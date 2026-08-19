@@ -9,6 +9,11 @@ import type { PlayerId } from '../core/brand';
 /**
  * Formation data.
  *
+ * Ids are the shape itself: outfield lines back to front, hyphen separated,
+ * goalkeeper implied. `'2-3-1'` is two defenders, three midfielders, one
+ * forward, plus a keeper. Content, UI and save data all key off that string
+ * directly, so it must stay readable and stable — never renumber an existing id.
+ *
  * The league's default competition is a 30-minute short format with seven a
  * side (one keeper, six outfielders), so that is where the depth is. Three
  * eleven-a-side shapes ship alongside them purely so nothing downstream — the
@@ -31,7 +36,7 @@ const slot = (
 /** Seven-a-side: GK + 6. The competitive default. */
 const SEVEN: readonly Formation[] = [
   {
-    id: '7:2-3-1',
+    id: '2-3-1',
     name: '2-3-1 Standard',
     shape: 'BALANCED',
     blurb: 'The reference shape. A flat back two, a working three, one out front.',
@@ -46,7 +51,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:3-2-1',
+    id: '3-2-1',
     name: '3-2-1 Pyramid',
     shape: 'DEFENSIVE',
     blurb: 'Three at the back, two to screen. Hard to break down, lonely up top.',
@@ -61,7 +66,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:2-1-3',
+    id: '2-1-3',
     name: '2-1-3 Spearhead',
     shape: 'ATTACKING',
     blurb: 'A lone anchor behind a front three. Devastating on the front foot, exposed behind.',
@@ -76,7 +81,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:3-1-2',
+    id: '3-1-2',
     name: '3-1-2 Anchor',
     shape: 'DEFENSIVE',
     blurb: 'A back three and a screen, with two to run the channels on the break.',
@@ -91,7 +96,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:1-3-2',
+    id: '1-3-2',
     name: '1-3-2 Cavalier',
     shape: 'ATTACKING',
     blurb: 'One defender. Everything forward. Thrilling and completely irresponsible.',
@@ -106,7 +111,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:2-2-2',
+    id: '2-2-2',
     name: '2-2-2 Box',
     shape: 'BALANCED',
     blurb: 'Three clean lines of two. Simple, symmetrical, always in shape.',
@@ -121,7 +126,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:2-1-2-1',
+    id: '2-1-2-1',
     name: '2-1-2-1 Diamond',
     shape: 'NARROW',
     blurb: 'Everything through the middle. Owns central areas, invites crosses.',
@@ -136,7 +141,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:3-3-0',
+    id: '3-3',
     name: '3-3 False Nine',
     shape: 'WIDE',
     blurb: 'No recognised striker. The attacking mid drops in and nobody can pick him up.',
@@ -151,7 +156,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:2-2-1-1',
+    id: '2-2-1-1',
     name: '2-2-1-1 Staggered',
     shape: 'BALANCED',
     blurb: 'A ten in the pocket between the lines, a nine on the last shoulder.',
@@ -166,7 +171,7 @@ const SEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '7:2-4-0',
+    id: '2-4',
     name: '2-4 Overload',
     shape: 'WIDE',
     blurb: 'Four across the middle stretching the pitch. Wins the ball back everywhere, scores from nowhere.',
@@ -185,7 +190,7 @@ const SEVEN: readonly Formation[] = [
 /** Eleven-a-side. Present so no consumer may assume a seven-slot formation. */
 const ELEVEN: readonly Formation[] = [
   {
-    id: '11:4-4-2',
+    id: '4-4-2',
     name: '4-4-2 Classic',
     shape: 'BALANCED',
     blurb: 'Two banks of four and a front pair. Nothing clever, nothing broken.',
@@ -204,7 +209,7 @@ const ELEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '11:4-3-3',
+    id: '4-3-3',
     name: '4-3-3 Press',
     shape: 'ATTACKING',
     blurb: 'A front three to squeeze the ball high and a midfield triangle behind it.',
@@ -223,7 +228,7 @@ const ELEVEN: readonly Formation[] = [
     ],
   },
   {
-    id: '11:3-5-2',
+    id: '3-5-2',
     name: '3-5-2 Wing-Backs',
     shape: 'WIDE',
     blurb: 'Wing-backs carry the whole flank. Enormous engine required.',
@@ -247,7 +252,7 @@ export const FORMATIONS: readonly Formation[] = [...SEVEN, ...ELEVEN];
 
 const BY_ID: ReadonlyMap<string, Formation> = new Map(FORMATIONS.map((f) => [f.id, f]));
 
-export const DEFAULT_FORMATION_ID = '7:2-3-1';
+export const DEFAULT_FORMATION_ID = '2-3-1';
 
 /** Falls back to the default shape rather than throwing: a bad save must still load. */
 export function formationById(id: string): Formation {

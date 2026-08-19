@@ -152,7 +152,7 @@ export function makeState(over: Partial<GameState> = {}): GameState {
     seasons: {},
     currentSeasonId: asId<SeasonId>('season_1'),
     currentCompetitionId: asId<CompetitionId>('competition_1'),
-    ledger: { balances: {}, transactions: [], idCounters: {}, appliedKeys: [] },
+    ledger: { balances: {}, transactions: [], idCounters: {}, appliedKeys: {}, permanentKeys: [], seasonTotals: [] },
     transfers: { listings: {}, negotiations: {}, completed: [], windowOpen: true, rumours: [] },
     scouting: { assignments: [], shortlist: [], weeklyCapacity: 2, network: 40 },
     training: { programId: 'TECHNICAL', intensity: 'NORMAL', individualFocus: {}, lastResults: [] },

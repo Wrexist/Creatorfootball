@@ -10,7 +10,7 @@ import type { Position } from '../players/positions';
 import { emptyForm } from '../players/player';
 import type { Player } from '../players/player';
 import { TRAITS } from '../players/traits';
-import { autoLineup, formationById, formationsFor } from '../tactics/formations';
+import { DEFAULT_FORMATION_ID, autoLineup, formationById, formationsFor } from '../tactics/formations';
 import type { SpecialRuleId } from './specialRules';
 import type { MatchConfig, MatchSetup, MatchTeam } from './simulator';
 import { DEFAULT_MATCH_CONFIG, NEUTRAL_MANAGER_BONUS } from './simulator';
@@ -127,10 +127,15 @@ export function makeTestTeam(
     ruleCards?: readonly SpecialRuleId[]; playersOnPitch?: number;
   },
 ): MatchTeam {
-  const players = makeTestSquad(rng, { prefix: opts.prefix, target: opts.target, playersOnPitch: opts.playersOnPitch });
+  // Each team draws from its own derived stream. Generating both squads from
+  // one sequential stream couples them, and a coupled fixture makes a fairness
+  // measurement impossible to interpret.
+  const players = makeTestSquad(rng.fork(`team:${opts.prefix}`), {
+    prefix: opts.prefix, target: opts.target, playersOnPitch: opts.playersOnPitch,
+  });
   const formation = opts.formationId
     ? formationById(opts.formationId)
-    : (formationsFor(opts.playersOnPitch ?? 7)[0] ?? formationById('7:2-3-1'));
+    : (formationsFor(opts.playersOnPitch ?? 7)[0] ?? formationById(DEFAULT_FORMATION_ID));
   return {
     clubId: asId<ClubId>(`club_${opts.prefix}`),
     name: opts.name,

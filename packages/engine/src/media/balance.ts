@@ -44,6 +44,13 @@ export const MEDIA_BALANCE = {
   routMargin: 4,
   routImportanceBonus: 1,
 
+  /**
+   * Weight the built-in fallbacks carry, relative to authored pack templates
+   * once their scales have been normalised. The fallbacks exist so the world is
+   * never mute; when authored content is available it should lead.
+   */
+  builtInWeightWithPack: 0.25,
+
   /** Stories retained on the state. */
   retention: 90,
 } as const;

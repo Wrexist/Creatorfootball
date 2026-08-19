@@ -62,7 +62,7 @@ export interface AiProfile {
 
 export const AI_PROFILES: readonly AiProfile[] = [
   {
-    id: 'youth_factory', name: 'Youth Factory',
+    id: 'YOUTH_FACTORY', name: 'Youth Factory',
     description: 'Buys teenagers, plays them early, sells them at their peak.',
     philosophy: 'YOUTH_ACADEMY',
     transferAggression: 0.55, spendMultiplier: 0.9, reinvestRatio: 0.5,
@@ -75,7 +75,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 0.2, squadTarget: 20,
   },
   {
-    id: 'big_spenders', name: 'Big Spenders',
+    id: 'BIG_SPENDERS', name: 'Big Spenders',
     description: 'Solves every problem with a cheque and a headline.',
     philosophy: 'BIG_SPENDERS',
     transferAggression: 0.85, spendMultiplier: 1.45, reinvestRatio: 0.85,
@@ -88,7 +88,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 0.4, squadTarget: 22,
   },
   {
-    id: 'analytics', name: 'Analytics',
+    id: 'ANALYTICS', name: 'Analytics',
     description: 'Buys undervalued profiles, sells a season before the decline.',
     philosophy: 'DATA_DRIVEN',
     transferAggression: 0.6, spendMultiplier: 0.95, reinvestRatio: 0.6,
@@ -101,7 +101,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 0.15, squadTarget: 21,
   },
   {
-    id: 'creator_club', name: 'Creator Club',
+    id: 'CREATOR_CLUB', name: 'Creator Club',
     description: 'Signs reach as readily as ability; the feed is the product.',
     philosophy: 'CREATOR_FIRST',
     transferAggression: 0.7, spendMultiplier: 1.2, reinvestRatio: 0.7,
@@ -114,7 +114,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 1, squadTarget: 21,
   },
   {
-    id: 'defensive_specialists', name: 'Defensive Specialists',
+    id: 'DEFENSIVE_SPECIALISTS', name: 'Defensive Specialists',
     description: 'Wins 1-0 and enjoys it. Recruits spine first, always.',
     philosophy: 'DEFENSIVE_ROCK',
     transferAggression: 0.5, spendMultiplier: 1, reinvestRatio: 0.55,
@@ -127,7 +127,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 0.1, squadTarget: 20,
   },
   {
-    id: 'local_underdog', name: 'Local Underdog',
+    id: 'LOCAL_UNDERDOG', name: 'Local Underdog',
     description: 'Free transfers, loyalty bonuses and a full away end.',
     philosophy: 'LOCAL_ROOTS',
     transferAggression: 0.35, spendMultiplier: 0.75, reinvestRatio: 0.35,
@@ -140,7 +140,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 0.25, squadTarget: 19,
   },
   {
-    id: 'showtime', name: 'Showtime',
+    id: 'SHOWTIME', name: 'Showtime',
     description: 'Entertainment first. Wingers, chaos, and a highlight reel.',
     philosophy: 'ENTERTAINERS',
     transferAggression: 0.75, spendMultiplier: 1.25, reinvestRatio: 0.75,
@@ -153,7 +153,7 @@ export const AI_PROFILES: readonly AiProfile[] = [
     creatorFocus: 0.7, squadTarget: 22,
   },
   {
-    id: 'veteran_core', name: 'Veteran Core',
+    id: 'VETERAN_CORE', name: 'Veteran Core',
     description: 'Experience over projection. Wins now, worries later.',
     philosophy: 'VETERAN_CORE',
     transferAggression: 0.6, spendMultiplier: 1.05, reinvestRatio: 0.6,
@@ -170,10 +170,17 @@ export const AI_PROFILES: readonly AiProfile[] = [
 const BY_ID = new Map(AI_PROFILES.map((p) => [p.id, p]));
 const BY_PHILOSOPHY = new Map(AI_PROFILES.map((p) => [p.philosophy, p]));
 
-/** Resolve a club's profile, falling back to its philosophy then to Analytics. */
+/**
+ * Resolve a club's profile.
+ *
+ * Profile ids are shared vocabulary with the content pack (`AI_PROFILE_IDS` in
+ * the base clubs table), so the common path is an exact hit. The philosophy
+ * fallback exists for community packs that set a philosophy but no profile, and
+ * matching is case-insensitive so a pack written in snake_case still lands.
+ */
 export function profileFor(club: Club): AiProfile {
   if (club.aiProfileId) {
-    const direct = BY_ID.get(club.aiProfileId);
+    const direct = BY_ID.get(club.aiProfileId) ?? BY_ID.get(club.aiProfileId.toUpperCase());
     if (direct) return direct;
   }
   return BY_PHILOSOPHY.get(club.philosophy) ?? (AI_PROFILES[2] as AiProfile);

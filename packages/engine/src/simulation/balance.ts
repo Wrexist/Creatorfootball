@@ -52,7 +52,6 @@ export const CASCADE_BALANCE = {
   derby: {
     /** Rivalry intensity above which a fixture is treated as a derby. */
     intensityThreshold: 60,
-    fanSentimentMultiplier: 1.8,
     rivalryWinBump: 3,
     rivalryLossBump: 2,
   },

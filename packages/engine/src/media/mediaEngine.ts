@@ -8,7 +8,8 @@ import type { CascadeResult } from '../simulation/cascade';
 import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort } from '../simulation/ports';
 import {
-  matchesConditions, pickTemplate, renderTemplate, seedFrom, sentimentBand, templatesForTrigger,
+  blendTemplates, matchesConditions, pickTemplate, renderTemplate, seedFrom, sentimentBand,
+  templatesForTrigger,
 } from '../simulation/templating';
 import { MEDIA_BALANCE as M, OUTLETS, outletByName, type Outlet } from './balance';
 import { FALLBACK_MEDIA_TEMPLATES } from './fallbackTemplates';
@@ -127,9 +128,7 @@ export function generateStories(
   if (hooks.length === 0) return [];
 
   const packTemplates = registry?.mediaTemplates() ?? [];
-  const templates = packTemplates.length > 0
-    ? [...packTemplates, ...FALLBACK_MEDIA_TEMPLATES]
-    : FALLBACK_MEDIA_TEMPLATES;
+  const templates = blendTemplates(packTemplates, FALLBACK_MEDIA_TEMPLATES, M.builtInWeightWithPack);
   const byTrigger = new Map<string, MediaTemplate[]>();
   for (const t of templates) {
     const list = byTrigger.get(t.trigger);

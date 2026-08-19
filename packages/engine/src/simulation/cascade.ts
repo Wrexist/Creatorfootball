@@ -5,7 +5,7 @@ import type {
 import type { GameState } from '../game/state';
 import { formatMoney } from '../economy/ledger';
 import { clamp } from '../core/math';
-import { rivalryFor, rivalryKey } from '../rivalries/rivalries';
+import { fanReactionMultiplier, rivalryFor, rivalryKey } from '../rivalries/rivalries';
 import { CASCADE_BALANCE as C } from './balance';
 import type { ContentHook, HookFacts, SocialPostKind, TokenMap } from './ports';
 import { sentimentBand } from './templating';
@@ -77,6 +77,8 @@ interface CascadeCtx {
   clubName(id: string | undefined): string;
   playerName(id: string | undefined): string;
   derbyHeat(a: ClubId | undefined, b: ClubId | undefined): number;
+  /** Who the club was playing in this match, when the fixture is known. */
+  opponentIn(matchId: string | undefined, clubId: ClubId): ClubId | undefined;
 }
 
 interface CascadeStep {
@@ -167,17 +169,22 @@ const FAN_JOY: readonly SocialPostKind[] = ['FAN', 'CLUB', 'CREATOR', 'PLAYER', 
  */
 const redCardRule: RuleFor<'RED_CARD'> = (e, ctx) => {
   const p = e.payload;
-  const heat = ctx.derbyHeat(p.clubId, undefined);
+  // Prefer the real opponent in this fixture; fall back to the club's hottest
+  // rivalry when the fixture is not in state (a friendly, or a replayed event).
+  const opponent = ctx.opponentIn(p.matchId, p.clubId);
+  const heat = ctx.derbyHeat(p.clubId, opponent);
   const isDerbyMoment = heat >= C.derby.intensityThreshold;
   const player = ctx.playerName(p.playerId);
   const club = ctx.clubName(p.clubId);
   const matches = C.redCard.suspensionMatches + (isDerbyMoment ? C.redCard.derbySuspensionBonus : 0);
-  const fanDelta = C.redCard.fanSentiment * (isDerbyMoment ? C.derby.fanSentimentMultiplier : 1);
+  // Fan reaction scales continuously with rivalry temperature rather than
+  // stepping at a threshold: a red card in a warm fixture stings proportionally.
+  const fanDelta = C.redCard.fanSentiment * fanReactionMultiplier(heat);
   const tokens: TokenMap = { player, club, minute: p.minute, matches };
   const facts: HookFacts = { minute: p.minute, derby: isDerbyMoment, matches, intensity: Math.round(heat) };
   const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
 
-  const rival = hottestRival(ctx, p.clubId);
+  const rival = opponent ?? hottestRival(ctx, p.clubId);
   const derived: AnyDomainEvent[] = [
     derive(e, 'morale', 'PLAYER_MORALE_CHANGED', {
       playerId: p.playerId, clubId: p.clubId, from: 0, to: C.redCard.playerMorale, reason: 'sent off',
@@ -349,7 +356,7 @@ const matchLostRule: RuleFor<'MATCH_LOST'> = (e, ctx) => {
   const facts: HookFacts = { margin: p.margin, derby: isDerbyMoment, shock, intensity: Math.round(heat), result: 'LOSS' };
   const entities = [...clubEntity(ctx, p.clubId), ...clubEntity(ctx, p.opponentId)];
   const fanDelta = (shock ? C.shockDefeat.fanSentiment : C.shockDefeat.fanSentiment / 2)
-    * (isDerbyMoment ? C.derby.fanSentimentMultiplier : 1);
+    * fanReactionMultiplier(heat);
 
   const derived: AnyDomainEvent[] = [
     derive(e, 'fans', 'FAN_SENTIMENT_CHANGED', {
@@ -403,7 +410,7 @@ const matchWonRule: RuleFor<'MATCH_WON'> = (e, ctx) => {
   const tokens: TokenMap = { club: clubName, opponent: oppName, rival: oppName, score, margin: p.margin };
   const facts: HookFacts = { margin: p.margin, derby: isDerbyMoment, big, intensity: Math.round(heat), result: 'WIN' };
   const entities = [...clubEntity(ctx, p.clubId), ...clubEntity(ctx, p.opponentId)];
-  const fanDelta = C.bigWin.fanSentiment * (big ? 1.4 : 1) * (isDerbyMoment ? C.derby.fanSentimentMultiplier : 1);
+  const fanDelta = C.bigWin.fanSentiment * (big ? 1.4 : 1) * fanReactionMultiplier(heat);
 
   const derived: AnyDomainEvent[] = [
     derive(e, 'fans', 'FAN_SENTIMENT_CHANGED', {
@@ -822,6 +829,12 @@ export function expandCascade(
     pressure.set(club.id, managerPressure(state, club.id));
   }
 
+  // One pass over fixtures; every rule then resolves an opponent in O(1).
+  const matchIndex = new Map<string, { home: ClubId; away: ClubId }>();
+  for (const fixture of Object.values(state.fixtures)) {
+    if (fixture.matchId) matchIndex.set(fixture.matchId, { home: fixture.homeClubId, away: fixture.awayClubId });
+  }
+
   const ctx: CascadeCtx = {
     state,
     cycle,
@@ -839,6 +852,14 @@ export function expandCascade(
         return max;
       }
       return rivalryFor(state, a, b)?.intensity ?? 0;
+    },
+    opponentIn: (matchId, clubId) => {
+      if (!matchId) return undefined;
+      const fixture = matchIndex.get(matchId);
+      if (!fixture) return undefined;
+      if (fixture.home === clubId) return fixture.away;
+      if (fixture.away === clubId) return fixture.home;
+      return undefined;
     },
   };
 

@@ -57,8 +57,12 @@ export function seedRivalries(
     byKey.set(norm(club.shortName), club);
     byKey.set(norm(club.abbreviation), club);
   }
+  // Templates declare rivals by *template* id, but the game layer assigns club
+  // ids independently. Bind each template to its club by whichever identifier
+  // survived generation so `rivalOf` always resolves.
   for (const t of templates) {
-    const club = byKey.get(norm(t.id)) ?? byKey.get(norm(t.name)) ?? byKey.get(norm(t.shortName));
+    const club = byKey.get(norm(t.id)) ?? byKey.get(norm(t.name))
+      ?? byKey.get(norm(t.shortName)) ?? byKey.get(norm(t.abbreviation));
     if (club) byKey.set(norm(t.id), club);
   }
 

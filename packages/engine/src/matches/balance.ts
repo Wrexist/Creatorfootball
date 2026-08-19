@@ -55,7 +55,7 @@ export const BALANCE = {
   /** Base per-tick probability that a progression attempt succeeds at parity. 0.4-0.85. */
   PROGRESSION_BASE: 0.66,
   /** How strongly the attack/defence rating gap swings progression. 0.02-0.14. */
-  PROGRESSION_EDGE: 0.007,
+  PROGRESSION_EDGE: 0.008,
   /** Base per-tick turnover probability at parity outside the final third. 0.1-0.3. */
   TURNOVER_BASE: 0.15,
   /** Extra turnover probability at maximum press. 0.02-0.15. */
@@ -63,7 +63,7 @@ export const BALANCE = {
   /** Turnover probability multiplier once inside the final third. 1.0-2.0. */
   TURNOVER_FINAL_THIRD: 1.4,
   /** How strongly the rating gap swings turnovers. 0.02-0.14. */
-  TURNOVER_EDGE: 0.006,
+  TURNOVER_EDGE: 0.0075,
   /** Share of turnovers recorded as a tackle rather than an interception. 0.3-0.7. */
   TACKLE_SHARE: 0.45,
   /** Ticks of elevated counter threat after winning the ball high. 2-10. */
@@ -103,7 +103,7 @@ export const BALANCE = {
   /** Multiplier range from defensive pressure: 1 = free header, this = crowded out. 0.35-0.8. */
   XG_PRESSURE_FLOOR: 0.55,
   /** How much the shooter's finishing (vs. a 55 baseline) scales xG. 0.2-0.9. */
-  XG_FINISHING_WEIGHT: 0.26,
+  XG_FINISHING_WEIGHT: 0.3,
   /** How much assist quality scales xG. 0.1-0.6. */
   XG_ASSIST_WEIGHT: 0.3,
   /** How much the keeper's quality (vs. a 55 baseline) suppresses xG. 0.1-0.6. */
@@ -118,6 +118,14 @@ export const BALANCE = {
   BIG_CHANCE_XG: 0.3,
   /** Global conversion trim. The single knob for "the league scores too much". 0.6-1.4. */
   CONVERSION_SCALE: 0.73,
+  /**
+   * How much a team's level varies from match to match — the "which version of
+   * them turned up" term. Drawn once per team per match and applied to every
+   * aggregate. This is the single biggest source of upsets, and the reason a
+   * heavy favourite tops out below 90% instead of running away with every
+   * fixture. 0-0.15.
+   */
+  TEAM_PERFORMANCE_SIGMA: 0.105,
   /**
    * Per-match openness. Every match draws one shared multiplier on chance
    * creation for BOTH sides. This is what makes goal counts overdispersed

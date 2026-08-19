@@ -197,6 +197,8 @@ interface TeamRuntime {
   squadQuality: number;
   readonly xgFor: number[];
   readonly xgAgainst: number[];
+  /** How well this side turned up today. Drawn once, applied to every aggregate. */
+  readonly performance: number;
   creatorBoostUntil: number;
   lastCreatorMinute: number;
   lastSubTick: number;
@@ -537,6 +539,10 @@ export class MatchSimulator {
       squadQuality,
       xgFor: [],
       xgAgainst: [],
+      performance: clamp(
+        1 + this.rng.fork(`performance:${side}`).normal(0, BALANCE.TEAM_PERFORMANCE_SIGMA),
+        0.72, 1.28,
+      ),
       creatorBoostUntil: -1,
       lastCreatorMinute: -999,
       lastSubTick: -999,
@@ -1474,7 +1480,18 @@ export class MatchSimulator {
       return { player: rt.player, role: rt.slot.role as SlotRole, ctx: rt.ctx };
     });
 
-    team.agg = computeAggregates(units, Math.max(1, this.setup.config.playersOnPitch - 1));
+    const raw = computeAggregates(units, Math.max(1, this.setup.config.playersOnPitch - 1));
+    const p = team.performance;
+    team.agg = {
+      ...raw,
+      attack: raw.attack * p,
+      creation: raw.creation * p,
+      progression: raw.progression * p,
+      defence: raw.defence * p,
+      pressing: raw.pressing * p,
+      aerial: raw.aerial * p,
+      keeper: raw.keeper * p,
+    };
   }
 
   private baseConditions(side: Side): TraitCondition[] {

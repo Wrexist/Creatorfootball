@@ -9,7 +9,7 @@ import type { CascadeResult } from '../simulation/cascade';
 import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort, SocialPostKind } from '../simulation/ports';
 import {
-  matchesConditions, pickTemplate, renderTemplate, seedFrom, templatesForTrigger,
+  blendTemplates, matchesConditions, pickTemplate, renderTemplate, seedFrom, templatesForTrigger,
 } from '../simulation/templating';
 import { rivalriesOf, rivalOpponent } from '../rivalries/rivalries';
 import { OUTLETS } from '../media/balance';
@@ -264,9 +264,7 @@ export function generatePosts(
   if (allHooks.length === 0) return [];
 
   const packTemplates = registry?.socialTemplates() ?? [];
-  const templates = packTemplates.length > 0
-    ? [...packTemplates, ...FALLBACK_SOCIAL_TEMPLATES]
-    : FALLBACK_SOCIAL_TEMPLATES;
+  const templates = blendTemplates(packTemplates, FALLBACK_SOCIAL_TEMPLATES, S.builtInWeightWithPack);
   const byKey = new Map<string, SocialTemplate[]>();
   for (const template of templates) {
     const key = `${template.trigger}|${template.authorKind}`;

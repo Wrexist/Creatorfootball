@@ -136,7 +136,7 @@ export const TRIGGER_FALLBACKS: Readonly<Record<string, string>> = {
 };
 
 /** How much a template keyed to the exact moment outweighs a generic one. */
-export const SPECIFIC_TRIGGER_BONUS = 3;
+export const SPECIFIC_TRIGGER_BONUS = 2;
 
 /**
  * Candidate templates for a trigger: its own, weighted up, plus the broader
@@ -153,4 +153,27 @@ export function templatesForTrigger<T extends Weighted>(
   const fallbackTrigger = TRIGGER_FALLBACKS[trigger];
   const fallback = fallbackTrigger ? lookup(`${fallbackTrigger}${suffix}`) ?? [] : [];
   return [...specific, ...fallback];
+}
+
+/**
+ * Blend a content pack's templates with the built-in fallbacks.
+ *
+ * Packs and fallbacks are written by different hands and their `weight` columns
+ * are not on the same scale (the base pack uses 1-5, the fallbacks 10). Naively
+ * concatenating them would let an arbitrary scale choice decide whose voice the
+ * game speaks in. So the fallbacks are re-scaled onto the pack's own scale and
+ * then held down by `factor`, which is the deliberate editorial decision:
+ * authored content leads, built-ins fill the gaps and cover triggers the pack
+ * has no line for.
+ */
+export function blendTemplates<T extends Weighted>(
+  pack: readonly T[],
+  fallbacks: readonly T[],
+  factor: number,
+): T[] {
+  if (pack.length === 0) return fallbacks.slice();
+  const average = (xs: readonly T[]): number =>
+    (xs.length ? xs.reduce((sum, t) => sum + Math.max(0, t.weight), 0) / xs.length : 1) || 1;
+  const scale = (average(pack) / average(fallbacks)) * factor;
+  return [...pack, ...fallbacks.map((t) => ({ ...t, weight: Math.max(0.01, t.weight * scale) }))];
 }

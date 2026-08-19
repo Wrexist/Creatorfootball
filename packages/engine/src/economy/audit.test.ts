@@ -95,7 +95,9 @@ describe('auditEconomy', () => {
       balances: { [`club:${state.playerClubId}`]: { CASH: 500_000, PREMIUM: 0 } },
       transactions: [duplicate, { ...duplicate, id: asId('tx_dup_2') }],
       idCounters: {},
-      appliedKeys: ['objective:win-derby'],
+      appliedKeys: { 'objective:win-derby': 0 },
+      permanentKeys: [],
+      seasonTotals: [],
     };
     const restored = Ledger.restore(snapshot);
     expect(codes(state, restored)).toContain('DOUBLE_CLAIMED');

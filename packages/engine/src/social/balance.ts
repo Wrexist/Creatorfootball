@@ -68,6 +68,9 @@ export const SOCIAL_BALANCE = {
   followerGainPerImpression: 0.00035,
   followerLossPerImpression: 0.00014,
 
+  /** See the media engine: authored content leads, built-ins fill the gaps. */
+  builtInWeightWithPack: 0.25,
+
   retention: 180,
 } as const;
 
