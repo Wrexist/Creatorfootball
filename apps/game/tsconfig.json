@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@cf/engine": ["../../packages/engine/src/index.ts"],
+      "@cf/engine/*": ["../../packages/engine/src/*"]
+    }
+  },
+  "include": ["src/**/*", "vite.config.ts"]
+}
