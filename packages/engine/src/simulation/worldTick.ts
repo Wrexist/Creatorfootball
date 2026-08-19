@@ -292,7 +292,10 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
   for (const clubId of aiClubIds) {
     const club = clubs[clubId];
     if (!club) continue;
-    const actions = aiClubTurn(interimForAi, club.id, root.fork('ai'), {
+    // Fork per club, not once per label: forking 'ai' repeatedly handed every
+    // club in the league the identical stream, so twelve supposedly independent
+    // AI clubs were making correlated decisions every single cycle.
+    const actions = aiClubTurn(interimForAi, club.id, root.fork(`ai:${club.id}`), {
       cycle,
       season: state.clock.season,
       leaguePosition: positionOf.get(club.id) ?? clubCount,

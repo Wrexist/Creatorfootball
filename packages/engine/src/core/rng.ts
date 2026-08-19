@@ -40,6 +40,7 @@ export interface RngState {
 export class Rng {
   private readonly next: () => number;
   private _calls = 0;
+  private forkedLabels = new Set<string>();
 
   constructor(readonly seed: string, skip = 0) {
     const h = hashString(seed);
@@ -64,9 +65,29 @@ export class Rng {
   /**
    * Derive an independent child stream. Use this to isolate subsystems so that
    * adding a die roll in the transfer market cannot shift match outcomes.
+   *
+   * A fork is a pure function of (seed, label): forking the same label twice
+   * deliberately returns the same stream, because that is what makes a
+   * subsystem reproducible in isolation. The hazard is doing it by accident —
+   * two call sites that both fork 'players' silently share a stream and their
+   * "independent" draws are identical. In development that is reported;
+   * `forkSequential` is the correct tool when you genuinely want N distinct
+   * children under one label.
    */
   fork(label: string): Rng {
+    if (this.forkedLabels.has(label)) {
+      reportForkCollision(this.seed, label);
+    }
+    this.forkedLabels.add(label);
     return new Rng(`${this.seed}:${label}`);
+  }
+
+  /**
+   * Derive the n-th distinct child under a label. Use inside loops, where every
+   * iteration needs its own stream but the label is naturally the same.
+   */
+  forkSequential(label: string, index: number): Rng {
+    return new Rng(`${this.seed}:${label}#${index}`);
   }
 
   /** Float in [min, max). */
@@ -146,3 +167,47 @@ export class Rng {
 
 /** Convenience for tests and content generation. */
 export const rngFrom = (seed: string): Rng => new Rng(seed);
+
+/* ------------------------------------------------------- fork diagnostics */
+
+export interface ForkCollision {
+  readonly seed: string;
+  readonly label: string;
+}
+
+let collisionMode: 'report' | 'throw' | 'off' = 'report';
+const collisions: ForkCollision[] = [];
+
+function reportForkCollision(seed: string, label: string): void {
+  if (collisionMode === 'off') return;
+  const collision: ForkCollision = { seed, label };
+  if (collisionMode === 'throw') {
+    throw new Error(
+      `Rng.fork('${label}') was called twice on the same stream. Both children ` +
+      `will produce identical values. Use forkSequential('${label}', i) instead.`,
+    );
+  }
+  collisions.push(collision);
+}
+
+/**
+ * `throw` in tests and audits, where an accidental shared stream is a defect;
+ * `report` in development; `off` in production, where a duplicated stream is a
+ * balance bug rather than a reason to lose a player's save.
+ */
+export const setForkCollisionMode = (mode: 'report' | 'throw' | 'off'): void => {
+  collisionMode = mode;
+};
+
+export const drainForkCollisions = (): ForkCollision[] =>
+  collisions.splice(0, collisions.length);
+
+/**
+ * Seed space is 32 bits, so roughly 4.3 billion distinct worlds. That is an
+ * accepted limit: it is far beyond what a single-player game needs, and
+ * widening it would shift every generated sequence and invalidate the tuned
+ * balance figures for no gameplay benefit. If this engine is ever used to
+ * arbitrate matches server-side across many concurrent games, revisit it then —
+ * that is the case where collisions start to matter.
+ */
+export const RNG_SEED_BITS = 32;

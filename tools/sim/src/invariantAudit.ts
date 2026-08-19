@@ -1,6 +1,7 @@
 import {
   validateState, saveGame, loadGame, MemoryStorage, checksum, SAVE_KEY,
   computeStandings, verifyFixtures, auditEconomy, advanceCycle, Ledger,
+  setForkCollisionMode, drainForkCollisions,
   type GameState,
 } from '@cf/engine';
 import { heading, note, summarise, pass, fail, table } from './report';
@@ -263,6 +264,24 @@ async function run(): Promise<boolean> {
 
   heading('Results');
   table(rows);
+
+  heading('Random stream hygiene');
+  // Forking the same label twice from one stream hands both children identical
+  // values. It is silent, it makes "independent" agents behave in lockstep, and
+  // it is invisible in any single test — so it is checked over a whole season.
+  setForkCollisionMode('report');
+  drainForkCollisions();
+  playSeason('inv-forks');
+  const forkCollisions = drainForkCollisions();
+  if (forkCollisions.length === 0) {
+    pass('no subsystem accidentally shared a random stream');
+  } else {
+    allOk = false;
+    const byLabel = new Map<string, number>();
+    for (const c of forkCollisions) byLabel.set(c.label, (byLabel.get(c.label) ?? 0) + 1);
+    fail(`${forkCollisions.length} duplicate stream forks`);
+    for (const [label, count] of byLabel) note(`        ${count} x fork('${label}')`);
+  }
 
   heading('Social provenance');
   const provenance = auditSocialProvenance('inv-social', 10);
