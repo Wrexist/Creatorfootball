@@ -1,4 +1,4 @@
-import type { ClubId, EventId, PlayerId } from '../core/brand';
+import type { ClubId, EventId, PlayerId, RivalryId } from '../core/brand';
 import type {
   AnyDomainEvent, DomainEvent, DomainEventPayloads, DomainEventType, EntityRef, EventImportance,
 } from '../core/events';
@@ -109,7 +109,7 @@ const derive = <T extends DomainEventType>(
   importance,
   entities,
   ...(source.matchId ? { matchId: source.matchId } : {}),
-} as AnyDomainEvent);
+} as unknown as AnyDomainEvent);
 
 const clubEntity = (ctx: CascadeCtx, id: string | undefined): EntityRef[] =>
   (id ? [{ kind: 'club' as const, id, name: ctx.clubName(id) }] : []);
@@ -188,7 +188,7 @@ const redCardRule: RuleFor<'RED_CARD'> = (e, ctx) => {
   ];
   if (rival) {
     derived.push(derive(e, 'rivalry', 'RIVALRY_INTENSIFIED', {
-      rivalryId: rivalryKey(p.clubId, rival) as never,
+      rivalryId: rivalryKey(p.clubId, rival) as RivalryId,
       clubA: p.clubId, clubB: rival,
       intensity: C.redCard.rivalryIntensity,
       reason: `${player} saw red against ${ctx.clubName(rival)}`,
@@ -358,7 +358,7 @@ const matchLostRule: RuleFor<'MATCH_LOST'> = (e, ctx) => {
   ];
   if (isDerbyMoment) {
     derived.push(derive(e, 'rivalry', 'RIVALRY_INTENSIFIED', {
-      rivalryId: rivalryKey(p.clubId, p.opponentId) as never,
+      rivalryId: rivalryKey(p.clubId, p.opponentId) as RivalryId,
       clubA: p.clubId, clubB: p.opponentId,
       intensity: C.derby.rivalryLossBump,
       reason: `${oppName} won the derby ${score}`,
@@ -412,7 +412,7 @@ const matchWonRule: RuleFor<'MATCH_WON'> = (e, ctx) => {
   ];
   if (isDerbyMoment) {
     derived.push(derive(e, 'rivalry', 'RIVALRY_INTENSIFIED', {
-      rivalryId: rivalryKey(p.clubId, p.opponentId) as never,
+      rivalryId: rivalryKey(p.clubId, p.opponentId) as RivalryId,
       clubA: p.clubId, clubB: p.opponentId,
       intensity: C.derby.rivalryWinBump + (big ? 3 : 0),
       reason: `${clubName} took the derby ${score}`,
@@ -545,7 +545,7 @@ const hijackRule: RuleFor<'TRANSFER_HIJACKED'> = (e, ctx) => {
       audiences: ['RIVAL', 'FAN', 'LEAK', 'CREATOR'], tags: ['transfer', 'rivalry'],
     }],
     derived: [derive(e, 'rivalry', 'RIVALRY_INTENSIFIED', {
-      rivalryId: rivalryKey(p.fromClubId, p.byClubId) as never,
+      rivalryId: rivalryKey(p.fromClubId, p.byClubId) as RivalryId,
       clubA: p.fromClubId, clubB: p.byClubId, intensity: 4,
       reason: `${thief} hijacked the ${player} deal`,
     }, 3, entities)],

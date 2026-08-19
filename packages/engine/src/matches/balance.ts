@@ -3,28 +3,40 @@
  *
  * The rule for this file: if a constant appears inline anywhere else in
  * `matches/`, that is a bug. Each entry documents what it controls and the
- * range within which the simulation still produces football. Values outside the
- * stated range are not forbidden — they are how you build a joke mode — but
- * they will fail the aggregate realism test.
+ * range within which the simulation still produces football.
  *
- * Calibrated against the 30-minute, seven-a-side default format:
- * total goals 4.5-6.5, shots 8-14 per team, conversion 12-20%, possession
- * inside 35-65%, 1-3 yellows, <0.12 reds, <0.15 injuries per match.
+ * Calibrated against `docs/SIMULATION_REFERENCE_DATA.md` for the 30-minute
+ * short format (GK + 6 outfield), which supersedes the provisional bands in the
+ * integration contract:
+ *
+ *   goals/match (blended)        6.0 - 9.0, target ~7.0
+ *   goals/minute                 0.20 - 0.30
+ *   normal-play goal rate        0.16 - 0.18 /min; rule-window 2-4x that
+ *   shots/match (both teams)     24 - 40
+ *   conversion                   18 - 28%
+ *   ball in play                 ~90% of clock (boards keep it alive)
+ *   yellows                      0.5 - 2.0 /match; reds 0.01 - 0.06
+ *   injuries                     0.08 - 0.14 per team per match
+ *   home advantage               ZERO by default (single neutral venue)
+ *   heavy-mismatch favourite     75 - 85%, never above 90%
+ *
+ * The single most important constant in the whole engine is the goals-per-minute
+ * multiplier against eleven-a-side: roughly 7x. Everything else is downstream.
  */
 export const BALANCE = {
   // ---------------------------------------------------------------- clock ---
   /** Simulation ticks per match minute. 10 = one tick per six seconds. 6-20. */
   TICKS_PER_MINUTE: 10,
   /** Ticks the clock stops for after a goal, for the restart. 2-8. */
-  GOAL_RESTART_TICKS: 4,
+  GOAL_RESTART_TICKS: 3,
   /** Ticks lost to an injury stoppage. 3-12. */
-  INJURY_STOPPAGE_TICKS: 6,
-  /** Ticks lost to a substitution. 1-4. */
-  SUB_STOPPAGE_TICKS: 2,
+  INJURY_STOPPAGE_TICKS: 5,
+  /** Ticks lost to a substitution. Rolling subs in this format, so it is cheap. 1-4. */
+  SUB_STOPPAGE_TICKS: 1,
   /** Ticks lost to a card being shown. 1-4. */
   CARD_STOPPAGE_TICKS: 2,
-  /** Added time per half, in ticks, per stoppage-worthy event. 2-6. */
-  ADDED_TICKS_PER_STOPPAGE: 3,
+  /** Share of stoppage time handed back as added time at the end of a half. 0-1. */
+  ADDED_TIME_RECOVERY: 0.5,
   /** Hard cap on added time per half, in match minutes. 1-6. */
   MAX_ADDED_MINUTES: 3,
   /** How often team-level aggregates are rebuilt, in ticks. Higher is faster,
@@ -33,25 +45,25 @@ export const BALANCE = {
 
   // ------------------------------------------------------------ possession ---
   /** Zone (0 own goal, 1 opponent goal) a possession restarts from after a turnover. */
-  RESTART_ZONE: 0.3,
+  RESTART_ZONE: 0.32,
   /** Zone at or above which the attacking team is in the final third. 0.6-0.8. */
   FINAL_THIRD_ZONE: 0.68,
-  /** Mean zone gained by a successful progression tick. 0.06-0.2. */
-  PROGRESSION_STEP: 0.13,
+  /** Mean zone gained by a successful progression tick. 0.06-0.25. */
+  PROGRESSION_STEP: 0.16,
   /** Zone lost when a progression attempt is forced backwards. 0.02-0.12. */
-  RECYCLE_STEP: 0.06,
-  /** Base per-tick probability that a progression attempt succeeds at parity. 0.4-0.8. */
-  PROGRESSION_BASE: 0.62,
-  /** How strongly the attack/defence rating gap swings progression. 0.02-0.12. */
-  PROGRESSION_EDGE: 0.055,
+  RECYCLE_STEP: 0.055,
+  /** Base per-tick probability that a progression attempt succeeds at parity. 0.4-0.85. */
+  PROGRESSION_BASE: 0.66,
+  /** How strongly the attack/defence rating gap swings progression. 0.02-0.14. */
+  PROGRESSION_EDGE: 0.065,
   /** Base per-tick turnover probability at parity outside the final third. 0.1-0.3. */
-  TURNOVER_BASE: 0.155,
+  TURNOVER_BASE: 0.15,
   /** Extra turnover probability at maximum press. 0.02-0.15. */
-  TURNOVER_PRESS: 0.075,
+  TURNOVER_PRESS: 0.07,
   /** Turnover probability multiplier once inside the final third. 1.0-2.0. */
-  TURNOVER_FINAL_THIRD: 1.45,
-  /** How strongly the rating gap swings turnovers. 0.02-0.12. */
-  TURNOVER_EDGE: 0.05,
+  TURNOVER_FINAL_THIRD: 1.4,
+  /** How strongly the rating gap swings turnovers. 0.02-0.14. */
+  TURNOVER_EDGE: 0.06,
   /** Share of turnovers recorded as a tackle rather than an interception. 0.3-0.7. */
   TACKLE_SHARE: 0.45,
   /** Ticks of elevated counter threat after winning the ball high. 2-10. */
@@ -69,13 +81,13 @@ export const BALANCE = {
   /** Share of final-third possessions that end in a cross rather than a shot. 0.05-0.3. */
   CROSS_RATE: 0.14,
   /** Chance a blocked or saved shot produces a corner. 0.2-0.6. */
-  CORNER_FROM_BLOCK: 0.38,
+  CORNER_FROM_BLOCK: 0.36,
   /** Chance a corner produces an immediate shot. 0.2-0.6. */
-  CORNER_SHOT_CHANCE: 0.42,
+  CORNER_SHOT_CHANCE: 0.4,
   /** Chance a final-third free kick is taken directly at goal. 0.1-0.5. */
   FREE_KICK_SHOT_CHANCE: 0.3,
   /** Chance an attack is flagged offside per final-third tick. 0-0.06. */
-  OFFSIDE_RATE: 0.016,
+  OFFSIDE_RATE: 0.012,
   /** How much a high defensive line raises the offside rate. 0-1.5. */
   OFFSIDE_LINE_WEIGHT: 0.9,
 
@@ -85,27 +97,34 @@ export const BALANCE = {
   /** xG floor for a hopeful effort. 0.01-0.06. */
   XG_MIN: 0.022,
   /** Decay constant for distance: xG falls off as exp(-DIST_DECAY * distance). 2-7. */
-  XG_DIST_DECAY: 4.1,
+  XG_DIST_DECAY: 3.9,
   /** Extra penalty for shooting from a tight angle. 0.3-1.5. */
-  XG_ANGLE_PENALTY: 0.85,
+  XG_ANGLE_PENALTY: 0.8,
   /** Multiplier range from defensive pressure: 1 = free header, this = crowded out. 0.35-0.8. */
-  XG_PRESSURE_FLOOR: 0.52,
+  XG_PRESSURE_FLOOR: 0.55,
   /** How much the shooter's finishing (vs. a 55 baseline) scales xG. 0.2-0.9. */
-  XG_FINISHING_WEIGHT: 0.55,
+  XG_FINISHING_WEIGHT: 0.6,
   /** How much assist quality scales xG. 0.1-0.6. */
   XG_ASSIST_WEIGHT: 0.3,
   /** How much the keeper's quality (vs. a 55 baseline) suppresses xG. 0.1-0.6. */
-  XG_KEEPER_WEIGHT: 0.28,
+  XG_KEEPER_WEIGHT: 0.3,
   /** Multiplier applied to xG when the shot arrives on the counter. 1.0-1.6. */
   XG_COUNTER_BONUS: 1.18,
   /** Multiplier applied to xG for a headed chance from a cross. 0.5-1.0. */
   XG_HEADER_FACTOR: 0.78,
-  /** xG assigned to a penalty. 0.7-0.85. */
-  XG_PENALTY: 0.78,
+  /** xG assigned to the format's one-on-one penalty run. 0.6-0.85. */
+  XG_PENALTY: 0.72,
   /** xG threshold above which a chance is a "big chance". 0.2-0.45. */
   BIG_CHANCE_XG: 0.3,
   /** Global conversion trim. The single knob for "the league scores too much". 0.6-1.4. */
   CONVERSION_SCALE: 1.0,
+  /**
+   * Per-match openness. Every match draws one shared multiplier on chance
+   * creation for BOTH sides. This is what makes goal counts overdispersed
+   * relative to Poisson (the dossier's negative-binomial requirement) and what
+   * correlates the two scorelines, so 6-5 and 0-1 both happen. 0-0.3.
+   */
+  MATCH_OPENNESS_SIGMA: 0.15,
 
   // ------------------------------------------------------- shot resolution ---
   /** Of shots that do not score, the share the keeper saves at parity. 0.25-0.5. */
@@ -118,8 +137,8 @@ export const BALANCE = {
   SAVE_KEEPER_WEIGHT: 0.16,
 
   // ------------------------------------------------------------ set pieces ---
-  /** Base per-tick foul probability by the defending team at parity. 0.02-0.06. */
-  FOUL_BASE: 0.031,
+  /** Base per-tick foul probability by the defending team at parity. 0.01-0.06. */
+  FOUL_BASE: 0.0235,
   /** How much pressing raises the foul rate. 0-1.2. */
   FOUL_PRESS_WEIGHT: 0.55,
   /** How much a full-intensity rivalry raises the foul rate. 0-0.8. */
@@ -130,10 +149,10 @@ export const BALANCE = {
   PENALTY_ZONE: 0.9,
 
   // ---------------------------------------------------------------- cards ---
-  /** Probability a foul is punished with a yellow at neutral discipline. 0.08-0.25. */
-  YELLOW_FROM_FOUL: 0.132,
+  /** Probability a foul is punished with a yellow at neutral discipline. 0.05-0.25. */
+  YELLOW_FROM_FOUL: 0.1,
   /** Probability a foul is a straight red at neutral discipline. 0-0.01. */
-  RED_FROM_FOUL: 0.0022,
+  RED_FROM_FOUL: 0.0018,
   /** How much a full-intensity rivalry raises card rates. 0-1.0. */
   CARD_RIVALRY_WEIGHT: 0.45,
   /** How much low player discipline (0 = terrible) raises card rates. 0-1.0. */
@@ -144,8 +163,13 @@ export const BALANCE = {
   CARD_TACTICAL_FOUL: 2.1,
 
   // ------------------------------------------------------------- injuries ---
-  /** Per-tick, per-team injury probability at neutral load. 0.00005-0.0006. */
-  INJURY_BASE: 0.000195,
+  /**
+   * Per-tick, per-team injury probability at neutral load. Denominator is
+   * TEAM-PITCH-MINUTES, fixed once and used everywhere — mixing player-hours
+   * and team-minutes is the classic calibration bug in this class of model.
+   * Target 0.08-0.14 injuries per team per match. 0.0001-0.0006.
+   */
+  INJURY_BASE: 0.00034,
   /** How much fatigue multiplies injury risk (at fatigue 1.0). 0-3. */
   INJURY_FATIGUE_WEIGHT: 1.6,
   /** How much a physical tactical setup multiplies injury risk. 0-1. */
@@ -158,8 +182,8 @@ export const BALANCE = {
   INJURED_CAPACITY: 0.62,
 
   // ---------------------------------------------------------------- fatigue ---
-  /** Fatigue accrued per tick by a 50-stamina player at neutral tactics. 0.0006-0.002. */
-  FATIGUE_PER_TICK: 0.00118,
+  /** Fatigue accrued per tick by a 55-stamina player at neutral tactics. 0.0006-0.003. */
+  FATIGUE_PER_TICK: 0.00135,
   /** How much stamina (vs. 55 baseline) reduces the drain. 0.2-1.0. */
   FATIGUE_STAMINA_WEIGHT: 0.6,
   /** Extra drain for the team without the ball, chasing it. 0-0.6. */
@@ -169,9 +193,9 @@ export const BALANCE = {
   /** Fatigue a substitute starts on relative to a starter. 0-0.15. */
   SUB_START_FATIGUE: 0.03,
   /** Fatigue above which the AI starts wanting to substitute. 0.3-0.8. */
-  SUB_FATIGUE_THRESHOLD: 0.46,
-  /** Earliest match fraction at which the AI will make a routine substitution. 0.3-0.8. */
-  SUB_EARLIEST_FRACTION: 0.45,
+  SUB_FATIGUE_THRESHOLD: 0.42,
+  /** Earliest match fraction at which the AI will make a routine substitution. 0.2-0.8. */
+  SUB_EARLIEST_FRACTION: 0.4,
 
   // -------------------------------------------------- effective attributes ---
   /** Weight of match fitness (0-100) on effective attributes. 0.05-0.3. */
@@ -210,9 +234,15 @@ export const BALANCE = {
   MOMENTUM_MAX_EFFECT: 0.06,
 
   // ------------------------------------------------------------ atmosphere ---
-  /** Home advantage at full strength, as a multiplier on chance creation. 0-0.15. */
-  HOME_ADVANTAGE_MAX: 0.075,
-  /** Attendance (as a fraction of a 20k reference) contribution to atmosphere. 0-1. */
+  /**
+   * There is NO home advantage in this competition: every match is played at
+   * the same neutral venue on a shared matchday. This slot is reused as the
+   * audience/support modifier — whose fans filled the arena — and is capped so
+   * it can never move win probability by more than about six percentage points,
+   * the size of the measured real-world home effect. 0-0.08.
+   */
+  SUPPORT_ADVANTAGE_MAX: 0.05,
+  /** Attendance treated as "full house" for the atmosphere term. */
   ATTENDANCE_REFERENCE: 20000,
   /** How much rivalry intensity raises match volatility. 0-0.5. */
   RIVALRY_VOLATILITY: 0.22,
@@ -240,14 +270,31 @@ export const BALANCE = {
   DECISION_TIMEOUT_SECONDS: 15,
 
   // ---------------------------------------------------------- special rules ---
-  /** Probability per eligible rule that a scheduled rule actually fires. 0.3-1. */
-  SPECIAL_RULE_FIRE_CHANCE: 0.85,
-  /** Minimum match minutes between two special rule windows. 2-10. */
+  /**
+   * Rules are CLOCK-ANCHORED, not random. Every half ends with a guaranteed
+   * swing window of this many minutes, announced in advance. Two per match.
+   * That is the format's identity: a predictable moment the player can plan
+   * for, and two designed re-engagement beats inside a 30-minute session.
+   * 2-5.
+   */
+  SWING_WINDOW_MINUTES: 3,
+  /** Shot-rate multiplier inside a swing window (fewer bodies, more space). 1.2-2.2. */
+  SWING_WINDOW_SHOT_MULTIPLIER: 1.55,
+  /** xG multiplier inside a swing window. 1.0-1.6. */
+  SWING_WINDOW_XG_MULTIPLIER: 1.22,
+  /** Vector deltas applied to BOTH teams for the length of any swing window. */
+  SWING_WINDOW_MODIFIERS: {
+    attackVolume: 0.2,
+    defensiveSolidity: -0.16,
+    volatility: 0.25,
+    fatigueRate: 0.12,
+  } as Readonly<Record<string, number>>,
+  /** Minimum match minutes between a played rule card and the next one. 2-10. */
   SPECIAL_RULE_GAP_MINUTES: 4,
 
   // -------------------------------------------------------- creator moments ---
   /** Per-tick probability of a creator moment at creatorPresence = 1. 0-0.01. */
-  CREATOR_MOMENT_RATE: 0.0016,
+  CREATOR_MOMENT_RATE: 0.0018,
   /** Momentum swing a creator moment produces. 0.05-0.4. */
   CREATOR_MOMENT_MOMENTUM: 0.2,
   /** Chance-creation multiplier the crowd lift gives, and how long it lasts (ticks). */
@@ -256,27 +303,35 @@ export const BALANCE = {
   /** Minimum match minutes between creator moments. 4-15. */
   CREATOR_MOMENT_GAP_MINUTES: 7,
 
+  // -------------------------------------------------------------- tie-break ---
+  /** Shots each side takes in the one-on-one shootout before sudden death. 3-5. */
+  SHOOTOUT_ROUNDS: 3,
+  /** Base conversion of a shootout run at parity. 0.4-0.75. */
+  SHOOTOUT_BASE: 0.58,
+  /** How much taker-vs-keeper quality moves shootout conversion. 0.1-0.5. */
+  SHOOTOUT_EDGE: 0.3,
+
   // --------------------------------------------------------------- ratings ---
   /** Every player starts here and earns or loses from it. 5.5-6.5. */
   RATING_BASE: 6.0,
-  RATING_GOAL: 1.15,
-  RATING_ASSIST: 0.72,
-  RATING_KEY_PASS: 0.16,
-  RATING_SHOT_ON_TARGET: 0.1,
-  RATING_BIG_CHANCE_MISSED: -0.42,
+  RATING_GOAL: 1.0,
+  RATING_ASSIST: 0.65,
+  RATING_KEY_PASS: 0.14,
+  RATING_SHOT_ON_TARGET: 0.09,
+  RATING_BIG_CHANCE_MISSED: -0.36,
   RATING_TACKLE: 0.11,
   RATING_INTERCEPTION: 0.1,
   RATING_DUEL_WON: 0.045,
   RATING_DUEL_LOST: -0.035,
-  RATING_SAVE: 0.24,
-  RATING_GOAL_CONCEDED_GK: -0.32,
-  RATING_GOAL_CONCEDED_DEF: -0.15,
-  RATING_CLEAN_SHEET_GK: 0.75,
-  RATING_CLEAN_SHEET_DEF: 0.45,
+  RATING_SAVE: 0.22,
+  RATING_GOAL_CONCEDED_GK: -0.26,
+  RATING_GOAL_CONCEDED_DEF: -0.13,
+  RATING_CLEAN_SHEET_GK: 0.9,
+  RATING_CLEAN_SHEET_DEF: 0.5,
   RATING_YELLOW: -0.28,
   RATING_RED: -1.6,
   RATING_PASS_ACCURACY_SWING: 0.7,
-  /** Ratings are scaled toward the base for players with few minutes. */
+  /** Ratings are pulled toward the base for players with few minutes. */
   RATING_MINUTES_REFERENCE: 20,
   RATING_MIN: 1.0,
   RATING_MAX: 10.0,
