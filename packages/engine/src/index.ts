@@ -40,5 +40,13 @@ export * from './league/types';
 export * from './licensing/identity';
 export * from './content/schema';
 
+// League orchestration
+export * from './league/fixtures';
+export * from './league/standings';
+
+// Persistence
+export * from './persistence/storage';
+export * from './persistence/save';
+
 // Game state
 export * from './game/state';

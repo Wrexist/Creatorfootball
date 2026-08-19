@@ -132,12 +132,26 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
   one match if alternatives exist.
 - Player ratings 1.0-10.0 computed from contributions, not from the scoreline.
 
-**Validation targets** (see `docs/SIMULATION_REFERENCE_DATA.md` if present;
-otherwise use these): for the default 30-minute short format, mean total goals
-per match 4.5-6.5, shots per team 8-14, conversion 12-20%, possession split
-within 35-65%, yellow cards 1-3 per match, red cards under 0.12 per match,
-injuries under 0.15 per match. A team with a 15-point squad-quality advantage
-should win roughly 60-70% of the time, never 95%+.
+**Validation targets** — `docs/SIMULATION_REFERENCE_DATA.md` is authoritative;
+read it. Summary for the default 30-minute, 7-a-side format: short-format
+football scores roughly 7x faster per minute than 11-a-side, so target
+**0.16-0.18 goals per minute in normal play** (both teams combined) with the
+special-rule windows lifting the blended total to **6-9 goals per match**.
+Validate normal play and rule-window play separately before checking the blend.
+Scoreline distribution should be **negative binomial** (real leagues are
+overdispersed); do not add a Dixon-Coles low-score correction at this goal rate.
+Shots 8-14 per team, conversion 12-20%, possession split within 35-65%, yellow
+cards 1-3 per match, red cards under 0.12 per match, injuries under 0.15 per
+match. **Home advantage defaults to 0** — creator leagues play at one neutral
+venue; that slot is reused as an audience/support modifier capped at roughly 6
+percentage points of win probability. A heavy-mismatch favourite should win
+**75-85%** of single fixtures and never more than 90%; across a full season a
+title-winning side wins about 66% and the worst side about 5%.
+
+**Special rules are clock-anchored.** Each half has a guaranteed swing window in
+its closing minutes during which the active rule applies — two windows per
+match. This makes rules part of the competition's identity rather than a random
+event, and gives the player two predictable high-tension beats to plan for.
 
 Write `matches/simulator.test.ts` proving: determinism (same seed → identical
 result twice), aggregate realism over 500 simulated matches, that the stronger
@@ -228,7 +242,10 @@ or biography.
 - **120+ social post templates** and **60+ media story templates**, keyed to
   triggers the world engine emits.
 - **Season config**: 12 clubs, 2 rounds (22 matches), 30-minute matches in 2
-  halves, 6 outfield + 1 GK on the pitch, squad of 18, bench 7, 5 subs.
+  halves, 6 outfield + 1 GK on the pitch, squad of 18, bench 7, 5 subs, plus the
+  wildcard structure: a drafted squad of 14, one season-long fixed wildcard slot
+  and one wildcard that rotates every week. The rotating slot hands the player a
+  real weekly decision without adding a management screen.
 
 Generators must produce players whose overall matches a requested target within
 ±3, whose potential respects age (young players have headroom, 30+ do not), and
@@ -369,3 +386,17 @@ adding tokens, never by changing existing ones.
 **Owns:** `packages/engine/src/game/**` except frozen `state.ts`,
 `packages/engine/src/league/**` except frozen `types.ts`,
 `packages/engine/src/persistence/**`.
+
+
+---
+
+## IP guardrails (applies to every workstream)
+
+The terms **"Gamechanger"**, **"Secret Weapon"**, **"President Penalty"** and
+**"Rulebreaker"** are assumed claimed by existing real-world leagues and must
+not appear in any id, display name, description, commentary line, social or
+media template, or documentation example. More broadly: nothing we ship may be,
+resemble, pun on, or be trivially decodable as a real club, league, competition,
+creator, streamer, footballer, brand or nation. Formats, rules and economic
+models are not protectable and we borrow them freely; names, marks, crests,
+likenesses and rulebook prose are, and we borrow none of them.
