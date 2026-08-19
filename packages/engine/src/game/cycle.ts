@@ -11,6 +11,12 @@ import { computeStandings } from '../league/standings';
 import { simulateMatch } from '../matches/simulator';
 import { tickWorld } from '../simulation/worldTick';
 import { runFinancialCycle } from '../economy/cycle';
+import { refreshMarket } from '../transfers/market';
+import { renewContract } from '../contracts/wages';
+import { defaultValuationContext, wageDemand } from '../transfers/valuation';
+import { asId } from '../core/brand';
+import type { ContractId } from '../core/brand';
+import { emptyBonuses } from '../contracts/contract';
 import { updateRivalry, rivalryFor } from '../rivalries/rivalries';
 import { rollObjectives, updateObjectiveProgress, applyObjectiveUpdates } from '../progression/objectives';
 import { updateLegacy } from '../progression/legacy';
@@ -18,8 +24,8 @@ import { ContentRegistry, BASE_PACK, type CreatorSeasonConfigDef } from '../cont
 import { applyMatchResult } from './applyResult';
 import { buildMatchSetup } from './matchSetup';
 import { GameEventFactory } from './eventFactory';
-import { appendEvents, patchClub, patchPlayer } from './mutations';
-import { clubCreators, recentForm } from './selectors';
+import { appendEvents, patchClub, patchPlayer, setContract, transferPlayer } from './mutations';
+import { clubCreators, recentForm, squadWageBill } from './selectors';
 
 /**
  * The cycle.
@@ -140,6 +146,19 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   // --- 3. recovery, suspensions and injuries tick down ------------------
   next = recoverSquads(next);
 
+  // --- 3b. clubs protect the players they want to keep -----------------
+  next = renewKeyContracts(next, rng.fork('renewals'));
+
+  // --- 3c. contracts run down, and some of them run out ----------------
+  const contractOutcome = tickContracts(next, events);
+  next = contractOutcome.state;
+  allEvents.push(...contractOutcome.events);
+
+  // --- 3d. clubs left short of bodies go to the free market ------------
+  const rebuilt = replenishSquads(next, rng.fork('replenish'), config.squadSize, events);
+  next = rebuilt.state;
+  allEvents.push(...rebuilt.events);
+
   // --- 4. finances for the player's club --------------------------------
   const playerClubId = state.playerClubId;
   const standings = computeStandings(
@@ -196,7 +215,30 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   next = world.state;
   allEvents.push(...world.events);
 
-  // --- 6. objectives and legacy are pure consumers of the stream --------
+  // --- 6. revalue the market ------------------------------------------
+  // Without this, players develop but their price tags never move, and the
+  // brake the design depends on — a growing club facing bigger fees and bigger
+  // wages — never engages. The economy audit catches exactly this as a flat
+  // mean value across seasons.
+  const market = refreshMarket(next, rng.fork('market'), {
+    cycle: next.clock.cycle,
+    season: next.clock.season,
+    windowOpen: next.transfers.windowOpen,
+    leagueSize: standings.length,
+  });
+
+  const revalued = { ...next.players };
+  for (const [playerId, value] of Object.entries(market.playerValues)) {
+    const player = revalued[playerId];
+    if (player && player.marketValue !== value) revalued[playerId] = { ...player, marketValue: value };
+  }
+  next = {
+    ...next,
+    players: revalued,
+    transfers: { ...next.transfers, listings: market.listings, rumours: market.rumours },
+  };
+
+  // --- 7. objectives and legacy are pure consumers of the stream --------
   const objectiveUpdates = updateObjectiveProgress(next, allEvents);
   next = { ...next, objectives: applyObjectiveUpdates(next, objectiveUpdates) };
 
@@ -210,7 +252,7 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
 
   next = { ...next, legacy: updateLegacy(next, allEvents) };
 
-  // --- 7. advance the clock --------------------------------------------
+  // --- 8. advance the clock --------------------------------------------
   const totalWeeks = season?.totalWeeks ?? 22;
   const seasonComplete = week >= totalWeeks;
 
@@ -299,6 +341,210 @@ function recoverSquads(state: GameState): GameState {
     });
   }
   return next;
+}
+
+/**
+ * Contracts count down once per cycle for every player in the league, and a
+ * deal that reaches zero actually ends.
+ *
+ * Without this the transfer market has no clock: nobody ever enters their final
+ * year, nobody becomes a free agent, and the wage bill is frozen for the life
+ * of the save. The economy audit surfaced it as a mean wage flat to three
+ * significant figures across four seasons.
+ */
+function tickContracts(
+  state: GameState,
+  events: GameEventFactory,
+): { state: GameState; events: AnyDomainEvent[] } {
+  let next = state;
+  const emitted: AnyDomainEvent[] = [];
+  const EXPIRY_WARNING_CYCLES = 6;
+
+  for (const contract of Object.values(state.contracts)) {
+    const weeksRemaining = Math.max(0, contract.weeksRemaining - 1);
+    next = {
+      ...next,
+      contracts: { ...next.contracts, [contract.id]: { ...contract, weeksRemaining } },
+    };
+
+    if (weeksRemaining === EXPIRY_WARNING_CYCLES) {
+      emitted.push(events.make('CONTRACT_EXPIRING', {
+        playerId: contract.playerId,
+        clubId: contract.clubId,
+        weeksLeft: weeksRemaining,
+      }, { importance: 3, entities: [events.playerRef(contract.playerId)] }));
+    }
+
+    if (weeksRemaining > 0) continue;
+
+    // The deal is up. He leaves for nothing — which is precisely the pressure
+    // that makes renewing a contract a decision rather than a formality.
+    const player = next.players[contract.playerId];
+    if (!player) continue;
+
+    next = patchClub(next, contract.clubId, (club) => ({
+      squad: club.squad.filter((id) => id !== contract.playerId),
+      youthSquad: club.youthSquad.filter((id) => id !== contract.playerId),
+    }));
+    next = patchPlayer(next, contract.playerId, { clubId: null, contractId: null });
+
+    const remaining = { ...next.contracts };
+    delete remaining[contract.id];
+    next = { ...next, contracts: remaining };
+
+    emitted.push(events.make('PLAYER_RELEASED', {
+      playerId: contract.playerId,
+      clubId: contract.clubId,
+    }, {
+      importance: player.overall >= 70 ? 4 : 2,
+      entities: [events.playerRef(contract.playerId), events.clubRef(contract.clubId)],
+    }));
+  }
+
+  return { state: next, events: emitted };
+}
+
+/**
+ * Renewals.
+ *
+ * A club with a player worth keeping and a deal running out will act before it
+ * expires. Without this, every contract in the league eventually runs to zero
+ * and squads empty — the economy audit measured one club reaching zero players
+ * by the third season. Whether a club renews is a judgement about the player's
+ * standing in his own squad and whether the wage bill can carry him, which is
+ * what makes losing a star on a free feel like a mistake rather than a rule.
+ */
+const RENEWAL_WINDOW_CYCLES = 10;
+
+function renewKeyContracts(state: GameState, rng: Rng): GameState {
+  let next = state;
+
+  for (const club of Object.values(state.clubs)) {
+    const squad = club.squad
+      .map((id) => next.players[id])
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+      .sort((a, b) => b.overall - a.overall);
+    if (squad.length === 0) continue;
+
+    const medianOverall = squad[Math.floor(squad.length / 2)]?.overall ?? 0;
+    const valuation = defaultValuationContext({
+      leagueAverageOverall: 62,
+      sellingSquadOveralls: squad.map((p) => p.overall),
+    });
+
+    for (const player of squad) {
+      if (!player.contractId) continue;
+      const contract = next.contracts[player.contractId];
+      if (!contract || contract.weeksRemaining > RENEWAL_WINDOW_CYCLES) continue;
+
+      // Keep the players who are at or above the middle of your own squad, and
+      // let the rest go. A club that renewed everyone would never turn over.
+      const wanted = player.overall >= medianOverall - 2;
+      if (!wanted) continue;
+
+      const wage = Math.round(wageDemand(player, valuation));
+      const committed = squadWageBill(next, club.id) - contract.wage + wage;
+      // Never renew past what the club can carry: this is the brake that makes
+      // a growing wage bill an actual constraint.
+      if (committed > club.finance.wageBudgetPerCycle * 1.35) continue;
+
+      next = setContract(next, renewContract(contract, {
+        fee: 0,
+        wage,
+        years: rng.int(2, 4),
+        role: contract.role,
+        signingBonus: 0,
+        releaseClause: contract.releaseClause,
+        goalBonus: contract.bonuses.goal,
+        appearanceBonus: contract.bonuses.appearance,
+      }, next.clock.cycle));
+    }
+  }
+
+  return next;
+}
+
+/**
+ * Free-agent recruitment.
+ *
+ * Any club below the registered squad size signs the best unattached player its
+ * wage budget can carry. This is what closes the loop opened by contract
+ * expiry: released players return to squads instead of accumulating in a pool
+ * nobody draws from, and no club is ever left unable to field a team.
+ */
+function replenishSquads(
+  state: GameState,
+  rng: Rng,
+  squadSize: number,
+  events: GameEventFactory,
+): { state: GameState; events: AnyDomainEvent[] } {
+  let next = state;
+  const emitted: AnyDomainEvent[] = [];
+  const minimum = Math.max(11, squadSize - 2);
+
+  const freeAgents = Object.values(state.players)
+    .filter((p) => p.clubId === null)
+    .sort((a, b) => b.overall - a.overall);
+  if (freeAgents.length === 0) return { state: next, events: emitted };
+
+  const taken = new Set<string>();
+  // Neediest clubs pick first, so nobody is left short while a full squad
+  // hoovers up the market.
+  const clubs = Object.values(state.clubs).sort((a, b) => a.squad.length - b.squad.length);
+
+  for (const club of clubs) {
+    let size = club.squad.length;
+    if (size >= minimum) continue;
+
+    const valuation = defaultValuationContext({ leagueAverageOverall: 62 });
+
+    while (size < minimum) {
+      const budgetLeft = club.finance.wageBudgetPerCycle * 1.2 - squadWageBill(next, club.id);
+      const candidate = freeAgents.find((p) => {
+        if (taken.has(p.id)) return false;
+        return wageDemand(p, valuation) <= Math.max(budgetLeft, club.finance.wageBudgetPerCycle * 0.04);
+      });
+      if (!candidate) break;
+
+      taken.add(candidate.id);
+      const wage = Math.round(wageDemand(candidate, valuation));
+      const contractId = asId<ContractId>(`ct_fa_${club.id}_${candidate.id}_${next.clock.cycle}`);
+      const years = rng.int(1, 3);
+
+      next = setContract(next, {
+        id: contractId,
+        playerId: candidate.id,
+        clubId: club.id,
+        wage,
+        weeksRemaining: years * 22,
+        totalWeeks: years * 22,
+        signingBonus: 0,
+        bonuses: emptyBonuses(),
+        role: 'SQUAD',
+        releaseClause: null,
+        loyaltyBonus: 0,
+        signedCycle: next.clock.cycle,
+        minutesPlayed: 0,
+        minutesAvailable: 0,
+      });
+      next = transferPlayer(next, candidate.id, club.id);
+      next = patchPlayer(next, candidate.id, { contractId });
+
+      emitted.push(events.make('PLAYER_SIGNED', {
+        playerId: candidate.id,
+        clubId: club.id,
+        fee: 0,
+        wage,
+      }, {
+        importance: candidate.overall >= 72 ? 4 : 2,
+        entities: [events.playerRef(candidate.id), events.clubRef(club.id)],
+      }));
+
+      size++;
+    }
+  }
+
+  return { state: next, events: emitted };
 }
 
 let cachedRegistry: ContentRegistry | null = null;

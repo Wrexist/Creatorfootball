@@ -356,6 +356,7 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     for (const releasedId of actions.releases) {
       const released = players[releasedId];
       if (!released) continue;
+      if (released.contractId) delete contracts[released.contractId];
       players[releasedId] = { ...released, clubId: null, contractId: null };
       nextClub = { ...nextClub, squad: nextClub.squad.filter((id) => id !== releasedId) };
       emit('PLAYER_RELEASED', { playerId: released.id, clubId: nextClub.id }, 1,
@@ -413,9 +414,13 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
   const ledger = ctx.ledger;
   if (ledger && (ctx.transferWindowOpen ?? state.transfers.windowOpen)) {
     for (const actions of aiActions) {
-      const buyer = clubs[actions.clubId];
-      if (!buyer) continue;
       for (const target of actions.transferTargets) {
+        // Re-read the club each iteration. Capturing it once meant a second
+        // signing in the same cycle wrote from a stale copy and silently
+        // dropped the first, leaving the player pointing at a club whose squad
+        // no longer listed him.
+        const buyer = clubs[actions.clubId];
+        if (!buyer) continue;
         const player = players[target.playerId];
         if (!player) continue;
         // Never move a player out of the human's club behind their back.
@@ -442,6 +447,9 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
           }
         }
 
+        // Retire the previous deal. Leaving it behind is how a player ends up
+        // holding two contracts, which makes the league-wide wage bill wrong.
+        if (player.contractId) delete contracts[player.contractId];
         players[player.id] = { ...player, clubId: buyer.id, contractId: `ct_ai_${cycle}_${player.id}` as ContractId };
         contracts[`ct_ai_${cycle}_${player.id}`] = {
           id: `ct_ai_${cycle}_${player.id}` as ContractId,

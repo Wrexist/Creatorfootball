@@ -7,7 +7,6 @@ import type { AnyDomainEvent } from '../core/events';
 import { clamp, decayToward, mean } from '../core/math';
 import { patchClub, patchPlayer, setFixture, setContract } from './mutations';
 import type { GameEventFactory } from './eventFactory';
-import { tickContract } from '../contracts/wages';
 
 /**
  * Folding a match result back into the world.
@@ -147,7 +146,16 @@ export function applyMatchResult(
 
     if (player.contractId) {
       const contract = next.contracts[player.contractId];
-      if (contract) next = setContract(next, tickContract(contract, stats.minutes, totalMinutes));
+      // Minutes only. The weekly countdown happens once per cycle for every
+      // contract in the league, not here — otherwise a fringe player's deal
+      // would never run down because he never appears.
+      if (contract) {
+        next = setContract(next, {
+          ...contract,
+          minutesPlayed: contract.minutesPlayed + Math.max(0, stats.minutes),
+          minutesAvailable: contract.minutesAvailable + totalMinutes,
+        });
+      }
     }
 
     if (injury) {
