@@ -271,7 +271,8 @@ export function progressionChance(input: PossessionInput): number {
 
 /** Probability the defending team wins the ball on this tick. */
 export function turnoverChance(input: PossessionInput): number {
-  const pressQuality = input.defence.pressing / 55;
+  // Softened: pressing quality is a nudge, not a second strength multiplier.
+  const pressQuality = 0.55 + 0.45 * (input.defence.pressing / 55);
   const press = BALANCE.TURNOVER_PRESS * input.defenceVector.pressRecovery * 2 * pressQuality;
 
   const atk = input.attack.progression * (0.92 + 0.16 * input.attackVector.possessionBias);
@@ -552,7 +553,7 @@ export function defensivePressure(
   const commitment = clamp01(0.35 + 0.5 * defenceVector.defensiveSolidity * 0.6 + 0.3 * defenceVector.aggression);
   // Defences are densest in their own box and thinnest on the halfway line.
   const density = clamp01(0.4 + 0.75 * Math.max(0, zone - 0.5));
-  return clamp01(0.25 + 0.75 * (quality * 0.45 + commitment * 0.3 + density * 0.25));
+  return clamp01(0.25 + 0.75 * (quality * 0.25 + commitment * 0.4 + density * 0.35));
 }
 
 /** Space in behind the last line, 0-1. High lines and pressing raise it. */

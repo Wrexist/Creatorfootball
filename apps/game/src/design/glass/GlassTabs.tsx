@@ -102,10 +102,10 @@ export function GlassTabs<T extends string = string>({
             }}
             className={cn(
               'relative inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap px-3.5',
-              'text-[14px] font-semibold transition-colors duration-fast ease-out-quint',
+              'text-[14px] font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
               appearance === 'enclosed' && 'rounded-pill',
               scrollable ? 'shrink-0' : 'flex-1',
-              selected ? 'text-ink' : 'text-ink-faint hover:text-ink-muted',
+              selected ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
               item.disabled && 'pointer-events-none opacity-40',
               FOCUS_RING,
             )}

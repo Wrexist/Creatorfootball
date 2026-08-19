@@ -47,7 +47,7 @@ export function GlassToggle({
   const control = (
     <span
       className={cn(
-        'relative inline-flex shrink-0 items-center rounded-pill p-0.5 transition-colors duration-fast ease-out-quint',
+        'relative inline-flex shrink-0 items-center rounded-pill p-0.5 transition-colors duration-[var(--duration-fast)] ease-out-quint',
         trackW,
         trackH,
         checked ? 'bg-volt' : 'bg-white/14',

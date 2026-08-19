@@ -244,3 +244,83 @@
 [data-reduced-effects='true'] .glass-2 { background: var(--color-surface-2); }
 [data-reduced-effects='true'] .glass-3 { background: var(--color-surface-3); }
 [data-reduced-effects='true'] .glass-4 { background: var(--color-surface-4); }
+
+/* ------------------------------------------------------------------ */
+/* Workstream F additions (design system).                             */
+/* Additive only: new tokens, new keyframes, new utilities. Nothing    */
+/* above this line is modified.                                        */
+/* ------------------------------------------------------------------ */
+
+@theme {
+  /* Named animations, so components reference a token rather than an
+     inline keyframe string. Each one is used by exactly one primitive. */
+  --animate-shimmer: cf-shimmer 1.5s ease-in-out infinite;   /* Skeleton */
+  --animate-sheen: cf-sheen 2.6s ease-in-out infinite;       /* ShinyText */
+  --animate-crest: cf-crest 7s linear infinite;              /* legendary card edge */
+  --animate-rise-fade: cf-rise-fade 900ms var(--ease-out-quint) forwards; /* GoalBurst */
+
+  /* Hero-moment surfaces. Reserved for design/hero/**; ordinary screens
+     must not reach for these. */
+  --color-hero-gold: #ffd76a;
+  --color-hero-gold-deep: #b8862b;
+  --shadow-hero: 0 0 0 1px rgb(255 255 255 / 0.1), 0 40px 120px -40px rgb(0 0 0 / 0.9);
+}
+
+@keyframes cf-shimmer {
+  0%   { background-position: 180% 0; }
+  100% { background-position: -80% 0; }
+}
+
+@keyframes cf-sheen {
+  0%, 55% { background-position: 220% 0; }
+  100%    { background-position: -120% 0; }
+}
+
+@keyframes cf-crest {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cf-rise-fade {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.9); }
+  30%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-26px) scale(1.05); }
+}
+
+@layer utilities {
+  /* Hairline separator that survives on every glass level. */
+  .hairline { border-color: rgb(255 255 255 / 0.08); }
+
+  /* Horizontal snap rail. Paired with `.snap-item` on children. */
+  .snap-rail {
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 20px;
+  }
+  .snap-item { scroll-snap-align: start; }
+
+  /* Content that must clear the fixed tab bar AND the home indicator. */
+  .pb-nav-safe {
+    padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+  }
+
+  /* Momentary GPU promotion for surfaces that are about to move. Applied
+     only while an interaction is in flight — a permanent `will-change`
+     on a glass panel keeps a full-size layer alive for the whole session. */
+  .lift-hint { will-change: transform; }
+}
+
+/*
+  Accessibility correction (Workstream F).
+
+  `--color-ink-faint` measures 3.1-3.8:1 against the surface tokens, which is
+  fine for a rule, a disabled glyph or an empty pip but fails WCAG AA for text.
+  Rather than change a frozen token, we add a third text step that clears 4.5:1
+  on every surface up to surface-4 (4.57:1 worst case). The rule for the kit:
+
+    ink        primary text
+    ink-muted  secondary text
+    ink-dim    tertiary text — the smallest text that still carries meaning
+    ink-faint  NON-TEXT ONLY: hairlines, empty states, disabled marks
+*/
+@theme {
+  --color-ink-dim: #8a939e;
+}

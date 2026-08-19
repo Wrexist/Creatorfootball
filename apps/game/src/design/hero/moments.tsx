@@ -1,0 +1,410 @@
+import { useEffect, useMemo, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '../cn';
+import { useDesignMotion } from '../motion';
+import { haptics } from '../haptics';
+import { SeedStream } from '../seed';
+import { Portal } from '../glass/Portal';
+import { GlassButton } from '../glass/GlassButton';
+import { ShinyText } from './effects';
+import { IconTrophy } from '../icons';
+
+/**
+ * Hero moments: full-screen, interruptive, and rationed.
+ *
+ * Each of these takes over the screen, so each is also dismissible by tap, by
+ * Escape, and by an explicit button — a celebration the player cannot skip
+ * becomes an obstacle by the third season. They auto-dismiss on a timer unless
+ * `persist` is set.
+ *
+ * Under reduced motion every one of these collapses to a plain cross-fade of
+ * the same content: the *information* (you scored, you won it) is never carried
+ * by the animation alone.
+ */
+
+export interface HeroOverlayProps {
+  open: boolean;
+  onDismiss: () => void;
+  /** ms until auto-dismiss. 0 waits for the player. */
+  autoDismiss?: number;
+  children?: ReactNode;
+  className?: string;
+}
+
+function HeroOverlay({ open, onDismiss, autoDismiss = 0, children, className }: HeroOverlayProps): ReactNode {
+  const m = useDesignMotion();
+
+  useEffect(() => {
+    if (!open || autoDismiss <= 0) return;
+    const timer = setTimeout(onDismiss, autoDismiss);
+    return () => clearTimeout(timer);
+  }, [open, autoDismiss, onDismiss]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') onDismiss();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onDismiss]);
+
+  return (
+    <Portal>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            variants={m.variants.backdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={onDismiss}
+            className={cn(
+              'fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden bg-void/92 px-6 text-center',
+              className,
+            )}
+            style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Portal>
+  );
+}
+
+/* --- radiating rays, shared by the burst moments ---------------------- */
+
+function Rays({ count = 14, color, seed }: { count?: number; color: string; seed: string }): ReactNode {
+  const m = useDesignMotion();
+  const rays = useMemo(() => {
+    const s = new SeedStream(seed);
+    return Array.from({ length: count }, (_, i) => ({
+      angle: (360 / count) * i + s.range(`jitter${i}`, -7, 7),
+      length: s.range(`len${i}`, 34, 50),
+      delay: s.range(`delay${i}`, 0, 0.12),
+    }));
+  }, [count, seed]);
+
+  if (m.reduced) return null;
+
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      {rays.map((ray, i) => (
+        <motion.span
+          key={i}
+          className="absolute origin-bottom rounded-pill"
+          style={{
+            width: 3,
+            height: `${ray.length}vmin`,
+            background: `linear-gradient(to top, ${color}, transparent)`,
+            transform: `rotate(${ray.angle}deg)`,
+            transformOrigin: 'center bottom',
+            bottom: '50%',
+          }}
+          initial={{ scaleY: 0, opacity: 0 }}
+          animate={{ scaleY: 1, opacity: [0, 0.85, 0] }}
+          transition={{ duration: 1.1, delay: ray.delay, ease: [0.22, 1, 0.36, 1] }}
+        />
+      ))}
+    </span>
+  );
+}
+
+/* --- HeroReveal ------------------------------------------------------- */
+
+export interface HeroRevealProps extends Omit<HeroOverlayProps, 'children'> {
+  /** Small line above the headline: "New club", "Signed", "Season 3". */
+  eyebrow?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  /** The thing being revealed: a badge, a card, a portrait. */
+  visual?: ReactNode;
+  action?: ReactNode;
+  tone?: 'volt' | 'gold' | 'ink';
+}
+
+/**
+ * The general-purpose reveal: club chosen, promotion won, record broken.
+ * Everything scales up out of a blur so the subject arrives *into* focus,
+ * which reads as "presented" rather than "popped in".
+ */
+export function HeroReveal({
+  eyebrow, title, subtitle, visual, action, tone = 'volt', ...overlay
+}: HeroRevealProps): ReactNode {
+  const m = useDesignMotion();
+
+  useEffect(() => {
+    if (overlay.open) haptics.celebrate();
+  }, [overlay.open]);
+
+  return (
+    <HeroOverlay {...overlay}>
+      <Rays color={tone === 'gold' ? 'rgb(255 215 106 / 0.5)' : 'rgb(200 255 46 / 0.35)'} seed={String(title)} />
+
+      {visual !== undefined && (
+        <motion.div
+          variants={m.variants.hero}
+          initial="hidden"
+          animate="visible"
+          className="relative mb-7"
+        >
+          {visual}
+        </motion.div>
+      )}
+
+      <motion.div
+        variants={m.variants.listContainer}
+        initial="hidden"
+        animate="visible"
+        className="relative flex flex-col items-center gap-2"
+      >
+        {eyebrow !== undefined && (
+          <motion.p
+            variants={m.variants.rise}
+            className="text-[12px] font-bold uppercase tracking-[0.28em] text-volt"
+          >
+            {eyebrow}
+          </motion.p>
+        )}
+        <motion.h2 variants={m.variants.rise} className="max-w-[18ch] text-balance">
+          <ShinyText as="span" tone={tone === 'ink' ? 'ink' : tone} className="font-display text-[40px] font-bold leading-[1.05] tracking-[-0.04em]">
+            {title}
+          </ShinyText>
+        </motion.h2>
+        {subtitle !== undefined && (
+          <motion.p variants={m.variants.rise} className="max-w-[32ch] text-[15px] leading-relaxed text-ink-muted text-pretty">
+            {subtitle}
+          </motion.p>
+        )}
+        <motion.div variants={m.variants.rise} className="mt-6">
+          {action ?? (
+            <GlassButton variant="primary" size="lg" onClick={overlay.onDismiss}>
+              Continue
+            </GlassButton>
+          )}
+        </motion.div>
+      </motion.div>
+    </HeroOverlay>
+  );
+}
+
+/* --- GoalBurst -------------------------------------------------------- */
+
+export interface GoalBurstProps extends Omit<HeroOverlayProps, 'children'> {
+  scorer: string;
+  assist?: string;
+  minute: number;
+  /** Score after the goal. */
+  homeScore: number;
+  awayScore: number;
+  /** Whose goal it is — drives the accent colour. */
+  accent?: string;
+  /** "PENALTY", "HEADER", "SCREAMER" — the one-word flavour line. */
+  flavour?: string;
+}
+
+/**
+ * The goal celebration. Deliberately short (1.8s default) and always skippable:
+ * the player will see this fifty times a season and it must never become the
+ * thing standing between them and the next moment.
+ */
+export function GoalBurst({
+  scorer, assist, minute, homeScore, awayScore, accent = '#c8ff2e', flavour, autoDismiss = 1900, ...overlay
+}: GoalBurstProps): ReactNode {
+  const m = useDesignMotion();
+
+  useEffect(() => {
+    if (overlay.open) haptics.celebrate();
+  }, [overlay.open]);
+
+  return (
+    <HeroOverlay {...overlay} autoDismiss={autoDismiss}>
+      <Rays color={`${accent}66`} count={18} seed={`${scorer}${minute}`} />
+
+      <motion.div
+        initial={m.reduced ? { opacity: 0 } : { scale: 0.55, opacity: 0 }}
+        animate={m.reduced ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+        transition={m.spring.bouncy}
+        className="relative flex flex-col items-center"
+      >
+        <span
+          className="font-display text-[clamp(56px,17vw,120px)] font-bold uppercase leading-none tracking-[-0.06em]"
+          style={{ color: accent }}
+        >
+          Goal
+        </span>
+        {flavour !== undefined && (
+          <span className="mt-1 text-[13px] font-bold uppercase tracking-[0.3em] text-ink-muted">{flavour}</span>
+        )}
+      </motion.div>
+
+      <motion.div
+        initial={m.reduced ? { opacity: 0 } : { y: 18, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ ...m.transition.medium, delay: m.reduced ? 0 : 0.14 }}
+        className="relative mt-5 flex flex-col items-center gap-1"
+      >
+        <p className="text-[26px] font-bold tracking-[-0.02em] text-ink">{scorer}</p>
+        <p className="tnum text-[14px] text-ink-muted">
+          {minute}&apos;{assist ? ` · assist ${assist}` : ''}
+        </p>
+        <p className="tnum mt-3 font-display text-[34px] font-bold tracking-[-0.04em] text-ink">
+          {homeScore} – {awayScore}
+        </p>
+      </motion.div>
+    </HeroOverlay>
+  );
+}
+
+/* --- TrophyMoment ----------------------------------------------------- */
+
+export interface TrophyMomentProps extends Omit<HeroOverlayProps, 'children'> {
+  competition: string;
+  season: ReactNode;
+  clubName: string;
+  /** Optional badge or crest node. */
+  visual?: ReactNode;
+  stats?: readonly { label: string; value: ReactNode }[];
+}
+
+/** The biggest moment the product has. Gold is used here and nowhere else. */
+export function TrophyMoment({
+  competition, season, clubName, visual, stats, ...overlay
+}: TrophyMomentProps): ReactNode {
+  const m = useDesignMotion();
+
+  useEffect(() => {
+    if (overlay.open) haptics.celebrate();
+  }, [overlay.open]);
+
+  return (
+    <HeroOverlay {...overlay}>
+      <Rays color="rgb(255 215 106 / 0.45)" count={20} seed={competition} />
+
+      <motion.div
+        initial={m.reduced ? { opacity: 0 } : { scale: 0.6, opacity: 0, rotate: -8 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+        transition={m.spring.bouncy}
+        className="relative text-hero-gold drop-shadow-[0_18px_48px_rgb(255_215_106/0.35)]"
+      >
+        {visual ?? <IconTrophy size={112} strokeWidth={1.2} />}
+      </motion.div>
+
+      <motion.div
+        variants={m.variants.listContainer}
+        initial="hidden"
+        animate="visible"
+        className="relative mt-7 flex flex-col items-center gap-2"
+      >
+        <motion.p variants={m.variants.rise} className="text-[12px] font-bold uppercase tracking-[0.28em] text-hero-gold">
+          Champions · {season}
+        </motion.p>
+        <motion.h2 variants={m.variants.rise} className="max-w-[16ch] text-balance">
+          <ShinyText as="span" tone="gold" loop className="font-display text-[42px] font-bold leading-[1.04] tracking-[-0.04em]">
+            {competition}
+          </ShinyText>
+        </motion.h2>
+        <motion.p variants={m.variants.rise} className="text-[17px] font-semibold text-ink">
+          {clubName}
+        </motion.p>
+
+        {stats && stats.length > 0 && (
+          <motion.dl variants={m.variants.rise} className="mt-6 flex gap-7">
+            {stats.map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center">
+                <dd className="tnum font-display text-[24px] font-bold text-ink">{stat.value}</dd>
+                <dt className="mt-0.5 text-[11px] uppercase tracking-[0.16em] text-ink-dim">{stat.label}</dt>
+              </div>
+            ))}
+          </motion.dl>
+        )}
+
+        <motion.div variants={m.variants.rise} className="mt-8">
+          <GlassButton variant="primary" size="lg" onClick={overlay.onDismiss}>
+            Lift it
+          </GlassButton>
+        </motion.div>
+      </motion.div>
+    </HeroOverlay>
+  );
+}
+
+/* --- SigningMoment ---------------------------------------------------- */
+
+export interface SigningMomentProps extends Omit<HeroOverlayProps, 'children'> {
+  playerName: string;
+  /** Usually a `<PlayerCard variant="featured" />`. */
+  card: ReactNode;
+  fee?: ReactNode;
+  contract?: ReactNode;
+  clubName?: string;
+  accent?: string;
+}
+
+/**
+ * The signing reveal. The card rotates in from a slight angle and settles —
+ * the one place a card is allowed to move in 3D, because here it is being
+ * *handed to you* rather than sitting in a list.
+ */
+export function SigningMoment({
+  playerName, card, fee, contract, clubName, accent = '#c8ff2e', ...overlay
+}: SigningMomentProps): ReactNode {
+  const m = useDesignMotion();
+
+  useEffect(() => {
+    if (overlay.open) haptics.success();
+  }, [overlay.open]);
+
+  return (
+    <HeroOverlay {...overlay}>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ background: `radial-gradient(60% 40% at 50% 42%, ${accent}22, transparent 70%)` }}
+      />
+
+      <motion.p
+        initial={m.reduced ? { opacity: 0 } : { y: -12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={m.transition.medium}
+        className="relative mb-6 text-[12px] font-bold uppercase tracking-[0.3em] text-volt"
+      >
+        {clubName ? `Signed for ${clubName}` : 'Signed'}
+      </motion.p>
+
+      <motion.div
+        initial={m.reduced ? { opacity: 0 } : { rotateY: -26, rotateZ: -6, y: 40, opacity: 0, scale: 0.86 }}
+        animate={{ rotateY: 0, rotateZ: 0, y: 0, opacity: 1, scale: 1 }}
+        transition={m.spring.gentle}
+        style={{ perspective: 1000 }}
+        className="relative w-[min(72vw,260px)]"
+      >
+        {card}
+      </motion.div>
+
+      <motion.div
+        initial={m.reduced ? { opacity: 0 } : { y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ ...m.transition.medium, delay: m.reduced ? 0 : 0.18 }}
+        className="relative mt-7 flex flex-col items-center gap-1.5"
+      >
+        <h2 className="font-display text-[28px] font-bold tracking-[-0.03em] text-ink">{playerName}</h2>
+        {(fee !== undefined || contract !== undefined) && (
+          <p className="tnum text-[14px] text-ink-muted">
+            {fee}
+            {fee !== undefined && contract !== undefined ? ' · ' : ''}
+            {contract}
+          </p>
+        )}
+        <div className="mt-6">
+          <GlassButton variant="primary" size="lg" onClick={overlay.onDismiss}>
+            Welcome him
+          </GlassButton>
+        </div>
+      </motion.div>
+    </HeroOverlay>
+  );
+}

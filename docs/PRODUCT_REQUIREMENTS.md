@@ -167,10 +167,41 @@ Priorities: **P0** ships or we do not ship. **P1** ships at launch unless a gate
 | M13 | `finish()` to skip to the end without further prompts | P0 | CONTRACTED |
 | M14 | Post-match key-moment reel driven by `MatchResult.keyMomentEventId` | P1 | SPEC |
 
-**Validation targets** (contract §Workstream A; supersede if `docs/SIMULATION_REFERENCE_DATA.md`
-lands): mean total goals/match 4.5-6.5; shots/team 8-14; conversion 12-20%; possession
-within 35-65%; yellows 1-3/match; reds < 0.12/match; injuries < 0.15/match. A 15-point
-squad-quality advantage wins 60-70% — **never 95%+**.
+| M15 | Two clock-anchored swing windows per match — one in the closing minutes of each half — during which the active special rule applies | P0 | CONTRACTED |
+| M16 | Goal counts modelled as **negative binomial**, not Poisson, with the dispersion parameter exposed as a tunable; score correlation modelled; **no Dixon-Coles low-score correction** at this goal rate | P0 | CONTRACTED |
+| M17 | Rule-window goals modelled as a **separate additive process**, never folded into the base rate | P0 | CONTRACTED |
+| M18 | Home advantage defaults to **0** (creator leagues play at one neutral venue); the `homeAdvantage` slot is reused as an audience/support modifier capped at ~6 percentage points of win probability | P0 | CONTRACTED |
+| M19 | A theatrical tie-break path (shootout / golden goal) for fixtures that must produce a winner | P1 | SPEC |
+
+**Validation targets.** `docs/SIMULATION_REFERENCE_DATA.md` is authoritative. Headline
+figures for the default 30-minute short format:
+
+| Metric | Target | Band |
+|---|---|---|
+| Goals per match (both teams) | 7.0 | 6.0 - 9.0 |
+| Goals per minute | 0.233 | 0.20 - 0.30 |
+| Normal-play goal rate | 0.16 - 0.18 / min | validate separately |
+| Rule-window goal rate | 2-4× normal | validate separately |
+| Shots per match (both teams) | ~30 | 24 - 40 |
+| Shot conversion | ~23% | 18% - 28% |
+| Ball in play | ~90% of clock | 8-14% out of play |
+| Yellow cards per match | ~1.0 | 0.5 - 2.0 |
+| Red cards per match | ~0.03 | 0.01 - 0.06 (rule-window dismissals counted separately) |
+| Injuries per team per match | 0.10 | 0.08 - 0.14 |
+| Possession split | 50/50 mean | within 35-65% |
+| Heavy-mismatch favourite, single match | 75-85% | **never > 90%** |
+| Champion win rate over a season | 60-70% | |
+| Bottom side win rate over a season | 5-15% | |
+
+**Do not validate only the blended number.** Normal play and rule-window play are two
+different regimes; a blended figure inside the band can hide a badly tuned window.
+
+> **Discrepancy — Workstream A must resolve.** The contract's own summary paragraph still
+> quotes shots 8-14 per team, conversion 12-20%, yellows 1-3, reds < 0.12 and injuries
+> < 0.15 per match, while naming the reference document authoritative. Those figures are
+> internally inconsistent with the contract's own 6-9 goal target: 16-28 total shots at
+> 12-20% yields 1.9-5.6 goals, not 6-9. The reference data's ~30 shots at ~23% yields 6.9.
+> **Use the reference-data figures.** Recorded as D7 in §11.
 
 ### 4.2 Squad (P0)
 
@@ -493,6 +524,8 @@ Stated so they are argued once, not every sprint.
 | Q8 | Is the social feed a separate tab or interleaved into home? | UX | No | Affects the onboarding beat at 7:20 |
 | Q9 | What happens to a save when a licensed pack expires mid-dynasty? | Legal/Eng | No (V2) | `isRenderable()` + `LicensedEntityBinding` define the mechanism; the *player-facing message* is undesigned |
 | Q10 | Do rule cards drop from objectives only, or can they be bought? | Design/Business | Yes, before the store lands | Buying rule cards would breach MN4. Current stance: objective rewards only |
+| Q11 | Are special-rule swing windows in **every** match, or only in designated rule weeks? | Design | **Yes — blocks Phase 2** | The contract says two guaranteed windows per match; `generateFixtures()` says designated weeks only. This changes the goal-rate model materially, because the blended 6-9 target assumes ~6 of 30 minutes are rule-window play |
+| Q12 | What is the tie-break mechanism, and where does it apply? | Design | No | Every real creator league has one, because at this goal rate draws are still frequent enough to be unsatisfying. Playoffs need one; the league stage may not |
 
 ---
 
@@ -508,3 +541,7 @@ Recorded here rather than papered over. Each is also raised in the relevant deep
 | D4 | `pnpm lint` runs `pnpm -r lint`, but no package defines a `lint` script and no ESLint config exists in the repo | The "engine imports nothing platform-specific" rule is currently unenforced. See `RISKS.md` R14 |
 | D5 | `core/ids.ts` claims "two runs of the same seed produce byte-identical saves", but `GameState`, `DomainEvent.at` and `GameClock.updatedAt` all carry wall-clock timestamps | Determinism holds for *simulation outcomes*; byte-identity of saves does not hold unless the harness injects a fixed clock. See `ARCHITECTURE.md` §7.3 |
 | D6 | `@cf/engine` `build` script is `tsc --noEmit`, so `pnpm build` type-checks the engine rather than emitting it | Fine today because `apps/game` consumes engine *source* via a Vite alias. Becomes wrong the moment anything consumes `@cf/engine` as a compiled package |
+| D7 | The contract's Workstream A summary quotes shots/conversion/card/injury bands that cannot produce its own stated goal target, while declaring `SIMULATION_REFERENCE_DATA.md` authoritative | See §4.1. Reference-data figures win: ~30 shots at ~23% conversion, ~1.0 yellow, ~0.03 red, 0.10 injuries per team |
+| D8 | `SIMULATION_REFERENCE_DATA.md` tunes for a **6v6** format throughout; the contract and the code implement **7-a-side** (`playersOnPitch: 7`, four 7-slot formations) | The per-minute goal rate is the load-bearing constant and transfers across both; the per-team injury figure does not (it is derived from 6 outfield players × 0.5h). Recompute injury rates for 7 on the pitch, and fix one denominator — player-hours *or* team-pitch-minutes — and use it everywhere |
+| D9 | The reference data validates a season at **11 matchdays** (single round robin); the season config is **22** (double round robin) | Season-level win-rate targets (champion 60-70%, bottom 5-15%) still apply; the points spread does not transfer directly |
+| D10 | The contract now states special rules give **two guaranteed windows per match**, but `generateFixtures()` sets `enabledSpecialRules: []` on any week not listed in `specialRuleWeeks` — so most matches have no rules at all | Either every fixture carries rules (and scarcity comes from *which* rule, not *whether*), or the "two windows per match" guarantee is conditional on a rule week. **Unresolved; blocks Phase 2 gate.** Tracked as Q11 |

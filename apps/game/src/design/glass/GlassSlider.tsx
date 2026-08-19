@@ -117,7 +117,7 @@ export function GlassSlider({
       </div>
 
       {marks !== undefined && marks.length > 0 && (
-        <div className="mt-1 flex justify-between text-[11px] text-ink-faint">
+        <div className="mt-1 flex justify-between text-[11px] text-ink-dim">
           {marks.map((mark) => (
             <span key={mark.value} className={cn(value === mark.value && 'text-ink')}>
               {mark.label}

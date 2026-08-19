@@ -114,10 +114,16 @@ export const FAN_BALANCE = {
   FANDOM_FLOOR_RATIO: 0.55,
 
   // --- Attendance ----------------------------------------------------------
-  /** Share of the fandom that is realistically in the market for a ticket. */
-  ATTENDANCE_SHARE_OF_FANDOM: 0.42,
+  /**
+   * Share of the fandom realistically in the market for a ticket on any given
+   * matchday. Deliberately low. Combined with REACH_TO_FANDOM_BASE this is the
+   * second lossy step, and together they reproduce the reference case: a club
+   * with a million-plus online audience playing in front of low four figures.
+   * Calibrated so that a home match is roughly 8-15% of a club's gross income.
+   */
+  ATTENDANCE_SHARE_OF_FANDOM: 0.18,
   /** Fill rate at neutral sentiment before any modifier. */
-  BASE_FILL: 0.55,
+  BASE_FILL: 0.46,
   /** Fill swing between sentiment 0 and 100. */
   FILL_SENTIMENT_SWING: 0.45,
   /** Importance multiplier per point of fixture importance above 3. */
@@ -126,8 +132,14 @@ export const FAN_BALANCE = {
   ATTENDANCE_NOISE: 0.05,
   /** Nobody is ever completely alone. */
   MIN_FILL: 0.04,
-  /** Season tickets as a share of fandom, scaled by loyalty. */
-  SEASON_TICKET_SHARE: 0.22,
+  /** Season tickets as a share of fandom, scaled by loyalty. A committed minority. */
+  SEASON_TICKET_SHARE: 0.085,
+  /**
+   * Share of season-ticket holders who actually turn up when the mood is at
+   * rock bottom. They have paid either way, but empty seats in a paid-for
+   * stand is exactly what a fan revolt looks like from the gantry.
+   */
+  SEASON_TICKET_TURNOUT_FLOOR: 0.62,
 
   // --- Matchday money (deliberately the smallest line) ---------------------
   /** Food, drink and programme spend per head. */
@@ -135,7 +147,7 @@ export const FAN_BALANCE = {
   /** Matchday retail per head — impulse buying, separate from the merch line. */
   MATCHDAY_MERCH_PER_HEAD: 1.9,
   /** Hospitality per seat of capacity, scaled by stadium quality. */
-  HOSPITALITY_PER_CAPACITY: 0.55,
+  HOSPITALITY_PER_CAPACITY: 0.35,
   /** Season-ticket revenue is recognised per match at a discount to walk-up. */
   SEASON_TICKET_DISCOUNT: 0.72,
 } as const;

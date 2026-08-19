@@ -68,7 +68,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
       )}
       <div
         className={cn(
-          'flex items-center gap-2.5 transition-colors duration-fast ease-out-quint',
+          'flex items-center gap-2.5 transition-colors duration-[var(--duration-fast)] ease-out-quint',
           glassClass(level, !nested),
           SIZE[size],
           'focus-within:border-volt/60 focus-within:shadow-[0_0_0_3px_rgb(200_255_46/0.12)]',
@@ -76,14 +76,14 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
           disabled && 'pointer-events-none opacity-45',
         )}
       >
-        {icon !== undefined && <span className="text-ink-faint">{icon}</span>}
+        {icon !== undefined && <span className="text-ink-dim">{icon}</span>}
         <input
           ref={ref}
           id={inputId}
           disabled={disabled}
           aria-invalid={error ? true : undefined}
           aria-describedby={cn(hint && hintId, error && errorId) || undefined}
-          className="w-full min-w-0 bg-transparent py-2 text-ink outline-none placeholder:text-ink-faint"
+          className="w-full min-w-0 bg-transparent py-2 text-ink outline-none placeholder:text-ink-dim"
           {...rest}
         />
         {trailing}
@@ -94,7 +94,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
         </p>
       ) : (
         hint !== undefined && (
-          <p id={hintId} className="mt-1.5 text-[12px] text-ink-faint">
+          <p id={hintId} className="mt-1.5 text-[12px] text-ink-dim">
             {hint}
           </p>
         )

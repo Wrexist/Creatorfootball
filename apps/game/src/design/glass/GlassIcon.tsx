@@ -64,7 +64,7 @@ export const GlassIcon = forwardRef<HTMLButtonElement, GlassIconProps>(function 
       disabled={inert}
       className={cn(
         'relative inline-flex shrink-0 items-center justify-center',
-        'transition-colors duration-fast ease-out-quint',
+        'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         SIZE[size],
         variant === 'glass' && cn(glassClass(level, !nested), 'text-ink hover:bg-white/10'),
         variant === 'ghost' && 'bg-transparent text-ink-muted hover:bg-white/[0.06] hover:text-ink',

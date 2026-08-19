@@ -1,0 +1,162 @@
+import type { SocialTemplate } from '../content/schema';
+
+/**
+ * Built-in social templates.
+ *
+ * Workstream B owns the full 120+ table. This set guarantees the feed is never
+ * silent and, more importantly, encodes the *voices*: fans are partisan and
+ * emotional, creators speak in their tone, rivals dunk, clubs are corporate,
+ * players are careful, leaks hedge. Anything the pack adds sits alongside these.
+ */
+const t = (
+  id: string,
+  trigger: string,
+  authorKind: string,
+  text: string,
+  sentiment: number,
+  weight = 10,
+  conditions?: Readonly<Record<string, string | number | boolean>>,
+): SocialTemplate => ({ id, trigger, authorKind, text, sentiment, weight, ...(conditions ? { conditions } : {}) });
+
+export const FALLBACK_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
+  // --- RED CARD ---
+  t('fs_red_fan1', 'RED_CARD', 'FAN', 'WHAT IS {player} DOING. {minute} minutes. we do this to ourselves every single time', -0.85),
+  t('fs_red_fan2', 'RED_CARD', 'FAN', 'no complaints, it was a red. absolutely no complaints. still furious though', -0.6),
+  t('fs_red_fan3', 'RED_CARD', 'FAN', '{matches} matches without {player}. brilliant. wonderful. love it here', -0.75),
+  t('fs_red_rival1', 'RED_CARD', 'RIVAL', 'imagine getting sent off in the {minute}th minute. {club} in a nutshell', -0.8),
+  t('fs_red_rival2', 'RED_CARD', 'RIVAL', "{player} doing more for us than our own front three today", -0.7),
+  t('fs_red_cr_prov', 'RED_CARD', 'CREATOR', "{player} has been walking that line all season and nobody at {club} said a word. now it costs them {matches} matches.", -0.7, 12, { tone: 'PROVOCATIVE' }),
+  t('fs_red_cr_ana', 'RED_CARD', 'CREATOR', 'the red changes the whole shape of the match. {club} were controlling the middle before the {minute}th and never got it back.', -0.3, 12, { tone: 'ANALYTICAL' }),
+  t('fs_red_cr_com', 'RED_CARD', 'CREATOR', 'lads it is a football match not a hostage situation. {player} out here collecting cards like stickers', -0.4, 12, { tone: 'COMEDIC' }),
+  t('fs_red_cr_dra', 'RED_CARD', 'CREATOR', 'the long walk. the silence. {club} will feel this one for weeks.', -0.6, 12, { tone: 'DRAMATIC' }),
+  t('fs_red_cr_hype', 'RED_CARD', 'CREATOR', 'ten men. still fighting. {club} do not lie down for anyone', 0.2, 10, { tone: 'HYPE' }),
+  t('fs_red_cr_whole', 'RED_CARD', 'CREATOR', 'tough night for {player}. he will be gutted. long season, plenty of time to put it right.', -0.1, 10, { tone: 'WHOLESOME' }),
+  t('fs_red_player', 'RED_CARD', 'PLAYER', 'I let the team and the supporters down tonight. That is on me and nobody else.', -0.5),
+  t('fs_red_media', 'RED_CARD', 'MEDIA', 'RED CARD — {player} ({club}) dismissed in the {minute}th minute.', -0.4),
+
+  // --- SUSPENSION AFTERMATH ---
+  t('fs_susp_fan', 'SUSPENSION_AFTERMATH', 'FAN', 'genuinely no idea who plays instead of {player}. pray for us', -0.4),
+  t('fs_susp_cr', 'SUSPENSION_AFTERMATH', 'CREATOR', 'without {player}, {club} lose their only reliable outlet. this is the week their depth gets tested.', -0.25, 10, { tone: 'ANALYTICAL' }),
+  t('fs_susp_media', 'SUSPENSION_AFTERMATH', 'MEDIA', '{player} begins his suspension. {club} name a reshaped side.', -0.2),
+
+  // --- SIGNINGS ---
+  t('fs_marq_club', 'MARQUEE_SIGNING', 'CLUB', 'He is here. {player} signs for {club}. Welcome to the family.', 0.9),
+  t('fs_marq_fan1', 'MARQUEE_SIGNING', 'FAN', '{fee} FOR {player}?? WE ARE ACTUALLY DOING THIS', 0.9),
+  t('fs_marq_fan2', 'MARQUEE_SIGNING', 'FAN', 'shirt ordered. name on the back. do not talk to me', 0.85),
+  t('fs_marq_rival', 'MARQUEE_SIGNING', 'RIVAL', '{fee} on {player}. buying a squad is not the same as building one, {club}', -0.5),
+  t('fs_marq_cr_hype', 'MARQUEE_SIGNING', 'CREATOR', 'STOP EVERYTHING. {player} TO {club}. {fee}. THE LEAGUE JUST CHANGED', 0.95, 12, { tone: 'HYPE' }),
+  t('fs_marq_cr_ana', 'MARQUEE_SIGNING', 'CREATOR', '{fee} is a lot, but {club} were creating nothing through the middle. On profile alone, {player} is the correct fix.', 0.35, 12, { tone: 'ANALYTICAL' }),
+  t('fs_marq_cr_prov', 'MARQUEE_SIGNING', 'CREATOR', '{fee}. for {player}. someone at {club} has to answer for this in six months.', -0.35, 12, { tone: 'PROVOCATIVE' }),
+  t('fs_marq_sponsor', 'MARQUEE_SIGNING', 'SPONSOR', 'Big moves deserve big moments. Proud to back {club}.', 0.6),
+  t('fs_marq_player', 'MARQUEE_SIGNING', 'PLAYER', 'Proud to be here. Cannot wait to get started with {club}.', 0.8),
+  t('fs_sign_club', 'SIGNING', 'CLUB', '{player} has joined {club}. Welcome.', 0.6),
+  t('fs_sign_fan', 'SIGNING', 'FAN', 'quiet signing but we needed that. good business', 0.45),
+  t('fs_debut_fan', 'DEBUT_WATCH', 'FAN', 'all eyes on {player} today. no pressure mate. only {fee} worth', 0.2),
+  t('fs_debut_cr', 'DEBUT_WATCH', 'CREATOR', 'first look at {player} in {club} colours. this is the one everyone will judge the window on.', 0.2, 10, { tone: 'ANALYTICAL' }),
+  t('fs_hijack_fan', 'TRANSFER_HIJACK', 'FAN', '{rival} have taken {player} from under us. absolutely sickening', -0.85),
+  t('fs_hijack_rival', 'TRANSFER_HIJACK', 'RIVAL', 'thanks for doing the scouting for us, {club}', -0.75),
+  t('fs_hijack_leak', 'TRANSFER_HIJACK', 'LEAK', 'Told last night that {player} had a second offer. {club} were not aware until this morning.', -0.3),
+
+  // --- RESULTS ---
+  t('fs_shock_fan1', 'SHOCK_DEFEAT', 'FAN', '{score}. at home. to {opponent}. I want to speak to whoever is responsible', -0.9),
+  t('fs_shock_fan2', 'SHOCK_DEFEAT', 'FAN', 'not angry. just done. {margin} goals.', -0.8),
+  t('fs_shock_rival', 'SHOCK_DEFEAT', 'RIVAL', '{score}. put it on a t-shirt. frame it. {club} everyone', -0.85),
+  t('fs_shock_cr_prov', 'SHOCK_DEFEAT', 'CREATOR', 'that was not a bad day. that was a structural problem at {club} that has been obvious for a month.', -0.75, 12, { tone: 'PROVOCATIVE' }),
+  t('fs_shock_cr_ana', 'SHOCK_DEFEAT', 'CREATOR', '{club} conceded {margin} more than their xG suggested. Some of that is variance. Most of it is the press being walked through.', -0.4, 12, { tone: 'ANALYTICAL' }),
+  t('fs_shock_cr_dra', 'SHOCK_DEFEAT', 'CREATOR', '{score}. There is no hiding place after a night like that.', -0.7, 12, { tone: 'DRAMATIC' }),
+  t('fs_defeat_fan', 'DEFEAT', 'FAN', 'lost {score}. same problems. same result.', -0.5),
+  t('fs_defeat_cr', 'DEFEAT', 'CREATOR', 'losing {score} at {opponent} is survivable. losing the same way three times is not.', -0.4, 10, { tone: 'ANALYTICAL' }),
+  t('fs_derbyl_fan', 'DERBY_DEFEAT', 'FAN', 'losing to {opponent} hurts more than the table ever will. {score}. gutted.', -0.85),
+  t('fs_derbyl_rival', 'DERBY_DEFEAT', 'RIVAL', 'derby day. {score}. the city is ours again', -0.8),
+  t('fs_win_fan', 'WIN', 'FAN', '{score}. professional. do it again next week.', 0.6),
+  t('fs_win_club', 'WIN', 'CLUB', 'FULL TIME | {club} {score} {opponent}. Three points.', 0.6),
+  t('fs_state_fan', 'STATEMENT_WIN', 'FAN', '{score}?! {margin} goals?! I am never doubting this team again (until saturday)', 0.9),
+  t('fs_state_cr_hype', 'STATEMENT_WIN', 'CREATOR', '{club} just put {margin} past {opponent} and made it look routine. WATCH OUT.', 0.9, 12, { tone: 'HYPE' }),
+  t('fs_state_cr_ana', 'STATEMENT_WIN', 'CREATOR', 'The {score} flatters nobody. {club} won every second ball and the shape never broke.', 0.55, 12, { tone: 'ANALYTICAL' }),
+  t('fs_derbyw_fan', 'DERBY_WIN', 'FAN', 'WE BEAT {opponent}. {score}. I am not sleeping tonight', 0.95),
+  t('fs_derbyw_club', 'DERBY_WIN', 'CLUB', 'The derby stays here. {score}.', 0.85),
+  t('fs_derbyw_rival', 'DERBY_WIN', 'RIVAL', 'enjoy it while it lasts. {score} means nothing in may', -0.6),
+  t('fs_fallout_fan', 'DEFEAT_FALLOUT', 'FAN', 'still thinking about that {margin} goal defeat. still not okay about it', -0.6),
+  t('fs_fallout_cr', 'DEFEAT_FALLOUT', 'CREATOR', 'a week on and nobody at {club} has explained what happened against {opponent}.', -0.5, 10, { tone: 'PROVOCATIVE' }),
+  t('fs_goal_fan', 'GOAL', 'FAN', '{player}!!! {minute} minutes and he does it again', 0.8),
+  t('fs_goal_club', 'GOAL', 'CLUB', 'GOAL! {player}, {minute}. {score}.', 0.7),
+  t('fs_sgoal_cr', 'SPECIAL_GOAL', 'CREATOR', 'REWIND THAT. {player}. WHAT.', 0.95, 12, { tone: 'HYPE' }),
+  t('fs_sgoal_fan', 'SPECIAL_GOAL', 'FAN', 'that is going on every timeline in the country. {player} is not human', 0.9),
+
+  // --- PLAYERS ---
+  t('fs_kid_fan', 'WONDERKID', 'FAN', '{player} is {overall} and OURS. hands off', 0.85),
+  t('fs_kid_cr_hype', 'WONDERKID', 'CREATOR', '{player} at {club} is the most exciting thing in this league right now. remember the name.', 0.9, 12, { tone: 'HYPE' }),
+  t('fs_kid_cr_ana', 'WONDERKID', 'CREATOR', '{player} is producing senior numbers at {overall} overall. The progression curve is genuinely unusual.', 0.6, 12, { tone: 'ANALYTICAL' }),
+  t('fs_kid_leak', 'WONDERKID', 'LEAK', 'Hearing two clubs have already asked about {player}. Nothing formal. Yet.', 0.1),
+  t('fs_kid_club', 'WONDERKID', 'CLUB', 'Academy to first team. {player} is one of our own.', 0.8),
+  t('fs_interest_leak', 'BREAKOUT_INTEREST', 'LEAK', 'Understand scouts were at {club} again this week for {player}. Take it as you find it.', -0.1),
+  t('fs_interest_fan', 'BREAKOUT_INTEREST', 'FAN', 'if we sell {player} I am cancelling everything', -0.5),
+  t('fs_inj_fan', 'INJURY_BLOW', 'FAN', '{weeks} weeks without {player}. this season is a test of character', -0.6),
+  t('fs_inj_club', 'INJURY_BLOW', 'CLUB', '{player} will be assessed and is expected to be out for around {weeks} weeks. We are with you.', -0.3),
+  t('fs_inj_cr', 'INJURY_BLOW', 'CREATOR', 'losing {player} for {weeks} weeks is the worst possible news for {club} right now.', -0.5, 10, { tone: 'DRAMATIC' }),
+  t('fs_unhappy_leak', 'PLAYER_UNHAPPY', 'LEAK', 'Told {player} is not happy at {club}. Reason given: {reason}.', -0.4),
+  t('fs_unhappy_cr', 'PLAYER_UNHAPPY', 'CREATOR', 'you do not need a source to see {player} is unhappy. watch the body language.', -0.4, 10, { tone: 'PROVOCATIVE' }),
+  t('fs_lifted_fan', 'PLAYER_LIFTED', 'FAN', 'you can see {player} is enjoying his football again and honestly that is all I wanted', 0.6),
+
+  // --- CLUB / FANS / MANAGER ---
+  t('fs_unrest_fan', 'FAN_UNREST', 'FAN', '{reason}. that is the third time this season. the mood around this club is rotten', -0.8),
+  t('fs_unrest_cr', 'FAN_UNREST', 'CREATOR', 'the atmosphere at {club} has turned. that is much harder to fix than form.', -0.6, 10, { tone: 'DRAMATIC' }),
+  t('fs_buzz_fan', 'FAN_BUZZ', 'FAN', 'first time in years the place has felt like this. {reason}. buzzing', 0.8),
+  t('fs_buzz_cr', 'FAN_BUZZ', 'CREATOR', 'whatever {club} are doing right now, it is working, and the crowd can feel it.', 0.7, 10, { tone: 'HYPE' }),
+  t('fs_riv_fan', 'RIVALRY_HEAT', 'FAN', 'this fixture is not a game any more. {reason}.', -0.4),
+  t('fs_riv_rival', 'RIVALRY_HEAT', 'RIVAL', 'we will see you in the return fixture, {club}. bring a bigger squad', -0.7),
+  t('fs_press_fan', 'MANAGER_PRESSURE', 'FAN', 'not calling for {manager} to go. but I am not defending him either', -0.6),
+  t('fs_press_cr', 'MANAGER_PRESSURE', 'CREATOR', 'the numbers at {club} have been trending the wrong way for six weeks. {manager} knows exactly what that means.', -0.55, 10, { tone: 'ANALYTICAL' }),
+  t('fs_press_rival', 'MANAGER_PRESSURE', 'RIVAL', 'please keep {manager}. we are begging you, {club}', -0.7),
+  t('fs_crisis_fan', 'MANAGER_CRISIS', 'FAN', 'enough. it is over. thanks for the memories {manager}', -0.85),
+  t('fs_crisis_media', 'MANAGER_CRISIS', 'MEDIA', 'Sources: {club} board held emergency talks over {manager} tonight.', -0.7),
+  t('fs_crisis_leak', 'MANAGER_CRISIS', 'LEAK', 'Two names already sounded out about the {club} job. That is all I will say.', -0.6),
+  t('fs_sack_fan', 'MANAGER_SACKED', 'FAN', '{manager} gone. right decision, badly handled, as always', -0.3),
+  t('fs_sack_media', 'MANAGER_SACKED', 'MEDIA', 'CONFIRMED: {manager} has left {club} with immediate effect.', -0.3),
+  t('fs_sack_rival', 'MANAGER_SACKED', 'RIVAL', 'another one. how many is that now, {club}?', -0.6),
+  t('fs_sponsor_sponsor', 'SPONSOR_SIGNED', 'SPONSOR', 'Delighted to begin our partnership with {club}. Worth {value} and every bit of it earned.', 0.6),
+  t('fs_creator_creator', 'CREATOR_JOINED', 'CREATOR', 'I am joining {club} as {role}. Full video explaining everything tonight.', 0.8),
+  t('fs_creator_fan', 'CREATOR_JOINED', 'FAN', '{creator} at {club}?? the content is going to be unreal', 0.7),
+
+  // --- HISTORY ---
+  t('fs_rec_club', 'RECORD_BROKEN', 'CLUB', '{record}. {value}. {player} is in the history books.', 0.9),
+  t('fs_rec_fan', 'RECORD_BROKEN', 'FAN', 'we watched {player} break {record} in person. tell your kids', 0.95),
+  t('fs_rec_cr', 'RECORD_BROKEN', 'CREATOR', '{record} at {value}. Records like that outlive everyone who argued about them.', 0.8, 10, { tone: 'DRAMATIC' }),
+  t('fs_rec_media', 'RECORD_BROKEN', 'MEDIA', 'RECORD | {player} sets a new mark: {record} ({value}).', 0.7),
+  t('fs_recreact_fan', 'RECORD_REACTION', 'FAN', 'still thinking about {player} and {record}. what a time to support this club', 0.8),
+  t('fs_trophy_club', 'TROPHY_WON', 'CLUB', 'CHAMPIONS. {club} win the {competition}.', 1),
+  t('fs_trophy_fan', 'TROPHY_WON', 'FAN', 'WE WON THE {competition}. I AM CRYING IN A CAR PARK', 1),
+  t('fs_trophy_cr', 'TROPHY_WON', 'CREATOR', '{club}. {competition}. Champions. Nobody can take this off them.', 0.95, 10, { tone: 'HYPE' }),
+  t('fs_trophy_sponsor', 'TROPHY_WON', 'SPONSOR', 'Champions. Proud to have been on the shirt for it, {club}.', 0.9),
+  t('fs_glow_fan', 'TROPHY_AFTERGLOW', 'FAN', 'a week later and I still have not taken the shirt off. {competition} winners.', 0.85),
+
+  // --- EMERGENT ---
+  t('fs_em_derby_fan', 'EMERGENT_DERBY_KING', 'FAN', '{count} derbies in a row {player} has scored in. he was made for this fixture', 0.9),
+  t('fs_em_derby_cr', 'EMERGENT_DERBY_KING', 'CREATOR', 'scoring in {count} straight derbies is not form. that is temperament.', 0.8, 10, { tone: 'ANALYTICAL' }),
+  t('fs_em_derby_rival', 'EMERGENT_DERBY_KING', 'RIVAL', 'someone mark {player} for once. {count} derbies. embarrassing', -0.5),
+  t('fs_em_cs_fan', 'EMERGENT_CLEAN_SHEET_RUN', 'FAN', '{count} clean sheets. {player} has a forcefield', 0.8),
+  t('fs_em_cs_cr', 'EMERGENT_CLEAN_SHEET_RUN', 'CREATOR', '{count} without conceding. {club} have built something at the back that nobody wants to play against.', 0.7, 10, { tone: 'ANALYTICAL' }),
+  t('fs_em_flop_fan', 'EMERGENT_FLOP_SIGNING', 'FAN', '{fee} for {count} appearances of nothing. I am so tired', -0.8),
+  t('fs_em_flop_cr', 'EMERGENT_FLOP_SIGNING', 'CREATOR', '{count} games in, {player} has not justified {fee}. At some point that is a recruitment failure, not a settling-in period.', -0.7, 12, { tone: 'PROVOCATIVE' }),
+  t('fs_em_flop_rival', 'EMERGENT_FLOP_SIGNING', 'RIVAL', 'best {fee} {club} ever spent. on our behalf. thanks', -0.7),
+  t('fs_em_unb_fan', 'EMERGENT_UNBEATEN_RUN', 'FAN', '{count} unbeaten. nobody is talking about us and I love it', 0.85),
+  t('fs_em_unb_cr', 'EMERGENT_UNBEATEN_RUN', 'CREATOR', '{count} unbeaten for {club}. This is no longer a hot streak, it is a level.', 0.75, 10, { tone: 'HYPE' }),
+  t('fs_em_boil_rival', 'EMERGENT_RIVALRY_BOILING', 'RIVAL', 'whatever happens next between us and {club}, they started it', -0.7),
+  t('fs_em_boil_fan', 'EMERGENT_RIVALRY_BOILING', 'FAN', 'this rivalry has gone somewhere dark and I am not sure it comes back', -0.5),
+  t('fs_em_chase_fan', 'EMERGENT_RECORD_CHASE', 'FAN', 'one goal. ONE. {player} needs one for {record}', 0.85),
+  t('fs_em_chase_cr', 'EMERGENT_RECORD_CHASE', 'CREATOR', '{player} is one from {record}. Do not miss the next {club} match.', 0.8, 10, { tone: 'HYPE' }),
+  t('fs_em_arc_fan', 'EMERGENT_BREAKOUT_ARC', 'FAN', '{player} is {age} years old and has improved {count} overall this season. we are cooking', 0.85),
+  t('fs_em_arc_cr', 'EMERGENT_BREAKOUT_ARC', 'CREATOR', 'up {count} overall in one season at {age}. {player} is the story of the year and it is not close.', 0.85, 10, { tone: 'HYPE' }),
+  t('fs_em_winless_fan', 'EMERGENT_WINLESS_RUN', 'FAN', '{count} games without a win. I have run out of ways to describe this', -0.8),
+  t('fs_em_winless_rival', 'EMERGENT_WINLESS_RUN', 'RIVAL', '{count} without a win. keep going {club}, you are doing great', -0.75),
+  t('fs_em_title_fan', 'EMERGENT_TITLE_RACE', 'FAN', 'us and {rival}. every week. I cannot cope with this run-in', 0.5),
+  t('fs_em_title_cr', 'EMERGENT_TITLE_RACE', 'CREATOR', '{club} and {rival} separated by nothing. Whoever blinks first loses a title.', 0.5, 10, { tone: 'DRAMATIC' }),
+
+  // --- DEBATE (quote-posts) ---
+  t('fs_debate_prov', 'DEBATE', 'CREATOR', 'this is exactly the kind of take that ages badly. watch what {club} do next.', -0.5, 10, { tone: 'PROVOCATIVE' }),
+  t('fs_debate_ana', 'DEBATE', 'CREATOR', 'respectfully, the numbers do not support this at all.', -0.2, 10, { tone: 'ANALYTICAL' }),
+  t('fs_debate_com', 'DEBATE', 'CREATOR', 'posting this and then watching {club} do the exact opposite is a genuine art form', -0.3, 10, { tone: 'COMEDIC' }),
+  t('fs_debate_hype', 'DEBATE', 'CREATOR', 'wild take. {club} are going to prove every word of this wrong.', 0.4, 10, { tone: 'HYPE' }),
+  t('fs_debate_dra', 'DEBATE', 'CREATOR', 'screenshot this. we are coming back to it.', -0.3, 10, { tone: 'DRAMATIC' }),
+  t('fs_debate_whole', 'DEBATE', 'CREATOR', 'I see it differently, but I understand why people feel this way about {club}.', 0.1, 10, { tone: 'WHOLESOME' }),
+];

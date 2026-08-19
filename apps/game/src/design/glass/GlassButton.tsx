@@ -102,7 +102,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(funct
       aria-busy={loading || undefined}
       className={cn(
         'relative inline-flex items-center justify-center whitespace-nowrap select-none',
-        'transition-colors duration-fast ease-out-quint',
+        'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         SIZE[size],
         VARIANT[variant],
         block && 'w-full',

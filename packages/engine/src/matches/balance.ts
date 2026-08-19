@@ -55,7 +55,7 @@ export const BALANCE = {
   /** Base per-tick probability that a progression attempt succeeds at parity. 0.4-0.85. */
   PROGRESSION_BASE: 0.66,
   /** How strongly the attack/defence rating gap swings progression. 0.02-0.14. */
-  PROGRESSION_EDGE: 0.065,
+  PROGRESSION_EDGE: 0.007,
   /** Base per-tick turnover probability at parity outside the final third. 0.1-0.3. */
   TURNOVER_BASE: 0.15,
   /** Extra turnover probability at maximum press. 0.02-0.15. */
@@ -63,7 +63,7 @@ export const BALANCE = {
   /** Turnover probability multiplier once inside the final third. 1.0-2.0. */
   TURNOVER_FINAL_THIRD: 1.4,
   /** How strongly the rating gap swings turnovers. 0.02-0.14. */
-  TURNOVER_EDGE: 0.06,
+  TURNOVER_EDGE: 0.006,
   /** Share of turnovers recorded as a tackle rather than an interception. 0.3-0.7. */
   TACKLE_SHARE: 0.45,
   /** Ticks of elevated counter threat after winning the ball high. 2-10. */
@@ -73,7 +73,7 @@ export const BALANCE = {
 
   // ---------------------------------------------------------------- shots ---
   /** Base per-tick shot probability in the final third at parity. 0.2-0.5. */
-  SHOT_BASE: 0.335,
+  SHOT_BASE: 0.225,
   /** How much `attackVolume` scales shot frequency. 0.3-1.2. */
   SHOT_VOLUME_WEIGHT: 0.85,
   /** How much a counter-attack window raises shot frequency. 0-0.5. */
@@ -103,11 +103,11 @@ export const BALANCE = {
   /** Multiplier range from defensive pressure: 1 = free header, this = crowded out. 0.35-0.8. */
   XG_PRESSURE_FLOOR: 0.55,
   /** How much the shooter's finishing (vs. a 55 baseline) scales xG. 0.2-0.9. */
-  XG_FINISHING_WEIGHT: 0.6,
+  XG_FINISHING_WEIGHT: 0.26,
   /** How much assist quality scales xG. 0.1-0.6. */
   XG_ASSIST_WEIGHT: 0.3,
   /** How much the keeper's quality (vs. a 55 baseline) suppresses xG. 0.1-0.6. */
-  XG_KEEPER_WEIGHT: 0.3,
+  XG_KEEPER_WEIGHT: 0.14,
   /** Multiplier applied to xG when the shot arrives on the counter. 1.0-1.6. */
   XG_COUNTER_BONUS: 1.18,
   /** Multiplier applied to xG for a headed chance from a cross. 0.5-1.0. */
@@ -117,7 +117,7 @@ export const BALANCE = {
   /** xG threshold above which a chance is a "big chance". 0.2-0.45. */
   BIG_CHANCE_XG: 0.3,
   /** Global conversion trim. The single knob for "the league scores too much". 0.6-1.4. */
-  CONVERSION_SCALE: 1.0,
+  CONVERSION_SCALE: 0.73,
   /**
    * Per-match openness. Every match draws one shared multiplier on chance
    * creation for BOTH sides. This is what makes goal counts overdispersed
@@ -150,9 +150,9 @@ export const BALANCE = {
 
   // ---------------------------------------------------------------- cards ---
   /** Probability a foul is punished with a yellow at neutral discipline. 0.05-0.25. */
-  YELLOW_FROM_FOUL: 0.1,
+  YELLOW_FROM_FOUL: 0.08,
   /** Probability a foul is a straight red at neutral discipline. 0-0.01. */
-  RED_FROM_FOUL: 0.0018,
+  RED_FROM_FOUL: 0.001,
   /** How much a full-intensity rivalry raises card rates. 0-1.0. */
   CARD_RIVALRY_WEIGHT: 0.45,
   /** How much low player discipline (0 = terrible) raises card rates. 0-1.0. */
@@ -169,7 +169,7 @@ export const BALANCE = {
    * and team-minutes is the classic calibration bug in this class of model.
    * Target 0.08-0.14 injuries per team per match. 0.0001-0.0006.
    */
-  INJURY_BASE: 0.00034,
+  INJURY_BASE: 0.00026,
   /** How much fatigue multiplies injury risk (at fatigue 1.0). 0-3. */
   INJURY_FATIGUE_WEIGHT: 1.6,
   /** How much a physical tactical setup multiplies injury risk. 0-1. */
@@ -205,7 +205,7 @@ export const BALANCE = {
   /** Weight of confidence (0-100, 50 neutral) on effective attributes. 0.02-0.15. */
   CONFIDENCE_WEIGHT: 0.07,
   /** Weight of crowd atmosphere on composure-linked attributes. 0.02-0.15. */
-  ATMOSPHERE_WEIGHT: 0.06,
+  ATMOSPHERE_WEIGHT: 0.04,
   /** Weight of pressure handling in big matches. 0.02-0.2. */
   PRESSURE_WEIGHT: 0.09,
   /** Floor for the position-familiarity multiplier so a bad slot is a cost, not a death sentence. 0.3-0.7. */
@@ -241,7 +241,7 @@ export const BALANCE = {
    * it can never move win probability by more than about six percentage points,
    * the size of the measured real-world home effect. 0-0.08.
    */
-  SUPPORT_ADVANTAGE_MAX: 0.05,
+  SUPPORT_ADVANTAGE_MAX: 0.03,
   /** Attendance treated as "full house" for the atmosphere term. */
   ATTENDANCE_REFERENCE: 20000,
   /** How much rivalry intensity raises match volatility. 0-0.5. */
@@ -279,9 +279,9 @@ export const BALANCE = {
    */
   SWING_WINDOW_MINUTES: 3,
   /** Shot-rate multiplier inside a swing window (fewer bodies, more space). 1.2-2.2. */
-  SWING_WINDOW_SHOT_MULTIPLIER: 1.55,
+  SWING_WINDOW_SHOT_MULTIPLIER: 1.45,
   /** xG multiplier inside a swing window. 1.0-1.6. */
-  SWING_WINDOW_XG_MULTIPLIER: 1.22,
+  SWING_WINDOW_XG_MULTIPLIER: 1.25,
   /** Vector deltas applied to BOTH teams for the length of any swing window. */
   SWING_WINDOW_MODIFIERS: {
     attackVolume: 0.2,

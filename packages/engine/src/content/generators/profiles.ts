@@ -1,4 +1,4 @@
-import { ATTRIBUTE_KEYS, type AttributeKey, type Attributes } from '../../players/attributes';
+import { ATTRIBUTE_KEYS, overallFor, type AttributeKey, type Attributes } from '../../players/attributes';
 import type { Position } from '../../players/positions';
 
 /**
@@ -202,4 +202,26 @@ export const attributesFromProfile = (
     out[key] = Math.max(1, Math.min(99, Math.round(value)));
   }
   return out;
+};
+
+/**
+ * Deterministic authoring helper: attributes whose position-weighted overall
+ * lands on `targetOverall`. Hand-written player templates state the rating a
+ * designer means, and this finds the raw numbers that produce it — so a named
+ * star cannot silently drift when the position weights are rebalanced.
+ */
+export const attributesForOverall = (
+  position: Position,
+  targetOverall: number,
+  overrides: Partial<Record<AttributeKey, number>> = {},
+): Attributes => {
+  let core = targetOverall;
+  let attributes = attributesFromProfile(position, core, overrides);
+  for (let i = 0; i < 24; i++) {
+    const delta = targetOverall - overallFor(attributes, position);
+    if (delta === 0) break;
+    core += delta;
+    attributes = attributesFromProfile(position, core, overrides);
+  }
+  return attributes;
 };

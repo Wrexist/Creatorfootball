@@ -782,7 +782,7 @@ export function managerPressure(state: GameState, clubId: ClubId): number {
 
 function hottestRival(ctx: CascadeCtx, clubId: ClubId): ClubId | null {
   let best: ClubId | null = null;
-  let bestHeat = C.derby.intensityThreshold;
+  let bestHeat: number = C.derby.intensityThreshold;
   for (const r of Object.values(ctx.state.rivalries)) {
     if (r.clubAId !== clubId && r.clubBId !== clubId) continue;
     if (r.intensity >= bestHeat) {

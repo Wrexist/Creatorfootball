@@ -2,7 +2,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../cn';
 import { glassClass, RADIUS_CLASS, type GlassLevel, type RadiusToken } from './glassLevel';
 
-export interface GlassPanelProps extends HTMLAttributes<HTMLDivElement> {
+export interface GlassPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   level?: GlassLevel;
   radius?: RadiusToken;
   sheen?: boolean;
