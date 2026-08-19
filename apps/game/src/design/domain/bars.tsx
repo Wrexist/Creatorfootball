@@ -1,7 +1,8 @@
-import { memo, useId, type ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
+import { useSvgId } from '../useSvgId';
 
 /* --- ProgressBar ------------------------------------------------------ */
 
@@ -273,7 +274,7 @@ export const Sparkline = memo(function Sparkline({
   className,
   label,
 }: SparklineProps): ReactNode {
-  const uid = useId().replace(/:/g, '');
+  const gradientId = useSvgId('cf-spark');
   if (values.length < 2) {
     return <span className={cn('inline-block', className)} style={{ width, height }} aria-hidden="true" />;
   }
@@ -302,14 +303,14 @@ export const Sparkline = memo(function Sparkline({
       {fill && (
         <>
           <defs>
-            <linearGradient id={`sp-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="currentColor" stopOpacity="0.28" />
               <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
             </linearGradient>
           </defs>
           <path
             d={`${line} L${width},${height} L0,${height} Z`}
-            fill={`url(#sp-${uid})`}
+            fill={`url(#${gradientId})`}
             className={SPARK_STROKE[tone].replace('stroke-', 'text-')}
             stroke="none"
           />

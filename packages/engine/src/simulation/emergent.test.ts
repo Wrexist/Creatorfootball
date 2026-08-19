@@ -9,11 +9,10 @@ const goal = (matchId: string, scorerId: string, id: string) => makeTestEvent('G
   minute: 30, homeScore: 1, awayScore: 0,
 }, { id });
 
-const result = (id: string, type: 'MATCH_WON' | 'MATCH_DRAWN' | 'MATCH_LOST') => makeTestEvent(type, ({
-  MATCH_WON: { matchId: 'mx' as MatchId, clubId: 'club_0' as ClubId, opponentId: 'club_3' as ClubId, homeScore: 1, awayScore: 0, margin: 1 },
-  MATCH_LOST: { matchId: 'mx' as MatchId, clubId: 'club_0' as ClubId, opponentId: 'club_3' as ClubId, homeScore: 0, awayScore: 1, margin: 1 },
-  MATCH_DRAWN: { matchId: 'mx' as MatchId, clubId: 'club_0' as ClubId, opponentId: 'club_3' as ClubId, score: 1 },
-} as Record<string, never>)[type], { id });
+const result = (id: string, type: 'MATCH_WON' | 'MATCH_LOST') => makeTestEvent(type, {
+  matchId: 'mx' as MatchId, clubId: 'club_0' as ClubId, opponentId: 'club_3' as ClubId,
+  homeScore: type === 'MATCH_WON' ? 1 : 0, awayScore: type === 'MATCH_WON' ? 0 : 1, margin: 1,
+}, { id });
 
 const kinds = (state: GameState): string[] => detectEmergentStories(state).map((s) => s.kind);
 

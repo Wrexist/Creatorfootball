@@ -166,7 +166,6 @@ Priorities: **P0** ships or we do not ship. **P1** ships at launch unless a gate
 | M12 | In-match substitutions (≤5) and tactical changes | P0 | CONTRACTED |
 | M13 | `finish()` to skip to the end without further prompts | P0 | CONTRACTED |
 | M14 | Post-match key-moment reel driven by `MatchResult.keyMomentEventId` | P1 | SPEC |
-
 | M15 | Two clock-anchored swing windows per match — one in the closing minutes of each half — during which the active special rule applies | P0 | CONTRACTED |
 | M16 | Goal counts modelled as **negative binomial**, not Poisson, with the dispersion parameter exposed as a tunable; score correlation modelled; **no Dixon-Coles low-score correction** at this goal rate | P0 | CONTRACTED |
 | M17 | Rule-window goals modelled as a **separate additive process**, never folded into the base rate | P0 | CONTRACTED |
@@ -524,8 +523,9 @@ Stated so they are argued once, not every sprint.
 | Q8 | Is the social feed a separate tab or interleaved into home? | UX | No | Affects the onboarding beat at 7:20 |
 | Q9 | What happens to a save when a licensed pack expires mid-dynasty? | Legal/Eng | No (V2) | `isRenderable()` + `LicensedEntityBinding` define the mechanism; the *player-facing message* is undesigned |
 | Q10 | Do rule cards drop from objectives only, or can they be bought? | Design/Business | Yes, before the store lands | Buying rule cards would breach MN4. Current stance: objective rewards only |
-| Q11 | Are special-rule swing windows in **every** match, or only in designated rule weeks? | Design | **Yes — blocks Phase 2** | The contract says two guaranteed windows per match; `generateFixtures()` says designated weeks only. This changes the goal-rate model materially, because the blended 6-9 target assumes ~6 of 30 minutes are rule-window play |
-| Q12 | What is the tie-break mechanism, and where does it apply? | Design | No | Every real creator league has one, because at this goal rate draws are still frequent enough to be unsatisfying. Playoffs need one; the league stage may not |
+| Q11 | Are special-rule swing windows in **every** match, or only in designated rule weeks? | Design | **Yes — blocks Phase 2 gate** | *Partly resolved by implementation:* `specialRuleEngine.ts` anchors one guaranteed window to the closing minutes of each half, two per match. But `generateFixtures()` still sets `enabledSpecialRules: []` outside `specialRuleWeeks`, so a non-rule-week fixture has no rule to run in its windows — and therefore a materially different goal rate. Decide whether the *window* is universal and only the *rule* is gated, or both are gated |
+| Q12 | What is the tie-break mechanism, and where does it apply? | Design | No | **Resolved by implementation:** a one-on-one shootout, exercised when the competition asks for it (`simulator.test.ts` covers it). Remaining question is *where* it applies — playoffs certainly; the league stage is a design choice |
+| Q13 | Is the audience/support modifier's cap the right one, and is it a monetisation surface? | Design | **Yes** | It currently measures a **9.6pp** win-probability swing against its documented **6pp** cap (a failing test). Beyond the balance bug: this is the single place where club reach influences a match result, so its magnitude is also the boundary of the anti-pay-to-win stance. See `ECONOMY.md` §8.4 |
 
 ---
 

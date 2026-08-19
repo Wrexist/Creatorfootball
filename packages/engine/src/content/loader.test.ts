@@ -96,6 +96,42 @@ describe('ContentRegistry', () => {
     expect(registry.has('community.stray')).toBe(true);
   });
 
+  it('resolves references into a dependency pack', () => {
+    const crossRef: ContentPack = {
+      manifest: { ...COMMUNITY_EXAMPLE_PACK.manifest, id: 'community.crossref', requires: ['base'] },
+      data: {
+        creators: [{
+          ...COMMUNITY_EXAMPLE_PACK.data.creators![2]!,
+          id: 'creator_crossref',
+          // Points at a club defined in the base pack, not in this one.
+          clubTemplateId: 'club_ironhollow_forge',
+        }],
+      },
+    };
+    const registry = loaded(BASE_PACK);
+    const issues = registry.load(crossRef);
+    expect(issues.filter((i) => i.severity === 'error')).toEqual([]);
+    expect(registry.creatorById('creator_crossref')?.clubTemplateId).toBe('club_ironhollow_forge');
+  });
+
+  it('errors on a reference that resolves in no loaded pack', () => {
+    const broken: ContentPack = {
+      manifest: { ...COMMUNITY_EXAMPLE_PACK.manifest, id: 'community.broken', requires: ['base'] },
+      data: {
+        creators: [{
+          ...COMMUNITY_EXAMPLE_PACK.data.creators![2]!,
+          id: 'creator_broken',
+          clubTemplateId: 'club_that_never_existed',
+        }],
+      },
+    };
+    const registry = loaded(BASE_PACK);
+    const issues = registry.load(broken);
+    expect(issues.some((i) =>
+      i.severity === 'error' && i.message.includes('unresolved club reference'))).toBe(true);
+    expect(registry.has('community.broken')).toBe(false);
+  });
+
   it('unloading restores the previous view without corrupting state', () => {
     const registry = loaded(BASE_PACK, COMMUNITY_EXAMPLE_PACK);
     expect(registry.clubs()).toHaveLength(15);

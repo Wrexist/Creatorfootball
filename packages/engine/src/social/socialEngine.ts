@@ -8,7 +8,9 @@ import { clamp } from '../core/math';
 import type { CascadeResult } from '../simulation/cascade';
 import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort, SocialPostKind } from '../simulation/ports';
-import { matchesConditions, pickTemplate, renderTemplate, seedFrom } from '../simulation/templating';
+import {
+  matchesConditions, pickTemplate, renderTemplate, seedFrom, templatesForTrigger,
+} from '../simulation/templating';
 import { rivalriesOf, rivalOpponent } from '../rivalries/rivalries';
 import { OUTLETS } from '../media/balance';
 import { FAN_PERSONAS, SOCIAL_BALANCE as S, SPONSOR_ACCOUNTS } from './balance';
@@ -48,6 +50,8 @@ interface Author {
   readonly tone?: Tone;
   readonly tier?: string;
   readonly creator?: Creator;
+  /** 0-1, set on leak accounts only. */
+  readonly credibility?: number;
 }
 
 const handleFrom = (name: string, salt: string): string =>
@@ -226,6 +230,8 @@ function authorsFor(hook: ContentHook, state: GameState, rng: Rng): Author[] {
     });
   }
   if (wanted.has('LEAK')) {
+    // Leaks are semi-reliable by design. Credibility rides on the post as a tag
+    // so the UI can show the hedge rather than presenting a rumour as fact.
     const leakRng = rng.fork('leak');
     const credibility = leakRng.float(S.leakCredibility[0], S.leakCredibility[1]);
     authors.push({
@@ -235,6 +241,7 @@ function authorsFor(hook: ContentHook, state: GameState, rng: Rng): Author[] {
       avatarSeed: seedFrom('leak', hook.sourceEventId),
       verified: false,
       reach: Math.round(180_000 * credibility),
+      credibility: Math.round(credibility * 100) / 100,
     });
   }
   return authors;
@@ -302,7 +309,7 @@ export function generatePosts(
         ...(author.tone ? { tone: author.tone } : {}),
         ...(author.tier ? { tier: author.tier } : {}),
       };
-      const pool = (byKey.get(`${hook.trigger}|${author.kind}`) ?? []).filter(
+      const pool = templatesForTrigger((key) => byKey.get(key), hook.trigger, `|${author.kind}`).filter(
         (template) => matchesConditions(template.conditions, facts) && renderTemplate(template.text, hook.tokens) !== null,
       );
       let template = pickTemplate(authorRng, pool, recent);
@@ -333,7 +340,13 @@ export function generatePosts(
         weight: weightFor(author.kind, hook.importance, engagement.likes),
         relatedEventId: hook.sourceEventId,
         entities: hook.entities.map((e) => ({ kind: e.kind, id: e.id, name: e.name })),
-        tags: [...hook.tags, ...(template.tags ?? []), `tpl:${template.id}`, `trigger:${hook.trigger}`],
+        tags: [
+          ...hook.tags, ...(template.tags ?? []), `tpl:${template.id}`, `trigger:${hook.trigger}`,
+          // Marks a post written by an actual creator entity, so the debate pass
+          // can tell a pundit apart from a supporter with a strong opinion.
+          ...(author.creator ? ['creator-voice'] : []),
+          ...(author.credibility !== undefined ? [`credibility:${author.credibility}`] : []),
+        ],
       });
       index++;
     }
@@ -361,7 +374,7 @@ function generateDebates(
 ): SocialPost[] {
   const byEvent = new Map<string, SocialPost[]>();
   for (const post of posts) {
-    if (post.kind !== 'CREATOR' && post.kind !== 'RIVAL') continue;
+    if (!post.tags.includes('creator-voice')) continue;
     const key = post.relatedEventId ?? '';
     const list = byEvent.get(key);
     if (list) list.push(post); else byEvent.set(key, [post]);
@@ -396,7 +409,7 @@ function generateDebates(
     const engagement = engagementFor(reach, hook.importance, sentiment, debateRng);
     out.push({
       id: `sp_${eventId}_debate_${out.length}`.toLowerCase(),
-      kind: 'CREATOR',
+      kind: challenger.kind,
       authorName: challenger.authorName,
       authorHandle: challenger.authorHandle,
       avatarSeed: challenger.avatarSeed,
@@ -407,7 +420,7 @@ function generateDebates(
       reposts: engagement.reposts,
       replies: Math.round(engagement.replies * 1.6),
       sentiment,
-      weight: weightFor('CREATOR', hook.importance, engagement.likes) + 4,
+      weight: weightFor(challenger.kind, hook.importance, engagement.likes) + 4,
       relatedEventId: eventId,
       entities: target.entities,
       quoted: { authorName: target.authorName, text: target.text },

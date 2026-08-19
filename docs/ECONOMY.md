@@ -341,6 +341,11 @@ competitive advantage outright."*
    Testable: scout credits map to assignment slots, never to `DEPTH_CONFIDENCE`.
 4. **No purchasable players, attributes or potential.** Testable: no offer content kind
    touches `Player`.
+4a. **The audience/support modifier is capped at ~6 percentage points of win probability.**
+   This is the one mechanism by which club reach influences a match outcome, and reach is
+   the club attribute a creator signing raises fastest — so its cap is a monetisation
+   boundary, not only a balance one. **Currently measuring 9.6pp and failing its test**
+   (`GAME_SYSTEMS.md` §9.5, `PRODUCT_REQUIREMENTS.md` Q13).
 5. **No loot boxes, no randomised paid rewards.** Testable: every `StoreOfferDef.contents`
    is a deterministic list.
 6. **No energy, no timers, no wait-to-play.** `GameClock` is a cycle counter by design.

@@ -6,6 +6,7 @@ import { points } from '../clubs/club';
 import { mean } from '../core/math';
 import { formatMoney } from '../economy/ledger';
 import { RIVALRY_BALANCE } from '../rivalries/balance';
+import { EMERGENT_BALANCE } from './balance';
 import type { ContentHook, HookFacts, SocialPostKind, TokenMap } from './ports';
 import { sentimentBand } from './templating';
 
@@ -21,28 +22,6 @@ import { sentimentBand } from './templating';
  * Every detector must anchor to a real event id. A pattern we cannot trace to
  * an event is not promoted, because a post without a source is a bug.
  */
-
-export const EMERGENT_BALANCE = {
-  derbyStreak: 3,
-  cleanSheetRun: 3,
-  unbeatenRun: 5,
-  winlessRun: 5,
-  /** Signings above this multiple of the club's cycle wage budget are "expensive". */
-  flopFeeToWageBudget: 4,
-  /** Appearances a signing needs before we are entitled to judge it. */
-  flopMinAppearances: 5,
-  flopMaxRating: 6.4,
-  flopMaxGoalContributions: 2,
-  /** Overall points gained in a season that constitutes a breakout arc. */
-  breakoutGain: 5,
-  breakoutMaxAge: 21,
-  /** Points separating the top two that counts as a title race. */
-  titleRacePoints: 2,
-  /** Fraction of the season that must be played before a title race is a story. */
-  titleRaceProgress: 0.6,
-  /** Cycles before the same emergent story may be told about the same subject again. */
-  cooldownCycles: 8,
-} as const;
 
 export type EmergentKind =
   | 'DERBY_KING' | 'CLEAN_SHEET_RUN' | 'FLOP_SIGNING' | 'BREAKOUT_ARC'

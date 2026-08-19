@@ -1,4 +1,5 @@
 import type { AnyDomainEvent } from '../core/events';
+import { CHURN_BALANCE } from './balance';
 
 /**
  * Analytics.
@@ -137,18 +138,6 @@ export function trackDomainEvents(events: readonly AnyDomainEvent[]): void {
   }
 }
 
-/**
- * Churn heuristics. The engine cannot see wall-clock gaps, so the caller passes
- * the observations; we own the thresholds and the naming.
- */
-export const CHURN_BALANCE = {
-  /** Cycles of no progress that counts as stalling. */
-  stalledCycles: 3,
-  /** Consecutive defeats that historically precede a lapse. */
-  losingStreak: 4,
-  /** Onboarding steps completed below which a drop is "early". */
-  earlyOnboardingStep: 3,
-} as const;
 
 export interface ChurnSignals {
   readonly cyclesSinceProgress: number;
@@ -162,7 +151,7 @@ export function evaluateChurnRisk(signals: ChurnSignals): string[] {
   const reasons: string[] = [];
   if (signals.cyclesSinceProgress >= CHURN_BALANCE.stalledCycles) reasons.push('stalled_progress');
   if (signals.consecutiveDefeats >= CHURN_BALANCE.losingStreak) reasons.push('losing_streak');
-  if (signals.fanSentiment <= 25) reasons.push('fan_sentiment_collapse');
+  if (signals.fanSentiment <= CHURN_BALANCE.sentimentCollapse) reasons.push('fan_sentiment_collapse');
   if (reasons.length > 0) {
     trackEvent('churn_risk_flagged', { reasons, sessionSeconds: signals.sessionSeconds });
   }

@@ -39,8 +39,10 @@ function starPath(cx: number, cy: number, count: number, outer: number, inner: n
 const SHAPE_PATH: Record<BadgeShape, string> = {
   SHIELD:
     'M50 3 L93 15 V48 C93 72 75 89 50 97 C25 89 7 72 7 48 V15 Z',
+  // Two half-arcs rather than one 359.9-degree arc: a single near-closed arc
+  // is a degenerate case that some rasterisers collapse.
   CIRCLE:
-    'M50 4 A46 46 0 1 1 49.99 4 Z',
+    'M4 50 A46 46 0 0 1 96 50 A46 46 0 0 1 4 50 Z',
   // Kite crest: flat shoulders, long taper. Reads as "club" faster than a
   // circle does at small sizes because the silhouette is asymmetric.
   CREST:
@@ -93,40 +95,49 @@ function Motif({
       );
 
     case 'PHOENIX':
-      // Two swept wings plus a lance-shaped body. Mirrored exactly, which is
-      // what makes an abstract bird read as a bird.
+      // Head, lance body, and two swept wings held clear of the body by a 3px
+      // gap on each side. The gap is the whole trick: without it the three
+      // shapes merge into one lump and the bird disappears.
       return (
         <g fill={fg}>
-          <path d={poly([[30, 17], [3, 8], [12, 29], [1, 35], [18, 42], [30, 45]])} />
-          <path d={poly([[34, 17], [61, 8], [52, 29], [63, 35], [46, 42], [34, 45]])} />
-          <path d={poly([[32, 3], [39, 26], [32, 61], [25, 26]])} />
+          <circle cx="32" cy="9" r="5" />
+          <path d={poly([[36, 8], [45, 11], [36, 14]])} />
+          <path d={poly([[32, 15], [37, 30], [34, 61], [30, 61], [27, 30]])} />
+          <path d={poly([[24, 24], [2, 8], [11, 27], [3, 31], [16, 36], [24, 40]])} />
+          <path d={poly([[40, 24], [62, 8], [53, 27], [61, 31], [48, 36], [40, 40]])} />
         </g>
       );
 
     case 'WOLF':
+      // Angular head with the ears carried by the silhouette rather than added
+      // on. Eyes are thin backward slashes — round eye holes turn any animal
+      // mask into a cartoon.
       return (
         <g>
           <path
-            d={poly([[9, 7], [24, 20], [40, 20], [55, 7], [51, 30], [44, 47], [32, 60], [20, 47], [13, 30]])}
+            d={poly([[7, 2], [23, 21], [41, 21], [57, 2], [52, 28], [45, 45], [32, 60], [19, 45], [12, 28]])}
             fill={fg}
           />
-          <path d={poly([[21, 28], [30, 32], [21, 37]])} fill={bg} />
-          <path d={poly([[43, 28], [34, 32], [43, 37]])} fill={bg} />
-          <path d={poly([[32, 40], [26, 49], [38, 49]])} fill={bg} />
+          <path d={poly([[19, 28], [29, 32], [29, 35], [19, 32]])} fill={bg} />
+          <path d={poly([[45, 28], [35, 32], [35, 35], [45, 32]])} fill={bg} />
+          <path d={poly([[32, 41], [27, 50], [32, 53], [37, 50]])} fill={bg} />
         </g>
       );
 
     case 'LION':
+      // Twelve-point mane, a face disc darkened away from the mane so the two
+      // read as separate planes, and features large enough to survive a 24px
+      // league-table badge.
       return (
         <g>
-          <path d={starPath(32, 32, 12, 31, 23)} fill={fg} />
-          <circle cx="21" cy="21" r="5" fill={fg} />
-          <circle cx="43" cy="21" r="5" fill={fg} />
-          <circle cx="32" cy="32" r="16" fill={bg} opacity="0.92" />
-          <circle cx="26" cy="29" r="2.4" fill={fg} />
-          <circle cx="38" cy="29" r="2.4" fill={fg} />
-          <path d={poly([[32, 34], [28, 39], [36, 39]])} fill={fg} />
-          <path d="M32 39 v4" stroke={fg} strokeWidth="2" strokeLinecap="round" />
+          <path d={starPath(32, 32, 12, 31, 19)} fill={fg} />
+          <circle cx="19" cy="19" r="5.5" fill={fg} />
+          <circle cx="45" cy="19" r="5.5" fill={fg} />
+          <circle cx="32" cy="32" r="18" fill={darken(bg, 0.35)} />
+          <circle cx="25.5" cy="28.5" r="3" fill={fg} />
+          <circle cx="38.5" cy="28.5" r="3" fill={fg} />
+          <path d={poly([[32, 34], [26.5, 39.5], [37.5, 39.5]])} fill={fg} />
+          <path d="M32 40 v3.5 M26 44 a6 4 0 0 0 12 0" stroke={fg} strokeWidth="2.2" fill="none" strokeLinecap="round" />
         </g>
       );
 
@@ -159,14 +170,15 @@ function Motif({
       return (
         <g>
           <path
-            d="M14 12 C28 4 42 12 38 22 C34 32 16 32 16 42 C16 52 28 56 40 52"
+            d="M13 12 C29 3 44 12 39 23 C34 34 15 32 15 42 C15 51 26 55 37 51"
             fill="none"
             stroke={fg}
-            strokeWidth="7"
+            strokeWidth="8.5"
             strokeLinecap="round"
           />
-          <path d={poly([[38, 46], [55, 52], [38, 58]])} fill={fg} />
-          <circle cx="44" cy="52" r="1.8" fill={bg} />
+          <path d={poly([[35, 44], [56, 51], [35, 58]])} fill={fg} />
+          <path d="M56 51 h6 M56 51 l5 -3 M56 51 l5 3" stroke={fg} strokeWidth="2.4" fill="none" strokeLinecap="round" />
+          <circle cx="42" cy="51" r="2" fill={bg} />
         </g>
       );
 
@@ -280,7 +292,7 @@ function ClubBadgeInner({ visual, size = 40, label, flat = false, className }: C
   const motifColor = pickReadable(
     motifBg,
     [visual.accent, lighten(visual.accent, 0.35), '#f4f6f8', '#08090b'],
-    3.2,
+    3,
   );
 
   return (

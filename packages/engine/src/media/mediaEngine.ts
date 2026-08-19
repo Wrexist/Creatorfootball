@@ -7,7 +7,9 @@ import { clamp } from '../core/math';
 import type { CascadeResult } from '../simulation/cascade';
 import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort } from '../simulation/ports';
-import { matchesConditions, pickTemplate, renderTemplate, seedFrom, sentimentBand } from '../simulation/templating';
+import {
+  matchesConditions, pickTemplate, renderTemplate, seedFrom, sentimentBand, templatesForTrigger,
+} from '../simulation/templating';
 import { MEDIA_BALANCE as M, OUTLETS, outletByName, type Outlet } from './balance';
 import { FALLBACK_MEDIA_TEMPLATES } from './fallbackTemplates';
 
@@ -45,7 +47,6 @@ function stakeImportance(hook: ContentHook, state: GameState): EventImportance {
   const margin = Number(hook.facts.margin ?? 0);
   if (margin >= M.routMargin) importance += M.routImportanceBonus;
   if (hook.facts.derby === true) importance += M.derbyImportanceBonus;
-  if (hook.clubId === state.playerClubId) importance += M.playerClubImportanceBonus;
   // A knock-on reaction is never bigger news than the thing it reacted to.
   importance -= hook.depth;
   return clamp(Math.round(importance), 1, 5) as EventImportance;
@@ -154,7 +155,7 @@ export function generateStories(
     candidates.push({
       hook,
       importance,
-      rank: importance * 10 + (hook.clubId === state.playerClubId ? 3 : 0) - hook.depth,
+      rank: importance * 10 + (hook.clubId === state.playerClubId ? M.playerClubRankBonus : 0) - hook.depth,
     });
   }
   candidates.sort((a, b) => b.rank - a.rank || (a.hook.sourceEventId < b.hook.sourceEventId ? -1 : 1));
@@ -170,7 +171,7 @@ export function generateStories(
   for (const candidate of chosen) {
     const hook = candidate.hook;
     const local = rng.fork(`media:${hook.sourceEventId}:${hook.trigger}`);
-    const pool = (byTrigger.get(hook.trigger) ?? []).filter(
+    const pool = templatesForTrigger((key) => byTrigger.get(key), hook.trigger).filter(
       (t) => matchesConditions(t.conditions, hook.facts) && renderTemplate(t.headline, hook.tokens) !== null && renderTemplate(t.body, hook.tokens) !== null,
     );
     if (pool.length === 0) continue;

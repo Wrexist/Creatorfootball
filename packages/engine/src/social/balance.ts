@@ -43,9 +43,13 @@ export const SOCIAL_BALANCE = {
   sponsorReach: 260_000,
   playerReachPerReputation: 7_400,
 
-  /** Feed weight: importance is dominant, engagement is the tiebreak. */
-  weightPerImportance: 15,
-  weightPerEngagementDecade: 8,
+  /**
+   * Feed weight: importance is dominant, engagement is the tiebreak. Tuned so
+   * that a big moment from a huge account lands near 90 rather than saturating
+   * at 100 — the UI needs the top of the range to stay distinguishable.
+   */
+  weightPerImportance: 12,
+  weightPerEngagementDecade: 4.5,
   kindWeightBonus: { CLUB: 6, MEDIA: 4, PLAYER: 6, CREATOR: 3, RIVAL: 2, FAN: 0, SPONSOR: -2, LEAK: 4 } as const,
 
   /** Sentiment gap between two creators that starts an argument. */

@@ -601,6 +601,13 @@ than the real-world home effect (~6 percentage points of win probability), so it
 nudge rather than a determinant. This is the one place where the creator economy touches the
 outcome of a match, and it is capped precisely because of that.
 
+> **Live balance bug.** The modifier currently measures a **9.6 percentage-point** swing at
+> full support — `simulator.test.ts` asserts ≤6pp and fails. At that magnitude, club reach
+> is influencing results more strongly than the largest measured effect in real top-flight
+> football. It also sits on the boundary of the anti-pay-to-win stance: reach is the one
+> club attribute a creator signing raises fastest. Tracked as
+> `PRODUCT_REQUIREMENTS.md` Q13.
+
 ### 9.6 Draws are a design problem to *create*, not to handle
 
 At an 11-a-side goal rate (λ≈1.47 per team) draws are ~24.5% of matches and the problem is

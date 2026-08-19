@@ -38,7 +38,7 @@ const FIRST_NAMES: readonly { value: string; weight?: number }[] = [
   w('Leonel'), w('Levi', 2), w('Liam', 3), w('Lorcan'), w('Lorenz', 2), w('Loris'),
   w('Luca', 3), w('Ludvig'), w('Lukas', 3), w('Mads', 2), w('Mahdi'), w('Malik', 2),
   w('Marek', 2), w('Mario', 2), w('Marius', 2), w('Marko', 2), w('Mateo', 3),
-  w('Mathis', 2), w('Matteo', 3), w('Maxim', 2), w('Mehdi'), w('Melker'), w('Milan', 2),
+  w('Mathis', 2), w('Matteo', 3), w('Maxim', 2), w('Mehdi'), w('Melker'), w('Milen', 2),
   w('Milos'), w('Mirko'), w('Mohan'), w('Nabil'), w('Nasir', 2), w('Nathan', 3),
   w('Nikola', 2), w('Nils', 2), w('Noah', 3), w('Nuno'), w('Odin'), w('Olav'), w('Oleg'),
   w('Omar', 3), w('Oriol'), w('Orrin'), w('Osric'), w('Oskar', 2), w('Otto', 2),
@@ -153,8 +153,8 @@ const CLUB_PREFIXES: readonly string[] = [
 ];
 
 const CLUB_SUFFIXES: readonly string[] = [
-  'United', 'City', 'Rovers', 'Wanderers', 'Athletic', 'Town', 'Albion', 'Harbour',
-  'Forge', 'Republic', 'Collective', 'Union', 'Rangers', 'Star', 'Park', 'Hollow',
+  'United', 'City', 'Rovers', 'Wanderers', 'Athletic', 'Town', 'Anvil', 'Harbour',
+  'Forge', 'Republic', 'Collective', 'Union', 'Wharf', 'Star', 'Park', 'Hollow',
   'Gate', 'Works', 'Vale', 'Point', 'Nine', 'Row', 'Sons', 'Guild',
 ];
 

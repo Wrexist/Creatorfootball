@@ -418,13 +418,24 @@ determinism is gone, replays do not reproduce, and the future server is a rewrit
 **Why it is High likelihood.** The rule is stated in three places — the integration contract,
 module headers, and this document set — and enforced in **zero**. There is no ESLint
 configuration anywhere in the repository. The root `pnpm lint` script runs `pnpm -r lint`,
-and no package defines a `lint` script. `.github/workflows/` is empty; there is no CI. Six
-workstreams are writing engine code in parallel right now against a rule nothing checks.
+and no package defines a `lint` script. `.github/workflows/` is empty; there is no CI.
+**Most of the engine has now been written** against a rule nothing checks — the retrofit
+cost has already risen once.
 
 **This is the highest-likelihood architectural risk in the repository.**
 
-**Early warning signals.** By definition there are none until something breaks. That is
-exactly why it needs a mechanical check rather than a review culture.
+**It has already produced consequences.** With no CI, two of the four workspace commands
+are currently red and nobody was told: `pnpm typecheck` fails on a `rootDir` conflict, and
+`pnpm test` fails 2 of 262. One of those failures is a test that **passes in isolation and
+fails in a full run** — a state leak between tests, in a codebase whose central claim is
+that the same inputs always produce the same outputs. That is precisely the class of bug a
+determinism guarantee is supposed to make impossible, and it went unnoticed because nothing
+runs the suite on a push.
+
+**Early warning signals.** By definition there are almost none until something breaks —
+which is exactly why it needs a mechanical check rather than a review culture. The one
+signal available: run the full suite with `--sequence.shuffle` and see whether it still
+passes.
 
 **Mitigation — required, Phase 0:**
 1. An ESLint config with `no-restricted-imports` scoped to `packages/engine/**`, banning
@@ -434,6 +445,8 @@ exactly why it needs a mechanical check rather than a review culture.
 3. A `lint` script in every package so `pnpm -r lint` does something.
 4. CI running `typecheck` + `lint` + `test` on every push.
 5. A determinism test that runs a full cycle twice with a fixed clock and diffs.
+6. `vitest --sequence.shuffle` in CI, so cross-test state leaks fail loudly rather than
+   intermittently.
 
 Adjacent, same root cause: the invariant system defaults to `mode = 'throw'`, while its own
 header says production should report rather than crash. **The host must call

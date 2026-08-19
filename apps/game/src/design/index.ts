@@ -27,6 +27,7 @@ export {
   HAPTIC_KINDS, type HapticKind, type HapticDriver,
 } from './haptics';
 export { useMediaQuery, useReducedTransparency, useCoarsePointer, useCanHover } from './useMediaQuery';
+export { useSvgId } from './useSvgId';
 export { BREAKPOINTS, useBreakpoint, useIsMobile, useIsWide, type Breakpoint } from './useBreakpoint';
 
 /* --- icons ------------------------------------------------------------ */

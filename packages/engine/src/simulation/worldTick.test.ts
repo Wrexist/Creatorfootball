@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
-import type { ClubId, MatchId, PlayerId } from '../core/brand';
+import { asId } from '../core/brand';
+import type { ClubId, EventId, MatchId, PlayerId } from '../core/brand';
 import type { GameState } from '../game/state';
 import { Ledger } from '../economy/ledger';
 import { WORLD_BALANCE } from './balance';
@@ -149,7 +150,7 @@ describe('the tick wires the cascade into state', () => {
     const result = tickWorld(world.state, new Rng('trace'), ctxFor(world.ledger, { events: [redCard] }));
     const known = new Set(result.state.eventLog.map((e) => e.id));
     for (const post of result.posts) {
-      expect(known.has(post.relatedEventId as string)).toBe(true);
+      expect(known.has(asId<EventId>(post.relatedEventId ?? ''))).toBe(true);
     }
   });
 
@@ -172,7 +173,7 @@ describe('the tick wires the cascade into state', () => {
       state = tickWorld(
         { ...state, clock: { ...state.clock, cycle: 10 + cycle } },
         new Rng(`r-${cycle}`),
-        ctxFor(world.ledger, { events: [{ ...redCard, id: `ev_r_${cycle}`, cycle: 10 + cycle }] }),
+        ctxFor(world.ledger, { events: [{ ...redCard, id: asId<EventId>(`ev_r_${cycle}`), cycle: 10 + cycle }] }),
       ).state;
     }
     expect(state.media.stories.length).toBeLessThanOrEqual(WORLD_BALANCE.retention.stories);

@@ -5,6 +5,7 @@ import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { SeedStream } from '../seed';
+import { useSvgId } from '../useSvgId';
 import { FOCUS_RING } from '../glass/glassLevel';
 import { GlassPill } from '../glass/GlassPill';
 import { CreatorAvatar } from './PlayerPortrait';
@@ -27,6 +28,7 @@ const STORY_PALETTES: readonly (readonly [string, string])[] = [
 ];
 
 function StoryArt({ seed, className }: { seed: string; className?: string }): ReactNode {
+  const fadeId = useSvgId('cf-story');
   const bands = useMemo(() => {
     const s = new SeedStream(seed);
     const palette = s.pick('palette', STORY_PALETTES);
@@ -55,9 +57,9 @@ function StoryArt({ seed, className }: { seed: string; className?: string }): Re
           />
         ))}
       </g>
-      <rect width="200" height="100" fill="url(#story-fade)" />
+      <rect width="200" height="100" fill={`url(#${fadeId})`} />
       <defs>
-        <linearGradient id="story-fade" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={fadeId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="40%" stopColor="#05060700" />
           <stop offset="100%" stopColor="#050607dd" />
         </linearGradient>

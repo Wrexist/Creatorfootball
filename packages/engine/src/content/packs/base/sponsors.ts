@@ -3,11 +3,33 @@ import type { SponsorTemplate } from '../../schema';
 /**
  * Twenty fictional sponsors across four tiers.
  *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ UNITS — READ BEFORE EDITING ANY NUMBER IN THIS FILE                     │
+ * │                                                                         │
+ * │ `baseValue` is CASH PER CYCLE — that is, per matchweek — quoted at the   │
+ * │ reference point of 1,500,000 total club reach and club reputation 50.    │
+ * │ It is NOT a per-season figure. `sponsors/sponsors.ts` scales it by slot, │
+ * │ by reach^0.62, by reputation and by a volatile market climate index, so  │
+ * │ authoring a season total here inflates the real payout by roughly the    │
+ * │ number of matchweeks in a season and wrecks the economy.                 │
+ * │                                                                         │
+ * │ Sanity check when adding a sponsor: a mid-table club running one tier-3  │
+ * │ shirt deal plus two tier-2 deals should land near 100k per cycle of      │
+ * │ sponsorship income, which is roughly 70% of its total income.            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
  * The gates are the point. A club at reputation 20 with fifty thousand
  * followers can sign a cider brand and a removals firm and nothing else, and
  * the jump to the tier-three brands is felt rather than announced. Creator-slot
  * sponsors gate on followers instead of reputation, which is what makes growing
  * an audience a distinct economic strategy from winning matches.
+ *
+ * The value range spans roughly 85x from the bottom of tier 1 to the top of
+ * tier 4, with each tier averaging 2.5-4x the one below it, so climbing the
+ * ladder is felt rather than announced. Tier 1 is deliberately viable for a
+ * bottom-of-the-table club with almost no reach: Pike Street gates at
+ * reputation 1 and asks for no followers at all, so a struggling club always
+ * has something to sign.
  *
  * Every brand here is invented. None refers to, resembles or trades on any real
  * company.

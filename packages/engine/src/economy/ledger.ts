@@ -63,15 +63,49 @@ export interface LedgerSnapshot {
   readonly balances: Record<string, Balances>;
   readonly transactions: readonly Transaction[];
   readonly idCounters: Record<string, number>;
-  readonly appliedKeys: readonly string[];
+  /** key -> cycle applied. Pruned on a long window; see KEY_RETENTION_CYCLES. */
+  readonly appliedKeys: Readonly<Record<string, number>>;
+  /** Never pruned: real-money purchases must stay idempotent forever. */
+  readonly permanentKeys: readonly string[];
+  readonly seasonTotals: readonly SeasonLedgerTotals[];
 }
+
+/**
+ * Per-season aggregate totals, retained for the life of the save.
+ *
+ * Individual transactions are pruned so a twenty-season dynasty does not carry
+ * a hundred thousand rows in its save file, but the aggregate must survive:
+ * without it the "100 seasons" economy audit would only ever be auditing a
+ * recent window, and the club history screen would forget its own past.
+ */
+export interface SeasonLedgerTotals {
+  readonly season: number;
+  readonly clubId: string;
+  readonly income: number;
+  readonly expenditure: number;
+  readonly byKind: Readonly<Record<string, number>>;
+  readonly closingBalance: number;
+}
+
+/**
+ * How long an idempotency key is remembered. Nine seasons at 22 matchweeks is
+ * far longer than any objective, sponsor bonus or reward stays claimable, so
+ * pruning past it cannot resurrect a double-claim — while keeping save growth
+ * bounded rather than monotonic.
+ */
+export const KEY_RETENTION_CYCLES = 200;
+
+/** Transaction kinds whose idempotency must never expire. */
+const PERMANENT_KEY_KINDS: ReadonlySet<TransactionKind> = new Set(['STORE_PURCHASE']);
 
 const ZERO: Balances = { CASH: 0, PREMIUM: 0 };
 
 export class Ledger {
   private balances = new Map<string, Balances>();
   private transactions: Transaction[] = [];
-  private appliedKeys = new Set<string>();
+  private appliedKeys = new Map<string, number>();
+  private permanentKeys = new Set<string>();
+  private seasonTotals: SeasonLedgerTotals[] = [];
   private ids: IdFactory;
   /** Keep the tail bounded; the season roll-up archives older entries. */
   private maxEntries: number;
@@ -128,7 +162,7 @@ export class Ledger {
     if (!isFiniteNumber(amount) || amount < 0) {
       return err({ code: 'INVALID_AMOUNT', amount: input.amount });
     }
-    if (input.idempotencyKey && this.appliedKeys.has(input.idempotencyKey)) {
+    if (input.idempotencyKey && this.hasApplied(input.idempotencyKey)) {
       return err({ code: 'DUPLICATE', key: input.idempotencyKey });
     }
 
@@ -168,7 +202,11 @@ export class Ledger {
       this.balances.set(toKey, { ...toBal, [currency]: toBal[currency] + amount });
     }
 
-    if (input.idempotencyKey) this.appliedKeys.add(input.idempotencyKey);
+    if (input.idempotencyKey) {
+      if (PERMANENT_KEY_KINDS.has(input.kind)) this.permanentKeys.add(input.idempotencyKey);
+      else this.appliedKeys.set(input.idempotencyKey, ctx.cycle);
+    }
+    this.accumulate(tx);
     this.transactions.push(tx);
     if (this.transactions.length > this.maxEntries) {
       this.transactions.splice(0, this.transactions.length - this.maxEntries);
@@ -217,7 +255,57 @@ export class Ledger {
 
   all(): readonly Transaction[] { return this.transactions; }
 
-  hasApplied(key: string): boolean { return this.appliedKeys.has(key); }
+  hasApplied(key: string): boolean {
+    return this.permanentKeys.has(key) || this.appliedKeys.has(key);
+  }
+
+  /**
+   * Fold a transaction into the per-season aggregate. Called on every post, so
+   * the rollup is always complete regardless of how aggressively the individual
+   * transaction tail is pruned.
+   */
+  private accumulate(tx: Transaction): void {
+    if (tx.currency !== 'CASH') return;
+    for (const [account, inbound] of [[tx.to, true], [tx.from, false]] as const) {
+      if (account.kind !== 'club') continue;
+      const clubId = account.clubId as string;
+      let row = this.seasonTotals.find((r) => r.season === tx.season && r.clubId === clubId);
+      if (!row) {
+        row = { season: tx.season, clubId, income: 0, expenditure: 0, byKind: {}, closingBalance: 0 };
+        this.seasonTotals.push(row);
+      }
+      const byKind = { ...row.byKind };
+      byKind[tx.kind] = (byKind[tx.kind] ?? 0) + (inbound ? tx.amount : -tx.amount);
+      const updated: SeasonLedgerTotals = {
+        ...row,
+        income: row.income + (inbound ? tx.amount : 0),
+        expenditure: row.expenditure + (inbound ? 0 : tx.amount),
+        byKind,
+        closingBalance: (this.balances.get(`club:${clubId}`) ?? ZERO).CASH,
+      };
+      this.seasonTotals[this.seasonTotals.indexOf(row)] = updated;
+    }
+  }
+
+  /** Complete per-season history, retained for the life of the save. */
+  seasonHistory(clubId?: ClubId): readonly SeasonLedgerTotals[] {
+    return clubId ? this.seasonTotals.filter((r) => r.clubId === clubId) : this.seasonTotals;
+  }
+
+  /**
+   * Drop idempotency keys older than the retention window. Called at each
+   * season boundary so save size stays bounded across a long dynasty.
+   */
+  pruneKeys(currentCycle: number): number {
+    let pruned = 0;
+    for (const [key, cycle] of this.appliedKeys) {
+      if (currentCycle - cycle > KEY_RETENTION_CYCLES) {
+        this.appliedKeys.delete(key);
+        pruned++;
+      }
+    }
+    return pruned;
+  }
 
   /** Every tracked balance must be finite and every transaction auditable. */
   verify(): string[] {
@@ -240,9 +328,13 @@ export class Ledger {
   snapshot(): LedgerSnapshot {
     return {
       balances: Object.fromEntries(this.balances),
-      transactions: this.transactions.slice(-1200),
+      // Persist the same window we keep in memory: a loaded save that knows
+      // less than the session that wrote it is a confusing class of bug.
+      transactions: this.transactions.slice(-this.maxEntries),
       idCounters: this.ids.serialize(),
-      appliedKeys: [...this.appliedKeys],
+      appliedKeys: Object.fromEntries(this.appliedKeys),
+      permanentKeys: [...this.permanentKeys],
+      seasonTotals: this.seasonTotals,
     };
   }
 
@@ -250,7 +342,14 @@ export class Ledger {
     const l = new Ledger(prefix);
     l.balances = new Map(Object.entries(snapshot.balances));
     l.transactions = snapshot.transactions.slice();
-    l.appliedKeys = new Set(snapshot.appliedKeys);
+    // Tolerate the pre-rollup snapshot shape so an in-flight save still loads.
+    l.appliedKeys = new Map(
+      Array.isArray(snapshot.appliedKeys)
+        ? (snapshot.appliedKeys as readonly string[]).map((k) => [k, 0] as const)
+        : Object.entries(snapshot.appliedKeys ?? {}),
+    );
+    l.permanentKeys = new Set(snapshot.permanentKeys ?? []);
+    l.seasonTotals = (snapshot.seasonTotals ?? []).slice();
     l.ids = IdFactory.restore(prefix, snapshot.idCounters);
     return l;
   }

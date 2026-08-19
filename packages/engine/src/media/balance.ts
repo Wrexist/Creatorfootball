@@ -34,7 +34,12 @@ export const MEDIA_BALANCE = {
 
   /** Stakes adjustments applied on top of the hook's importance. */
   derbyImportanceBonus: 1,
-  playerClubImportanceBonus: 1,
+  /**
+   * Stories about the player's club jump the queue but are not *inflated*:
+   * this is a ranking bonus only, so the published importance still means the
+   * same thing whoever the story is about.
+   */
+  playerClubRankBonus: 3,
   /** Goal margin at which a result is a rout rather than a win. */
   routMargin: 4,
   routImportanceBonus: 1,

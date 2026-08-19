@@ -1,7 +1,8 @@
-import { memo, useId, useMemo, type ReactNode } from 'react';
+import { memo, useMemo, type ReactNode } from 'react';
 import { cn } from '../cn';
 import { SeedStream } from '../seed';
 import { darken, lighten, rgba } from '../color';
+import { useSvgId } from '../useSvgId';
 
 /**
  * Procedurally generated portraits.
@@ -275,7 +276,8 @@ function PortraitInner({
   className,
   label,
 }: PlayerPortraitProps): ReactNode {
-  const uid = useId().replace(/:/g, '');
+  const bgId = useSvgId('cf-face-bg');
+  const headClipId = useSvgId('cf-face-clip');
   const f = useMemo(() => portraitFeatures(seed), [seed]);
 
   const primary = colors?.primary ?? '#1c2026';
@@ -297,17 +299,17 @@ function PortraitInner({
       aria-hidden={label ? undefined : true}
     >
       <defs>
-        <radialGradient id={`bg-${uid}`} cx="50%" cy="34%" r="78%">
+        <radialGradient id={bgId} cx="50%" cy="34%" r="78%">
           <stop offset="0%" stopColor={lighten(primary, 0.18)} />
           <stop offset="62%" stopColor={primary} />
           <stop offset="100%" stopColor={darken(primary, 0.55)} />
         </radialGradient>
-        <clipPath id={`head-${uid}`}>
+        <clipPath id={headClipId}>
           <path d={head} />
         </clipPath>
       </defs>
 
-      <rect width="120" height="120" fill={`url(#bg-${uid})`} />
+      <rect width="120" height="120" fill={`url(#${bgId})`} />
       {/* A single wide arc gives the flat backdrop depth without a second
           gradient pass — cheaper than a blur and reads as stadium light. */}
       <path d="M-10 96 C24 74 96 74 130 96 L130 130 L-10 130 Z" fill={rgba(darken(primary, 0.7), 0.55)} />
@@ -335,8 +337,10 @@ function PortraitInner({
 
       <path d={head} fill={f.skin} />
       {/* Form shading, clipped to the head so it never leaks onto the kit. */}
-      <g clipPath={`url(#head-${uid})`}>
-        <path d={`M${CX + 4} 0 L120 0 L120 120 L${CX + 14} 120 Z`} fill={rgba(shade, 0.35)} />
+      <g clipPath={`url(#${headClipId})`}>
+        {/* A soft form shadow down one side. Kept at 0.16 — anything stronger
+            reads as a hard mask rather than as light falling across a face. */}
+        <path d={`M${CX + 7} 0 L120 0 L120 120 L${CX + 15} 120 Z`} fill={rgba(shade, 0.16)} />
       </g>
 
       {/* Brows */}
@@ -346,26 +350,20 @@ function PortraitInner({
       </g>
 
       {/* Eyes */}
-      <g fill="#241d1a">
-        {f.eyeStyle === 0 && (
-          <>
-            <ellipse cx={CX - 11} cy={eyeY} rx={2.6} ry={3.1} />
-            <ellipse cx={CX + 11} cy={eyeY} rx={2.6} ry={3.1} />
-          </>
-        )}
-        {f.eyeStyle === 1 && (
-          <>
-            <rect x={CX - 15} y={eyeY - 1.4} width={8} height={2.8} rx={1.4} />
-            <rect x={CX + 7} y={eyeY - 1.4} width={8} height={2.8} rx={1.4} />
-          </>
-        )}
-        {f.eyeStyle === 2 && (
-          <>
-            <ellipse cx={CX - 11} cy={eyeY} rx={3.4} ry={2.4} />
-            <ellipse cx={CX + 11} cy={eyeY} rx={3.4} ry={2.4} />
-          </>
-        )}
-      </g>
+      {/* Every eye variant is drawn as a light sclera with a dark iris. A bare
+          dark slit — the obvious simplification — reads as a closed eye at the
+          28px size used in squad lists, which makes every face look asleep. */}
+      {([-1, 1] as const).map((sideSign) => {
+        const ex = CX + sideSign * 11;
+        const rx = f.eyeStyle === 2 ? 4.4 : 3.9;
+        const ry = f.eyeStyle === 1 ? 2.6 : 3.1;
+        return (
+          <g key={sideSign}>
+            <ellipse cx={ex} cy={eyeY} rx={rx} ry={ry} fill="#f2efe9" />
+            <circle cx={ex + sideSign * 0.4} cy={eyeY} r={f.eyeStyle === 1 ? 1.7 : 2} fill="#241d1a" />
+          </g>
+        );
+      })}
 
       {/* Nose and mouth */}
       <path

@@ -1,10 +1,26 @@
 # Creator Football — Test Plan
 
-**Current state, honestly:** the repo has one test file
-(`packages/engine/src/league/fixtures.test.ts`, 5 cases), Vitest configured for Node with
-globals, no ESLint configuration anywhere, an empty `.github/workflows/` directory, and an
-empty `tools/sim` directory that four root `package.json` scripts already point at. Almost
-everything below is `TO BUILD`. It is written as the target, with each item's status marked.
+**Current state, measured:**
+
+| | |
+|---|---|
+| Test files | **20** |
+| Tests | **262 — 260 passing, 2 failing** |
+| `pnpm typecheck` | **Red.** TS6059: `packages/engine/test/save.test.ts` is matched by the `test/**/*` include but sits outside `rootDir: "src"` |
+| `pnpm lint` | **Does nothing.** No ESLint config anywhere; no package defines a `lint` script |
+| `pnpm audit:*` | **Red.** `tools/sim` is a package with a `report.ts`, but none of the four entry points its scripts invoke exist |
+| CI | **None.** `.github/workflows/` is empty |
+
+### The two failing tests
+
+| Test | Failure | Why it matters |
+|---|---|---|
+| `home advantage and support > keeps the audience modifier under a six-point swing at full support` | Measured **9.6pp** against a **6pp** cap | The audience modifier occupies the structural slot home advantage occupies in a conventional sim, and the reference data caps it at roughly the real-world home effect specifically so it stays a nudge rather than a determinant. At 9.6pp, club reach is influencing match outcomes more than the strongest effect in real top-flight football — which is also the closest this design comes to a pay-to-win surface |
+| `special rule windows > runs exactly one guaranteed window per half, anchored to its closing minutes` | Passes **in isolation**, fails in a **full run** (`expected [] to have a length of 2`) | This is an isolation or ordering leak, not a logic bug — and it is the most concerning failure in the suite, because the codebase's central architectural claim is that the same inputs always produce the same outputs. Something is carrying state between tests. Find it before writing more tests on top of it |
+
+Everything else below is written as the target, with each item's status marked. Unit
+coverage now exists for most engine modules; what is missing is the **static enforcement**
+layer (§2.1), the **content validation** suite (§3) and the entire **audit harness** (§4-§6).
 
 ---
 
@@ -31,11 +47,12 @@ These are cheap, and they protect the two properties the whole architecture rest
 
 | Rule | Enforcement | Status |
 |---|---|---|
+| **Tests do not leak state between files** | A `vitest` run with `--sequence.shuffle` must pass, repeatedly | **TO BUILD — one test already fails only in a full run** |
 | `packages/engine` imports no React, DOM, Capacitor or Node built-in | ESLint `no-restricted-imports` scoped to `packages/engine/**` | **TO BUILD — the highest-value missing check in the repo** |
 | No `Math.random()` in `packages/engine` | ESLint `no-restricted-globals` / `no-restricted-properties` | **TO BUILD** |
 | No `Date.now()` in engine simulation modules | Same, with an allowlist for none — timestamps are parameters | **TO BUILD** |
 | No `window`, `document`, `localStorage`, `navigator`, `fetch` in the engine | Same | **TO BUILD** |
-| Strict TypeScript passes with zero errors | `pnpm typecheck` | BUILT (`tsc` config), enforced by CI once CI exists |
+| Strict TypeScript passes with zero errors | `pnpm typecheck` | **Currently red** — fix the `rootDir` conflict before adding CI, or CI lands permanently broken |
 | No content string matches the legal denylist | Custom Vitest rule over pack data | **TO BUILD** (`LICENSING_ARCHITECTURE.md` §6.4) |
 
 Without the first four, the purity rule described throughout `ARCHITECTURE.md` is a
@@ -58,13 +75,13 @@ convention that a single careless import breaks silently.
 | `tactics/formations` | Every formation's slot 0 is `GK`; `formationsFor(7)` returns only 7-slot shapes; `formationById` falls back rather than throwing; `autoLineup` fills every slot when enough players exist, never puts an outfielder in goal when a keeper is available, benches a spare keeper first, and picks a plausible captain/set-piece/penalty taker | TO BUILD |
 | `league/fixtures` | Complete double round robin for 12; odd counts get a bye without self-fixtures; deterministic per seed; different seeds differ; `verifyFixtures` returns `[]`; home/away balanced within 1; `phaseForWeek` covers every phase proportionally | **BUILT** (5 cases) — extend with `phaseForWeek` and playoff bracket |
 | `league/standings` | Points and GD arithmetic; `H2H_FIRST` vs `GD_FIRST` tiebreaks; zones assigned correctly at boundaries; `form` capped at 5, newest last; ordering is stable; `positionContext` at first, last and middle | TO BUILD |
-| `economy/ledger` | Balances move correctly; `INSUFFICIENT_FUNDS` on overdraft; `allowOverdraft` bypasses; `DUPLICATE` on a repeated `idempotencyKey`; `INVALID_AMOUNT` on negative/NaN/Infinity; `world` accounts are untracked; `summaryFor` windows correctly; `snapshot`/`restore` preserves balances, ids **and** applied keys; `verify()` catches every problem class; `formatMoney` at K/M/B boundaries and negatives | TO BUILD |
-| `persistence/save` | Round-trip; checksum mismatch → `CORRUPT`; future version → `UNSUPPORTED_VERSION`; missing → `NOT_FOUND`; **`loadGame` falls back to backup and reports `recoveredFromBackup: true`**; `saveGame` refuses to overwrite a good save with an invalid state; `validateState` catches a player in two squads, a squad referencing an unknown player, and a missing current season | TO BUILD |
+| `economy/ledger` | *(economy `audit.test.ts` and `cycle.test.ts` exist; the ledger itself has no direct test)* Balances move correctly; `INSUFFICIENT_FUNDS` on overdraft; `allowOverdraft` bypasses; `DUPLICATE` on a repeated `idempotencyKey`; `INVALID_AMOUNT` on negative/NaN/Infinity; `world` accounts are untracked; `summaryFor` windows correctly; `snapshot`/`restore` preserves balances, ids **and** applied keys; `verify()` catches every problem class; `formatMoney` at K/M/B boundaries and negatives | TO BUILD |
+| `persistence/save` | *(`test/save.test.ts` exists — and is the file breaking `typecheck`)* Round-trip; checksum mismatch → `CORRUPT`; future version → `UNSUPPORTED_VERSION`; missing → `NOT_FOUND`; **`loadGame` falls back to backup and reports `recoveredFromBackup: true`**; `saveGame` refuses to overwrite a good save with an invalid state; `validateState` catches a player in two squads, a squad referencing an unknown player, and a missing current season | TO BUILD |
 | `licensing/identity` | `isRenderable` true for all fictional kinds; false for licensed with no rights, non-`ACTIVE` status, past expiry, out-of-region; true for empty `regions` (worldwide); boundary at `expiresAt === now` (expired) | TO BUILD |
 | `simulation/templating` | `renderTemplate` returns `null` on any missing token and collapses whitespace; `matchesConditions` handles every operator (`gte`, `lte`, `gt`, `lt`, `not`, `in`) and **returns false for an unknown fact key**; `pickTemplate` de-weights recent ids by `REPEAT_PENALTY` and returns `null` on an empty pool; `sentimentBand` boundaries | TO BUILD |
-| `content/loader` | Valid pack loads clean; every §4.1 validation error is caught; duplicate id without `overrides` is an error; declared override replaces; `unload` restores; `visibleFor` filters by region and time | TO BUILD (Workstream B) |
-| `transfers/valuation` | Monotonic in overall; age curve peaks 24-28 and floors at `AGE_MULT_FLOOR`; potential premium capped and irrelevant past 30; contract expiry cliff; injury discount capped; every output within `[MIN_VALUE, MAX_VALUE]` and finite | TO BUILD (Workstream C) |
-| `transfers/negotiation` | Patience burns per round and per lowball; insult doubles the burn; hijack probability respects its cap; both failure modes reachable; a completed transfer posts exactly two ledger entries (out and in) plus the agent fee | TO BUILD (Workstream C) |
+| `content/loader` | **Module exists; no test file.** Valid pack loads clean; every §4.1 validation error is caught; duplicate id without `overrides` is an error; declared override replaces; `unload` restores; `visibleFor` filters by region and time | Module built, test missing |
+| `transfers/valuation` | *(`valuation.test.ts` exists)* Monotonic in overall; age curve peaks 24-28 and floors at `AGE_MULT_FLOOR`; potential premium capped and irrelevant past 30; contract expiry cliff; injury discount capped; every output within `[MIN_VALUE, MAX_VALUE]` and finite | Partially covered |
+| `transfers/negotiation` | *(`negotiation.test.ts` exists)* Patience burns per round and per lowball; insult doubles the burn; hijack probability respects its cap; both failure modes reachable; a completed transfer posts exactly two ledger entries (out and in) plus the agent fee | Partially covered |
 
 ---
 

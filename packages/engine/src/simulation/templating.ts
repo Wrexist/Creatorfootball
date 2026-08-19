@@ -96,3 +96,61 @@ export const sentimentBand = (s: number): 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' =>
 /** Deterministic small integer from a string — used for avatar/image seeds. */
 export const seedFrom = (...parts: readonly (string | number)[]): string =>
   parts.map((p) => String(p)).join('-').replace(/[^a-zA-Z0-9_-]+/g, '').slice(0, 48);
+
+/**
+ * Trigger aliases.
+ *
+ * The cascade speaks in *semantic* triggers — a 6-0 derby win is a
+ * `DERBY_WIN`, not just a `MATCH_WON` — because that is what lets a template
+ * pack write a line that fits the moment. Content packs may key on the plain
+ * domain event type instead, which is a perfectly reasonable thing for an
+ * author to do. This table lets both work: a hook draws on templates for its
+ * specific trigger *and* on the broader event-type pool, with the specific
+ * lines weighted up so they win whenever they exist.
+ */
+export const TRIGGER_FALLBACKS: Readonly<Record<string, string>> = {
+  MARQUEE_SIGNING: 'PLAYER_SIGNED',
+  SIGNING: 'PLAYER_SIGNED',
+  DEBUT_WATCH: 'PLAYER_SIGNED',
+  WIN: 'MATCH_WON',
+  STATEMENT_WIN: 'MATCH_WON',
+  DERBY_WIN: 'MATCH_WON',
+  DEFEAT: 'MATCH_LOST',
+  SHOCK_DEFEAT: 'MATCH_LOST',
+  DERBY_DEFEAT: 'MATCH_LOST',
+  DEFEAT_FALLOUT: 'MATCH_LOST',
+  GOAL: 'GOAL_SCORED',
+  SPECIAL_GOAL: 'GOAL_SCORED',
+  WONDERKID: 'PLAYER_BREAKOUT',
+  BREAKOUT_INTEREST: 'PLAYER_BREAKOUT',
+  INJURY_BLOW: 'PLAYER_INJURED',
+  FAN_UNREST: 'FAN_SENTIMENT_CHANGED',
+  FAN_BUZZ: 'FAN_SENTIMENT_CHANGED',
+  RIVALRY_HEAT: 'RIVALRY_INTENSIFIED',
+  TRANSFER_HIJACK: 'TRANSFER_HIJACKED',
+  SUSPENSION_AFTERMATH: 'RED_CARD',
+  RECORD_REACTION: 'RECORD_BROKEN',
+  TROPHY_AFTERGLOW: 'TROPHY_WON',
+  PLAYER_UNHAPPY: 'PLAYER_MORALE_CHANGED',
+  PLAYER_LIFTED: 'PLAYER_MORALE_CHANGED',
+};
+
+/** How much a template keyed to the exact moment outweighs a generic one. */
+export const SPECIFIC_TRIGGER_BONUS = 3;
+
+/**
+ * Candidate templates for a trigger: its own, weighted up, plus the broader
+ * event-type pool underneath.
+ */
+export function templatesForTrigger<T extends Weighted>(
+  lookup: (key: string) => readonly T[] | undefined,
+  trigger: string,
+  suffix = '',
+): T[] {
+  const specific = (lookup(`${trigger}${suffix}`) ?? []).map(
+    (t) => ({ ...t, weight: Math.max(1, t.weight) * SPECIFIC_TRIGGER_BONUS }),
+  );
+  const fallbackTrigger = TRIGGER_FALLBACKS[trigger];
+  const fallback = fallbackTrigger ? lookup(`${fallbackTrigger}${suffix}`) ?? [] : [];
+  return [...specific, ...fallback];
+}

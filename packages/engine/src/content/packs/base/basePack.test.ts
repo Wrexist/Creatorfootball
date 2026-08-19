@@ -148,6 +148,27 @@ describe('base pack inventory', () => {
     }
     // Follower gates exist on the creator-facing deals.
     expect(BASE_SPONSORS.filter((s) => s.requiresFollowers).length).toBeGreaterThanOrEqual(5);
+
+    // Each tier averages a real multiple of the one below it, or the ladder is
+    // decorative rather than progression.
+    for (let i = 1; i < byTier.length; i++) {
+      expect(byTier[i]!.value / byTier[i - 1]!.value).toBeGreaterThan(2);
+    }
+
+    // baseValue is CASH PER CYCLE at reference reach/reputation, never per
+    // season. This bound is the guard against somebody re-authoring it as a
+    // season total, which would be roughly 22x too large.
+    const values = BASE_SPONSORS.map((s) => s.baseValue);
+    const low = Math.min(...values);
+    const high = Math.max(...values);
+    expect(low).toBeGreaterThan(1_000);
+    expect(low).toBeLessThan(10_000);
+    expect(high).toBeLessThan(400_000);
+    expect(high / low).toBeGreaterThan(40);
+
+    // A bottom-of-the-table club with no reach must always have something to sign.
+    const entryLevel = BASE_SPONSORS.filter((s) => s.requiresReputation <= 5 && !s.requiresFollowers);
+    expect(entryLevel.length).toBeGreaterThanOrEqual(2);
   });
 
   it('ships eleven facilities with five levels and machine-readable effects', () => {

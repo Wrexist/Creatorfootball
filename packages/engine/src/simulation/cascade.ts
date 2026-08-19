@@ -377,7 +377,7 @@ const matchLostRule: RuleFor<'MATCH_LOST'> = (e, ctx) => {
     ],
     media: [{
       trigger: shock ? 'SHOCK_DEFEAT' : isDerbyMoment ? 'DERBY_DEFEAT' : 'DEFEAT',
-      importance: (shock ? C.shockDefeat.mediaImportance : isDerbyMoment ? 4 : 2) as EventImportance,
+      importance: (shock ? C.shockDefeat.mediaImportance : isDerbyMoment ? 3 : 2) as EventImportance,
       sentiment: shock ? -0.75 : -0.4, tokens, facts, entities,
       clubId: p.clubId, opponentClubId: p.opponentId, tags: ['match', 'result'],
     }],
@@ -429,7 +429,9 @@ const matchWonRule: RuleFor<'MATCH_WON'> = (e, ctx) => {
     ],
     media: [{
       trigger: isDerbyMoment ? 'DERBY_WIN' : big ? 'STATEMENT_WIN' : 'WIN',
-      importance: (isDerbyMoment ? 4 : big ? 3 : 2) as EventImportance,
+      // The derby and rout bonuses are added by the media engine's stakes pass;
+      // the base is what the result would be worth on a normal weekend.
+      importance: (isDerbyMoment ? 3 : big ? 3 : 2) as EventImportance,
       sentiment: 0.6, tokens, facts, entities,
       clubId: p.clubId, opponentClubId: p.opponentId, tags: ['match', 'result'],
     }],

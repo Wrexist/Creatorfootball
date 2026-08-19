@@ -154,3 +154,32 @@ export const WORLD_BALANCE = {
     milestones: 120,
   },
 } as const;
+
+/**
+ * Emergent-story thresholds.
+ *
+ * These are the lines between "a thing happened" and "a thing worth telling a
+ * story about". Set them too low and the feed cries wolf; too high and the
+ * payoff never arrives.
+ */
+export const EMERGENT_BALANCE = {
+  derbyStreak: 3,
+  cleanSheetRun: 3,
+  unbeatenRun: 5,
+  winlessRun: 5,
+  /** Signings above this multiple of the club's cycle wage budget are "expensive". */
+  flopFeeToWageBudget: 4,
+  /** Appearances a signing needs before we are entitled to judge it. */
+  flopMinAppearances: 5,
+  flopMaxRating: 6.4,
+  flopMaxGoalContributions: 2,
+  /** Overall points gained in a season that constitutes a breakout arc. */
+  breakoutGain: 5,
+  breakoutMaxAge: 21,
+  /** Points separating the top two that counts as a title race. */
+  titleRacePoints: 2,
+  /** Fraction of the season that must be played before a title race is a story. */
+  titleRaceProgress: 0.6,
+  /** Cycles before the same emergent story may be told about the same subject again. */
+  cooldownCycles: 8,
+} as const;

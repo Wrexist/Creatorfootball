@@ -10,6 +10,12 @@
     "audit:all": "tsx src/runAll.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": { "@cf/engine": "workspace:*" },
-  "devDependencies": { "tsx": "^4.20.3", "typescript": "^5.9.2", "@types/node": "^22.10.2" }
+  "dependencies": {
+    "@cf/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
+    "@types/node": "^22.10.2"
+  }
 }

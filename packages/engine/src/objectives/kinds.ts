@@ -2,6 +2,7 @@ import type { ClubId } from '../core/brand';
 import type { AnyDomainEvent } from '../core/events';
 import type { GameState } from '../game/state';
 import { points } from '../clubs/club';
+import { OBJECTIVE_BALANCE as B } from './balance';
 
 /**
  * Objective kinds.
@@ -56,19 +57,19 @@ export const OBJECTIVE_KINDS: readonly ObjectiveKindDef[] = [
     feasible: (ctx) => ({
       min: 1,
       // 85% of the expected wins in the remaining fixtures: demanding, never absurd.
-      max: Math.max(1, achievable(ctx.remainingMatches, ctx.winRate, 0.85)),
+      max: Math.max(1, achievable(ctx.remainingMatches, ctx.winRate, B.winTargetHeadroom)),
     }),
   },
   {
     id: 'SCORE_GOALS', label: 'Score goals',
     progress: (e, c) => (e.type === 'GOAL_SCORED' && isFor(e, c) ? 1 : 0),
-    feasible: (ctx) => ({ min: 2, max: Math.max(3, Math.floor(ctx.remainingMatches * 2.2)) }),
+    feasible: (ctx) => ({ min: 2, max: Math.max(3, Math.floor(ctx.remainingMatches * B.goalsPerMatch)) }),
   },
   {
     id: 'CLEAN_SHEETS', label: 'Keep clean sheets',
     progress: (e, c) => (e.type === 'MATCH_WON' && isFor(e, c)
       && (e.payload.homeScore === 0 || e.payload.awayScore === 0) ? 1 : 0),
-    feasible: (ctx) => ({ min: 1, max: Math.max(1, achievable(ctx.remainingMatches, 0.35, 1)) }),
+    feasible: (ctx) => ({ min: 1, max: Math.max(1, achievable(ctx.remainingMatches, B.cleanSheetRate, 1)) }),
   },
   {
     id: 'WIN_DERBY', label: 'Win a derby',
@@ -79,7 +80,7 @@ export const OBJECTIVE_KINDS: readonly ObjectiveKindDef[] = [
     id: 'AVOID_RED_CARDS', label: 'Discipline',
     progress: (e, c) => (e.type === 'RED_CARD' && isFor(e, c) ? 1 : 0),
     lowerIsBetter: true,
-    feasible: (ctx) => ({ min: 0, max: Math.max(0, Math.floor(ctx.remainingMatches / 6)) }),
+    feasible: (ctx) => ({ min: 0, max: Math.max(0, Math.floor(ctx.remainingMatches / B.matchesPerAllowedRedCard)) }),
   },
   {
     id: 'LEAGUE_POSITION', label: 'Finish in position',
@@ -93,8 +94,8 @@ export const OBJECTIVE_KINDS: readonly ObjectiveKindDef[] = [
     lowerIsBetter: true,
     feasible: (ctx) => ({
       // You can be asked to climb, but only by a plausible number of places.
-      min: Math.max(1, ctx.currentPosition - 4),
-      max: Math.min(ctx.clubCount, ctx.currentPosition + 2),
+      min: Math.max(1, ctx.currentPosition - B.maxPositionsToClimb),
+      max: Math.min(ctx.clubCount, ctx.currentPosition + B.maxPositionsToSlip),
     }),
   },
   {
@@ -105,7 +106,7 @@ export const OBJECTIVE_KINDS: readonly ObjectiveKindDef[] = [
   {
     id: 'DEVELOP_PLAYER', label: 'Develop players',
     progress: (e, c) => (e.type === 'PLAYER_DEVELOPED' && isFor(e, c) ? Math.max(0, e.payload.to - e.payload.from) : 0),
-    feasible: (ctx) => ({ min: 2, max: Math.max(3, Math.floor(ctx.remainingMatches * 0.8)) }),
+    feasible: (ctx) => ({ min: 2, max: Math.max(3, Math.floor(ctx.remainingMatches * B.developmentPerMatch)) }),
   },
   {
     id: 'YOUTH_MINUTES', label: 'Trust the academy',
@@ -116,27 +117,27 @@ export const OBJECTIVE_KINDS: readonly ObjectiveKindDef[] = [
     id: 'GAIN_FOLLOWERS', label: 'Grow the audience',
     measure: (state, clubId) => state.clubs[clubId]?.fans.onlineFollowers ?? 0,
     feasible: (ctx) => ({
-      min: Math.round(ctx.followers * 1.02),
-      max: Math.round(ctx.followers * 1.25),
+      min: Math.round(ctx.followers * B.followerGrowth[0]),
+      max: Math.round(ctx.followers * B.followerGrowth[1]),
     }),
   },
   {
     id: 'FAN_SENTIMENT', label: 'Win the fans over',
     measure: (state, clubId) => Math.round(state.clubs[clubId]?.fans.sentiment ?? 0),
     feasible: (ctx) => ({
-      min: Math.min(95, Math.round(ctx.fanSentiment) + 2),
-      max: Math.min(95, Math.round(ctx.fanSentiment) + 18),
+      min: Math.min(B.sentimentCeiling, Math.round(ctx.fanSentiment) + B.sentimentGain[0]),
+      max: Math.min(B.sentimentCeiling, Math.round(ctx.fanSentiment) + B.sentimentGain[1]),
     }),
   },
   {
     id: 'MOTM_AWARDS', label: 'Match-winners',
     progress: (e, c) => (e.type === 'MOTM_AWARDED' && isFor(e, c) ? 1 : 0),
-    feasible: (ctx) => ({ min: 1, max: Math.max(1, Math.floor(ctx.remainingMatches * 0.6)) }),
+    feasible: (ctx) => ({ min: 1, max: Math.max(1, Math.floor(ctx.remainingMatches * B.motmRate)) }),
   },
   {
     id: 'FACILITY_UPGRADE', label: 'Invest in the club',
     progress: (e, c) => (e.type === 'FACILITY_UPGRADED' && isFor(e, c) ? 1 : 0),
-    feasible: (ctx) => ({ min: 1, max: ctx.balance > 2_000_000 ? 2 : 1 }),
+    feasible: (ctx) => ({ min: 1, max: ctx.balance > B.twoUpgradesBalance ? 2 : 1 }),
   },
   {
     id: 'SPONSOR_DEALS', label: 'Commercial growth',
@@ -146,7 +147,7 @@ export const OBJECTIVE_KINDS: readonly ObjectiveKindDef[] = [
   {
     id: 'TROPHY', label: 'Win silverware',
     progress: (e, c) => (e.type === 'TROPHY_WON' && isFor(e, c) ? 1 : 0),
-    feasible: (ctx) => ({ min: 1, max: ctx.currentPosition <= 3 ? 1 : 0 }),
+    feasible: (ctx) => ({ min: 1, max: ctx.currentPosition <= B.trophyContenderPosition ? 1 : 0 }),
   },
 ];
 

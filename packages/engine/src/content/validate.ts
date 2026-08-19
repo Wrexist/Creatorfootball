@@ -65,6 +65,13 @@ export function validatePack(pack: ContentPack): ValidationIssue[] {
   if (!manifest) return [{ path: 'manifest', message: 'manifest is missing', severity: ERROR }];
   if (!data) return [{ path: 'data', message: 'data is missing', severity: ERROR }];
 
+  // A pack that declares dependencies may legitimately point at ids defined in
+  // one of them, and validatePack cannot see those. Such references drop to a
+  // warning here and are re-checked for real by ContentRegistry.load, which
+  // does know what else is loaded. A pack with no dependencies has no excuse.
+  const refSeverity = (manifest.requires?.length ?? 0) > 0 ? WARNING : ERROR;
+  const refNote = refSeverity === WARNING ? ' (may resolve in a required pack)' : '';
+
   /* ------------------------------------------------------------ manifest */
   const requiredManifestFields: readonly (keyof typeof manifest)[] = [
     'id', 'version', 'kind', 'name', 'description', 'provider', 'identityKind',
@@ -167,7 +174,7 @@ export function validatePack(pack: ContentPack): ValidationIssue[] {
   for (const [i, club] of (data.clubs ?? []).entries()) {
     for (const rivalId of club.rivalOf ?? []) {
       if (!clubIds.has(rivalId)) {
-        add(`clubs[${i}].rivalOf`, `dangling reference: rival club "${rivalId}" does not exist in this pack`);
+        add(`clubs[${i}].rivalOf`, `dangling reference: rival club "${rivalId}" does not exist in this pack${refNote}`, refSeverity);
       }
       if (rivalId === club.id) add(`clubs[${i}].rivalOf`, 'a club cannot be its own rival');
     }
@@ -236,10 +243,10 @@ export function validatePack(pack: ContentPack): ValidationIssue[] {
       }
     }
     if (player.clubTemplateId && !clubIds.has(player.clubTemplateId)) {
-      add(`${p}.clubTemplateId`, `dangling reference: club template "${player.clubTemplateId}" does not exist in this pack`);
+      add(`${p}.clubTemplateId`, `dangling reference: club template "${player.clubTemplateId}" does not exist in this pack${refNote}`, refSeverity);
     }
     if (player.creatorTemplateId && !creatorIds.has(player.creatorTemplateId)) {
-      add(`${p}.creatorTemplateId`, `dangling reference: creator template "${player.creatorTemplateId}" does not exist in this pack`);
+      add(`${p}.creatorTemplateId`, `dangling reference: creator template "${player.creatorTemplateId}" does not exist in this pack${refNote}`, refSeverity);
     }
   }
 
@@ -293,10 +300,10 @@ export function validatePack(pack: ContentPack): ValidationIssue[] {
       add(`${p}.attributes`, 'attributes are required');
     }
     if (creator.clubTemplateId && !clubIds.has(creator.clubTemplateId)) {
-      add(`${p}.clubTemplateId`, `dangling reference: club template "${creator.clubTemplateId}" does not exist in this pack`);
+      add(`${p}.clubTemplateId`, `dangling reference: club template "${creator.clubTemplateId}" does not exist in this pack${refNote}`, refSeverity);
     }
     if (creator.playerTemplateId && !playerIds.has(creator.playerTemplateId)) {
-      add(`${p}.playerTemplateId`, `dangling reference: player template "${creator.playerTemplateId}" does not exist in this pack`);
+      add(`${p}.playerTemplateId`, `dangling reference: player template "${creator.playerTemplateId}" does not exist in this pack${refNote}`, refSeverity);
     }
   }
 
@@ -314,7 +321,7 @@ export function validatePack(pack: ContentPack): ValidationIssue[] {
       }
     }
     if (manager.creatorTemplateId && !creatorIds.has(manager.creatorTemplateId)) {
-      add(`${p}.creatorTemplateId`, `dangling reference: creator template "${manager.creatorTemplateId}" does not exist in this pack`);
+      add(`${p}.creatorTemplateId`, `dangling reference: creator template "${manager.creatorTemplateId}" does not exist in this pack${refNote}`, refSeverity);
     }
   }
 
@@ -543,3 +550,28 @@ export function validatePack(pack: ContentPack): ValidationIssue[] {
 /** Convenience for tests and tooling. */
 export const errorsOnly = (issues: readonly ValidationIssue[]): ValidationIssue[] =>
   issues.filter((i) => i.severity === 'error');
+
+/**
+ * Every cross-entity reference a pack makes, so the registry can re-check the
+ * ones `validatePack` had to let through as warnings because they might resolve
+ * inside a dependency.
+ */
+export function collectReferences(pack: ContentPack): { path: string; kind: string; id: string }[] {
+  const out: { path: string; kind: string; id: string }[] = [];
+  const data = pack.data ?? {};
+  for (const [i, club] of (data.clubs ?? []).entries()) {
+    for (const rivalId of club.rivalOf ?? []) out.push({ path: `clubs[${i}].rivalOf`, kind: 'club', id: rivalId });
+  }
+  for (const [i, player] of (data.players ?? []).entries()) {
+    if (player.clubTemplateId) out.push({ path: `players[${i}].clubTemplateId`, kind: 'club', id: player.clubTemplateId });
+    if (player.creatorTemplateId) out.push({ path: `players[${i}].creatorTemplateId`, kind: 'creator', id: player.creatorTemplateId });
+  }
+  for (const [i, creator] of (data.creators ?? []).entries()) {
+    if (creator.clubTemplateId) out.push({ path: `creators[${i}].clubTemplateId`, kind: 'club', id: creator.clubTemplateId });
+    if (creator.playerTemplateId) out.push({ path: `creators[${i}].playerTemplateId`, kind: 'player', id: creator.playerTemplateId });
+  }
+  for (const [i, manager] of (data.managers ?? []).entries()) {
+    if (manager.creatorTemplateId) out.push({ path: `managers[${i}].creatorTemplateId`, kind: 'creator', id: manager.creatorTemplateId });
+  }
+  return out;
+}

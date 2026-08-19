@@ -40,9 +40,17 @@ export function parseColor(input: string): Rgb {
 export const toHex = ({ r, g, b }: Rgb): string =>
   `#${[r, g, b].map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('')}`;
 
+/**
+ * Legacy comma syntax on purpose. The modern `rgb(r g b / a)` form is fine in
+ * CSS, but these strings are also written into SVG *presentation attributes*
+ * (`fill`, `stroke`), where stricter colour parsers — old WebViews, and every
+ * SVG rasteriser we might use for share images — silently fall back to opaque
+ * black. A soft 16% form shadow turning into a solid black mask is not a bug
+ * worth risking to save four characters.
+ */
 export const rgba = (color: string, alpha: number): string => {
   const { r, g, b } = parseColor(color);
-  return `rgb(${r} ${g} ${b} / ${alpha})`;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
 /** WCAG relative luminance. */

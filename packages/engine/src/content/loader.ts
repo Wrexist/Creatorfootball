@@ -5,7 +5,7 @@ import type {
   PlayerTemplate, SeasonConfigDef, SocialTemplate, SponsorTemplate, StoreOfferDef,
   ValidationIssue,
 } from './schema';
-import { validatePack } from './validate';
+import { collectReferences, validatePack } from './validate';
 import { BASE_SEASON_CONFIG } from './seasonConfig';
 
 /**
@@ -115,8 +115,8 @@ export class ContentRegistry {
 
     // An override that matches nothing is not fatal, but it is always a mistake:
     // the pack author believed they were replacing something.
+    const knownIds = new Set(this.allEntityIds());
     if (pack.manifest.overrides.length > 0) {
-      const knownIds = new Set(this.allEntityIds());
       for (const id of pack.manifest.overrides) {
         if (!knownIds.has(id)) {
           issues.push({
@@ -125,6 +125,20 @@ export class ContentRegistry {
             severity: 'warning',
           });
         }
+      }
+    }
+
+    // `validatePack` can only see inside one pack, so a reference into a
+    // dependency comes back as a warning. This is the place that actually knows
+    // what is loaded, so this is where an unresolved reference becomes an error.
+    const resolvable = new Set([...knownIds, ...this.packEntityIds(pack)]);
+    for (const ref of collectReferences(pack)) {
+      if (!resolvable.has(ref.id)) {
+        issues.push({
+          path: ref.path,
+          message: `unresolved ${ref.kind} reference "${ref.id}" — not in this pack or any loaded dependency`,
+          severity: 'error',
+        });
       }
     }
 
@@ -162,6 +176,16 @@ export class ContentRegistry {
       if (pack) out.push(pack);
     }
     return out;
+  }
+
+  private packEntityIds(pack: ContentPack): string[] {
+    const d = pack.data;
+    return [
+      ...(d.clubs ?? []).map((c) => c.id), ...(d.players ?? []).map((p) => p.id),
+      ...(d.creators ?? []).map((c) => c.id), ...(d.managers ?? []).map((m) => m.id),
+      ...(d.sponsors ?? []).map((s) => s.id), ...(d.facilities ?? []).map((f) => f.id),
+      ...(d.objectives ?? []).map((o) => o.id), ...(d.offers ?? []).map((o) => o.sku),
+    ];
   }
 
   private allEntityIds(): string[] {
