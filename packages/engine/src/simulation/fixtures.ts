@@ -114,7 +114,7 @@ export function makeTestClub(id: string, index: number, over: Partial<Club> = {}
     squad: [],
     youthSquad: [],
     creatorIds: [],
-    tactics: { formationId: 'f_3_2_1', ...DEFAULT_TACTICS, lineup: {}, bench: [], captainId: null, setPieceTakerId: null, penaltyTakerId: null },
+    tactics: { formationId: '3-2-1', ...DEFAULT_TACTICS, lineup: {}, bench: [], captainId: null, setPieceTakerId: null, penaltyTakerId: null },
     facilityLevels: {},
     sponsorDealIds: [],
     rivalryIds: [],

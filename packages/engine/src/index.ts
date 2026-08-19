@@ -94,6 +94,9 @@ export * from './analytics/analytics';
 
 // --- Game orchestration ---
 export * from './game/newGame';
+export * from './game/cycle';
+export * from './game/applyResult';
+export * from './game/matchSetup';
 export * from './game/selectors';
 export * from './game/mutations';
 export * from './game/eventFactory';
