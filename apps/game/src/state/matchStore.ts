@@ -30,6 +30,11 @@ const TICK_INTERVAL: Record<MatchSpeed, number> = {
 
 /** Structural view of the engine's simulator, so this store never imports its implementation. */
 export interface SimulatorHandle {
+  /** Present on the real simulator; optional so tests can supply a stub. */
+  readonly setup?: {
+    readonly home: { readonly isPlayerControlled: boolean };
+    readonly away: { readonly isPlayerControlled: boolean };
+  };
   step(): readonly MatchEvent[];
   frame(): PitchFrame;
   pendingDecision(): DecisionPrompt | null;
@@ -60,8 +65,18 @@ interface MatchState {
   decisionDeadline: number | null;
   result: MatchResult | null;
   presentation: 'PITCH' | 'BROADCAST';
+  /**
+   * Which side the human manages. Substitutions and rule cards must be applied
+   * to it, not to whichever team happens to be nominally at home — hardcoding
+   * 'home' silently made every away fixture substitute the opposition.
+   */
+  playerSide: Side;
 
-  attach: (sim: SimulatorHandle) => void;
+  /**
+   * `playerSide` defaults to whichever team the simulator reports as
+   * player-controlled, so no call site has to remember it.
+   */
+  attach: (sim: SimulatorHandle, playerSide?: Side) => void;
   play: () => void;
   pause: () => void;
   setSpeed: (speed: MatchSpeed) => void;
@@ -154,11 +169,15 @@ export const useMatchStore = create<MatchState>((set, get) => {
     decisionDeadline: null,
     result: null,
     presentation: 'PITCH',
+    playerSide: 'home',
 
-    attach: (sim) => {
+    attach: (sim, playerSide) => {
       clearTimer();
       simulator = sim;
+      const resolvedSide: Side =
+        playerSide ?? (sim.setup?.away.isPlayerControlled ? 'away' : 'home');
       set({
+        playerSide: resolvedSide,
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
         frame: sim.frame(), feed: [], highlight: null, decision: null,
         decisionDeadline: null, result: null,
@@ -195,13 +214,13 @@ export const useMatchStore = create<MatchState>((set, get) => {
     substitute: (out, in_) => {
       const sim = simulator;
       if (!sim) return false;
-      return sim.makeSubstitution('home', out, in_);
+      return sim.makeSubstitution(get().playerSide, out, in_);
     },
 
     playRuleCard: (ruleId) => {
       const sim = simulator;
       if (!sim) return false;
-      return sim.playRuleCard('home', ruleId);
+      return sim.playRuleCard(get().playerSide, ruleId);
     },
 
     skipToEnd: () => {

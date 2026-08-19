@@ -1,0 +1,510 @@
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import type { Club, FixtureId, Player } from '@cf/engine';
+import {
+  ClubBadge, Divider, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill,
+  IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, MatchCard, PlayerPortrait,
+  PositionChip, ProgressBar, RatingBadge, Screen, SectionHeader, Skeleton, StatCard, StatGrid,
+  cn, haptics,
+} from '@/design';
+import type { MatchCardSide } from '@/design';
+import { useGameStore } from '@/state/gameStore';
+import { useMatchStore } from '@/state/matchStore';
+import { useMatchdayContext, type KeyBattle, type MatchdayContext } from '../shared/context';
+import { kitColors, type KitColors } from '../shared/kit';
+import { SPECIAL_RULE_TONE } from '../shared/format';
+import { LineupBoard } from './LineupBoard';
+
+/**
+ * The hour before kick-off.
+ *
+ * Everything on this screen exists to make the player *want* to press one
+ * button. It answers, in order: who are they, what is at stake, what is going
+ * to decide it, who is missing, and what strange thing might happen this week.
+ * Then it gets out of the way — a single volt PLAY in the footer, with
+ * "simulate" placed as a quiet secondary for the player who is on a bus.
+ */
+
+export function MatchPreviewScreen(): ReactNode {
+  const params = useParams<{ fixtureId: string }>();
+  const fixtureId = params.fixtureId as FixtureId | undefined;
+  const navigate = useNavigate();
+  const context = useMatchdayContext(fixtureId);
+  const [simulating, setSimulating] = useState(false);
+
+  const ourKit = useMemo(
+    () => (context ? kitColors(context.us.id, context.us.visual) : null),
+    [context],
+  );
+
+  const play = useCallback(() => {
+    if (!fixtureId) return;
+    haptics.impact();
+    navigate(`/matchday/live/${fixtureId}`);
+  }, [fixtureId, navigate]);
+
+  /**
+   * "Simulate" is the same simulation, run to the end with no prompts. It goes
+   * through the identical result screen, so skipping the match never skips the
+   * consequences.
+   */
+  const simulate = useCallback(() => {
+    if (!fixtureId || simulating) return;
+    setSimulating(true);
+    // Yielding one frame lets the button paint its spinner before the whole
+    // match runs synchronously on the main thread.
+    requestAnimationFrame(() => {
+      const sim = useGameStore.getState().createSimulator(fixtureId);
+      if (!sim) { setSimulating(false); return; }
+      const store = useMatchStore.getState();
+      store.attach(sim);
+      store.skipToEnd();
+      const result = useMatchStore.getState().result;
+      if (result) navigate(`/matchday/result/${result.matchId}`);
+      else setSimulating(false);
+    });
+  }, [fixtureId, simulating, navigate]);
+
+  if (!context || !ourKit) {
+    return (
+      <Screen title="Matchday" onBack={() => navigate('/matchday')}>
+        {fixtureId === undefined ? (
+          <ErrorState title="No fixture" description="This match could not be found." />
+        ) : (
+          <>
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </>
+        )}
+      </Screen>
+    );
+  }
+
+  const { home, away, us, them, fixture } = context;
+
+  return (
+    <Screen
+      title={`${home.abbreviation} v ${away.abbreviation}`}
+      subtitle={`${context.competitionName} · week ${fixture.week}`}
+      onBack={() => navigate('/matchday')}
+      aside={<PreviewAside context={context} />}
+      footer={
+        <div className="flex items-center gap-2">
+          <GlassButton
+            variant="primary"
+            size="lg"
+            block
+            icon={<IconPlay />}
+            onClick={play}
+            className="flex-[2]"
+          >
+            Play
+          </GlassButton>
+          <GlassButton
+            variant="ghost"
+            size="lg"
+            icon={<IconFastForward />}
+            onClick={simulate}
+            loading={simulating}
+            className="flex-1"
+          >
+            Simulate
+          </GlassButton>
+        </div>
+      }
+    >
+      <MatchCard
+        home={sideFor(home, context.playerIsHome ? context.ourForm : context.theirForm)}
+        away={sideFor(away, context.playerIsHome ? context.theirForm : context.ourForm)}
+        variant="hero"
+        status={fixture.stageLabel ?? 'Kick-off soon'}
+        importance={fixture.importance}
+        isDerby={fixture.isDerby}
+        competitionLabel={context.competitionName}
+      />
+
+      {fixture.isDerby && <RivalryPanel context={context} />}
+
+      <StakesPanel context={context} />
+
+      <OpponentPanel context={context} />
+
+      <section>
+        <SectionHeader title="Your predicted eleven" subtitle={context.formation.name} />
+        <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <LineupBoard slots={context.lineup} kit={ourKit} />
+          <GlassPanel nested level={2} padding="md" title="Bench">
+            <ul className="flex flex-col gap-1.5">
+              {context.bench.map((player) => (
+                <BenchRow key={player.id} player={player} kit={ourKit} />
+              ))}
+              {context.bench.length === 0 && (
+                <li className="py-2 text-[13px] text-ink-dim">No fit players left on the bench.</li>
+              )}
+            </ul>
+          </GlassPanel>
+        </div>
+      </section>
+
+      <KeyBattlesPanel battles={context.keyBattles} ourKit={ourKit} them={them} />
+
+      <RuleWindowsPanel context={context} />
+
+      <AvailabilityPanel context={context} us={us} them={them} />
+    </Screen>
+  );
+}
+
+/* --- pieces ------------------------------------------------------------ */
+
+function sideFor(club: Club, form: readonly ('W' | 'D' | 'L')[]): MatchCardSide {
+  return {
+    clubId: club.id,
+    name: club.name,
+    shortName: club.shortName,
+    abbreviation: club.abbreviation,
+    visual: club.visual,
+    form,
+  };
+}
+
+function StakesPanel({ context }: { context: MatchdayContext }): ReactNode {
+  const position = context.ourPosition;
+  return (
+    <GlassPanel nested level={2} padding="md" accent="volt" title="What is at stake">
+      <ul className="flex flex-col gap-2">
+        {context.stakes.map((line) => (
+          <li key={line.kind} className="flex items-start gap-2.5">
+            <GlassPill
+              tone={line.kind === 'WIN' ? 'positive' : line.kind === 'DRAW' ? 'neutral' : 'danger'}
+              size="sm"
+            >
+              {line.kind}
+            </GlassPill>
+            <span className="min-w-0 flex-1 text-[15px] leading-snug text-ink text-pretty">{line.text}</span>
+          </li>
+        ))}
+      </ul>
+
+      {position && (
+        <div className="mt-3 border-t border-white/[0.07] pt-3">
+          <StatGrid columns={3} gap="sm">
+            <StatCard nested level={1} size="sm" label="Position" value={position.position} />
+            <StatCard
+              nested
+              level={1}
+              size="sm"
+              label="To the side above"
+              value={position.pointsToAbove ?? 0}
+              suffix=" pts"
+            />
+            <StatCard
+              nested
+              level={1}
+              size="sm"
+              label="Cushion below"
+              value={position.pointsFromBelow ?? 0}
+              suffix=" pts"
+            />
+          </StatGrid>
+        </div>
+      )}
+    </GlassPanel>
+  );
+}
+
+function RivalryPanel({ context }: { context: MatchdayContext }): ReactNode {
+  const { rivalry, derbyHeat, them } = context;
+  return (
+    <GlassPanel nested level={2} padding="md" accent="danger">
+      <div className="flex items-center gap-2">
+        <span className="text-danger [&_svg]:size-5"><IconFlame /></span>
+        <h3 className="text-[17px] font-bold tracking-[-0.01em] text-ink">Derby day</h3>
+        <GlassPill tone="danger" size="sm" filled className="ml-auto">
+          Heat {Math.round(derbyHeat)}
+        </GlassPill>
+      </div>
+      <p className="mt-2 text-[14px] leading-snug text-ink-muted text-pretty">
+        {rivalry?.origin ?? `Nobody in this city wants to lose to ${them.shortName}.`}
+      </p>
+      <ProgressBar value={derbyHeat} max={100} tone="danger" size="sm" className="mt-3" label="Rivalry intensity" />
+      {rivalry && (
+        <p className="mt-2 tnum text-[13px] text-ink-dim">
+          {rivalry.meetings} meetings · {rivalry.aWins}W {rivalry.draws}D {rivalry.bWins}L
+        </p>
+      )}
+      {rivalry && rivalry.incidents.length > 0 && (
+        <p className="mt-2 text-[13px] italic text-ink-muted text-pretty">
+          “{rivalry.incidents[rivalry.incidents.length - 1]?.text}”
+        </p>
+      )}
+    </GlassPanel>
+  );
+}
+
+function OpponentPanel({ context }: { context: MatchdayContext }): ReactNode {
+  const { them, theirForm, theirRow, theirStar, theirTopScorer } = context;
+  return (
+    <GlassPanel nested level={2} padding="md" title="The opposition">
+      <div className="flex items-center gap-3">
+        <ClubBadge visual={them.visual} size={48} flat label={them.name} />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-[18px] font-bold tracking-[-0.02em] text-ink">{them.name}</h3>
+          <p className="truncate text-[13px] text-ink-muted">
+            {them.city} · {them.motto}
+          </p>
+        </div>
+        {theirRow && (
+          <div className="shrink-0 rounded-md bg-white/[0.07] px-2.5 py-1.5 text-center">
+            <span className="tnum block font-display text-[20px] font-bold leading-none text-ink">
+              {theirRow.position}
+            </span>
+            <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+              in the table
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <FormGuide results={theirForm} size="sm" />
+        {theirRow && (
+          <span className="tnum text-[13px] text-ink-muted">
+            {theirRow.points} pts · {theirRow.goalsFor}:{theirRow.goalsAgainst}
+          </span>
+        )}
+      </div>
+
+      <Divider className="my-3" />
+
+      {theirStar && (
+        <KeyValueRow
+          label="Danger man"
+          value={`${theirStar.displayName} · ${theirStar.overall}`}
+          hint={`${theirStar.position} · ${theirStar.form.goals} goals this season`}
+        />
+      )}
+      {theirTopScorer && theirTopScorer.id !== theirStar?.id && (
+        <KeyValueRow
+          label="Top scorer"
+          value={`${theirTopScorer.displayName} · ${theirTopScorer.form.goals}`}
+          hint={theirTopScorer.position}
+          divided
+        />
+      )}
+      <KeyValueRow label="Reputation" value={them.reputation} divided />
+    </GlassPanel>
+  );
+}
+
+function KeyBattlesPanel({
+  battles, ourKit, them,
+}: { battles: readonly KeyBattle[]; ourKit: KitColors; them: Club }): ReactNode {
+  const theirKit = useMemo(() => kitColors(them.id, them.visual), [them]);
+  if (battles.length === 0) return null;
+
+  return (
+    <section>
+      <SectionHeader title="Key battles" subtitle="Where this match gets decided" />
+      <ul className="mt-3 flex flex-col gap-2">
+        {battles.map((battle) => (
+          <li key={battle.id}>
+            <GlassPanel nested level={2} padding="sm">
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+                {battle.headline}
+              </p>
+              <div className="flex items-center gap-2">
+                <BattleFace player={battle.ours} kit={ourKit} align="start" />
+                <GlassPill
+                  tone={battle.edge === 'US' ? 'positive' : battle.edge === 'THEM' ? 'danger' : 'neutral'}
+                  size="sm"
+                >
+                  {battle.edge === 'US' ? 'Edge us' : battle.edge === 'THEM' ? 'Edge them' : 'Even'}
+                </GlassPill>
+                <BattleFace player={battle.theirs} kit={theirKit} align="end" />
+              </div>
+            </GlassPanel>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function BattleFace({
+  player, kit, align,
+}: { player: Player; kit: KitColors; align: 'start' | 'end' }): ReactNode {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-1 items-center gap-2',
+        align === 'end' && 'flex-row-reverse text-right',
+      )}
+    >
+      <PlayerPortrait seed={player.portraitSeed} size={34} colors={kit} shape="squircle" />
+      <div className="min-w-0">
+        <p className="truncate text-[14px] font-semibold text-ink">{player.displayName}</p>
+        <p className="tnum text-[12px] text-ink-dim">
+          {player.position} · {player.overall}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode {
+  const { ruleWindows, heldCards } = context;
+  if (ruleWindows.length === 0 && heldCards.length === 0) return null;
+
+  return (
+    <section>
+      <SectionHeader title="Special rules" subtitle="Two swing windows, one in each half" />
+      <div className="mt-3 flex flex-col gap-2">
+        {ruleWindows.map((rule) => (
+          <GlassPanel
+            key={rule.id}
+            nested
+            level={2}
+            padding="sm"
+            style={{ borderLeftColor: rule.accent, borderLeftWidth: 3 }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="text-[15px] font-bold text-ink">{rule.name}</h4>
+              <GlassPill tone={SPECIAL_RULE_TONE[rule.id]} size="sm">{rule.rarity}</GlassPill>
+            </div>
+            <p className="mt-1 text-[13px] leading-snug text-ink-muted text-pretty">{rule.description}</p>
+            <p className="mt-1.5 text-[12px] leading-snug text-warning text-pretty">
+              Counterplay: {rule.counterplay}
+            </p>
+          </GlassPanel>
+        ))}
+
+        {heldCards.length > 0 && (
+          <GlassPanel nested level={2} padding="sm" title="In your hand">
+            <div className="flex flex-wrap gap-1.5">
+              {heldCards.map(({ definition, quantity }) => (
+                <GlassPill key={definition.id} tone={SPECIAL_RULE_TONE[definition.id]} size="md">
+                  {definition.name} ×{quantity}
+                </GlassPill>
+              ))}
+            </div>
+            <p className="mt-2 text-[12px] text-ink-dim">Playable once the match is under way.</p>
+          </GlassPanel>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AvailabilityPanel({
+  context, us, them,
+}: { context: MatchdayContext; us: Club; them: Club }): ReactNode {
+  const ours = context.ourAvailability;
+  const theirs = context.theirAvailability;
+  const nobodyOut =
+    ours.injured.length + ours.suspended.length + theirs.injured.length + theirs.suspended.length === 0;
+
+  return (
+    <section>
+      <SectionHeader title="Team news" />
+      {nobodyOut ? (
+        <div className="mt-3">
+          <EmptyState
+            size="sm"
+            title="A clean bill of health"
+            description="Both sides can pick from a full squad."
+          />
+        </div>
+      ) : (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <AvailabilityColumn club={us} label="Your squad" availability={ours} />
+          <AvailabilityColumn club={them} label={them.shortName} availability={theirs} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AvailabilityColumn({
+  club, label, availability,
+}: {
+  club: Club;
+  label: string;
+  availability: { injured: readonly Player[]; suspended: readonly Player[] };
+}): ReactNode {
+  const empty = availability.injured.length + availability.suspended.length === 0;
+  return (
+    <GlassPanel nested level={2} padding="sm" title={label}>
+      {empty && <p className="text-[13px] text-ink-dim">Everyone available.</p>}
+      <ul className="flex flex-col gap-1.5">
+        {availability.injured.map((player) => (
+          <li key={player.id} className="flex items-center gap-2 text-[13px]">
+            <span className="text-danger [&_svg]:size-4"><IconInjury /></span>
+            <span className="min-w-0 flex-1 truncate text-ink">{player.displayName}</span>
+            <PositionChip position={player.position} size="xs" />
+            <span className="tnum shrink-0 text-[12px] text-ink-dim">
+              {player.injury?.weeksRemaining ?? 0}w
+            </span>
+          </li>
+        ))}
+        {availability.suspended.map((player) => (
+          <li key={player.id} className="flex items-center gap-2 text-[13px]">
+            <GlassPill tone="danger" size="xs" filled>SUS</GlassPill>
+            <span className="min-w-0 flex-1 truncate text-ink">{player.displayName}</span>
+            <span className="tnum shrink-0 text-[12px] text-ink-dim">
+              {player.suspensionMatches} match
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="sr-only">{club.name} availability</p>
+    </GlassPanel>
+  );
+}
+
+function BenchRow({ player, kit }: { player: Player; kit: KitColors }): ReactNode {
+  return (
+    <li className="flex items-center gap-2.5">
+      <PlayerPortrait seed={player.portraitSeed} size={28} colors={kit} shape="circle" />
+      <span className="min-w-0 flex-1 truncate text-[14px] text-ink">{player.displayName}</span>
+      <PositionChip position={player.position} size="xs" />
+      <RatingBadge value={player.overall} scale="overall" size="xs" />
+    </li>
+  );
+}
+
+/** Desktop sidebar: the table around us, so the stakes have a shape. */
+function PreviewAside({ context }: { context: MatchdayContext }): ReactNode {
+  const { table, us, them, clubNames } = context;
+  const window = useMemo(() => {
+    const index = table.findIndex((row) => row.clubId === us.id);
+    if (index < 0) return table.slice(0, 6);
+    return table.slice(Math.max(0, index - 2), Math.max(0, index - 2) + 6);
+  }, [table, us.id]);
+
+  return (
+    <GlassPanel nested level={2} padding="md" title="Around you">
+      <ol className="flex flex-col">
+        {window.map((row) => {
+          const highlight = row.clubId === us.id || row.clubId === them.id;
+          return (
+            <li
+              key={row.clubId}
+              className={cn(
+                'flex items-center gap-2 border-b border-white/[0.05] py-2 last:border-0 text-[13px]',
+                highlight ? 'text-ink' : 'text-ink-muted',
+              )}
+            >
+              <span className="tnum w-5 shrink-0 text-ink-dim">{row.position}</span>
+              <span className="min-w-0 flex-1 truncate font-medium">
+                {clubNames[row.clubId] ?? row.clubId}
+              </span>
+              <span className="tnum shrink-0 font-semibold">{row.points}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </GlassPanel>
+  );
+}

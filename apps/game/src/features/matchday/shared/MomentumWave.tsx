@@ -33,7 +33,7 @@ const WIDTH = 300;
 export const MomentumWave = memo(function MomentumWave({
   values, homeColor, awayColor, homeLabel, awayLabel, height = 84, markers, className,
 }: MomentumWaveProps): ReactNode {
-  const id = useSvgId();
+  const id = useSvgId('momentum');
 
   const { area, line } = useMemo(() => {
     if (values.length < 2) return { area: '', line: '' };

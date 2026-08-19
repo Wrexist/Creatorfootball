@@ -60,6 +60,8 @@ export interface MatchdayContext {
   readonly ourRow: StandingRow | null;
   readonly theirRow: StandingRow | null;
   readonly table: readonly StandingRow[];
+  /** clubId -> short name, so a table row never has to render a raw id. */
+  readonly clubNames: Readonly<Record<string, string>>;
   readonly ourPosition: ReturnType<typeof leaguePosition>;
 
   readonly rivalry: Rivalry | null;
@@ -261,6 +263,9 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
     ourRow: table.find((r) => r.clubId === us.id) ?? null,
     theirRow: table.find((r) => r.clubId === them.id) ?? null,
     table,
+    clubNames: Object.fromEntries(
+      Object.values(state.clubs).map((club) => [club.id as string, club.shortName]),
+    ),
     ourPosition: leaguePosition(state, us.id),
 
     rivalry,

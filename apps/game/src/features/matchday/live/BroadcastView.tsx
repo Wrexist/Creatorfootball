@@ -7,7 +7,7 @@ import {
 import { useMatchStore } from '@/state/matchStore';
 import { CompareRow } from '../shared/CompareRow';
 import { MomentumWave } from '../shared/MomentumWave';
-import { isNoteworthy, minuteLabel, momentumPhrase, one, percent } from '../shared/format';
+import { isNoteworthy, minuteLabel, momentumPhrase, one } from '../shared/format';
 import type { KitPalette } from '../shared/kit';
 import { EventFeed } from './EventFeed';
 import { useLiveStats } from './useLiveStats';
@@ -50,8 +50,6 @@ export function BroadcastView({
   const headline = useMemo(() => feed.find(isNoteworthy) ?? null, [feed]);
   const activeRules = useMemo(() => collectActiveRules(feed), [feed]);
   const subs = useMemo(() => feed.filter((e) => e.type === 'SUBSTITUTION').slice(0, 4), [feed]);
-
-  const ourTactics = playerSide === 'home' ? tactics : tactics;
 
   return (
     <div className={cn('scroll-y flex flex-col gap-3 pb-2', className)}>
@@ -166,12 +164,12 @@ export function BroadcastView({
       {/* --- what we are doing ---------------------------------------- */}
       <GlassPanel nested level={2} padding="md" title="Your shape">
         <div className="flex flex-wrap gap-1.5">
-          <GlassPill tone="neutral" size="sm">{label(ourTactics.tempo)}</GlassPill>
-          <GlassPill tone="neutral" size="sm">{label(ourTactics.press)} press</GlassPill>
-          <GlassPill tone="neutral" size="sm">{label(ourTactics.line)} line</GlassPill>
-          <GlassPill tone="neutral" size="sm">{label(ourTactics.width)}</GlassPill>
-          <GlassPill tone={ourTactics.risk === 'RECKLESS' ? 'danger' : 'neutral'} size="sm">
-            {label(ourTactics.risk)}
+          <GlassPill tone="neutral" size="sm">{label(tactics.tempo)}</GlassPill>
+          <GlassPill tone="neutral" size="sm">{label(tactics.press)} press</GlassPill>
+          <GlassPill tone="neutral" size="sm">{label(tactics.line)} line</GlassPill>
+          <GlassPill tone="neutral" size="sm">{label(tactics.width)}</GlassPill>
+          <GlassPill tone={tactics.risk === 'RECKLESS' ? 'danger' : 'neutral'} size="sm">
+            {label(tactics.risk)}
           </GlassPill>
         </div>
 

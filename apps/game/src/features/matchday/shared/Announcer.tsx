@@ -21,6 +21,9 @@ export interface AnnouncerProps {
   polite?: string | null;
 }
 
+/** Appended to force assistive tech to treat a repeated string as new. */
+const ZERO_WIDTH = '\u200B';
+
 function useRepeatable(message: string | null | undefined): string {
   const [text, setText] = useState('');
   const previous = useRef<string | null>(null);
@@ -30,7 +33,7 @@ function useRepeatable(message: string | null | undefined): string {
     if (!message) return;
     if (message === previous.current) {
       toggle.current = !toggle.current;
-      setText(toggle.current ? `${message}​` : message);
+      setText(toggle.current ? `${message}${ZERO_WIDTH}` : message);
       return;
     }
     previous.current = message;

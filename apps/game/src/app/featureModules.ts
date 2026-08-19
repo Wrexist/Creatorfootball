@@ -1,8 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import {
-  pendingClub, pendingHome, pendingLeague, pendingMarket, pendingMatchday,
-  pendingProgression, pendingSocial, pendingSquad,
-} from './pending';
+import { pendingProgression, pendingSocial, pendingSquad } from './pending';
 
 /**
  * Where the router gets its screens.
@@ -23,28 +20,30 @@ import {
 type ScreenModule<K extends string> = Readonly<Record<K, ComponentType>>;
 type Loader<K extends string> = () => Promise<ScreenModule<K>>;
 
-/* --- TEMPORARY BLOCK: the right-hand sides land with the feature workstreams. */
+/* --- The three lines still pointing at `pending.tsx` are the only temporary
+       ones left; each carries the real expression to swap in. Home, matchday,
+       club, market and league are already wired to their real barrels. ----- */
 
 const home: Loader<'HomeScreen'> =
-  pendingHome; // → () => import('@/features/home')
+  () => import('@/features/home');
 
 const matchday: Loader<'MatchPreviewScreen' | 'MatchLiveScreen' | 'MatchResultScreen'> =
-  pendingMatchday; // → () => import('@/features/matchday')
+  () => import('@/features/matchday');
 
 const club: Loader<
   | 'ClubScreen' | 'FacilitiesScreen' | 'SponsorsScreen' | 'FansScreen'
   | 'FinancesScreen' | 'HistoryScreen' | 'TrophyRoomScreen'
-> = pendingClub; // → () => import('@/features/club')
+> = () => import('@/features/club');
 
 const squad: Loader<'SquadScreen' | 'PlayerProfileScreen' | 'TacticsScreen' | 'TrainingScreen'> =
   pendingSquad; // → () => import('@/features/squad')
 
 const market: Loader<'MarketScreen' | 'PlayerSearchScreen' | 'NegotiationScreen' | 'ScoutingScreen'> =
-  pendingMarket; // → () => import('@/features/market')
+  () => import('@/features/market');
 
 const league: Loader<
   'LeagueScreen' | 'StandingsScreen' | 'FixturesScreen' | 'RivalriesScreen' | 'SeasonOverviewScreen'
-> = pendingLeague; // → () => import('@/features/league')
+> = () => import('@/features/league');
 
 const social: Loader<'SocialScreen' | 'MediaScreen' | 'CreatorProfileScreen'> =
   pendingSocial; // → () => import('@/features/social')
