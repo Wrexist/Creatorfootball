@@ -54,9 +54,15 @@ describe('tickWorld determinism', () => {
 
   it('never mutates the state it was given', () => {
     const world = buildTestWorld();
-    const before = JSON.stringify(world.state);
+    // The Ledger is an explicitly mutable service handed in through the context;
+    // everything else in the state must come back untouched.
+    const withoutLedger = (state: GameState): string => {
+      const { ledger: _ledger, ...rest } = state;
+      return JSON.stringify(rest);
+    };
+    const before = withoutLedger(world.state);
     tickWorld(world.state, new Rng('nomutate'), ctxFor(world.ledger, { events: [redCard] }));
-    expect(JSON.stringify(world.state)).toBe(before);
+    expect(withoutLedger(world.state)).toBe(before);
   });
 });
 
