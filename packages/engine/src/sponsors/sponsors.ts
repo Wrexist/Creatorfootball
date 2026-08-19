@@ -1,6 +1,5 @@
 import type { Club } from '../clubs/club';
 import type { SponsorTemplate } from '../content/schema';
-import type { ClubId } from '../core/brand';
 import { clamp, clamp01, lerp } from '../core/math';
 import { hashString, type Rng } from '../core/rng';
 import type { Ledger, PostContext } from '../economy/ledger';
@@ -385,4 +384,3 @@ export function climateLabel(index: number): string {
   return 'Contracting. Budgets are being cut across the board.';
 }
 
-export const clubIdOf = (club: Club): ClubId => club.id;

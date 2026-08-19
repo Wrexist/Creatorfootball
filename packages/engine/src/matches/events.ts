@@ -1,4 +1,4 @@
-import type { ClubId, MatchId, PlayerId } from '../core/brand';
+import type { ClubId, PlayerId } from '../core/brand';
 
 /**
  * The match event stream.

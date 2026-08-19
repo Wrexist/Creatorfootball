@@ -106,24 +106,24 @@ describe('AI profiles', () => {
   });
 
   it('recruits at visibly different ages', () => {
-    const youth = byProfile.get('youth_factory');
-    const veterans = byProfile.get('veteran_core');
+    const youth = byProfile.get('YOUTH_FACTORY');
+    const veterans = byProfile.get('VETERAN_CORE');
     expect(youth && veterans).toBeTruthy();
     if (!youth || !veterans) return;
     expect(veterans.meanAge - youth.meanAge).toBeGreaterThan(3);
   });
 
   it('spends at visibly different levels', () => {
-    const spenders = byProfile.get('big_spenders');
-    const underdog = byProfile.get('local_underdog');
+    const spenders = byProfile.get('BIG_SPENDERS');
+    const underdog = byProfile.get('LOCAL_UNDERDOG');
     expect(spenders && underdog).toBeTruthy();
     if (!spenders || !underdog) return;
     expect(spenders.meanFee).toBeGreaterThan(underdog.meanFee);
   });
 
   it('recruits for visibly different shapes', () => {
-    const defensive = byProfile.get('defensive_specialists');
-    const showtime = byProfile.get('showtime');
+    const defensive = byProfile.get('DEFENSIVE_SPECIALISTS');
+    const showtime = byProfile.get('SHOWTIME');
     expect(defensive && showtime).toBeTruthy();
     if (!defensive || !showtime) return;
     expect(defensive.defensiveShare).toBeGreaterThan(showtime.defensiveShare);
@@ -131,8 +131,8 @@ describe('AI profiles', () => {
   });
 
   it('trusts the academy at visibly different rates', () => {
-    const youth = byProfile.get('youth_factory');
-    const spenders = byProfile.get('big_spenders');
+    const youth = byProfile.get('YOUTH_FACTORY');
+    const spenders = byProfile.get('BIG_SPENDERS');
     expect(youth && spenders).toBeTruthy();
     if (!youth || !spenders) return;
     expect(youth.youthPromotions).toBeGreaterThan(spenders.youthPromotions);

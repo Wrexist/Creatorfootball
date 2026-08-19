@@ -697,8 +697,8 @@ export class MatchSimulator {
     if (this.tick <= this.counterUntil) this.phase = 'TRANSITION';
 
     const inWindow = this.rules.inSwingWindow(this.nominalMinute()) !== null;
-    let xgHome = 0;
-    let xgAway = 0;
+    const xgHome = 0;
+    const xgAway = 0;
 
     // 1. A foul stops everything else this tick.
     const foulP = foulChance({
@@ -1302,7 +1302,7 @@ export class MatchSimulator {
         .filter((p) => p.slot.role !== 'GK')
         .sort((a, b) => b.fatigue - a.fatigue)[0] ?? null;
       const booked = team.onPitch.find((p) => p.yellow >= 1) ?? null;
-      const window = this.rules.windows().find((w) => w.startMinute > this.nominalMinute()) ?? null;
+      const nextWindow = this.rules.windows().find((w) => w.startMinute > this.nominalMinute()) ?? null;
 
       const situation: DecisionSituation = {
         minute,
@@ -1317,7 +1317,7 @@ export class MatchSimulator {
         tiredPlayerName: tired && tired.fatigue > BALANCE.SUB_FATIGUE_THRESHOLD ? tired.player.displayName : null,
         bookedPlayerName: booked ? booked.player.displayName : null,
         injuredNoSubs: team.onPitch.some((p) => p.injured) && team.subsUsed >= this.setup.config.substitutions,
-        minutesToWindow: window ? window.startMinute - this.nominalMinute() : null,
+        minutesToWindow: nextWindow ? nextWindow.startMinute - this.nominalMinute() : null,
         atHalfTime: atHalfTime || this.halfTimePrompt,
         opponentChanged: this.opponentChangedFor === team.side,
         creatorMoment: this.creatorMomentFor === team.side,

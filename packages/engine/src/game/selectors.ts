@@ -48,7 +48,7 @@ export const contractFor = (s: GameState, playerId: PlayerId): Contract | undefi
   return s.contracts[player.contractId];
 };
 
-export const wageBill = (s: GameState, clubId: ClubId): number => {
+export const squadWageBill = (s: GameState, clubId: ClubId): number => {
   const club = s.clubs[clubId];
   if (!club) return 0;
   return [...club.squad, ...club.youthSquad].reduce((total, playerId) => {
@@ -61,7 +61,7 @@ export const wageBill = (s: GameState, clubId: ClubId): number => {
 export const wageBudgetUsage = (s: GameState, clubId: ClubId): number => {
   const club = s.clubs[clubId];
   if (!club || club.finance.wageBudgetPerCycle <= 0) return 0;
-  return wageBill(s, clubId) / club.finance.wageBudgetPerCycle;
+  return squadWageBill(s, clubId) / club.finance.wageBudgetPerCycle;
 };
 
 export const squadStrength = (s: GameState, clubId: ClubId): number => {
@@ -147,7 +147,7 @@ export const clubCreators = (s: GameState, clubId: ClubId) =>
   Object.values(s.creators).filter((c) => c.clubId === clubId);
 
 /** Total reach the club commands through its creators — drives sponsor tiers. */
-export const clubReach = (s: GameState, clubId: ClubId): number =>
+export const clubTotalReach = (s: GameState, clubId: ClubId): number =>
   clubCreators(s, clubId).reduce((total, c) => total + c.followers, 0) +
   (s.clubs[clubId]?.fans.onlineFollowers ?? 0);
 

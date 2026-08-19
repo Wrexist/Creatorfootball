@@ -1,4 +1,4 @@
-import type { ClubId, ContractId, EventId, PlayerId, SponsorId } from '../core/brand';
+import type { ClubId, ContractId, EventId, SponsorId } from '../core/brand';
 import type { AnyDomainEvent, DomainEventPayloads, DomainEventType, EntityRef, EventImportance } from '../core/events';
 import type { GameState, NewsStory, SocialPost, TransferListing } from '../game/state';
 import type { Player } from '../players/player';

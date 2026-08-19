@@ -1,6 +1,6 @@
 import { asId } from '../core/brand';
 import type {
-  ClubId, CompetitionId, ContractId, CreatorId, ManagerId, PlayerId, SeasonId,
+  ClubId, CompetitionId, ContractId, CreatorId, ManagerId, SeasonId,
 } from '../core/brand';
 import { initialClock } from '../core/clock';
 import { Rng } from '../core/rng';
@@ -18,7 +18,7 @@ import { emptyBonuses } from '../contracts/contract';
 import { defaultValuationContext, marketValue, wageDemand } from '../transfers/valuation';
 import {
   BASE_PACK, ContentRegistry, DEFAULT_FORMATION_ID, clubFromTemplate,
-  generateManager, generateSquad, generateCreator, BASE_SEASON_CONFIG,
+  generateManager, generateSquad, generateCreator,
   type ClubTemplate, type ContentPack, type CreatorSeasonConfigDef,
 } from '../content';
 

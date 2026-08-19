@@ -334,7 +334,10 @@ export class Ledger {
       idCounters: this.ids.serialize(),
       appliedKeys: Object.fromEntries(this.appliedKeys),
       permanentKeys: [...this.permanentKeys],
-      seasonTotals: this.seasonTotals,
+      // Copy, never alias: a snapshot that keeps mutating after it is taken is
+      // a save-corruption hazard, because the serialiser may run after further
+      // transactions have been posted.
+      seasonTotals: this.seasonTotals.slice(),
     };
   }
 

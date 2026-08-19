@@ -93,8 +93,8 @@ const RECIPES: readonly Recipe[] = [
         { defensiveSolidity: 0.2, spaceBehind: -0.16, aggression: -0.2, possessionBias: -0.16, attackVolume: -0.14 }, 8, 'LOW'),
       opt('press', 'Press out of it', 'Squeeze up and try to win it high. It costs legs and leaves space in behind.',
         { pressRecovery: 0.22, aggression: 0.22, spaceBehind: 0.2, fatigueRate: 0.28, defensiveSolidity: -0.08 }, 6, 'HIGH'),
-      opt('hold', 'Ride it out', 'Change nothing and trust the shape. If it is not a blip, it gets worse.',
-        { volatility: 0.06 }, 5, 'MEDIUM'),
+      opt('hold', 'Ride it out', 'Keep the shape and save your legs. You hand them the initiative to do it.',
+        { defensiveSolidity: 0.06, fatigueRate: -0.08, attackVolume: -0.1, volatility: 0.08 }, 6, 'MEDIUM'),
     ],
   },
   {

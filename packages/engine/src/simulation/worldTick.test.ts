@@ -3,7 +3,7 @@ import { Rng } from '../core/rng';
 import { asId } from '../core/brand';
 import type { ClubId, EventId, MatchId, PlayerId } from '../core/brand';
 import type { GameState } from '../game/state';
-import { Ledger } from '../economy/ledger';
+import type { Ledger } from '../economy/ledger';
 import { WORLD_BALANCE } from './balance';
 import { buildTestWorld, makeTestEvent } from './fixtures';
 import { tickWorld, type WorldTickContext } from './worldTick';

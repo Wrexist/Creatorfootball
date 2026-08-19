@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createNewGame } from '../src/game/newGame';
 import { validateState } from '../src/persistence/save';
 import { computeStandings } from '../src/league/standings';
-import { squadStrength, wageBill, playerClub, nextFixture } from '../src/game/selectors';
+import { squadStrength, squadWageBill, playerClub, nextFixture } from '../src/game/selectors';
 import { verifyFixtures } from '../src/league/fixtures';
 import type { ClubId } from '../src/core/brand';
 
@@ -69,7 +69,7 @@ describe('new game creation', () => {
   it('starts every club solvent, with a wage bill it can carry', () => {
     const state = newGame();
     for (const clubId of Object.keys(state.clubs) as ClubId[]) {
-      const bill = wageBill(state, clubId);
+      const bill = squadWageBill(state, clubId);
       expect(bill).toBeGreaterThan(0);
       // A club that begins the game already unable to pay is a broken start,
       // not a difficulty setting.

@@ -1,4 +1,4 @@
-import type { ClubId, ObjectiveId } from '../core/brand';
+import type { ClubId } from '../core/brand';
 import type { AnyDomainEvent } from '../core/events';
 import type { GameState, Objective, ObjectiveState, RewardGrant } from '../game/state';
 import type { ObjectiveTemplate } from '../content/schema';

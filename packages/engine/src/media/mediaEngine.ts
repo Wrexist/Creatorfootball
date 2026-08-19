@@ -43,7 +43,7 @@ interface Candidate {
 }
 
 /** Stakes-aware importance. This is what stops a 1-0 reading like a 6-0. */
-function stakeImportance(hook: ContentHook, state: GameState): EventImportance {
+function stakeImportance(hook: ContentHook, _state: GameState): EventImportance {
   let importance: number = hook.importance;
   const margin = Number(hook.facts.margin ?? 0);
   if (margin >= M.routMargin) importance += M.routImportanceBonus;
