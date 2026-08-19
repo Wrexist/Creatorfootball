@@ -158,6 +158,7 @@ function FixturesView({ state }: { state: GameState }): ReactNode {
           aria-label="Which fixtures to show"
           size="sm"
           block
+          nested
         />
       }
       aside={

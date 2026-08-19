@@ -34,9 +34,13 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
   const [splashHeld, setSplashHeld] = useState(true);
   const booted = useRef(false);
 
+  /**
+   * Work that must happen exactly once per session. Kept apart from the
+   * subscriptions below because StrictMode mounts, unmounts and remounts every
+   * effect in development: anything guarded by a ref must therefore own no
+   * teardown, or the second run skips setting up what the first run tore down.
+   */
   useEffect(() => {
-    // StrictMode runs effects twice in development; booting twice would race
-    // two reads of the same save against each other for no benefit.
     if (booted.current) return;
     booted.current = true;
 
@@ -51,7 +55,10 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     // The splash is covering this: warm the first screen the player will see.
     preloadHome();
     void boot();
+  }, [boot, setReducedEffects]);
 
+  /** Idempotent: safe to tear down and set up again. */
+  useEffect(() => {
     const timer = setTimeout(() => setSplashHeld(false), SPLASH_MINIMUM_MS);
     const onLeave = (): void => trackEvent('session_end', {});
     window.addEventListener('pagehide', onLeave);
@@ -59,7 +66,7 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
       clearTimeout(timer);
       window.removeEventListener('pagehide', onLeave);
     };
-  }, [boot, setReducedEffects]);
+  }, []);
 
   useEffect(() => {
     if (!recovered) return;

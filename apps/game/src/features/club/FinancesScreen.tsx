@@ -155,6 +155,7 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
       onBack={() => navigate(ROUTES.club)}
       headerAccessory={
         <GlassSegmented
+          nested
           value={period}
           onChange={setPeriod}
           size="sm"

@@ -33,7 +33,10 @@ export function BrandMark({
     >
       <circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" strokeWidth="2.5" opacity="0.22" />
       <circle cx="32" cy="32" r="20.5" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.14" />
-      <path d="M38 8 L20 34 H31 L26 56 L46 27 H34 Z" fill="var(--color-volt)" />
+      {/* The volt token, written as a literal: this paints in the first frame,
+          before any stylesheet has had to resolve a custom property, and SVG
+          rasterisers outside the browser (share images) do not know our tokens. */}
+      <path d="M38 8 L20 34 H31 L26 56 L46 27 H34 Z" fill="#c8ff2e" />
     </svg>
   );
 }

@@ -225,6 +225,7 @@ function SponsorsBody({ state }: { state: GameState }): ReactNode {
       onBack={() => navigate(ROUTES.club)}
       headerAccessory={
         <GlassSegmented
+          nested
           value={tab}
           onChange={setTab}
           size="sm"
@@ -261,8 +262,9 @@ function SponsorsBody({ state }: { state: GameState }): ReactNode {
           {Math.round(data.share * 100)}%
         </p>
         <p className="mt-1 text-[13px] text-ink-muted text-pretty">
-          of everything {data.club.shortName} has earned this season came from sponsors — {formatMoney(data.sponsorIncome)} of{' '}
-          {formatMoney(data.income)}. Gate receipts cannot replace this; reach can only grow it.
+          {data.sponsorIncome > 0
+            ? `of everything ${data.club.shortName} has earned this season came from sponsors — ${formatMoney(data.sponsorIncome)} of ${formatMoney(data.income)}. Gate receipts cannot replace this; reach can only grow it.`
+            : `of your income is commercial. Sponsorship is the largest income line available to a club this size — until you sign one, ${data.club.shortName} is running on gate receipts and merchandise, and neither scales.`}
         </p>
         <div className="mt-3 flex h-2 overflow-hidden rounded-pill bg-white/[0.08]" aria-hidden="true">
           <span className="h-full bg-volt" style={{ width: `${Math.min(100, data.share * 100)}%` }} />

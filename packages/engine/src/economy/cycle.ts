@@ -132,7 +132,9 @@ export function merchandiseRevenue(
     E.MERCH_FACTOR_MIN,
     E.MERCH_FACTOR_MAX,
   );
-  const volume = club.fans.base * E.MERCH_PER_FAN + reach * E.MERCH_PER_REACH;
+  const volume =
+    club.fans.base * E.MERCH_PER_FAN +
+    Math.pow(Math.max(0, reach), E.MERCH_REACH_EXPONENT) * E.MERCH_PER_REACH;
   const stars = 1 + clamp(starCommercialValue, -0.5, 2) * E.MERCH_STAR_SWING;
   return Math.max(
     0,

@@ -567,8 +567,19 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
   }, [data, club, navigate, state.clock.cycle, state.transfers.windowOpen]);
 
   const visible = expanded ? cards : cards.slice(0, 4);
-  const homeSide = fixture && clubById(state, fixture.homeClubId);
-  const awaySide = fixture && clubById(state, fixture.awayClubId);
+
+  // Memoised because `MatchCard` is memoised: rebuilding these two objects each
+  // render would defeat it, and each one runs a fixture scan for the form guide.
+  const sides = useMemo(() => {
+    if (!fixture) return null;
+    const home = clubById(state, fixture.homeClubId);
+    const away = clubById(state, fixture.awayClubId);
+    if (!home || !away) return null;
+    return {
+      home: sideOf(home, recentForm(state, home.id, 3)),
+      away: sideOf(away, recentForm(state, away.id, 3)),
+    };
+  }, [state, fixture]);
 
   return (
     <Screen
@@ -606,7 +617,7 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
       }
     >
       {/* --- the hero: next match ------------------------------------- */}
-      {fixture && opponent && homeSide && awaySide ? (
+      {fixture && opponent && sides ? (
         <>
           <div className="flex items-baseline justify-between gap-3 pt-1">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-volt">Next match</h2>
@@ -615,8 +626,8 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
             </span>
           </div>
           <MatchCard
-            home={sideOf(homeSide, recentForm(state, homeSide.id, 3))}
-            away={sideOf(awaySide, recentForm(state, awaySide.id, 3))}
+            home={sides.home}
+            away={sides.away}
             variant="hero"
             importance={fixture.importance}
             isDerby={fixture.isDerby}

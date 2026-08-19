@@ -295,6 +295,7 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
       onBack={() => navigate(ROUTES.club)}
       headerAccessory={
         <GlassSegmented
+          nested
           options={CATEGORIES}
           value={category}
           onChange={setCategory}

@@ -16,7 +16,7 @@ import {
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup } from './clubs';
-import { orderScoutReport, scoutingCapacity, useLiveMarket } from './engine';
+import { orderScoutReport, scoutingCapacity } from './engine';
 import { PlayerRow } from './components/PlayerRow';
 import { AttributeDossier, ConfidenceMeter, PotentialPill, useKnowledge } from './components/scouting';
 
@@ -160,7 +160,6 @@ function DepthSheet({ open, player, lastCosts, onClose, onPick }: DepthSheetProp
 function ScoutingView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const toast = useToast();
-  useLiveMarket();
 
   const clubs = useClubLookup(state);
   const [picking, setPicking] = useState<PlayerId | null>(null);

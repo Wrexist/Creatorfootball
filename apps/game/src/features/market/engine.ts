@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import {
   BASE_PACK,
   ContentRegistry,
@@ -13,7 +13,6 @@ import {
   contractFor,
   openNegotiation,
   phaseForWeek,
-  refreshMarket,
   scoutCapacity,
   setClub,
   setContract,
@@ -21,7 +20,6 @@ import {
   shortlist as addToShortlist,
   submitOffer,
   unshortlist as removeFromShortlist,
-  type ClubId,
   type Club,
   type GameState,
   type MarketContext,
@@ -129,52 +127,22 @@ export function valuationContext(s: GameState): ValuationContext {
   return buildValuationContext(s, marketContext(s));
 }
 
-/* --- keeping the market current ---------------------------------------- */
+/* --- market freshness --------------------------------------------------- */
 
 /**
- * The market re-prices itself once per matchweek.
+ * The market is re-priced by the engine's cycle, not by the app.
  *
- * `refreshMarket` is a pure engine function returning a delta, so running it
- * from the app layer is safe and deterministic: the seed is the save's seed
- * plus the cycle, which means two devices on the same save see the same
- * shop window. The module-level guard stops a render loop if a refresh ever
- * legitimately produces nothing.
+ * An earlier version of this file ran `refreshMarket` from a mount-time hook,
+ * because at the time `advanceCycle` did not. It does now, and running it here
+ * as well was actively harmful: the app seeded its own stream differently from
+ * the cycle's, so visiting the market screen re-rolled listings and valuations
+ * that the cycle had already settled. The same save advanced the same way would
+ * end up in two different states depending on which screens the player happened
+ * to open — precisely the class of bug the "no game rules in components" rule
+ * exists to prevent.
+ *
+ * Screens read `state.transfers` and trust it.
  */
-const refreshedAt = new Map<string, number>();
-
-export function refreshMarketNow(force = false): void {
-  const store = useGameStore.getState();
-  const s = store.state;
-  if (!s) return;
-  const key = s.saveId;
-  if (!force && refreshedAt.get(key) === s.clock.cycle) return;
-  refreshedAt.set(key, s.clock.cycle);
-
-  const rng = new Rng(`${s.seed}:market:${s.clock.cycle}`);
-  const delta = refreshMarket(s, rng, marketContext(s));
-
-  store.apply((current) => {
-    const players: Record<string, Player> = { ...current.players };
-    for (const [id, value] of Object.entries(delta.playerValues)) {
-      const player = players[id];
-      if (player && player.marketValue !== value) players[id] = { ...player, marketValue: value };
-    }
-    return {
-      ...current,
-      players,
-      transfers: { ...current.transfers, listings: delta.listings, rumours: delta.rumours },
-    };
-  });
-}
-
-/** Mount-time hook for any screen that reads listings, rumours or valuations. */
-export function useLiveMarket(): void {
-  const cycle = useGameStore((s) => s.state?.clock.cycle ?? -1);
-  const ready = useGameStore((s) => s.phase === 'READY');
-  useEffect(() => {
-    if (ready) refreshMarketNow();
-  }, [ready, cycle]);
-}
 
 /* --- shortlist ---------------------------------------------------------- */
 
@@ -440,16 +408,3 @@ export function useOurNegotiations(s: GameState): Negotiation[] {
   );
 }
 
-export const clubOf = (s: GameState, id: ClubId | null | undefined): Club | undefined =>
-  (id ? s.clubs[id] : undefined);
-
-/** Stable identity for a value that only changes when the cycle does. */
-export function useCycleMemo<T>(s: GameState, factory: () => T): T {
-  const cycleRef = useRef(-1);
-  const valueRef = useRef<T | null>(null);
-  if (cycleRef.current !== s.clock.cycle || valueRef.current === null) {
-    cycleRef.current = s.clock.cycle;
-    valueRef.current = factory();
-  }
-  return valueRef.current;
-}

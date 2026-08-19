@@ -12,6 +12,8 @@ import { simulateMatch } from '../matches/simulator';
 import { tickWorld } from '../simulation/worldTick';
 import { runFinancialCycle } from '../economy/cycle';
 import { refreshMarket } from '../transfers/market';
+import { generateSponsorOffers } from '../sponsors/sponsors';
+import { facilityEffect } from '../facilities/facilities';
 import { renewContract } from '../contracts/wages';
 import { defaultValuationContext, wageDemand } from '../transfers/valuation';
 import { asId } from '../core/brand';
@@ -202,6 +204,42 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
     sponsors: finance.sponsors,
   };
   notes.push(...finance.notes);
+
+  // --- 4b. sponsors come to the table ----------------------------------
+  // The financial cycle advances deals that already exist but never creates
+  // one, so without this the club could never sign its first sponsor and
+  // sponsorship — the dominant income line in this format by design — stayed
+  // permanently at zero.
+  const sponsorOffers = generateSponsorOffers(
+    finance.club,
+    registry,
+    rng.fork('sponsorOffers'),
+    {
+      cycle: next.clock.cycle,
+      season: next.clock.season,
+      reach: finance.reach,
+      leaguePosition: position > 0 ? position : standings.length,
+      leagueSize: standings.length,
+      brandBuilding: next.managers[next.playerManagerId]?.attributes.brandBuilding ?? 50,
+      creatorReachBonus: facilityEffect(finance.club, 'creatorReach', registry),
+      seed: next.seed,
+    },
+    next.sponsors.active,
+  );
+
+  if (sponsorOffers.length > 0) {
+    // Offers expire; carry forward only the ones still on the table so the
+    // screen never shows a deal that has quietly lapsed.
+    const live = next.sponsors.available.filter((o) => o.expiresCycle > next.clock.cycle);
+    const known = new Set(live.map((o) => o.id));
+    next = {
+      ...next,
+      sponsors: {
+        ...next.sponsors,
+        available: [...live, ...sponsorOffers.filter((o) => !known.has(o.id))],
+      },
+    };
+  }
 
   // --- 5. the world moves whether or not the player did anything --------
   const world = tickWorld(next, rng.fork('world'), {

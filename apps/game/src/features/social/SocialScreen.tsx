@@ -117,6 +117,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
           aria-label="Filter the feed"
           size="sm"
           block
+          nested
         />
       }
       aside={stats}

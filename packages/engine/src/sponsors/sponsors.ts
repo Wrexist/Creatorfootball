@@ -384,3 +384,63 @@ export function climateLabel(index: number): string {
   return 'Contracting. Budgets are being cut across the board.';
 }
 
+
+/**
+ * The commercial portfolio a club already has when you take it over.
+ *
+ * A new save must never start with zero sponsorship. Offer generation is gated
+ * by the market climate, so on some seeds it legitimately returns nothing —
+ * correct behaviour for a club shopping for a *new* partner, wrong for
+ * establishing the shirt deal every real club already carries. This builds that
+ * inherited deal directly, part-way through its term, so the player arrives
+ * mid-contract with a renewal to think about rather than a blank slate.
+ */
+export function inheritedSponsorDeals(
+  club: Club,
+  registry: SponsorRegistry,
+  rng: Rng,
+  ctx: SponsorContext,
+  maxSlots = 3,
+): SponsorDeal[] {
+  const stream = rng.fork(`inherited:${club.id}`);
+  const deals: SponsorDeal[] = [];
+  const taken = new Set<SponsorDeal['slot']>();
+  const usedSponsors = new Set<string>();
+
+  // Shirt first — it is the deal every club has and the one worth most — then
+  // whatever else the club's standing can support.
+  const SLOT_ORDER: SponsorDeal['slot'][] = ['SHIRT', 'SLEEVE', 'STADIUM', 'TRAINING', 'CREATOR'];
+
+  for (const slot of SLOT_ORDER) {
+    if (deals.length >= maxSlots) break;
+    const eligible = registry
+      .sponsors()
+      .filter((t) => !usedSponsors.has(t.id))
+      .filter((t) => meetsRequirements(t, club))
+      .filter((t) => t.slots.includes(slot));
+    if (eligible.length === 0) continue;
+
+    // The best partner the club could realistically have attracted, not a
+    // random one: an established club should not be wearing the smallest brand
+    // in the league on its shirt.
+    const best = eligible.reduce((top, t) => (t.tier > top.tier ? t : top), eligible[0] as SponsorTemplate);
+    const valuePerCycle = sponsorValue(best, slot, club, ctx);
+    if (valuePerCycle <= 0) continue;
+
+    usedSponsors.add(best.id);
+    taken.add(slot);
+    deals.push({
+      id: `deal_inherited_${club.id}_${slot.toLowerCase()}`,
+      sponsorId: best.id,
+      name: best.name,
+      slot,
+      valuePerCycle,
+      // Staggered expiry, so renewals arrive as separate decisions across the
+      // season rather than as one cliff.
+      weeksRemaining: stream.int(12, 40),
+      satisfaction: stream.int(52, 74),
+    });
+  }
+
+  return deals;
+}

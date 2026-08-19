@@ -4,7 +4,6 @@ import {
   ContentRegistry,
   Ledger,
   claimObjective,
-  isLicensed,
   isRenderable,
   patchClub,
   type ClaimResult,
@@ -115,9 +114,6 @@ export function usePacks(state: GameState, now: number): PackView[] {
     });
   }, [state.settings.region, state.settings.enabledPackIds, now]);
 }
-
-export const anyLicensed = (packs: readonly PackView[]): boolean =>
-  packs.some((p) => isLicensed(p.manifest.identityKind));
 
 /* --- store -------------------------------------------------------------- */
 

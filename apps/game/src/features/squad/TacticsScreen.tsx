@@ -157,11 +157,12 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
     };
 
     const warnings: { id: string; text: string; tone: 'danger' | 'warning' }[] = [];
+    let empty = 0;
     for (const slot of formation.slots) {
       const playerId = tactics.lineup[slot.id];
       const player = playerId ? byId.get(playerId) : undefined;
       if (!player) {
-        warnings.push({ id: `empty-${slot.id}`, text: `${slot.position} is empty — the simulator will fill it for you.`, tone: 'warning' });
+        empty++;
         continue;
       }
       if (!isAvailable(player)) {
@@ -199,8 +200,19 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       }
     }
 
+    // One line for the whole problem rather than seven identical ones: a wall
+    // of "GK is empty" is noise, and the fix is the same button either way.
+    if (empty > 0 && empty < formation.slots.length) {
+      warnings.unshift({
+        id: 'empty',
+        text: `${empty} position${empty === 1 ? ' is' : 's are'} unfilled — the simulator will pick for you if you leave it.`,
+        tone: 'warning',
+      });
+    }
+
     return {
       club, tactics, formation, squad, byId, bench, reserves, vectorContext,
+      empty,
       warnings: warnings.slice(0, 5),
       vector: toTacticVector(tactics, vectorContext),
     };
@@ -403,6 +415,25 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
         </>
       }
     >
+      {/* --- no team picked yet ---------------------------------------- */}
+      {data.empty === formation.slots.length && (
+        <GlassPanel padding="md" accent="volt">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-volt">No team selected</p>
+          <h2 className="mt-1 font-display text-[20px] font-bold tracking-[-0.03em] text-ink">
+            Pick a side for {formation.name}
+          </h2>
+          <p className="mt-1 text-[13px] leading-relaxed text-ink-muted text-pretty">
+            Start from a sensible eleven and adjust it, or drag players onto the pitch yourself. Leave it empty and the
+            simulator picks for you — it will not pick badly, but it will not pick your way either.
+          </p>
+          <div className="mt-3">
+            <GlassButton variant="primary" icon={<IconSwap size={18} />} onClick={autoPick}>
+              Pick a team for me
+            </GlassButton>
+          </div>
+        </GlassPanel>
+      )}
+
       {/* --- warnings ------------------------------------------------- */}
       {data.warnings.length > 0 && (
         <GlassPanel padding="sm" accent="danger">
@@ -606,6 +637,55 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
 
 /* --- one instruction, with its cost ---------------------------------- */
 
+interface VectorDelta {
+  readonly key: keyof TacticVector;
+  readonly delta: number;
+}
+
+/**
+ * What one instruction is actually doing, measured rather than asserted: the
+ * team's vector with this setting as given, against the identical team with
+ * this one setting neutral. Everything else is held constant, so the difference
+ * is the instruction and nothing else.
+ */
+function deltasFor(
+  tactics: TacticSetup,
+  key: SettingKey,
+  value: string,
+  neutral: string,
+  context: { squadQuality: number; managerTactical: number },
+): VectorDelta[] {
+  const chosen = toTacticVector({ ...tactics, [key]: value } as TacticSetup, context);
+  const base = toTacticVector({ ...tactics, [key]: neutral } as TacticSetup, context);
+  return (Object.keys(VECTOR_TERMS) as (keyof TacticVector)[])
+    .map((term) => ({ key: term, delta: chosen[term] - base[term] }))
+    .filter((entry) => Math.abs(entry.delta) >= 0.015)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 4);
+}
+
+function DeltaPills({ deltas }: { deltas: readonly VectorDelta[] }): ReactNode {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {deltas.map(({ key, delta }) => {
+        const term = VECTOR_TERMS[key];
+        const verdict = term.higher === 'neutral'
+          ? 'neutral'
+          : (delta > 0) === (term.higher === 'good') ? 'good' : 'bad';
+        return (
+          <GlassPill
+            key={key}
+            size="sm"
+            tone={verdict === 'good' ? 'positive' : verdict === 'bad' ? 'danger' : 'neutral'}
+          >
+            {term.label} {delta > 0 ? '+' : '−'}{Math.abs(delta * term.scale).toFixed(0)}
+          </GlassPill>
+        );
+      })}
+    </div>
+  );
+}
+
 const SettingCard = memo(function SettingCard({
   setting, tactics, context, onChange,
 }: {
@@ -614,29 +694,23 @@ const SettingCard = memo(function SettingCard({
   context: { squadQuality: number; managerTactical: number };
   onChange: (value: string) => void;
 }): ReactNode {
+  const [compare, setCompare] = useState(false);
   const current = String(tactics[setting.key as SettingKey]);
-  const option = setting.options.find((o) => o.value === current) ?? setting.options[0];
 
-  // The honest comparison: this instruction as chosen, against the same team
-  // with this one instruction neutral. Everything else is held constant.
-  const deltas = useMemo(() => {
-    const chosen = toTacticVector(tactics, context);
-    const neutral = toTacticVector(
-      { ...tactics, [setting.key]: setting.neutral } as TacticSetup,
-      context,
-    );
-    return (Object.keys(VECTOR_TERMS) as (keyof TacticVector)[])
-      .map((key) => ({ key, delta: chosen[key] - neutral[key] }))
-      .filter((entry) => Math.abs(entry.delta) >= 0.015)
-      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
-      .slice(0, 4);
-  }, [tactics, context, setting]);
+  const rows = useMemo(
+    () => setting.options.map((option) => ({
+      option,
+      deltas: deltasFor(tactics, setting.key, option.value, setting.neutral, context),
+    })),
+    [setting, tactics, context],
+  );
+  const active = rows.find((row) => row.option.value === current) ?? rows[0];
 
   return (
     <GlassPanel padding="md">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-[15px] font-semibold text-ink">{setting.label}</h3>
-        <span className="text-[12px] text-ink-dim">{setting.question}</span>
+        <span className="truncate text-[12px] text-ink-dim">{setting.question}</span>
       </div>
 
       <div className="mt-3">
@@ -650,29 +724,56 @@ const SettingCard = memo(function SettingCard({
         />
       </div>
 
-      <p className="mt-3 text-[13px] leading-relaxed text-ink text-pretty">{option?.tradeOff}</p>
+      <p className="mt-3 text-[13px] leading-relaxed text-ink text-pretty">{active?.option.tradeOff}</p>
 
-      {deltas.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {deltas.map(({ key, delta }) => {
-            const term = VECTOR_TERMS[key];
-            const good = term.higher === 'neutral'
-              ? 'neutral'
-              : (delta > 0) === (term.higher === 'good') ? 'good' : 'bad';
-            return (
-              <GlassPill
-                key={key}
-                size="sm"
-                tone={good === 'good' ? 'positive' : good === 'bad' ? 'danger' : 'neutral'}
-              >
-                {term.label} {delta > 0 ? '+' : '−'}{Math.abs(delta * term.scale).toFixed(0)}
-              </GlassPill>
-            );
-          })}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {active && active.deltas.length > 0 ? (
+          <DeltaPills deltas={active.deltas} />
+        ) : (
+          <span className="text-[12px] text-ink-dim">Neutral — buying nothing, costing nothing.</span>
+        )}
+        <GlassButton variant="ghost" size="sm" onClick={() => setCompare(true)}>
+          Compare all {setting.options.length}
+        </GlassButton>
+      </div>
+
+      <GlassSheet
+        open={compare}
+        onClose={() => setCompare(false)}
+        title={setting.label}
+        subtitle={setting.question}
+        size="tall"
+      >
+        <div className="flex flex-col gap-2">
+          {rows.map(({ option, deltas }) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => { onChange(option.value); setCompare(false); }}
+              className={cn(
+                'w-full rounded-lg px-3.5 py-3 text-left',
+                'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
+                option.value === current ? 'bg-volt/12 ring-1 ring-volt/40' : 'bg-white/[0.04] hover:bg-white/[0.07]',
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[15px] font-semibold text-ink">{option.label}</span>
+                {option.value === current && <IconCheck size={17} className="shrink-0 text-volt" />}
+              </div>
+              <p className="mt-1 text-[12px] leading-relaxed text-ink-muted text-pretty">{option.tradeOff}</p>
+              {deltas.length > 0 ? (
+                <div className="mt-2"><DeltaPills deltas={deltas} /></div>
+              ) : (
+                <p className="mt-2 text-[11px] text-ink-dim">The reference setting — no movement either way.</p>
+              )}
+            </button>
+          ))}
         </div>
-      ) : (
-        <p className="mt-2 text-[12px] text-ink-dim">Neutral — this setting is currently costing and buying nothing.</p>
-      )}
+        <p className="mt-3 text-[12px] leading-relaxed text-ink-dim text-pretty">
+          Numbers are this instruction measured against the same team with it set neutral, through your manager and your
+          squad. A better coach lands more of it; a weaker squad pays more of the physical cost.
+        </p>
+      </GlassSheet>
     </GlassPanel>
   );
 });

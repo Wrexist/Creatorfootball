@@ -3,20 +3,16 @@ import type { ManagerAppearance, MediaStyle, SocialPersonality } from '@cf/engin
 /**
  * The vocabulary of the appearance builder.
  *
- * Two of these axes are *rendered* — skin tone, hair style, hair colour and
- * facial hair are the four channels the design system's procedural portrait
- * actually draws, so the colours and names below are the renderer's own values
- * rather than approximations of them (see `portraitSeed.ts` for how a choice
- * becomes a seed the portrait will honour).
+ * Every axis here is drawn. The colour values are the design system portrait's
+ * own palettes — same skin tones, same hair colours — so a manager sits
+ * alongside generated players without looking like he came from a different
+ * game. `ManagerPortrait` renders them; see the note at the top of that file
+ * for why the kit's seeded portrait cannot.
  *
- * Outfit and accessory are not drawn at portrait scale — a lanyard at 96px is
- * three grey pixels — so they are presented as what they are: character
- * details that appear in text and in future full-body art, never as a promise
- * that the picture will change. Pretending otherwise is how a customiser loses
- * the player's trust in the first thirty seconds.
- *
- * The accent colour *is* live: it tints the portrait backdrop and the ring, and
- * carries through the manager's presence across the app.
+ * Outfit and accessory are real fields on `ManagerAppearance` and are drawn as
+ * a collar and a prop rather than stored and forgotten. The accent colour tints
+ * the backdrop and the shoulder flash, and carries the manager's presence
+ * through the rest of the app.
  */
 
 export interface Option<T> {

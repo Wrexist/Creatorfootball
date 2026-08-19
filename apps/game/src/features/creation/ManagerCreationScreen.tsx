@@ -6,7 +6,7 @@ import {
 } from '@cf/engine';
 import {
   GlassButton, GlassIcon, GlassInput, GlassPanel, GlassSegmented, IconCheck, IconSwap, IconX,
-  PlayerPortrait, SectionHeader, cn,
+  SectionHeader, cn,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { CreationScreen } from './CreationScreen';
@@ -17,7 +17,7 @@ import {
   SOCIAL_PERSONALITIES, SOCIAL_PERSONALITY_HINT,
 } from './appearance';
 import { managerBlocker, useCreationStore } from './creationStore';
-import { managerPortraitSeed } from './portraitSeed';
+import { ManagerPortrait } from './ManagerPortrait';
 
 /**
  * Minute 0-1: identity.
@@ -98,13 +98,10 @@ export function ManagerCreationScreen(): ReactNode {
 
   const blocker = managerBlocker(state);
 
-  const portraitSeed = useMemo(
-    () => managerPortraitSeed(state.appearance),
-    [state.appearance],
-  );
-
-  const premadeSeeds = useMemo(
-    () => new Map(PREMADE_MANAGERS.map((m) => [m.id, managerPortraitSeed({
+  /** Pre-made managers carry the engine generator's vocabulary; the portrait
+   *  understands both, so the fast path looks like the built path. */
+  const premadeAppearance = useMemo(
+    () => new Map(PREMADE_MANAGERS.map((m) => [m.id, {
       skinTone: Number(m.appearance?.skinTone ?? 3),
       hairStyle: String(m.appearance?.hairStyle ?? 'short'),
       hairColor: String(m.appearance?.hairColor ?? 'dark'),
@@ -112,7 +109,7 @@ export function ManagerCreationScreen(): ReactNode {
       outfit: String(m.appearance?.outfit ?? 'suit'),
       accessory: String(m.appearance?.accessory ?? 'none'),
       accentColor: String(m.appearance?.accentColor ?? '#C8FF2E'),
-    })])),
+    }])),
     [],
   );
 
@@ -155,13 +152,10 @@ export function ManagerCreationScreen(): ReactNode {
               is the subject, and everything below it is a control panel. */}
           <GlassPanel level={2} radius="xl" padding="md" sheen>
             <div className="flex items-center gap-4">
-              <PlayerPortrait
-                seed={portraitSeed}
+              <ManagerPortrait
+                appearance={state.appearance}
                 size={96}
-                shape="squircle"
-                colors={{ primary: state.appearance.accentColor }}
-                ring={state.appearance.accentColor}
-                label="Your manager portrait"
+                label="Your manager"
               />
               <div className="min-w-0 flex-1">
                 <GlassInput
@@ -230,7 +224,7 @@ export function ManagerCreationScreen(): ReactNode {
                 options={OUTFITS.map((o) => ({ value: o.value, label: o.label }))}
                 value={state.appearance.outfit}
                 onChange={(outfit) => state.setAppearance({ outfit })}
-                hint="Outfit and what you carry show up in media coverage, not in this portrait."
+                hint="Your collar on the touchline. It shows in the portrait."
               />
               <ChoiceChips
                 legend="Always carrying"
@@ -319,11 +313,9 @@ export function ManagerCreationScreen(): ReactNode {
                   accent={archetype?.accent ?? '#C8FF2E'}
                 >
                   <div className="flex gap-3.5 pl-2">
-                    <PlayerPortrait
-                      seed={premadeSeeds.get(manager.id) ?? manager.id}
+                    <ManagerPortrait
+                      appearance={premadeAppearance.get(manager.id) ?? state.appearance}
                       size={56}
-                      shape="squircle"
-                      colors={{ primary: String(manager.appearance?.accentColor ?? '#1c2026') }}
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">

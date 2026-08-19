@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { currentCompetition, type ClubId, type GameState } from '@cf/engine';
 import {
   Divider, EmptyState, GlassPanel, GlassPill, GlassSegmented, GlassSheet, IconTrophy,
-  KeyValueRow, ProgressBar, Screen, SectionHeader, cn,
+  KeyValueRow, ProgressBar, Screen, cn,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -60,6 +60,7 @@ function StandingsView({ state }: { state: GameState }): ReactNode {
           aria-label="Table ordering"
           size="sm"
           block
+          nested
         />
       }
       aside={

@@ -8,7 +8,8 @@
     "build": "tsc -b --noEmit false && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "cap:sync": "cap sync"
+    "cap:sync": "cap sync",
+    "test": "vitest run"
   },
   "dependencies": {
     "@cf/engine": "workspace:*",
@@ -28,6 +29,7 @@
     "@vitejs/plugin-react": "^5.0.2",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
-    "vite": "^7.1.5"
+    "vite": "^7.1.5",
+    "vitest": "^3.2.4"
   }
 }

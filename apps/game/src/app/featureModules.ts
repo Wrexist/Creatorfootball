@@ -1,5 +1,4 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import { pendingProgression, pendingSocial, pendingSquad } from './pending';
 
 /**
  * Where the router gets its screens.
@@ -10,19 +9,13 @@ import { pendingProgression, pendingSocial, pendingSquad } from './pending';
  * pitch renderer and the commentary engine, and it must never sit in the chunk
  * that has to arrive before the splash can leave.
  *
- * Each loader is typed to the exact export list its barrel promises, which
- * means the temporary stand-ins in `pending.tsx` can be swapped for the real
- * modules — the expression is written beside each one — and the compiler
- * checks the swap rather than the reviewer. Deleting `pending.tsx` after that
- * swap is the whole cleanup.
+ * Each loader is typed to the exact export list its barrel promises, so a
+ * feature area that renames or drops a screen fails the typecheck here rather
+ * than at runtime on the route nobody opened before shipping.
  */
 
 type ScreenModule<K extends string> = Readonly<Record<K, ComponentType>>;
 type Loader<K extends string> = () => Promise<ScreenModule<K>>;
-
-/* --- The three lines still pointing at `pending.tsx` are the only temporary
-       ones left; each carries the real expression to swap in. Home, matchday,
-       club, market and league are already wired to their real barrels. ----- */
 
 const home: Loader<'HomeScreen'> =
   () => import('@/features/home');
@@ -36,7 +29,7 @@ const club: Loader<
 > = () => import('@/features/club');
 
 const squad: Loader<'SquadScreen' | 'PlayerProfileScreen' | 'TacticsScreen' | 'TrainingScreen'> =
-  pendingSquad; // → () => import('@/features/squad')
+  () => import('@/features/squad');
 
 const market: Loader<'MarketScreen' | 'PlayerSearchScreen' | 'NegotiationScreen' | 'ScoutingScreen'> =
   () => import('@/features/market');
@@ -46,13 +39,11 @@ const league: Loader<
 > = () => import('@/features/league');
 
 const social: Loader<'SocialScreen' | 'MediaScreen' | 'CreatorProfileScreen'> =
-  pendingSocial; // → () => import('@/features/social')
+  () => import('@/features/social');
 
 const progression: Loader<
   'ObjectivesScreen' | 'RewardsScreen' | 'StoreScreen' | 'SettingsScreen' | 'ContentPacksScreen'
-> = pendingProgression; // → () => import('@/features/progression')
-
-/* --- end temporary block ---------------------------------------------- */
+> = () => import('@/features/progression');
 
 /** `React.lazy` over a named export rather than a default one. */
 function screen<K extends string>(load: Loader<K>, name: K): LazyExoticComponent<ComponentType> {

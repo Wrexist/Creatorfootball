@@ -32,7 +32,20 @@ export const ECONOMY_BALANCE = {
    * a shirt bought by someone who will never attend a match, which for a creator
    * club is most of the retail business.
    */
-  MERCH_PER_REACH: 0.021,
+  /**
+   * Merchandise conversion from reach, applied as `reach ** MERCH_REACH_EXPONENT`.
+   *
+   * This term used to be linear, which made revenue explode once clubs were
+   * given creator-league audiences: a club with 31M reach turned over £211M a
+   * season, roughly six times the real turnover of the largest creator-owned
+   * club in existence. Reality is emphatically sub-linear — audience converts
+   * to money worse and worse as it grows, which is the same lossy-conversion
+   * principle the fan model already encodes. The exponent is the brake; the
+   * coefficient is calibrated so a club at the 1.5M-reach sponsorship reference
+   * point is roughly unchanged.
+   */
+  MERCH_PER_REACH: 1.12,
+  MERCH_REACH_EXPONENT: 0.72,
   /** Price fans consider fair for a shirt. */
   MERCH_PRICE_REFERENCE: 55,
   /** Elasticity of merch volume to price. Less elastic than tickets: it is a souvenir. */

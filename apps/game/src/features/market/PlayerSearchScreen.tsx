@@ -21,7 +21,7 @@ import {
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup } from './clubs';
-import { openTalks, orderScoutReport, toggleShortlist, useLiveMarket } from './engine';
+import { openTalks, orderScoutReport, toggleShortlist } from './engine';
 import { MarketPlayerCard, AVAILABILITY } from './components/MarketPlayerCard';
 import { AttributeDossier, ConfidenceMeter, KnownRating, PotentialPill, useKnowledge } from './components/scouting';
 import { plainMoney } from './format';
@@ -418,7 +418,6 @@ const ResultCard = memo(function ResultCard({
 function SearchView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const toast = useToast();
-  useLiveMarket();
 
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState<Draft>(DEFAULT_DRAFT);
@@ -502,12 +501,14 @@ function SearchView({ state }: { state: GameState }): ReactNode {
             value={query}
             icon={<IconSearch />}
             size="sm"
+            nested
             onChange={(event) => { setQuery(event.target.value); setLimit(PAGE); }}
             className="flex-1"
           />
           <GlassIcon
             label={`Filters${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ''}`}
             icon={<IconFilter />}
+            nested
             active={activeFilterCount > 0}
             {...(activeFilterCount > 0 ? { badge: activeFilterCount } : {})}
             onClick={() => setFiltersOpen(true)}

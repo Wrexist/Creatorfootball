@@ -286,6 +286,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
       }
       headerAccessory={
         <GlassSegmented
+          nested
           value={group}
           onChange={setGroup}
           size="sm"

@@ -5,7 +5,7 @@ import {
   type GameState, type Player,
 } from '@cf/engine';
 import {
-  ClubBadge, Divider, EmptyState, GlassPanel, GlassPill, IconBall, IconTrophy, KeyValueRow,
+  ClubBadge, EmptyState, GlassPanel, GlassPill, IconBall, IconTrophy, KeyValueRow,
   MatchCard, PlayerPortrait, ProgressBar, Screen, SectionHeader, StatCard, StatGrid,
   cn, type MatchCardSide,
 } from '@/design';

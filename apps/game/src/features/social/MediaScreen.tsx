@@ -110,6 +110,7 @@ function MediaView({ state }: { state: GameState }): ReactNode {
           aria-label="Which stories to show"
           size="sm"
           block
+          nested
         />
       }
       aside={

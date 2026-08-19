@@ -101,7 +101,18 @@ export function clubFromTemplate(
   }
 
   const budget = opts.startingBudget ?? t.budget;
+  // Local, gate-going support scales with the ground, as it does anywhere.
   const supporterBase = Math.round(t.stadiumCapacity * (3.2 + t.reputation / 30) * rng.float(0.9, 1.1));
+
+  // Online audience does NOT. This is the defining economic fact of creator
+  // football: reach is the independent variable and the stadium is close to
+  // irrelevant to it — one real creator club with two million subscribers
+  // averaged a few hundred people through the turnstiles. Deriving followers
+  // from capacity, as an ordinary football club would, made audience a rounding
+  // error and left sponsorship — the dominant income line by design — at under
+  // 1% of revenue. Reputation drives it on a steep curve, and fan culture
+  // decides how much of that following is online rather than in the ground.
+  const audienceBase = 25_000 * (t.reputation / 20) ** 2.6;
 
   const tactics: TacticSetup = {
     ...DEFAULT_TACTICS,
@@ -143,7 +154,7 @@ export function clubFromTemplate(
       expectation: clamp(Math.round(profile.expectation * 0.55 + t.reputation * 0.5), 1, 100),
       lastAttendance: 0,
       seasonTicketHolders: Math.round(t.stadiumCapacity * profile.seasonTicketShare),
-      onlineFollowers: Math.round(supporterBase * profile.onlineShare),
+      onlineFollowers: Math.round(audienceBase * profile.onlineShare * rng.float(0.85, 1.15)),
     },
     finance: {
       wageBudgetPerCycle: Math.round(budget * cfg.wageBudgetShare),

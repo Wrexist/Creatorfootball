@@ -21,6 +21,7 @@ import {
   generateManager, generateSquad, generateCreator,
   type ClubTemplate, type ContentPack, type CreatorSeasonConfigDef,
 } from '../content';
+import { generateSponsorOffers, inheritedSponsorDeals } from '../sponsors/sponsors';
 
 /**
  * New game creation.
@@ -379,6 +380,37 @@ export function createNewGame(opts: NewGameOptions): GameState {
     playerFinalPosition: null,
   };
 
+  // --- opening sponsorship ---------------------------------------------
+  // Every real club already has a shirt sponsor on the day you take over, so
+  // the inherited deal is built directly rather than drawn from the offer
+  // generator — that generator is gated by the market climate and on some
+  // seeds legitimately returns nothing, which is right for a club shopping for
+  // a new partner and wrong for the deal it already has.
+  const sponsorRng = rng.fork('openingSponsors');
+  const playerClub = clubs[playerClubId] as Club;
+  const openingCreators = Object.values(creators).filter((c) => c.clubId === playerClubId);
+  const sponsorCtx = {
+    cycle: 0,
+    season: 1,
+    // Reach is club followers plus everything the attached creators command;
+    // using the club's own following alone undervalued every deal.
+    reach:
+      playerClub.fans.onlineFollowers +
+      openingCreators.reduce((total, c) => total + c.followers, 0),
+    leaguePosition: templates.length,
+    leagueSize: templates.length,
+    brandBuilding: playerManager.attributes.brandBuilding,
+    seed: opts.seed,
+  };
+
+  // A club arrives with a portfolio, not a single shirt deal — real clubs
+  // monetise several slots, and starting with one left sponsorship, the
+  // dominant income line by design, at a fifth of what it should be.
+  const activeDeals = inheritedSponsorDeals(playerClub, registry, sponsorRng, sponsorCtx);
+  const openingOffers = generateSponsorOffers(
+    playerClub, registry, sponsorRng, sponsorCtx, activeDeals,
+  );
+
   const settings: GameSettings = {
     reducedMotion: false,
     haptics: true,
@@ -414,7 +446,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
     transfers: { listings: {}, negotiations: {}, completed: [], windowOpen: false, rumours: [] },
     scouting: { assignments: [], shortlist: [], weeklyCapacity: 2, network: 25 },
     training: { programId: 'balanced', intensity: 'NORMAL', individualFocus: {}, lastResults: [] },
-    sponsors: { available: [], active: [] },
+    sponsors: { available: openingOffers, active: activeDeals },
     media: { stories: [] },
     social: {
       posts: [],

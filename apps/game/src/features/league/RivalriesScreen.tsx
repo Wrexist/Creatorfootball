@@ -61,7 +61,7 @@ const RivalryCard = memo(function RivalryCard({
     [record.notableIncidents, rivalry.id],
   );
 
-  return (
+  const panel = (
     <GlassPanel padding="md" accent={temperature.tone === 'danger' ? 'danger' : 'none'}>
       <header className="flex items-center gap-3">
         <ClubBadge visual={theirSide.visual} size={44} label={theirSide.name} />
@@ -127,7 +127,23 @@ const RivalryCard = memo(function RivalryCard({
         </>
       )}
 
-      <Divider className="my-3" label="Next meeting" />
+      <p className={cn('mt-3 text-[12px] leading-relaxed text-ink-dim text-pretty')}>
+        {currentCycle - (rivalry.lastMeetingCycle ?? currentCycle) > 12
+          ? 'The heat fades when they stop meeting. It comes straight back when they do.'
+          : 'Intensity feeds atmosphere, pressure and the card count. This one is live.'}
+      </p>
+    </GlassPanel>
+  );
+
+  return (
+    <section className="flex flex-col gap-2">
+      {panel}
+      {/* The fixture card sits outside the panel deliberately: `MatchCard` is a
+          blurring surface of its own, and stacking it inside another one would
+          put three backdrop filters on the same pixels. */}
+      <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+        Next meeting
+      </p>
       {nextMeeting ? (
         <MatchCard
           home={nextMeeting.homeClubId === ourSide.clubId ? ourSide : theirSide}
@@ -139,17 +155,11 @@ const RivalryCard = memo(function RivalryCard({
           onPress={() => onOpenFixture(nextMeeting)}
         />
       ) : (
-        <p className="text-[13px] text-ink-muted text-pretty">
+        <p className="px-1 text-[13px] text-ink-muted text-pretty">
           Nothing scheduled against them this season.
         </p>
       )}
-
-      <p className={cn('mt-3 text-[12px] leading-relaxed text-ink-dim text-pretty')}>
-        {currentCycle - (rivalry.lastMeetingCycle ?? currentCycle) > 12
-          ? 'The heat fades when they stop meeting. It comes straight back when they do.'
-          : 'Intensity feeds atmosphere, pressure and the card count. This one is live.'}
-      </p>
-    </GlassPanel>
+    </section>
   );
 });
 

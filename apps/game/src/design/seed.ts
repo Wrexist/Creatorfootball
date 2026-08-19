@@ -18,6 +18,17 @@ export function hashSeed(seed: string): number {
   return h >>> 0;
 }
 
+/** murmur3 finaliser: full avalanche, so one changed input bit moves half the output. */
+function fmix32(h: number): number {
+  let x = h >>> 0;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x85ebca6b);
+  x ^= x >>> 13;
+  x = Math.imul(x, 0xc2b2ae35);
+  x ^= x >>> 16;
+  return x >>> 0;
+}
+
 /**
  * A tiny counter-based PRNG. Counter-based (rather than stateful) so that any
  * layer of a procedural drawing can ask for "value #7 of this seed" without
@@ -32,15 +43,25 @@ export class SeedStream {
     this.root = hashSeed(seed);
   }
 
-  /** Named channels stay stable when unrelated channels are added or removed. */
+  /**
+   * Named channels stay stable when unrelated channels are added or removed.
+   *
+   * The label is mixed *through* the hash function rather than XORed into the
+   * root. XOR is linear: a label could only ever flip fixed bits of the root,
+   * and the single xorshift round that followed did not diffuse them, so
+   * different channels of the same seed stayed strongly correlated. The visible
+   * cost was severe — the whole portrait system could reach only 32 distinct
+   * faces across every possible seed, and the correlation tied features
+   * together, so skin tone effectively determined facial hair. Multiplicative
+   * mixing plus a full murmur3 finaliser restores channel independence.
+   */
   channel(label: string): number {
-    const h = hashSeed(label) ^ this.root;
-    // xorshift32 finaliser: cheap avalanche so adjacent seeds look unrelated.
-    let x = h >>> 0 || 1;
-    x ^= x << 13; x >>>= 0;
-    x ^= x >>> 17;
-    x ^= x << 5; x >>>= 0;
-    return x / 0x100000000;
+    let h = this.root;
+    for (let i = 0; i < label.length; i += 1) {
+      h ^= label.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return fmix32(h) / 0x100000000;
   }
 
   next(): number {

@@ -10,6 +10,7 @@ import {
   type NegotiationStage,
   type NegotiationTerms,
   type Player,
+  type PlayerId,
 } from '@cf/engine';
 import {
   ClubBadge, Divider, EmptyState, GlassButton, GlassPanel, GlassPill, KeyValueRow, MoneyLabel,
@@ -240,13 +241,21 @@ const RivalStrip = memo(function RivalStrip({
 
 /* --- screen ------------------------------------------------------------- */
 
+export interface SignedDeal {
+  readonly playerId: PlayerId;
+  readonly fee: number;
+  readonly wage: number;
+  readonly years: number;
+}
+
 interface ViewProps {
   state: GameState;
   negotiation: Negotiation;
   player: Player;
+  onSigned: (deal: SignedDeal) => void;
 }
 
-function NegotiationView({ state, negotiation, player }: ViewProps): ReactNode {
+function NegotiationView({ state, negotiation, player, onSigned }: ViewProps): ReactNode {
   const navigate = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
@@ -257,7 +266,6 @@ function NegotiationView({ state, negotiation, player }: ViewProps): ReactNode {
   const [composerOpen, setComposerOpen] = useState(false);
   const [lastOutcome, setLastOutcome] = useState<NegotiationOutcome | null>(null);
   const [lastHeadline, setLastHeadline] = useState<{ title: string; detail: string } | null>(null);
-  const [signed, setSigned] = useState<{ fee: number; wage: number; years: number } | null>(null);
 
   const ourClub = state.clubs[state.playerClubId];
   const sellingClub = negotiation.fromClubId ? state.clubs[negotiation.fromClubId] : undefined;
@@ -316,7 +324,10 @@ function NegotiationView({ state, negotiation, player }: ViewProps): ReactNode {
       return;
     }
     const terms = negotiation.ourOffer;
-    setSigned({
+    // Handed upward: settling the transfer deletes this negotiation, and the
+    // celebration must outlive the record that produced it.
+    onSigned({
+      playerId: player.id,
       fee: terms?.fee ?? 0,
       wage: terms?.wage ?? 0,
       years: terms?.years ?? 0,
@@ -542,24 +553,37 @@ function NegotiationView({ state, negotiation, player }: ViewProps): ReactNode {
         onClose={() => setComposerOpen(false)}
         onSubmit={handleSubmit}
       />
-
-      <SigningMoment
-        open={signed !== null}
-        onDismiss={() => { setSigned(null); navigate(ROUTES.market); }}
-        playerName={player.displayName}
-        card={
-          <PlayerCard
-            player={player}
-            {...(clubs(state.playerClubId) ? { club: clubs(state.playerClubId) } : {})}
-            variant="featured"
-          />
-        }
-        fee={<MoneyLabel amount={signed?.fee ?? 0} size="lg" />}
-        contract={`${plainMoney(signed?.wage ?? 0)} a week for ${signed?.years ?? 0} year${signed?.years === 1 ? '' : 's'}`}
-        clubName={ourClub?.name ?? ''}
-        {...(ourClub ? { accent: ourClub.visual.primary } : {})}
-      />
     </Screen>
+  );
+}
+
+/**
+ * The signing moment.
+ *
+ * One of the nine events licensed to take over the screen — and the reason it
+ * is mounted at the route level rather than inside the negotiation view: the
+ * moment `completeTransfer` settles, the negotiation record is gone, and a
+ * celebration living inside that view would unmount before it played a frame.
+ */
+function SigningCelebration({
+  state, deal, onDismiss,
+}: { state: GameState; deal: SignedDeal; onDismiss: () => void }): ReactNode {
+  const clubs = useClubLookup(state);
+  const player = state.players[deal.playerId];
+  const club = state.clubs[state.playerClubId];
+  if (!player) return null;
+  const card = clubs(state.playerClubId);
+  return (
+    <SigningMoment
+      open
+      onDismiss={onDismiss}
+      playerName={player.displayName}
+      card={<PlayerCard player={player} {...(card ? { club: card } : {})} variant="featured" />}
+      fee={<MoneyLabel amount={deal.fee} size="lg" />}
+      contract={`${plainMoney(deal.wage)} a week for ${deal.years} year${deal.years === 1 ? '' : 's'}`}
+      clubName={club?.name ?? ''}
+      {...(club ? { accent: club.visual.primary } : {})}
+    />
   );
 }
 
@@ -567,12 +591,21 @@ export function NegotiationScreen(): ReactNode {
   const gate = useGameStatus();
   const navigate = useNavigate();
   const params = useParams();
+  const [signed, setSigned] = useState<SignedDeal | null>(null);
 
   if (gate.status !== 'ready') return <GateScreen gate={gate} title="Negotiation" />;
 
+  const state = gate.state;
   const negotiationId = params.negotiationId ?? '';
-  const negotiation = gate.state.transfers.negotiations[negotiationId];
-  const player = negotiation ? gate.state.players[negotiation.playerId] : undefined;
+  const negotiation = state.transfers.negotiations[negotiationId];
+  const player = negotiation ? state.players[negotiation.playerId] : undefined;
+  const celebration = signed ? (
+    <SigningCelebration
+      state={state}
+      deal={signed}
+      onDismiss={() => { setSigned(null); navigate(ROUTES.market); }}
+    />
+  ) : null;
 
   if (!negotiation || !player) {
     return (
@@ -586,9 +619,20 @@ export function NegotiationScreen(): ReactNode {
             </GlassButton>
           }
         />
+        {celebration}
       </Screen>
     );
   }
 
-  return <NegotiationView state={gate.state} negotiation={negotiation} player={player} />;
+  return (
+    <>
+      <NegotiationView
+        state={state}
+        negotiation={negotiation}
+        player={player}
+        onSigned={setSigned}
+      />
+      {celebration}
+    </>
+  );
 }

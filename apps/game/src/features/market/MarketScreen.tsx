@@ -16,7 +16,7 @@ import {
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup, type ClubLookup } from './clubs';
-import { openTalks, useHeadroom, useLiveMarket, useOurNegotiations, windowState } from './engine';
+import { openTalks, useHeadroom, useOurNegotiations, windowState } from './engine';
 import { PlayerRow } from './components/PlayerRow';
 import { cyclesLeft, relativeCycle } from './format';
 
@@ -165,7 +165,6 @@ const DoneDeal = memo(function DoneDeal({
 function MarketView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const toast = useToast();
-  useLiveMarket();
 
   const clubs = useClubLookup(state);
   const headroom = useHeadroom(state);
