@@ -180,9 +180,18 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
         <div
           className={cn(
             'relative z-20 shrink-0 border-t border-white/[0.07]',
-            wide ? 'bg-base/95' : 'glass-3',
+            wide ? 'bg-base/95' : 'chrome-surface',
           )}
-          style={{ paddingBottom: wide ? undefined : 'var(--safe-bottom)' }}
+          style={{
+            // The tab bar is fixed at z-40, so a footer left in normal flow ends
+            // up underneath it and the screen's primary action becomes
+            // unreachable. Lift it to sit directly on top of the bar. The bar
+            // already clears the home indicator, so the footer must not add the
+            // safe-area inset a second time.
+            marginBottom:
+              withTabBar && !wide ? 'calc(var(--nav-height) + var(--safe-bottom))' : undefined,
+            paddingBottom: withTabBar || wide ? undefined : 'var(--safe-bottom)',
+          }}
         >
           <div className="mx-auto w-full max-w-[1180px] px-4 py-3 sm:px-6">{footer}</div>
         </div>

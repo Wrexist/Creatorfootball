@@ -302,6 +302,25 @@
     padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
   }
 
+  /*
+    Chrome surfaces that content scrolls behind.
+
+    Plain glass is too sheer for this job at our contrast levels: over a
+    near-black base an 8% white wash leaves text behind it perfectly legible, so
+    a stat card scrolling under the tab bar collided with the navigation labels
+    and both became unreadable. Chrome needs a scrim under the blur — it keeps
+    the material's depth and reflection while making whatever passes beneath it
+    unambiguously background.
+  */
+  .chrome-surface {
+    background: color-mix(in srgb, var(--color-base) 88%, transparent);
+    backdrop-filter: blur(var(--blur-glass-3)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--blur-glass-3)) saturate(160%);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .chrome-surface { background: var(--color-base); }
+  }
+
   /* Momentary GPU promotion for surfaces that are about to move. Applied
      only while an interaction is in flight — a permanent `will-change`
      on a glass panel keeps a full-size layer alive for the whole session. */

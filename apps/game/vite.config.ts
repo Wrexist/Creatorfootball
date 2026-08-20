@@ -18,12 +18,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Split by *why* a module loads, not merely by where it lives.
-          // The fictional universe is a large static payload read only when a
-          // save is created or a pack inspected, and the engine is stable code
-          // a returning player already has cached — neither belongs on the
-          // critical path with the shell.
-          if (id.includes('packages/engine/src/content/packs')) return 'content';
+          // The engine ships as ONE chunk on purpose.
+          //
+          // Splitting the content packs out of it looked like an easy win —
+          // it is a large static payload only read when a save is created —
+          // but the engine's modules and its content data reference each other
+          // at module scope, and Rollup cannot order two chunks that form a
+          // cycle. The result was a build that succeeded, a test suite that
+          // passed (it runs the source in Node, never the bundle), and a
+          // production page that died on load with a temporal-dead-zone error.
+          // A browser smoke test now guards this; do not re-split without one.
           if (id.includes('packages/engine/src')) return 'engine';
           if (!id.includes('node_modules')) return undefined;
           if (/node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)) {

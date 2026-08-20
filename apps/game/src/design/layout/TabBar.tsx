@@ -51,7 +51,7 @@ export function TabBar({ value, onChange, badges, hidden = false, className }: T
     <nav
       aria-label="Primary"
       className={cn(
-        'glass-3 fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.07]',
+        'chrome-surface fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.07]',
         'transition-transform duration-[var(--duration-fast)] ease-out-quint',
         hidden && 'translate-y-full',
         className,
