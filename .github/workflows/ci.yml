@@ -36,6 +36,12 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # A green build and a green unit suite are not evidence the app runs:
+      # the bundle has failed to boot while both were passing. This drives the
+      # real artefact in a real browser.
+      - name: Browser smoke test
+        run: pnpm test:smoke
+
   audits:
     runs-on: ubuntu-latest
     steps:
