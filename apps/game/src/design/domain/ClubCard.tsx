@@ -178,7 +178,10 @@ export const ClubCard = memo(function ClubCard({
           </span>
           {featured && (
             <span className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <GlassPill size="xs" tone="volt">{PHILOSOPHY_LABELS[club.philosophy]}</GlassPill>
+              {/* Neutral, not volt. A philosophy is a permanent property of the
+                  club, not something live or actionable, and painting it in the
+                  accent put a lime element on every club surface in the game. */}
+              <GlassPill size="xs">{PHILOSOPHY_LABELS[club.philosophy]}</GlassPill>
               <GlassPill size="xs" icon={<IconStadium />}>{formatCount(club.stadium.capacity)}</GlassPill>
               <GlassPill size="xs" icon={<IconFans />}>{formatCount(club.fans.base)}</GlassPill>
             </span>

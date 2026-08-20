@@ -27,6 +27,22 @@ export const UNUSED_PREFERENCE = 6;
 const TOKEN_RE = /\{([a-zA-Z0-9_]+)\}/g;
 
 /** Returns the rendered string, or null when the template needs a token we lack. */
+/**
+ * English ordinal suffix. Templates used to hardcode "th" after {minute},
+ * which produced "sent off in the 22th minute" and "the 1th minute".
+ */
+export function ordinal(n: number): string {
+  const abs = Math.abs(Math.round(n));
+  const lastTwo = abs % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return `${abs}th`;
+  switch (abs % 10) {
+    case 1: return `${abs}st`;
+    case 2: return `${abs}nd`;
+    case 3: return `${abs}rd`;
+    default: return `${abs}th`;
+  }
+}
+
 export function renderTemplate(text: string, tokens: TokenMap): string | null {
   let missing = false;
   const out = text.replace(TOKEN_RE, (_match, key: string) => {

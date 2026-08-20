@@ -190,11 +190,14 @@ export function GoalMoment({
             exit={m.reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
             transition={m.transition.medium}
             className={cn(
-              'pointer-events-none fixed inset-x-3 z-[56] rounded-lg border bg-void/92 p-3',
-              'shadow-[0_18px_50px_rgb(0_0_0/0.55)]',
+              'pointer-events-none fixed inset-x-3 z-[56] rounded-lg border p-3',
+              'shadow-[0_18px_50px_rgb(0_0_0/0.65)]',
               ours ? 'border-volt/35' : 'border-danger/35',
             )}
-            style={{ bottom: 'calc(var(--safe-bottom) + 86px)' }}
+            // Fully opaque, by value. A translucent band sat on top of the feed
+            // and made both unreadable — the one thing a band that exists to be
+            // read must not do.
+            style={{ bottom: 'calc(var(--safe-bottom) + 86px)', background: 'var(--color-surface-1)' }}
           >
             <div className="flex items-center gap-2">
               <span

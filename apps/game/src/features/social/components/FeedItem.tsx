@@ -2,21 +2,20 @@ import { memo, type ReactNode } from 'react';
 import type { SocialPost as PostData } from '@cf/engine';
 import {
   CreatorAvatar, FOCUS_RING, GlassPill, IconHeart, IconInfo, IconRepost, IconVerified,
-  NameText, SocialPost, Text, cn,
-  Numeric,
+  NameText, Numeric, Text, cn,
 } from '@/design';
 import { KIND_LABEL, KIND_RAIL, KIND_TONE, tierFor, type Tier } from '../data';
 
 /**
  * One item in the feed.
  *
- * Three renderings, chosen by `post.weight` rather than by kind — the weight is
+ * Three renderings, chosen by editorial rank rather than by kind — the weight is
  * how much the world engine thought the underlying event mattered, so a record
  * broken, a hijacked transfer or a derby humiliation physically outweighs a
  * supporter's throwaway line:
  *
- *   LEAD      the week's real story — display type, accent rail, engagement
- *   STANDARD  the design system's post, as-is
+ *   LEAD      the week's one story — display type, accent rail, engagement
+ *   STANDARD  a full card at reading size, for the two runners-up
  *   CHATTER   a single dense line, because most of a feed is noise and noise
  *             that takes up a full card stops being scannable
  *
@@ -184,10 +183,56 @@ const Lead = memo(function Lead({
   );
 });
 
+/* --- standard ----------------------------------------------------------- */
+
+const Standard = memo(function Standard({
+  post, timeLabel, hasEvent, onOpenEvent,
+}: FeedItemProps): ReactNode {
+  return (
+    <article className="glass-1 relative overflow-hidden rounded-lg p-3.5">
+      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-0.5', KIND_RAIL[post.kind])} />
+      <div className="flex gap-3">
+        <CreatorAvatar seed={post.avatarSeed} size={34} verified={post.verified} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-1.5">
+            <NameText name={post.authorName} role="bodyStrong" className="min-w-0 shrink" />
+            {post.verified && (
+              <IconVerified size={13} className="shrink-0 self-center text-info" label="Verified" />
+            )}
+            <Text role="micro" as="span" className="shrink-0">{timeLabel}</Text>
+          </div>
+          <Text role="body" as="p" className="mt-1 whitespace-pre-line text-pretty">
+            {post.text}
+          </Text>
+          <div className="mt-2 flex items-center gap-3">
+            <span className="min-w-0 shrink"><Engagement post={post} /></span>
+            {/* Inside the card, not floating under it: the link belongs to the
+                post it explains. */}
+            {hasEvent && (
+              <button
+                type="button"
+                onClick={() => onOpenEvent(post.id)}
+                className={cn(
+                  'ml-auto inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap',
+                  'rounded-md px-1.5 text-[12px] font-semibold text-volt hover:text-volt-bright',
+                  FOCUS_RING,
+                )}
+              >
+                <IconInfo size={13} />
+                What happened
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+});
+
 /* --- switch ------------------------------------------------------------- */
 
 export const FeedItem = memo(function FeedItem(props: FeedItemProps): ReactNode {
-  const { post, timeLabel, hasEvent, onOpenEvent, className } = props;
+  const { post, timeLabel, className } = props;
   const tier: Tier = props.tier ?? tierFor(post.weight);
 
   if (post.quoted) {
@@ -213,12 +258,7 @@ export const FeedItem = memo(function FeedItem(props: FeedItemProps): ReactNode 
   }
   return (
     <div className={className}>
-      <SocialPost post={post} timeLabel={timeLabel} />
-      {hasEvent && (
-        <div className="px-3.5 pb-2">
-          <EventLink postId={post.id} onOpenEvent={onOpenEvent} />
-        </div>
-      )}
+      <Standard {...props} />
     </div>
   );
 });

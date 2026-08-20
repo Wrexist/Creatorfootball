@@ -8,8 +8,8 @@ import {
 import {
   ClubBadge, CardRail, Divider, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
   HeroSurface, ListRow, NameText, PlayerPortrait, ProgressBar, RatingBadge, ScorePanel, Screen,
-  StatBlock, Text, formatCount, formatMoney,
-  IconBall, IconCalendar, IconClock, IconFans, IconFlame, IconInjury, IconLeague, IconMarket,
+  StatBlock, Text, cn, formatCount, formatMoney,
+  IconBall, IconCalendar, IconChevronRight, IconClock, IconFans, IconFlame, IconInjury, IconLeague, IconMarket,
   IconMoney, IconScout, IconSocial, IconStar, IconTraining, IconTrophy, IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
@@ -70,12 +70,13 @@ const TONE_DOT: Record<Tone, string> = {
   neutral: 'bg-ink-faint',
 };
 
-const TONE_ACCENT: Record<Tone, 'volt' | 'danger' | 'positive' | 'none'> = {
-  volt: 'volt',
-  danger: 'danger',
-  warning: 'danger',
-  positive: 'positive',
-  neutral: 'none',
+/** A hairline down the leading edge, in the tone of the news. */
+const ACCENT_EDGE: Record<Tone, string> = {
+  volt: 'border-l-2 border-l-volt',
+  danger: 'border-l-2 border-l-danger',
+  warning: 'border-l-2 border-l-warning',
+  positive: 'border-l-2 border-l-positive',
+  neutral: 'border-l-2 border-l-white/12',
 };
 
 const TONE_BLOCK: Record<Tone, 'volt' | 'danger' | 'warning' | 'positive' | 'neutral'> = {
@@ -119,12 +120,18 @@ const LeadCard = memo(function LeadCard({
   onGo: (route: string) => void;
 }): ReactNode {
   return (
-    <GlassPanel accent={TONE_ACCENT[card.tone]} padding="md">
+    // The whole card is the target rather than a small button inside it: one
+    // action, a 200pt hit area, and nothing for the tab bar to sit on top of.
+    <GlassCard
+      onPress={() => onGo(card.route)}
+      padding="md"
+      className={cn('relative', ACCENT_EDGE[card.tone])}
+    >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0"><Glyphs glyph={card.glyph} tone={card.tone} size={20} /></span>
         <div className="min-w-0 flex-1">
           <Text role="label" className={TONE_TEXT[card.tone]}>{TONE_KICKER[card.tone]}</Text>
-          <Text role="title" as="h3" className="mt-1 text-[20px] text-pretty">{card.headline}</Text>
+          <Text role="title" as="h3" className="mt-1 text-pretty">{card.headline}</Text>
           <Text role="caption" className="mt-1.5 text-pretty">{card.meaning}</Text>
         </div>
         {card.metric && (
@@ -168,12 +175,11 @@ const LeadCard = memo(function LeadCard({
         </div>
       )}
 
-      <div className="mt-3">
-        <GlassButton variant="secondary" size="sm" onClick={() => onGo(card.route)}>
-          {card.actionLabel}
-        </GlassButton>
+      <div className="mt-3 flex items-center gap-1.5 text-volt">
+        <Text role="label" as="span" className="text-volt">{card.actionLabel}</Text>
+        <IconChevronRight size={15} aria-hidden="true" />
       </div>
-    </GlassPanel>
+    </GlassCard>
   );
 });
 
@@ -579,7 +585,7 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
                   >
                     {creator.clubSentiment >= 20 ? 'On side' : creator.clubSentiment <= -20 ? 'Critical' : 'Neutral'}
                   </GlassPill>
-                  <Text role="stat" className="text-[14px]">{formatCount(creator.followers)}</Text>
+                  <Text role="stat">{formatCount(creator.followers)}</Text>
                 </div>
               </GlassCard>
             ))}

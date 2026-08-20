@@ -265,7 +265,7 @@ export const SocialPost = memo(function SocialPost({
       <div className="flex gap-3">
         <CreatorAvatar seed={post.avatarSeed} size={40} verified={false} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className={cn(TYPE_CLASS.caption, 'flex items-center gap-1.5')}>
             <NameText
               name={post.authorName}
               short={post.authorHandle}

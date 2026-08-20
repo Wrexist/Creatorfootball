@@ -453,8 +453,13 @@
   --text-live: var(--text-caption);
   --text-commentary: var(--text-body);
 
-  /* The floor, in px, for anything that computes a size at runtime. */
-  --text-floor: 11px;
+}
+
+/* The floor, in px, for anything that computes a size at runtime. Deliberately
+   NOT in `@theme`: it is a constant, not a rung, and a `text-floor` utility
+   would be a tenth size nobody chose. */
+:root {
+  --type-floor: 11px;
 }
 
 @layer utilities {

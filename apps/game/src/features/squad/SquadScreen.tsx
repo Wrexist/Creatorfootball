@@ -139,7 +139,7 @@ const SquadRow = memo(function SquadRow({
             />
             {player.shirtNumber !== null && (
               <span
-                className="absolute -bottom-1 -right-1 flex min-w-5 items-center justify-center rounded-pill bg-base px-1 num-broadcast text-[10px] font-bold text-ink-muted ring-1 ring-white/10"
+                className="absolute -bottom-1 -right-1 flex min-w-5 items-center justify-center rounded-pill bg-base px-1 num-broadcast text-micro font-bold text-ink-muted ring-1 ring-white/10"
                 aria-hidden="true"
               >
                 {player.shirtNumber}
@@ -156,19 +156,19 @@ const SquadRow = memo(function SquadRow({
               className="min-w-0 flex-1"
             />
             {player.injury && (
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-danger/85 px-1.5 py-0.5 text-[10px] font-bold text-ink">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-danger/85 px-1.5 py-0.5 text-micro font-bold text-ink">
                 <IconInjury size={11} />
                 {player.injury.weeksRemaining}w
               </span>
             )}
             {!player.injury && player.suspensionMatches > 0 && (
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-warning/85 px-1.5 py-0.5 text-[10px] font-bold text-void">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-warning/85 px-1.5 py-0.5 text-micro font-bold text-void">
                 <IconCard size={11} />
                 {player.suspensionMatches}
               </span>
             )}
             {!entry.unavailable && hot && (
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-volt/18 px-1.5 py-0.5 text-[10px] font-bold text-volt">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-volt/18 px-1.5 py-0.5 text-micro font-bold text-volt">
                 <IconFlame size={11} />
                 Hot
               </span>
@@ -179,8 +179,8 @@ const SquadRow = memo(function SquadRow({
           <span className="mt-1 flex flex-col gap-1.5">
             <span className="flex flex-wrap items-center gap-1.5">
               <PositionChip position={player.position} size="xs" />
-              <span className="num-broadcast text-[12px] text-ink-muted">{player.age}</span>
-              <span className="text-[12px] text-ink-dim">{SQUAD_ROLE_LABELS[role]}</span>
+              <span className="num-broadcast text-label text-ink-muted">{player.age}</span>
+              <span className="text-label text-ink-dim">{SQUAD_ROLE_LABELS[role]}</span>
               {entry.trait && <TraitChip trait={entry.trait} />}
             </span>
             <span className="flex items-center gap-2">
@@ -193,16 +193,16 @@ const SquadRow = memo(function SquadRow({
                   style={{ width: `${Math.max(2, Math.min(100, player.fitness))}%` }}
                 />
               </span>
-              <span className="text-[11px] text-ink-dim">
+              <span className="text-micro text-ink-dim">
                 {player.fitness >= 80 ? 'Fresh' : player.fitness >= 55 ? 'Tiring' : 'Needs a rest'}
               </span>
               {contract && (
-                <span className={cn('text-[11px]', entry.expiring ? 'text-warning' : 'text-ink-dim')}>
+                <span className={cn('text-micro', entry.expiring ? 'text-warning' : 'text-ink-dim')}>
                   · {entry.expiring ? `deal ends in ${contract.weeksRemaining}w` : `${contract.weeksRemaining}w left`}
                 </span>
               )}
               {cold && !entry.unavailable && (
-                <span className="text-[11px] text-danger">· off form</span>
+                <span className="text-micro text-danger">· off form</span>
               )}
             </span>
           </span>
@@ -545,7 +545,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
           <div key={section.key} className="flex flex-col gap-2">
             {section.title && (
               <div className="flex items-baseline gap-2 pt-1">
-                <Text role="section" as="h3" className="text-[13px]">{section.title}</Text>
+                <Text role="label" as="h3" className="text-ink">{section.title}</Text>
                 <Text role="caption" className="text-ink-dim">{section.rows.length}</Text>
               </div>
             )}
@@ -605,7 +605,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
               type="button"
               onClick={() => { setSort(key); setSortOpen(false); }}
               className={cn(
-                'flex min-h-11 items-center justify-between rounded-md px-3 text-left text-[15px]',
+                'flex min-h-11 items-center justify-between rounded-md px-3 text-left text-body',
                 'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
                 sort === key ? 'bg-volt/12 text-volt' : 'text-ink hover:bg-white/[0.05]',
               )}

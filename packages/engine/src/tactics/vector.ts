@@ -33,11 +33,14 @@ const TEMPO: Record<TacticSetup['tempo'], Delta> = {
 /**
  * Press intensity — where the team tries to win the ball.
  * Trade-off: pressing high generates turnovers in dangerous areas but burns
- * stamina, opens the space behind the last line and racks up fouls. Sitting in
- * a low block is safe and cheap but surrenders the ball and the pitch.
+ * stamina, opens the space behind the last line and racks up fouls — and both
+ * of those are now charged: fatigue erodes `pressRecovery` itself as the match
+ * goes on, and `spaceBehind` converts into balls over the top. Sitting in a low
+ * block surrenders the ball and the pitch, and buys back cheap legs, a shut
+ * door in behind and the best transition in the game.
  */
 const PRESS: Record<TacticSetup['press'], Delta> = {
-  LOW_BLOCK:  { defensiveSolidity: +0.22, spaceBehind: -0.17, pressRecovery: -0.26, possessionBias: -0.12, aggression: -0.26, fatigueRate: -0.14, counterWeight: +0.18, attackVolume: -0.05, chanceQuality: +0.05 },
+  LOW_BLOCK:  { defensiveSolidity: +0.27, spaceBehind: -0.19, pressRecovery: -0.26, possessionBias: -0.12, aggression: -0.26, fatigueRate: -0.14, counterWeight: +0.24, attackVolume: -0.04, chanceQuality: +0.07 },
   MID_BLOCK:  { defensiveSolidity: +0.10, spaceBehind: -0.07, pressRecovery: -0.09, aggression: -0.11, fatigueRate: -0.06, possessionBias: -0.04, counterWeight: +0.06 },
   BALANCED:   {},
   HIGH_PRESS: { pressRecovery: +0.24, aggression: +0.26, attackVolume: +0.09, spaceBehind: +0.21, fatigueRate: +0.26, foulRate: +0.11, defensiveSolidity: -0.09 },
@@ -63,7 +66,10 @@ const LINE: Record<TacticSetup['line'], Delta> = {
  * value positions and with a stretched defensive block. Narrow owns the centre
  * and the best chance locations, and lets the opponent have the flanks — which
  * is a real cost, because a delivery into a compact block is the one chance a
- * narrow shape cannot defend (see AERIAL_NARROW_EXPOSURE).
+ * narrow shape cannot defend (see AERIAL_NARROW_EXPOSURE). The two also read
+ * each other: SHAPE_MISMATCH_WEIGHT rewards whichever side is attacking the
+ * channels the other has left alone, so width is the axis with the clearest
+ * rock-paper-scissors in it.
  */
 const WIDTH: Record<TacticSetup['width'], Delta> = {
   NARROW:   { widthBias: -0.5, chanceQuality: +0.07, defensiveSolidity: +0.05, attackVolume: -0.10, spaceBehind: +0.06 },

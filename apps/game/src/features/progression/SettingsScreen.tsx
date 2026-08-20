@@ -134,7 +134,8 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
               aria-label="Match speed"
               block
               nested
-            />
+          size="sm"
+        />
           </div>
           <div>
             <p className="mb-2 text-[13px] font-semibold text-ink">Presentation</p>
@@ -199,6 +200,7 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
           aria-label="Difficulty"
           block
           nested
+          size="sm"
         />
         <p className="mt-2 text-[13px] leading-relaxed text-ink-muted text-pretty">
           {DIFFICULTY_BLURB[settings.difficulty]}
@@ -213,6 +215,7 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
           aria-label="Region"
           block
           nested
+          size="sm"
         />
         <p className="mt-2 text-[13px] leading-relaxed text-ink-muted text-pretty">
           Region decides which licensed content packs may be shown to you. The base game is

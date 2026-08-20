@@ -146,7 +146,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'Six against seven and they still could not manage it.',
   ], ['discipline', 'rivalry']),
   ...post('RED_CARD', 'MEDIA', -0.3, 3, [
-    '{player} is sent off in the {minute}th minute. He will now serve a suspension.',
+    '{player} is sent off in the {minuteOrdinal} minute. He will now serve a suspension.',
   ], ['discipline']),
   ...post('RED_CARD', 'CREATOR', -0.4, 3, [
     'I have watched it four times. It is a red. It is a clear red. Move on.',

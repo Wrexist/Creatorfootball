@@ -116,7 +116,7 @@ export const BALANCE = {
 
   // ---------------------------------------------------------------- shots ---
   /** Base per-tick shot probability in the final third at parity. 0.2-0.5. */
-  SHOT_BASE: 0.2,
+  SHOT_BASE: 0.218,
   /**
    * How much `attackVolume` scales shot frequency.
    *
@@ -138,13 +138,14 @@ export const BALANCE = {
    * final-third tick, which is where 20-goal scorelines came from. A side can
    * be relentless; it cannot shoot every six seconds. 0.4-0.8.
    */
-  SHOT_CHANCE_CEILING: 0.64,
+  SHOT_CHANCE_CEILING: 0.72,
   /**
-   * Hard ceiling on the stacked xG multiplier (openness x momentum x creator
-   * lift x swing window). Same compounding problem at the other end of the
-   * pipeline. 1.2-2.0.
+   * Hard ceiling on the stacked xG multiplier from the per-match draws
+   * (openness x momentum x creator lift). Same compounding problem at the other
+   * end of the pipeline. The swing-window multiplier is applied AFTER this, so
+   * the ceiling bounds the noise without capping the format. 1.2-2.0.
    */
-  XG_MULTIPLIER_CEILING: 1.78,
+  XG_MULTIPLIER_CEILING: 1.55,
   /** Share of final-third possessions that end in a cross rather than a shot. 0.05-0.3. */
   CROSS_RATE: 0.15,
   /** How much a wide shape raises the cross rate (and a narrow one lowers it).
@@ -277,7 +278,7 @@ export const BALANCE = {
   /** xG threshold above which a chance is a "big chance". 0.2-0.45. */
   BIG_CHANCE_XG: 0.3,
   /** Global conversion trim. The single knob for "the league scores too much". 0.6-1.4. */
-  CONVERSION_SCALE: 0.725,
+  CONVERSION_SCALE: 0.63,
   /**
    * How much a team's level varies from match to match — the "which version of
    * them turned up" term. Drawn once per team per match and applied to every
@@ -301,7 +302,7 @@ export const BALANCE = {
    * the shot rate AND again to xG, which squared it and produced a tail of
    * twenty-goal fixtures. 0-0.3.
    */
-  MATCH_OPENNESS_SIGMA: 0.235,
+  MATCH_OPENNESS_SIGMA: 0.25,
   /**
    * How much a side's `volatility` widens its own performance draw.
    *
@@ -435,8 +436,18 @@ export const BALANCE = {
   FORM_WEIGHT: 0.06,
   /** Weight of confidence (0-100, 50 neutral) on effective attributes. 0.02-0.15. */
   CONFIDENCE_WEIGHT: 0.07,
-  /** Weight of crowd atmosphere on composure-linked attributes. 0.02-0.15. */
-  ATMOSPHERE_WEIGHT: 0.04,
+  /**
+   * Weight of crowd atmosphere on composure-linked attributes.
+   *
+   * COUNTS TOWARD THE AUDIENCE CAP. `ctx.atmosphere` is non-zero only when the
+   * arena is filled by one side's support, so this is a SECOND application of
+   * the same quantity as SUPPORT_ADVANTAGE_MAX and the two must be sized
+   * together: reach is the thing a creator signing raises fastest, and an
+   * audience effect that outgrows the cap is a pay-to-win boundary rather than
+   * a balance miss. `balance.test.ts > keeps the audience modifier under a
+   * six-point swing` measures the two channels jointly and is the gate. 0-0.05.
+   */
+  ATMOSPHERE_WEIGHT: 0.015,
   /** Weight of pressure handling in big matches. 0.02-0.2. */
   PRESSURE_WEIGHT: 0.09,
   /** Floor for the position-familiarity multiplier so a bad slot is a cost, not a death sentence. 0.3-0.7. */
@@ -470,9 +481,13 @@ export const BALANCE = {
    * the same neutral venue on a shared matchday. This slot is reused as the
    * audience/support modifier — whose fans filled the arena — and is capped so
    * it can never move win probability by more than about six percentage points,
-   * the size of the measured real-world home effect. 0-0.08.
+   * the size of the measured real-world home effect.
+   *
+   * COUNTS TOWARD THE AUDIENCE CAP together with ATMOSPHERE_WEIGHT; see the
+   * note there. Neither may be raised without re-measuring the joint swing,
+   * and the cap is a product constraint, not a tuning knob. 0-0.04.
    */
-  SUPPORT_ADVANTAGE_MAX: 0.024,
+  SUPPORT_ADVANTAGE_MAX: 0.01,
   /** Attendance treated as "full house" for the atmosphere term. */
   ATTENDANCE_REFERENCE: 20000,
   /** How much rivalry intensity raises match volatility. 0-0.5. */
@@ -517,9 +532,9 @@ export const BALANCE = {
    * ticks and possession still has to get there. Tuned against the measured
    * window-to-normal goal ratio, whose documented target is 2-4x. 1.2-2.6.
    */
-  SWING_WINDOW_SHOT_MULTIPLIER: 2.25,
+  SWING_WINDOW_SHOT_MULTIPLIER: 2.8,
   /** xG multiplier inside a swing window. 1.0-1.8. */
-  SWING_WINDOW_XG_MULTIPLIER: 1.46,
+  SWING_WINDOW_XG_MULTIPLIER: 1.72,
   /** Vector deltas applied to BOTH teams for the length of any swing window. */
   SWING_WINDOW_MODIFIERS: {
     attackVolume: 0.34,

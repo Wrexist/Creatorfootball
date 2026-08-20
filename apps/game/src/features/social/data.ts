@@ -31,6 +31,9 @@ export function tierFor(weight: number): Tier {
 /** A post has to clear this before it can be a lead at all. */
 const LEAD_FLOOR = 0.78;
 
+/** How many full-size posts sit under the lead before the week turns to chatter. */
+const RUNNERS_UP = 2;
+
 /**
  * Editorial hierarchy, not just a size lookup.
  *
@@ -62,8 +65,16 @@ export function assignTiers(posts: readonly SocialPost[]): Map<string, Tier> {
         tiers.set(post.id, 'LEAD');
         return;
       }
-      // Runners-up keep their substance but give up the front page.
-      tiers.set(post.id, base === 'LEAD' ? 'STANDARD' : base);
+      // Rank, not just weight, decides the step down. A matchweek routinely
+      // produces a dozen posts that all clear the "important" threshold; if
+      // they all render at full size the feed is a wall again, which is the
+      // problem the weights were supposed to solve. Two runners-up keep a full
+      // card, everything after that is chatter — the shape of a front page.
+      if (index <= RUNNERS_UP) {
+        tiers.set(post.id, base === 'CHATTER' ? 'CHATTER' : 'STANDARD');
+        return;
+      }
+      tiers.set(post.id, 'CHATTER');
     });
   }
   return tiers;

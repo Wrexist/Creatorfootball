@@ -99,10 +99,10 @@ export function kitPalette(clubId: string, visual: ClubVisualIdentity): KitPalet
     keeper,
     keeperInk: readableOn(keeper),
     plate: {
-      GK: lighten(keeper, 0.1),
-      DEF: mix(lighten(visual.primary, 0.18), '#7c8cff', 0.3),
-      MID: lighten(visual.primary, 0.24),
-      ATT: mix(lighten(visual.primary, 0.2), '#ffcf5c', 0.34),
+      GK: lighten(keeper, 0.08),
+      DEF: mix(lighten(visual.primary, 0.14), '#7c8cff', 0.26),
+      MID: lighten(visual.primary, 0.2),
+      ATT: mix(lighten(visual.primary, 0.16), '#ffcf5c', 0.28),
     },
   };
   paletteCache.set(clubId, next);

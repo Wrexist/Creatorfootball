@@ -608,10 +608,10 @@ export class PitchRenderer {
     ctx.beginPath();
     ctx.ellipse(x, y + r * 0.78, r * 1.12, r * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = node.state === 'DOWN' ? 0.35 : 0.9;
+    ctx.globalAlpha = node.state === 'DOWN' ? 0.24 : 0.6;
     ctx.fillStyle = style.plate[role];
     ctx.beginPath();
-    ctx.ellipse(x, y + r * 0.72, r * 1.32, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + r * 0.82, r * 1.26, r * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -713,14 +713,18 @@ export class PitchRenderer {
     }
 
     if (node.hasBall) {
+      // Glow first, crisp ring second. Drawn the other way round the soft pass
+      // washes over the hard one and the single most important mark on the
+      // pitch — who actually has the ball — turns into a vague olive halo.
       ctx.save();
       ctx.strokeStyle = '#c8ff2e';
-      ctx.lineWidth = 2.4 * scale;
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 7 * scale;
       ctx.beginPath();
       ctx.arc(x, y, r + 3 * scale, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.globalAlpha = 0.28;
-      ctx.lineWidth = 6 * scale;
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 2.8 * scale;
       ctx.stroke();
       ctx.restore();
     }

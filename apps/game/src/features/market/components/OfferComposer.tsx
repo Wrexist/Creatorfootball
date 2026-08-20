@@ -161,7 +161,8 @@ export function OfferComposer({
                   aria-label="Squad role"
                   block
                   nested
-                />
+          size="sm"
+        />
                 <p className="mt-2 text-[12px] leading-relaxed text-ink-dim text-pretty">
                   A role is a promise. Break it with team selection and his morale pays for it.
                 </p>

@@ -56,11 +56,18 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     description: 'Your side commits an extra body forward for the window and attacks with a spare man.',
     counterplay: 'That body comes from your own half. Lose the ball and the space behind you is enormous.',
     beneficiary: 'HOLDER',
-    durationMinutes: 3,
+    durationMinutes: 5,
     earliestPhase: 0.25,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.44, possessionBias: 0.16, chanceQuality: 0.08, spaceBehind: 0.16, defensiveSolidity: -0.1, fatigueRate: 0.15 },
-    opponentModifiers: { counterWeight: 0.24, defensiveSolidity: 0.04 },
+    // Weighted toward TERRITORY rather than volume or quality. Both of those
+    // are self-limiting in this possession loop: raising the shot rate ends
+    // possessions sooner, and raising chance quality trades shots away through
+    // the patience term, so a card built on either measured at zero however
+    // large the number. `possessionBias` is the term that is not self-limiting
+    // — it buys final-third time, which is what an extra body forward is.
+    modifiers: { attackVolume: 0.3, possessionBias: 0.45, chanceQuality: 0.16, spaceBehind: 0.09, defensiveSolidity: -0.04, fatigueRate: 0.15 },
+    shotRateScale: 1.5,
+    opponentModifiers: { counterWeight: 0.16, defensiveSolidity: 0.04 },
     rarity: 'COMMON',
     accent: '#38BDF8',
   }),
@@ -70,11 +77,11 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     description: 'The side that is behind defends with everything and breaks at speed when it wins the ball.',
     counterplay: 'It only helps while you are losing, and it hands the opponent the ball for the whole window.',
     beneficiary: 'TRAILING',
-    durationMinutes: 3,
+    durationMinutes: 5,
     earliestPhase: 0.5,
     latestPhase: 1,
-    modifiers: { defensiveSolidity: 0.4, counterWeight: 0.42, spaceBehind: -0.18, possessionBias: -0.2, attackVolume: -0.08, chanceQuality: 0.1, aggression: -0.12 },
-    opponentModifiers: { possessionBias: 0.16, chanceQuality: -0.14 },
+    modifiers: { defensiveSolidity: 0.7, counterWeight: 0.6, spaceBehind: -0.34, possessionBias: -0.2, attackVolume: -0.04, chanceQuality: 0.38, aggression: -0.12 },
+    opponentModifiers: { possessionBias: 0.16, chanceQuality: -0.26, attackVolume: -0.1 },
     rarity: 'COMMON',
     accent: '#94A3B8',
   }),
@@ -84,11 +91,11 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     description: 'Your side drops into a compact block and refuses to be broken down for the window.',
     counterplay: 'Nothing gets through in either direction — you will not score during it either.',
     beneficiary: 'HOLDER',
-    durationMinutes: 3,
+    durationMinutes: 5,
     earliestPhase: 0.3,
     latestPhase: 1,
-    modifiers: { defensiveSolidity: 0.48, spaceBehind: -0.32, attackVolume: -0.24, possessionBias: -0.14, aggression: -0.2 },
-    opponentModifiers: { chanceQuality: -0.22, attackVolume: -0.12, possessionBias: 0.14 },
+    modifiers: { defensiveSolidity: 0.6, spaceBehind: -0.4, attackVolume: -0.2, possessionBias: -0.14, aggression: -0.2 },
+    opponentModifiers: { chanceQuality: -0.26, attackVolume: -0.18, possessionBias: 0.14 },
     rarity: 'COMMON',
     accent: '#64748B',
   }),
@@ -98,11 +105,12 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     description: 'Every outfielder pushes into the opponent half and the shape is abandoned.',
     counterplay: 'There is no shape left. Every turnover is a clear run at your keeper.',
     beneficiary: 'HOLDER',
-    durationMinutes: 3,
+    durationMinutes: 5,
     earliestPhase: 0.55,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.62, defensiveSolidity: -0.3, spaceBehind: 0.24, fatigueRate: 0.3, volatility: 0.4, chanceQuality: -0.04 },
-    opponentModifiers: { counterWeight: 0.3, chanceQuality: 0.08 },
+    modifiers: { attackVolume: 0.45, possessionBias: 0.34, defensiveSolidity: -0.18, spaceBehind: 0.12, fatigueRate: 0.3, volatility: 0.4, chanceQuality: 0.12 },
+    shotRateScale: 1.35,
+    opponentModifiers: { counterWeight: 0.26, chanceQuality: 0.06 },
     rarity: 'RARE',
     accent: '#EF4444',
   }),
@@ -112,10 +120,11 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     description: 'The arena gets behind your side and the noise lifts the press and the tempo.',
     counterplay: 'Noise cuts both ways. Score against it and the silence lands on your own players.',
     beneficiary: 'HOLDER',
-    durationMinutes: 3,
+    durationMinutes: 5,
     earliestPhase: 0.2,
     latestPhase: 1,
-    modifiers: { pressRecovery: 0.26, aggression: 0.14, attackVolume: 0.3, chanceQuality: 0.06, fatigueRate: 0.1, volatility: 0.16 },
+    modifiers: { pressRecovery: 0.36, aggression: 0.14, attackVolume: 0.2, possessionBias: 0.3, chanceQuality: 0.14, fatigueRate: 0.1, volatility: 0.16 },
+    shotRateScale: 1.35,
     opponentModifiers: { counterWeight: 0.14, chanceQuality: 0.06 },
     rarity: 'RARE',
     accent: '#A855F7',
@@ -154,11 +163,12 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     description: 'Everything runs through your captain, and his goals count twice while the window is live.',
     counterplay: 'One man is doing everything, and the opposition know exactly who to stop and who to kick.',
     beneficiary: 'HOLDER',
-    durationMinutes: 3,
+    durationMinutes: 5,
     earliestPhase: 0.25,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.24, chanceQuality: 0.16, foulRate: 0.1, volatility: 0.14 },
-    opponentModifiers: { defensiveSolidity: 0.08, foulRate: 0.18 },
+    modifiers: { attackVolume: 0.2, chanceQuality: 0.38, foulRate: 0.1, volatility: 0.14 },
+    shotRateScale: 1.2,
+    opponentModifiers: { defensiveSolidity: 0.06, foulRate: 0.18 },
     goalMultiplier: 2,
     rarity: 'EPIC',
     accent: '#F97316',
@@ -335,6 +345,16 @@ export class SpecialRuleEngine {
       multiplier *= rule.goalMultiplier;
     }
     return multiplier;
+  }
+
+  /** How much the live rules scale this side's shot rate, window or not. */
+  shotRateScale(side: Side): number {
+    let scale = 1;
+    for (const l of this.live) {
+      if (l.target !== 'both' && l.target !== side) continue;
+      scale *= l.definition.shotRateScale ?? 1;
+    }
+    return scale;
   }
 
   /**

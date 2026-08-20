@@ -11,6 +11,16 @@ import { isNoteworthy } from '../shared/format';
  * chatter (passes, carries, possession changes) unless the simulation marked it
  * important. A feed that logs every pass is a feed nobody reads, and the full
  * stream is preserved on the result object for the analytics screen anyway.
+ *
+ * ## Why each row is animated by *label* and not by object
+ *
+ * `MatchEventRow` carries `variants={listItem}` and no `initial`/`animate` of
+ * its own: it is built to be driven by whatever list it is dropped into. Motion
+ * propagates variant *labels* down the tree, not animation objects — so a row
+ * wrapped in a parent that animates with `initial={{ opacity: 0 }}` inherits no
+ * label at all, resolves to its own `hidden` variant, and stays at opacity 0
+ * forever. The whole feed rendered at full height with nothing legible in it,
+ * for the entire match. Every wrapper here therefore animates by label.
  */
 
 export interface EventFeedProps {
@@ -18,6 +28,17 @@ export interface EventFeedProps {
   limit?: number;
   className?: string;
 }
+
+/** Labels, not objects — see the note above. */
+const ROW = {
+  hidden: { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0 },
+} as const;
+
+const REDUCED_ROW = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+} as const;
 
 export const EventFeed = memo(function EventFeed({
   perspective, limit = 40, className,
@@ -37,8 +58,9 @@ export const EventFeed = memo(function EventFeed({
           <motion.li
             key={event.id}
             layout={m.reduced ? false : 'position'}
-            initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={m.reduced ? REDUCED_ROW : ROW}
+            initial="hidden"
+            animate="visible"
             transition={m.transition.fast}
           >
             <MatchEventRow event={event} perspective={perspective} dense />

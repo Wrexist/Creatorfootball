@@ -190,8 +190,8 @@ export const SPEED_LABEL = {
  * experiences.
  */
 export const SPEED_HINT = {
-  SLOW: 'Around three minutes. Every phase is readable.',
-  NORMAL: 'Around a minute and a half. The default.',
-  FAST: 'Under a minute. Good once you trust your side.',
-  INSTANT: 'As fast as the phone can run it.',
+  SLOW: 'Around two and a half minutes. Every phase is readable.',
+  NORMAL: 'Around ninety seconds. The default.',
+  FAST: 'Around forty seconds. Good once you trust your side.',
+  INSTANT: 'Fifteen seconds. As fast as the phone can run it.',
 } as const satisfies Record<string, string>;

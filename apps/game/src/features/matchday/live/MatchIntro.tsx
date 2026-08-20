@@ -37,9 +37,16 @@ export interface MatchIntroProps {
   onDone: () => void;
 }
 
-/** Beat boundaries in ms from the start. The last entry ends the sequence. */
-const BEATS = [1100, 2250, 3300, 4150, 4600] as const;
-const INTRO_MS = 4600;
+/**
+ * Beat boundaries in ms from the start. The last entry ends the sequence.
+ *
+ * Each beat has to outlast its own cross-fade by enough to be read; with a
+ * quarter-second in and a quarter out, a one-second beat spent half its life in
+ * transition and the screenshot at its midpoint came back completely empty. The
+ * fades are now 0.2s in and 0.12s out against beats of 1.1s.
+ */
+const BEATS = [1150, 2300, 3400, 4250, 4750] as const;
+const INTRO_MS = 4750;
 
 export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchIntroProps): ReactNode {
   const m = useDesignMotion();
@@ -256,8 +263,8 @@ function Beat({ children }: { children: ReactNode }): ReactNode {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.18 } }}
-      transition={{ duration: 0.26 }}
+      exit={{ opacity: 0, transition: { duration: 0.12 } }}
+      transition={{ duration: 0.2 }}
       className="flex flex-col items-center"
     >
       {children}
@@ -348,19 +355,43 @@ function StaticIntro({
       </h2>
       {stake && <p className="text-balance text-[15px] font-semibold text-volt">{stake}</p>}
       <dl className="flex w-full flex-col gap-1.5 text-[14px]">
-        <Row label="Your danger man" value={context.ourStar?.displayName ?? '—'} color={homePalette.primary} />
-        <Row label="Theirs" value={context.theirStar?.displayName ?? '—'} color={awayPalette.primary} />
-        <Row label="Your shape" value={context.formation.name} color="#c8ff2e" />
+        <Row
+          label="Your danger man"
+          value={context.ourStar?.displayName ?? 'Nobody named'}
+          swatch={context.playerIsHome ? homePalette.primary : awayPalette.primary}
+        />
+        <Row
+          label="Theirs"
+          value={context.theirStar?.displayName ?? 'Nobody named'}
+          swatch={context.playerIsHome ? awayPalette.primary : homePalette.primary}
+        />
+        <Row label="Your shape" value={context.formation.name} />
       </dl>
     </div>
   );
 }
 
-function Row({ label, value, color }: { label: string; value: string; color: string }): ReactNode {
+/**
+ * The club's colour is a swatch beside the name, never the name's own colour:
+ * a dark claret or navy kit set as 14px text on a near-black card is the exact
+ * failure the goal wordmark had, at a smaller size where it is worse.
+ */
+function Row({
+  label, value, swatch,
+}: { label: string; value: string; swatch?: string }): ReactNode {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-white/[0.07] pb-1.5 last:border-0">
       <dt className="text-[12px] uppercase tracking-[0.14em] text-ink-dim">{label}</dt>
-      <dd className="text-right text-[14px] font-semibold" style={{ color }}>{value}</dd>
+      <dd className="flex items-center gap-1.5 text-right text-[14px] font-semibold text-ink">
+        {swatch !== undefined && (
+          <span
+            aria-hidden="true"
+            className="block size-2 shrink-0 rounded-pill ring-1 ring-white/25"
+            style={{ background: swatch }}
+          />
+        )}
+        {value}
+      </dd>
     </div>
   );
 }

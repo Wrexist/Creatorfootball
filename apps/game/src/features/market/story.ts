@@ -126,17 +126,19 @@ export function buildTargetStory(
             : ratio >= 1.35 ? 'Priced to stay'
               : 'Available at his value';
 
+  // The asking price is already on the card. This line says what the price
+  // *means* — repeating the number is the "form, not a story" failure again.
   const cardLine = sellingClub === null
-    ? `No fee. He wants ${money(wage)} a week.`
+    ? 'No fee to anyone. He is free to talk to whoever he likes.'
     : runningDown
-      ? `${contract.weeksRemaining} weeks left on his deal — ${money(asking)} now.`
+      ? `Only ${contract.weeksRemaining} weeks left on his deal, which is why he is this cheap.`
       : suitors >= 2
-        ? `${suitors} clubs watching. Asking ${money(asking)}.`
+        ? `Every extra bidder puts the agent's cut up.`
         : ratio <= 0.9
-          ? `${money(asking)} for a player valued at ${money(value)}.`
+          ? `Below his ${money(value)} valuation — somebody needs the cash.`
           : ratio >= 1.35
-            ? `${money(asking)} against a ${money(value)} valuation.`
-            : `Asking ${money(asking)}, about what he is worth.`;
+            ? `Well above his ${money(value)} valuation. They do not need to sell.`
+            : `About the ${money(value)} the market says he is worth.`;
 
   return {
     asking,

@@ -55,7 +55,8 @@ describe('cn keeps the type scale intact', () => {
     expect(cn('p-4', 'p-0')).toBe('p-0');
     expect(cn('rounded-lg', 'rounded-none')).toBe('rounded-none');
     expect(cn('text-ink', 'text-danger')).toBe('text-danger');
-    expect(cn('flex', false && 'hidden', ['gap-2'])).toBe('flex gap-2');
+    const hidden = false as boolean;
+    expect(cn('flex', hidden && 'hidden', ['gap-2'])).toBe('flex gap-2');
   });
 
   it('lists exactly the rungs tokens.css defines', () => {

@@ -129,7 +129,8 @@ function SocialView({ state }: { state: GameState }): ReactNode {
             aria-label="Filter the feed"
             block
             nested
-          />
+          size="sm"
+        />
         )
       }
       aside={worldIsQuiet ? undefined : reachPanel}

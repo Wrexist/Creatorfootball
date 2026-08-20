@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
-import { diversifyByTrigger, pickTemplate, type TemplateRecency } from './templating';
+import { diversifyByTrigger, ordinal, pickTemplate, type TemplateRecency } from './templating';
 
 const pool = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `t${i}`, weight: 1 }));
 
@@ -68,5 +68,26 @@ describe('diversifyByTrigger', () => {
   it('honours the per-trigger cap even with budget to spare', () => {
     const hooks = Array.from({ length: 10 }, () => hook('SAME', 3));
     expect(diversifyByTrigger(hooks, { limit: 10, perTrigger: 2 })).toHaveLength(2);
+  });
+});
+
+describe('ordinal', () => {
+  it('never produces the 22th minute', () => {
+    // Templates used to glue "th" onto the raw number, which read as
+    // "sent off in the 22th minute" in shipped copy.
+    expect(ordinal(1)).toBe('1st');
+    expect(ordinal(2)).toBe('2nd');
+    expect(ordinal(3)).toBe('3rd');
+    expect(ordinal(4)).toBe('4th');
+    expect(ordinal(22)).toBe('22nd');
+    expect(ordinal(23)).toBe('23rd');
+    expect(ordinal(31)).toBe('31st');
+  });
+
+  it('keeps the teens as th, which is the case a naive rule gets wrong', () => {
+    expect(ordinal(11)).toBe('11th');
+    expect(ordinal(12)).toBe('12th');
+    expect(ordinal(13)).toBe('13th');
+    expect(ordinal(111)).toBe('111th');
   });
 });

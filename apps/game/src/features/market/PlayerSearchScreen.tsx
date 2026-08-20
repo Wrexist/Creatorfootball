@@ -540,6 +540,7 @@ function SearchView({ state }: { state: GameState }): ReactNode {
           onChange={(sort) => setDraft({ ...draft, sort })}
           aria-label="Sort results"
           block
+          size="sm"
         />
       </div>
 

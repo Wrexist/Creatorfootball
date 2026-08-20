@@ -1,6 +1,7 @@
 import { Fragment, memo, type ReactNode } from 'react';
 import type { ClubId, StandingRow } from '@cf/engine';
-import { ClubBadge, FOCUS_RING, FormGuide, NameText, Text, cn, type MatchCardSide   Numeric,
+import {
+  ClubBadge, FOCUS_RING, FormGuide, NameText, Numeric, Text, cn, type MatchCardSide,
 } from '@/design';
 
 /**

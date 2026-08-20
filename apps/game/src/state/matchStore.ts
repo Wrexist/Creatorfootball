@@ -47,9 +47,9 @@ export type PlaybackState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'AWAITING_DECISION' 
  * slow.
  */
 const TICK_INTERVAL: Record<MatchSpeed, number> = {
-  SLOW: 400,
-  NORMAL: 170,
-  FAST: 70,
+  SLOW: 480,
+  NORMAL: 240,
+  FAST: 100,
   INSTANT: 0,
 };
 

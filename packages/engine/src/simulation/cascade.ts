@@ -12,7 +12,7 @@ import {
   type ClubToken, type ContentHook, type HookFacts, type PersonToken, type SocialPostKind,
   type PlainToken, type TokenMap,
 } from './ports';
-import { sentimentBand } from './templating';
+import { ordinal, sentimentBand } from './templating';
 
 /**
  * The cascade.
@@ -196,7 +196,7 @@ const redCardRule: RuleFor<'RED_CARD'> = (e, ctx) => {
   // Fan reaction scales continuously with rivalry temperature rather than
   // stepping at a threshold: a red card in a warm fixture stings proportionally.
   const fanDelta = C.redCard.fanSentiment * fanReactionMultiplier(heat);
-  const tokens: TokenMap = { player, club, minute: p.minute, matches };
+  const tokens: TokenMap = { player, club, minute: p.minute, minuteOrdinal: ordinal(p.minute), matches };
   const facts: HookFacts = { minute: p.minute, derby: isDerbyMoment, matches, intensity: Math.round(heat) };
   const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
 
@@ -613,7 +613,7 @@ const goalRule: RuleFor<'GOAL_SCORED'> = (e, ctx) => {
     social: [{
       trigger: p.special ? 'SPECIAL_GOAL' : 'GOAL', importance: (p.special ? 3 : 2) as EventImportance,
       sentiment: 0.7,
-      tokens: { player: scorer, club: clubName, minute: p.minute, score: `${p.homeScore}-${p.awayScore}` },
+      tokens: { player: scorer, club: clubName, minute: p.minute, minuteOrdinal: ordinal(p.minute), score: `${p.homeScore}-${p.awayScore}` },
       facts: { minute: p.minute, late, special: p.special ?? 'none' },
       entities, clubId: p.clubId, playerId: p.scorerId,
       audiences: ['FAN', 'CLUB', 'CREATOR', 'PLAYER', 'MEDIA'], tags: ['goal'],

@@ -218,7 +218,8 @@ function StoreView({ state }: { state: GameState }): ReactNode {
         onChange={setCategory}
         aria-label="Filter the catalogue"
         block
-      />
+          size="sm"
+        />
 
       <SectionHeader title="This rotation" subtitle={`Rotation week ${store.week}`} />
       {thisWeek.length === 0 ? (

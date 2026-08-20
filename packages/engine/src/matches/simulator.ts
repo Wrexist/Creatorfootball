@@ -776,6 +776,7 @@ export class MatchSimulator {
     // 3. Shot.
     if (finalThird) {
       let p = shotChance(input, this.tick <= this.counterUntil);
+      p *= this.rules.shotRateScale(atk.side);
       if (inWindow) p *= BALANCE.SWING_WINDOW_SHOT_MULTIPLIER * this.rules.windowShotScale(atk.side);
       // The ceiling stops the window multiplier from turning a final third into
       // a shooting gallery on every tick.
@@ -987,8 +988,11 @@ export class MatchSimulator {
     let multiplier = this.opennessFactor()
       * (1 + momentumBoost(this.momentumTracker.current, atk.side));
     if (this.tick <= atk.creatorBoostUntil) multiplier *= 1 + BALANCE.CREATOR_MOMENT_BOOST;
-    if (inWindow) multiplier *= BALANCE.SWING_WINDOW_XG_MULTIPLIER;
+    // The ceiling bounds the ACCIDENTAL compounding of the per-match draws.
+    // The swing window is a designed, pre-announced multiplier and is applied
+    // after it, so capping the noise does not quietly cap the format.
     multiplier = Math.min(multiplier, BALANCE.XG_MULTIPLIER_CEILING);
+    if (inWindow) multiplier *= BALANCE.SWING_WINDOW_XG_MULTIPLIER;
 
     const chance = buildChance(this.rng, {
       zone: this.zone,

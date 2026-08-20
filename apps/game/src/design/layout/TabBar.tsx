@@ -61,6 +61,11 @@ export function TabBar({
       aria-label="Primary"
       className={cn(
         'fixed inset-x-0 bottom-0 z-40',
+        // The island is inset, so the strips either side of it are see-through
+        // and must also be tap-through: a fixed bar that silently eats touches
+        // where it is not actually drawn is the same bug as a control hidden
+        // underneath it. Only the island itself takes input.
+        'pointer-events-none',
         'transition-transform duration-[var(--duration-fast)] ease-out-quint',
         hidden && 'translate-y-[calc(100%+var(--safe-bottom))]',
         className,
@@ -69,7 +74,7 @@ export function TabBar({
     >
       <div
         className={cn(
-          'mx-auto flex w-full max-w-lg items-stretch',
+          'pointer-events-auto mx-auto flex w-full max-w-lg items-stretch',
           // Both appearances occupy the same box. The island simply insets
           // itself inside it, so `--nav-height` still describes the space a
           // screen has to leave clear.

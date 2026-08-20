@@ -97,22 +97,44 @@ for (const route of ROUTES) {
   await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
 
-  const blocked = await page.evaluate(() => {
-    const out = [];
-    for (const el of document.querySelectorAll('button, a[href]')) {
+  // Two passes, because "covered" and "unreachable" are different things.
+  //
+  // A scrolling list of tall rows will always have one row whose visible
+  // portion happens to sit under the fixed navigation, and that is normal —
+  // the player scrolls a notch and taps it. What actually matters is a control
+  // that stays buried no matter what, which is what put PLAY underneath the
+  // tab bar. So we collect suspects, then do what a user would do: scroll each
+  // one into view and test again. Only a control that is still covered when
+  // centred in the viewport is a real defect.
+  const suspects = await page.evaluate(() => {
+    const ids = [];
+    document.querySelectorAll('button, a[href]').forEach((el, index) => {
       const r = el.getBoundingClientRect();
-      if (r.width < 24 || r.height < 24) continue;
-      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      if (r.width < 24 || r.height < 24) return;
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
       const x = r.left + r.width / 2;
-      const y = r.top + r.height / 2;
-      if (y < 0 || y > window.innerHeight) continue;
+      const y = Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 1);
       const hit = document.elementFromPoint(x, y);
-      if (hit && !el.contains(hit) && !hit.contains(el)) {
-        out.push((el.innerText || el.getAttribute('aria-label') || 'control').trim().slice(0, 40).replace(/\n/g, ' '));
-      }
-    }
-    return out;
+      if (hit && !el.contains(hit) && !hit.contains(el)) ids.push(index);
+    });
+    return ids;
   });
+
+  const blocked = [];
+  for (const index of suspects) {
+    const stillCovered = await page.evaluate((i) => {
+      const el = document.querySelectorAll('button, a[href]')[i];
+      if (!el) return null;
+      el.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (hit && !el.contains(hit) && !hit.contains(el)) {
+        return (el.innerText || el.getAttribute('aria-label') || 'control').trim().slice(0, 40).replace(/\n/g, ' ');
+      }
+      return null;
+    }, index);
+    if (stillCovered) blocked.push(stillCovered);
+  }
 
   if (blocked.length > 0) {
     obstructed += blocked.length;
