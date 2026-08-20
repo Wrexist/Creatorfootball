@@ -14,7 +14,6 @@ import { patchClub, patchPlayer, transferPlayer, setPlayer } from './mutations';
 import { generatePlayer } from '../content/generators/playerGenerator';
 import { facilityEffect } from '../facilities/facilities';
 import type { ContentRegistry } from '../content';
-import { POSITIONS } from '../players/positions';
 import type { GameEventFactory } from './eventFactory';
 
 /**

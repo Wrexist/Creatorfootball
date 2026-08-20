@@ -1200,11 +1200,19 @@ and `favouredPositions` per profile. `RISKS.md` R10 ("clubs feel identical") is 
 Two caveats worth recording. First, the AI's only tactical adaptation is to revert to its own
 profile lean when under pressure (`aiClub.ts:452-461`) — it never reads the player's shape and
 never counters it, so the G1 exploit is uncontested for as long as a save lasts. Second, the
-player's own club ships on `MID_BLOCK` / `NORMAL` / `CAUTIOUS`, which the paired sweep measures
-at roughly **−0.30 ppg against the default** and −0.85 ppg against the dominant stack. The
-starting configuration is one of the weakest available, which means the single largest
-improvement a new player can make to their club has nothing to do with football and everything to
-do with noticing which dropdown is undertuned.
+player's own club ships on `MID_BLOCK` / `NORMAL` / `BALANCED` / `CAUTIOUS`. Measured directly,
+n = 1,500 CRN:
+
+```
+BALANCED default                              1.425 ppg  42.8% W
+Cinderwick's shipped preset                   1.330 ppg  39.7% W   Δ −0.095  z −2.34
+press stack vs Cinderwick's shipped preset    2.403 ppg  76.9% W
+```
+
+The player is handed a configuration that loses to the neutral default, in a league where three
+dropdowns beat that same configuration 76.9% of the time. The single largest improvement a new
+player can make to their club has nothing to do with football and everything to do with noticing
+which dropdown is undertuned.
 
 ---
 
