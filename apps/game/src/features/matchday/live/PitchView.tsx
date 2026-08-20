@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { PlayPhase, Side } from '@cf/engine';
-import { GlassPill, cn, useReducedMotionPreference } from '@/design';
+import { cn, useReducedMotionPreference } from '@/design';
 import { useMatchStore } from '@/state/matchStore';
 import { PHASE_HINT, PHASE_LABEL } from '../shared/format';
-import type { KitPalette } from '../shared/kit';
-import { PitchRenderer, type PitchOrientation } from './pitchRenderer';
+import type { KitPalette, PitchRole } from '../shared/kit';
+import { PitchRenderer, type PitchCamera, type PitchOrientation } from './pitchRenderer';
 
 /**
  * The React shell around the canvas renderer.
@@ -24,14 +24,24 @@ export interface PitchViewProps {
   playerSide: Side;
   numbers: Readonly<Record<string, number>>;
   keepers: Readonly<Record<string, boolean>>;
+  roles: Readonly<Record<string, PitchRole>>;
   orientation: PitchOrientation;
+  camera: PitchCamera;
+  /** Presentation-only emphasis while a genuinely important beat is running. */
+  drama?: boolean;
+  /**
+   * Changes to a new value when a goal lands. The renderer answers with one
+   * shake; nothing smaller than a goal is allowed to set it.
+   */
+  impactKey?: string | null;
   className?: string;
 }
 
 const PROFILE = typeof window !== 'undefined' && window.location.search.includes('pitchprofile');
 
-export function PitchView({
-  homePalette, awayPalette, playerSide, numbers, keepers, orientation, className,
+export const PitchView = memo(function PitchView({
+  homePalette, awayPalette, playerSide, numbers, keepers, roles, orientation, camera,
+  drama = false, impactKey = null, className,
 }: PitchViewProps): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -53,9 +63,11 @@ export function PitchView({
       away: awayPalette,
       playerSide,
       orientation,
+      camera,
       reducedMotion: reduced,
       numbers,
       keepers,
+      roles,
     });
     rendererRef.current = renderer;
 
@@ -123,15 +135,26 @@ export function PitchView({
   // Option changes are pushed in rather than remounting the renderer.
   useEffect(() => {
     rendererRef.current?.setOptions({
-      home: homePalette, away: awayPalette, playerSide, orientation,
-      reducedMotion: reduced, numbers, keepers,
+      home: homePalette, away: awayPalette, playerSide, orientation, camera,
+      reducedMotion: reduced, numbers, keepers, roles,
     });
-  }, [homePalette, awayPalette, playerSide, orientation, reduced, numbers, keepers]);
+  }, [homePalette, awayPalette, playerSide, orientation, camera, reduced, numbers, keepers, roles]);
+
+  useEffect(() => {
+    rendererRef.current?.setDrama(drama);
+  }, [drama]);
+
+  useEffect(() => {
+    if (impactKey) rendererRef.current?.impact(1);
+  }, [impactKey]);
 
   return (
     <div
       ref={hostRef}
-      className={cn('relative h-full w-full overflow-hidden rounded-lg bg-[var(--color-pitch-deep)]', className)}
+      className={cn(
+        'relative h-full w-full overflow-hidden rounded-lg bg-[var(--color-pitch-deep)]',
+        className,
+      )}
     >
       <canvas
         ref={canvasRef}
@@ -140,14 +163,12 @@ export function PitchView({
         aria-label="Animated pitch showing both teams' shape and the ball"
       />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2">
-        <GlassPill tone="neutral" size="sm" className="backdrop-blur-none">
-          {PHASE_LABEL[phase]}
-        </GlassPill>
-        <span className="rounded-pill bg-void/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
-          {orientation === 'vertical' ? 'You attack ↑' : 'You attack →'}
-        </span>
-      </div>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-2 top-2 rounded-pill bg-void/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-muted"
+      >
+        {PHASE_LABEL[phase]}
+      </span>
 
       {/* The phase in words, for a screen reader and for reduced motion, where
           the animation is not doing the explaining. */}
@@ -162,4 +183,4 @@ export function PitchView({
       )}
     </div>
   );
-}
+});

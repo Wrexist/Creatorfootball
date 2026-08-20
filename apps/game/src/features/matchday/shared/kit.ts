@@ -1,5 +1,5 @@
-import type { Club, ClubVisualIdentity } from '@cf/engine';
-import { darken, lighten, readableOn } from '@/design';
+import type { Club, ClubVisualIdentity, Position } from '@cf/engine';
+import { darken, lighten, mix, readableOn } from '@/design';
 
 /**
  * Kit colours, interned.
@@ -17,6 +17,25 @@ export interface KitColors {
   readonly secondary: string;
 }
 
+/** The four bands the pitch colours a token by. */
+export type PitchRole = 'GK' | 'DEF' | 'MID' | 'ATT';
+
+const ROLE_OF: Readonly<Record<Position, PitchRole>> = {
+  GK: 'GK',
+  CB: 'DEF', LB: 'DEF', RB: 'DEF',
+  CDM: 'MID', CM: 'MID', CAM: 'MID',
+  LW: 'ATT', RW: 'ATT', ST: 'ATT',
+};
+
+export const roleOfPosition = (position: Position): PitchRole => ROLE_OF[position] ?? 'MID';
+
+export const ROLE_LABEL: Readonly<Record<PitchRole, string>> = {
+  GK: 'Keeper',
+  DEF: 'Defence',
+  MID: 'Midfield',
+  ATT: 'Attack',
+};
+
 /** What the pitch renderer needs to draw one team, precomputed once. */
 export interface KitPalette extends KitColors {
   readonly clubId: string;
@@ -28,6 +47,17 @@ export interface KitPalette extends KitColors {
   /** Keeper strip: deliberately far from both outfield kits. */
   readonly keeper: string;
   readonly keeperInk: string;
+  /**
+   * Ground-plate colours by role.
+   *
+   * A token's fill stays the club's colour — identity must survive — so the
+   * unit a player belongs to is carried by the marker on the grass beneath him:
+   * defenders cool, midfield the club's own colour, attackers warm. Because the
+   * tint is *mixed into* the kit rather than replacing it, two clubs never end
+   * up with the same "attacker" colour, and the pitch still reads as two teams
+   * before it reads as eight units.
+   */
+  readonly plate: Readonly<Record<PitchRole, string>>;
 }
 
 const kitCache = new Map<string, KitColors>();
@@ -48,6 +78,7 @@ export function kitPalette(clubId: string, visual: ClubVisualIdentity): KitPalet
   const existing = paletteCache.get(clubId);
   if (existing && existing.primary === visual.primary) return existing;
 
+  const keeper = lighten(visual.accent, 0.25);
   const next: KitPalette = {
     clubId,
     primary: visual.primary,
@@ -57,8 +88,14 @@ export function kitPalette(clubId: string, visual: ClubVisualIdentity): KitPalet
     ink: readableOn(visual.primary),
     // Keepers are drawn in a lifted, desaturated version of the club accent so
     // the two shot-stoppers never read as outfield players of either side.
-    keeper: lighten(visual.accent, 0.25),
-    keeperInk: readableOn(lighten(visual.accent, 0.25)),
+    keeper,
+    keeperInk: readableOn(keeper),
+    plate: {
+      GK: lighten(keeper, 0.1),
+      DEF: mix(lighten(visual.primary, 0.18), '#7c8cff', 0.3),
+      MID: lighten(visual.primary, 0.24),
+      ATT: mix(lighten(visual.primary, 0.2), '#ffcf5c', 0.34),
+    },
   };
   paletteCache.set(clubId, next);
   return next;

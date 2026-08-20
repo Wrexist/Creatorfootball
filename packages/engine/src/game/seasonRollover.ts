@@ -31,10 +31,18 @@ import type { GameEventFactory } from './eventFactory';
  * retirements have settled the squads that will play it.
  */
 
-/** Age past which a player may retire rather than decline further. */
-const RETIREMENT_AGE = 34;
+/**
+ * Age past which a player may retire rather than decline further.
+ *
+ * Set against the intake so the league's population stays roughly stable. A
+ * twelve-club league of eighteen-man squads holds ~216 players, and a career
+ * lasting a dozen years means turning over roughly eighteen of them a season.
+ * Retiring only from 34 produced about six a season against an intake of
+ * thirty-four, and the world inflated toward five hundred players.
+ */
+const RETIREMENT_AGE = 31;
 /** Ability below which an ageing player is more likely to stop. */
-const RETIREMENT_ABILITY = 66;
+const RETIREMENT_ABILITY = 68;
 
 export interface RolloverResult {
   readonly state: GameState;
@@ -109,7 +117,7 @@ export function rolloverSeason(
     // still playing at 80 keeps going; a 35-year-old at 60 does not.
     const overAge = Math.max(0, age - RETIREMENT_AGE);
     const abilityGap = Math.max(0, RETIREMENT_ABILITY - player.overall) / 40;
-    const retireChance = clamp(overAge * 0.22 + abilityGap * overAge * 0.3, 0, 0.95);
+    const retireChance = clamp(overAge * 0.16 + abilityGap * overAge * 0.34, 0, 0.95);
 
     if (age > RETIREMENT_AGE && ageRng.chance(retireChance)) {
       retired.push(player.id);
@@ -125,7 +133,13 @@ export function rolloverSeason(
         delete remaining[player.contractId];
         next = { ...next, contracts: remaining };
       }
-      next = patchPlayer(next, player.id, { age, contractId: null, clubId: null });
+      // Leave the world entirely. Simply unemploying him kept every player who
+      // ever retired in the save forever: the pool grew without bound and the
+      // free-agent list filled with men who had stopped playing. Posts and
+      // stories carry denormalised names, so nothing dangles.
+      const withoutPlayer = { ...next.players };
+      delete withoutPlayer[player.id];
+      next = { ...next, players: withoutPlayer };
       continue;
     }
 
@@ -199,7 +213,8 @@ export function rolloverSeason(
     const academy = opts.registry
       ? facilityEffect(club, 'youthQuality', opts.registry)
       : 0;
-    const intakeSize = 2 + (intakeRng.chance(0.35 + academy * 0.4) ? 1 : 0);
+    // Roughly one and a half per club, which balances the retirement rate above.
+    const intakeSize = 1 + (intakeRng.chance(0.45 + academy * 0.45) ? 1 : 0);
     const takenNumbers = [...club.squad, ...club.youthSquad]
       .map((id) => next.players[id]?.shirtNumber)
       .filter((n): n is number => typeof n === 'number');

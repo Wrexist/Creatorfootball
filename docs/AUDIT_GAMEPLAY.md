@@ -1099,10 +1099,10 @@ match is arguably too many to feel meaningful, but the restraint in the model is
 |---|---|---|
 | Creation | manager archetype + club identity | Strong. Eight archetypes with real strengths and weaknesses; this is a genuine choice that scales six systems. |
 | First look at the squad | top-7 mean 66.7 against a league where the best is 92.1 | **Deflating.** The player is handed the worst squad in a league whose best side is 25 points better. There is no framing anywhere that says "this is the job". |
-| Prepare | tactics screen, eleven dropdowns | **The trap.** Three of the eleven decide matches, five do nothing, and the default the player is given (`MID_BLOCK`/`NORMAL`/`CAUTIOUS`) is one of the weaker configurations available. |
+| Prepare | tactics screen, eleven dropdowns | **The trap.** Three of the eleven decide matches, five do nothing, and the preset the player is handed measures at 1.330 ppg against the neutral default's 1.425 (z −2.34) — the game starts you on a losing setup. |
 | Match | ~275 events over 30 minutes, 3 live decisions, 2 swing windows | **The best beat in the game.** Real shape, real spikes, real choices. |
 | Post-match | ratings, key moment | Good. Ratings defensible line by line. |
-| World tick | 6-12 press stories, 18 social posts | **Immediately repetitive.** In week 1 the player will already see "breaks a record that stood for a generation" and "Defeat for X, who have now taken one point from a possible nine". |
+| World tick | 6-13 press stories, 18 social posts per cycle | **Immediately repetitive.** In week 1 the player already sees "breaks a record that stood for a generation" (twice) and "Defeat for X, who have now taken one point from a possible nine" (five times, five different clubs). |
 | Objectives | 4 active | Fine, but the season targets list is empty at week 22 and objectives that reach their target sit at `ACTIVE` (observed: "Finish in the top half — 8/8", status ACTIVE). |
 
 **Where it drags in the first session:** nowhere in the match. Everywhere in the world layer.
@@ -1119,8 +1119,10 @@ match is arguably too many to feel meaningful, but the restraint in the model is
   objectives ask for academy players that do not exist. **There is nothing left to decide
   between matches.** The loop reduces to: read a repetitive feed, pick a lineup, watch a good
   match, repeat.
-- **Season end:** the player finishes 11th or 12th (mean 11.20 across 20 runs, best 9th), having
-  had no lever with which to change that.
+- **Season end:** left alone, the player finishes 11th or 12th (mean 11.20 across 20 independent
+  runs, best 9th). A player who discovers the press stack has an enormous lever — worth about
+  +20 overall points of squad quality — but it is a lever the game never signposts and never
+  balances, so the first season is either a scripted relegation fight or an exploit.
 
 ### The tenth season
 
@@ -1135,8 +1137,10 @@ match is arguably too many to feel meaningful, but the restraint in the model is
 - Nothing that has happened in ten seasons is different from what happened in season one, except
   that everyone is older and worse.
 
-**The one-line summary of pacing:** the ninety seconds of match are excellent and the twelve
-minutes around them have almost nothing in them, and that ratio does not improve with time.
+**The one-line summary of pacing:** the two minutes of match are excellent and the twelve minutes
+around them have almost nothing in them, and that ratio does not improve with time. The product
+brief targets a 10-15 minute session in which "a session must feel like it moved the story
+forward"; as measured, the only thing that moves the story forward is the match itself.
 
 ---
 
@@ -1153,15 +1157,16 @@ Ranked by (damage × cheapness):
    and currently points at a market where the best affordable player is worse than the worst
    current starter.
 4. **G8 — stop the record spam.** A one-line guard (evaluate cumulative records at rollover only)
-   removes 15% of all generated content and it is the 15% that reads worst.
+   removes a quarter of all generated press and it is the quarter that reads worst.
 5. **G16/G10 — compress the starting quality spread** to 10-12 points. Fixes the calcified table
    and the 15-1 scorelines at the same time.
 6. **G4 — wire or cut the four dead trait keys**, and stop the player profile advertising them.
 7. **G6 — make the hijack roll respond to the offer.**
 8. **G12 — give the half-time talk a reserved slot.**
 
-Items 2, 4, 6 and 8 are each under an hour of work and remove four of the eight named failure
-modes in the brief.
+Items 2, 4, 6 and 8 are each an afternoon of work at most, and between them they remove four of
+the seven named failure modes in the brief. Item 1 is the only one that needs real design
+iteration, and it is the one that decides whether any of the rest matters.
 
 ---
 

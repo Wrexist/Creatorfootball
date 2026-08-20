@@ -84,14 +84,21 @@ const CHECKS: readonly Check[] = [
       const seen = new Set<string>();
       for (const fixture of Object.values(state.fixtures)) {
         if (fixture.homeClubId === fixture.awayClubId) problems.push(`${fixture.id} is a club against itself`);
-        const key = `${fixture.week}:${fixture.homeClubId}:${fixture.awayClubId}`;
+        // Key on the season too. Once seasons roll over, the save legitimately
+        // holds last season's fixtures alongside this season's, and the same
+        // pairing in the same matchweek of two different seasons is not a
+        // duplicate — keying without the season produced 1,328 false positives.
+        const key = `${fixture.seasonId}:${fixture.week}:${fixture.homeClubId}:${fixture.awayClubId}`;
         if (seen.has(key)) problems.push(`duplicate fixture ${key}`);
         seen.add(key);
       }
       const competition = state.competitions[state.currentCompetitionId];
       if (competition) {
+        // Verify the current season only, for the same reason.
         problems.push(...verifyFixtures(
-          Object.values(state.fixtures).filter((f) => f.competitionId === competition.id),
+          Object.values(state.fixtures).filter(
+            (f) => f.competitionId === competition.id && f.seasonId === state.currentSeasonId,
+          ),
           competition.clubIds,
           competition.rounds,
         ));

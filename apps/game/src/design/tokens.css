@@ -343,3 +343,362 @@
 @theme {
   --color-ink-dim: #8a939e;
 }
+
+/* ================================================================== */
+/* Workstream: design-system pass 2 (material, type, football).        */
+/*                                                                     */
+/* Additive only. Every token above this line keeps its meaning and    */
+/* its value; what follows adds new tokens, new utilities and richer   */
+/* definitions for the four glass levels.                              */
+/* ================================================================== */
+
+@theme {
+  /* --- glass, continued -------------------------------------------------
+     The original four `--glass-N-bg` / `--glass-N-border` tokens still mean
+     exactly what they meant: the flat tint and hairline of each level. Real
+     material needs four more things per level, so each gets its own token
+     rather than being buried in a utility:
+
+       -sheen   the specular highlight running along the lit (top) edge
+       -shade   the internal shade along the unlit (bottom) edge
+       -pool    the internal light falloff — a soft pool where light lands
+       -cast    the shadow the object casts on whatever is behind it
+
+     Level 1 is a quiet surface you look *through*; level 4 is a hero object
+     you look *at*. The numbers below are what separates them. */
+
+  --glass-1-sheen: rgb(255 255 255 / 0.08);
+  --glass-1-shade: rgb(0 0 0 / 0.18);
+  --glass-1-pool: rgb(255 255 255 / 0.028);
+  --glass-1-cast: 0 1px 2px -1px rgb(0 0 0 / 0.5);
+
+  --glass-2-sheen: rgb(255 255 255 / 0.16);
+  --glass-2-shade: rgb(0 0 0 / 0.3);
+  --glass-2-pool: rgb(255 255 255 / 0.055);
+  --glass-2-cast: 0 2px 5px -2px rgb(0 0 0 / 0.55), 0 12px 30px -16px rgb(0 0 0 / 0.8);
+
+  --glass-3-sheen: rgb(255 255 255 / 0.24);
+  --glass-3-shade: rgb(0 0 0 / 0.4);
+  --glass-3-pool: rgb(255 255 255 / 0.085);
+  --glass-3-cast: 0 4px 10px -4px rgb(0 0 0 / 0.6), 0 22px 56px -22px rgb(0 0 0 / 0.88);
+
+  --glass-4-sheen: rgb(255 255 255 / 0.34);
+  --glass-4-shade: rgb(0 0 0 / 0.5);
+  --glass-4-pool: rgb(255 255 255 / 0.12);
+  --glass-4-cast: 0 6px 14px -6px rgb(0 0 0 / 0.65), 0 34px 88px -30px rgb(0 0 0 / 0.95);
+
+  /* Environmental bleed. `saturate` alone pulls colour through the panel from
+     whatever is behind it; `brightness` keeps the material from reading as a
+     grey filter. Tuned per level so the deeper the glass, the more of the
+     environment it collects. */
+  --glass-1-filter: blur(var(--blur-glass-1)) saturate(155%) brightness(1.04);
+  --glass-2-filter: blur(var(--blur-glass-2)) saturate(175%) brightness(1.06);
+  --glass-3-filter: blur(var(--blur-glass-3)) saturate(195%) brightness(1.08) contrast(1.02);
+  --glass-4-filter: blur(var(--blur-glass-4)) saturate(215%) brightness(1.11) contrast(1.04);
+
+  /* --- football material ------------------------------------------------ */
+  --pitch-stripe: rgb(255 255 255 / 0.022);
+  --stadium-light: rgb(226 240 255 / 0.09);
+  --matchday-haze: rgb(150 190 255 / 0.05);
+
+  /* --- type scale -------------------------------------------------------
+     Eleven roles. Sizes are px because the product is a fixed-scale mobile
+     app, not a document. */
+  --text-display: 40px;
+  --text-hero: 32px;
+  --text-title: 24px;
+  --text-section: 15px;
+  --text-body: 15px;
+  --text-caption: 13px;
+  --text-micro: 11px;
+  --text-stat: 17px;
+  --text-giant: 44px;
+  --text-score: 40px;
+  --text-commentary: 14px;
+}
+
+@layer utilities {
+  /*
+    Glass, rebuilt as material.
+
+    Each level is ONE element with ONE backdrop-filter (the two-blur ceiling is
+    untouched) carrying four things at once:
+
+      background      a vertical falloff — light pools near the lit edge and
+                      drains away toward the bottom, so the surface is not a
+                      flat wash
+      backdrop-filter blur + saturate + brightness: the saturation is what
+                      drags colour out of whatever sits behind the panel, which
+                      is the difference between "translucent" and "glass"
+      inset shadows   a specular highlight on the top edge and a shade on the
+                      bottom edge — the two cues that read as thickness
+      box-shadow      a layered cast shadow: one tight contact shadow and one
+                      wide ambient one
+
+    Nothing here animates. `backdrop-filter` is never transitioned.
+  */
+  .glass-1 {
+    background:
+      linear-gradient(180deg, var(--glass-1-pool) 0%, transparent 58%),
+      var(--glass-1-bg);
+    border: 1px solid var(--glass-1-border);
+    backdrop-filter: var(--glass-1-filter);
+    -webkit-backdrop-filter: var(--glass-1-filter);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-1-sheen),
+      inset 0 -1px 0 0 var(--glass-1-shade),
+      var(--glass-1-cast);
+  }
+  .glass-2 {
+    background:
+      radial-gradient(120% 100% at 18% -10%, var(--glass-2-pool) 0%, transparent 62%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.03) 0%, transparent 46%, rgb(0 0 0 / 0.05) 100%),
+      var(--glass-2-bg);
+    border: 1px solid var(--glass-2-border);
+    backdrop-filter: var(--glass-2-filter);
+    -webkit-backdrop-filter: var(--glass-2-filter);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-2-sheen),
+      inset 0 -1px 0 0 var(--glass-2-shade),
+      inset 1px 0 0 0 rgb(255 255 255 / 0.045),
+      var(--glass-2-cast);
+  }
+  .glass-3 {
+    background:
+      radial-gradient(130% 110% at 22% -14%, var(--glass-3-pool) 0%, transparent 66%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.05) 0%, transparent 44%, rgb(0 0 0 / 0.08) 100%),
+      var(--glass-3-bg);
+    border: 1px solid var(--glass-3-border);
+    backdrop-filter: var(--glass-3-filter);
+    -webkit-backdrop-filter: var(--glass-3-filter);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-3-sheen),
+      inset 0 -1px 0 0 var(--glass-3-shade),
+      inset 1px 0 0 0 rgb(255 255 255 / 0.06),
+      inset -1px 0 0 0 rgb(255 255 255 / 0.05),
+      var(--glass-3-cast);
+  }
+  .glass-4 {
+    background:
+      radial-gradient(140% 120% at 26% -18%, var(--glass-4-pool) 0%, transparent 68%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.07) 0%, transparent 42%, rgb(0 0 0 / 0.1) 100%),
+      var(--glass-4-bg);
+    border: 1px solid var(--glass-4-border);
+    backdrop-filter: var(--glass-4-filter);
+    -webkit-backdrop-filter: var(--glass-4-filter);
+    box-shadow:
+      inset 0 1.5px 0 0 var(--glass-4-sheen),
+      inset 0 -1px 0 0 var(--glass-4-shade),
+      inset 1px 0 0 0 rgb(255 255 255 / 0.08),
+      inset -1px 0 0 0 rgb(255 255 255 / 0.07),
+      var(--glass-4-cast);
+  }
+
+  /*
+    The sheen pseudo-element still exists for surfaces that want the diagonal
+    reflection on top of the edge highlight, but it is now a *reflection*
+    rather than a wash: a narrow bright band raking across the top-left corner,
+    which is what a curved edge does to a light source.
+  */
+  .glass-sheen::before {
+    background:
+      linear-gradient(
+        152deg,
+        rgb(255 255 255 / 0.14) 0%,
+        rgb(255 255 255 / 0.05) 14%,
+        transparent 34%
+      ),
+      radial-gradient(100% 60% at 50% 100%, rgb(0 0 0 / 0.12) 0%, transparent 70%);
+  }
+
+  /*
+    Club-colour ambient bleed. Opt-in: a component sets `--bleed` to the club's
+    primary and the surface picks up a directional glow of it, as though the
+    object were sitting in that club's light. Strength is a second custom
+    property so a hero can push it without a second class.
+  */
+  .glass-bleed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(
+        120% 90% at 8% 0%,
+        color-mix(in srgb, var(--bleed, transparent) calc(var(--bleed-strength, 26) * 1%), transparent) 0%,
+        transparent 64%
+      ),
+      radial-gradient(
+        90% 70% at 100% 100%,
+        color-mix(in srgb, var(--bleed, transparent) calc(var(--bleed-strength, 26) * 0.45%), transparent) 0%,
+        transparent 58%
+      );
+  }
+
+  /* --- football material, all opt-in ------------------------------------ */
+
+  /* Mown pitch stripes. Two frequencies so it does not read as a barcode, and
+     masked to the lower two-thirds so it never sits under a headline. */
+  .tex-pitch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        104deg,
+        var(--pitch-stripe) 0 22px,
+        transparent 22px 44px
+      ),
+      repeating-linear-gradient(
+        104deg,
+        rgb(255 255 255 / 0.012) 0 7px,
+        transparent 7px 14px
+      );
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 55%, #000 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 55%, #000 100%);
+  }
+
+  /* Floodlight falloff: a cool pool of light entering from the top edge, the
+     way a stand looks under a gantry. */
+  .tex-stadium::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(85% 55% at 22% -18%, var(--stadium-light) 0%, transparent 68%),
+      radial-gradient(70% 46% at 84% -12%, var(--stadium-light) 0%, transparent 62%),
+      linear-gradient(180deg, transparent 42%, rgb(0 0 0 / 0.28) 100%);
+  }
+
+  /* Matchday haze: the cold air over a floodlit pitch. Deliberately weak — it
+     is atmosphere, not a filter. */
+  .tex-haze::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 50% 120%, var(--matchday-haze) 0%, transparent 70%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.02) 0%, transparent 30%);
+  }
+
+  /* --- type roles -------------------------------------------------------
+     Broadcast numerals: tabular, lining, no slashed zero (a slashed zero in a
+     scoreline reads as an error), tight tracking, confident weight. */
+  .num-broadcast {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1, 'ss01' 0;
+    font-family: var(--font-display);
+  }
+
+  /* Optical fix for very large numerals: at display sizes the default side
+     bearings on tabular figures look loose, so they get pulled in. */
+  .num-tight { letter-spacing: -0.05em; }
+
+  /* Live score: a broadcast lower-third figure. */
+  .num-live {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-family: var(--font-display);
+    letter-spacing: -0.055em;
+    font-weight: 800;
+  }
+
+  /*
+    Commentary. Reads as somebody talking, not as UI: slightly looser leading,
+    a touch of optical size, and hanging punctuation where the browser supports
+    it. Paired with a left rule by the component that uses it.
+  */
+  .type-commentary {
+    font-family: var(--font-sans);
+    font-size: var(--text-commentary);
+    line-height: 1.55;
+    letter-spacing: 0.004em;
+    hanging-punctuation: first;
+  }
+
+  /* Names must never end in an ellipsis. This is the class that enforces it:
+     wrapping and breaking are allowed, clipping is not. */
+  .name-safe {
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: none;
+    text-overflow: clip;
+  }
+
+  /* Floating chrome — the tab bar island. Chrome keeps its scrim (content
+     behind it must stay illegible) but gains the edge and cast of a real
+     object sitting above the app. */
+  .chrome-float {
+    background:
+      radial-gradient(120% 140% at 30% -30%, rgb(255 255 255 / 0.07) 0%, transparent 60%),
+      color-mix(in srgb, var(--color-base) 84%, transparent);
+    backdrop-filter: blur(var(--blur-glass-4)) saturate(200%) brightness(1.1);
+    -webkit-backdrop-filter: blur(var(--blur-glass-4)) saturate(200%) brightness(1.1);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.2),
+      inset 0 -1px 0 0 rgb(0 0 0 / 0.5),
+      0 2px 8px -2px rgb(0 0 0 / 0.6),
+      0 18px 44px -18px rgb(0 0 0 / 0.9);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .chrome-float { background: var(--color-base); }
+  }
+
+  /* A soft volt pool behind the active navigation item. Only ever one on
+     screen: the bar is chrome, not a light show. */
+  .nav-glow {
+    background: radial-gradient(60% 70% at 50% 42%, rgb(200 255 46 / 0.2) 0%, transparent 72%);
+  }
+}
+
+/*
+  Reduced transparency / reduced effects.
+
+  The rebuilt levels degrade to the same solid surfaces they always did, and
+  every optional football texture and colour bleed is removed outright — those
+  are atmosphere, and atmosphere is the first thing to go when somebody has
+  asked for less of it. Contrast is unchanged in both modes because the text
+  colours never depended on the blur.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .glass-1 { background: var(--color-surface-1); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-2 { background: var(--color-surface-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-3 { background: var(--color-surface-3); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-4 { background: var(--color-surface-4); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .chrome-float {
+    background: var(--color-surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-sheen::before,
+  .glass-bleed::after,
+  .tex-pitch::after,
+  .tex-stadium::after,
+  .tex-haze::after { display: none; }
+}
+
+[data-reduced-effects='true'] .glass-1,
+[data-reduced-effects='true'] .glass-2,
+[data-reduced-effects='true'] .glass-3,
+[data-reduced-effects='true'] .glass-4,
+[data-reduced-effects='true'] .chrome-float {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-reduced-effects='true'] .glass-1 { background: var(--color-surface-1); }
+[data-reduced-effects='true'] .glass-2 { background: var(--color-surface-2); }
+[data-reduced-effects='true'] .glass-3 { background: var(--color-surface-3); }
+[data-reduced-effects='true'] .glass-4 { background: var(--color-surface-4); }
+[data-reduced-effects='true'] .chrome-float { background: var(--color-surface-2); }
+[data-reduced-effects='true'] .tex-pitch::after,
+[data-reduced-effects='true'] .tex-stadium::after,
+[data-reduced-effects='true'] .tex-haze::after,
+[data-reduced-effects='true'] .glass-bleed::after { display: none; }
