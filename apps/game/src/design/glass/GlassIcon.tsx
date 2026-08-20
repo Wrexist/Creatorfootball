@@ -86,7 +86,7 @@ export const GlassIcon = forwardRef<HTMLButtonElement, GlassIconProps>(function 
     >
       {icon}
       {badge !== undefined && badge !== null && (
-        <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-pill bg-volt px-1 text-[10px] font-bold leading-4 text-volt-ink">
+        <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-pill bg-volt px-1 text-micro font-bold leading-none text-volt-ink">
           {badge}
         </span>
       )}

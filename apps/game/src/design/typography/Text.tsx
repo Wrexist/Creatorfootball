@@ -6,7 +6,7 @@ import { EntityName, type EntityNameProps } from './FitText';
 /**
  * The one way to set type.
  *
- * A component that writes `text-[13px] font-semibold uppercase tracking-[0.14em]`
+ * A component that writes `text-caption font-semibold uppercase tracking-[0.14em]`
  * has invented a role, and the next component will invent a slightly different
  * one. `<Text role="label">` cannot drift.
  *

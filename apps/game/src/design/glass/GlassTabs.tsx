@@ -102,7 +102,7 @@ export function GlassTabs<T extends string = string>({
             }}
             className={cn(
               'relative inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap px-3.5',
-              'text-[14px] font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
+              'text-body font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
               appearance === 'enclosed' && 'rounded-pill',
               scrollable ? 'shrink-0' : 'flex-1',
               selected ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
@@ -120,7 +120,7 @@ export function GlassTabs<T extends string = string>({
             {item.icon}
             <span className="relative">{item.label}</span>
             {item.badge !== undefined && item.badge !== null && (
-              <span className="rounded-pill bg-volt/18 px-1.5 text-[10px] font-bold leading-4 text-volt">
+              <span className="rounded-pill bg-volt/18 px-1.5 text-micro font-bold leading-4 text-volt">
                 {item.badge}
               </span>
             )}

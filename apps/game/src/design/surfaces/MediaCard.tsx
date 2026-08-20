@@ -89,7 +89,7 @@ export const MediaCard = forwardRef<HTMLDivElement, MediaCardProps>(function Med
 
       <div className="relative z-1 -mt-1 flex flex-col gap-1 px-4 pb-4">
         {eyebrow !== undefined && <span className={TYPE_CLASS.eyebrow}>{eyebrow}</span>}
-        <span className={cn(TYPE_CLASS.title, 'text-[20px] text-pretty')}>{title}</span>
+        <span className={cn(TYPE_CLASS.title, 'text-title text-pretty')}>{title}</span>
         {subtitle !== undefined && (
           <span className={cn(TYPE_CLASS.caption, 'text-pretty')}>{subtitle}</span>
         )}

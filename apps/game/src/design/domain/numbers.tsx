@@ -115,10 +115,10 @@ export interface MoneyLabelProps {
 }
 
 const MONEY_SIZE = {
-  sm: 'text-[13px]',
-  md: 'text-[15px]',
-  lg: 'text-[20px]',
-  xl: 'text-[30px] num-broadcast font-extrabold tracking-[-0.04em]',
+  sm: 'text-caption',
+  md: 'text-body',
+  lg: 'text-title',
+  xl: 'text-hero num-broadcast font-extrabold tracking-[-0.04em]',
 } as const;
 
 export const MoneyLabel = memo(function MoneyLabel({
@@ -176,7 +176,7 @@ export const TrendIndicator = memo(function TrendIndicator({
     <span
       className={cn(
         'inline-flex items-center gap-1 font-semibold tnum',
-        size === 'sm' ? 'text-[12px]' : 'text-[14px]',
+        size === 'sm' ? 'text-label' : 'text-body',
         flat ? 'text-ink-dim' : good ? 'text-positive' : 'text-danger',
         className,
       )}
@@ -208,10 +208,10 @@ export interface ScoreDisplayProps {
  * separate numbers instead of one scoreline.
  */
 const SCORE_SIZE = {
-  sm: 'text-[17px] tracking-[-0.03em]',
-  md: 'text-[26px] tracking-[-0.045em]',
-  lg: 'text-[40px] tracking-[-0.055em]',
-  hero: 'text-[68px] tracking-[-0.065em]',
+  sm: 'text-section tracking-[-0.03em]',
+  md: 'text-hero tracking-[-0.045em]',
+  lg: 'text-display tracking-[-0.055em]',
+  hero: 'text-takeover tracking-[-0.065em]',
 } as const;
 
 export const ScoreDisplay = memo(function ScoreDisplay({
@@ -249,7 +249,7 @@ export const ScoreDisplay = memo(function ScoreDisplay({
               <span className="relative inline-flex size-1.5 rounded-pill bg-danger" />
             </span>
           )}
-          <span className={cn('num-live text-[12px]', live ? 'text-danger' : 'text-ink-muted')}>
+          <span className={cn('num-live text-label', live ? 'text-danger' : 'text-ink-muted')}>
             {status}
           </span>
         </div>

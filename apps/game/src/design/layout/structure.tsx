@@ -45,7 +45,7 @@ export function SectionHeader({
           className={cn(
             TYPE_CLASS.section,
             'block text-pretty',
-            size === 'sm' ? 'text-[13px]' : 'text-[15px]',
+            size === 'sm' ? 'text-caption' : 'text-body',
           )}
         >
           {title}
@@ -57,7 +57,7 @@ export function SectionHeader({
         )}
       </span>
       {onPress ? (
-        <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-volt">
+        <span className="flex shrink-0 items-center gap-1 text-caption font-semibold text-volt">
           {action}
           <IconChevronRight size={16} />
         </span>
@@ -141,14 +141,14 @@ export function KeyValueRow({
     <>
       {icon !== undefined && <span className="shrink-0 text-ink-dim">{icon}</span>}
       <span className="min-w-0 flex-1">
-        <span className={cn('block text-[14px] text-pretty', emphasis ? 'font-semibold text-ink' : 'text-ink-muted')}>
+        <span className={cn('block text-body text-pretty', emphasis ? 'font-semibold text-ink' : 'text-ink-muted')}>
           {label}
         </span>
         {hint !== undefined && (
-          <span className="mt-0.5 block text-[12px] text-ink-dim text-pretty">{hint}</span>
+          <span className="mt-0.5 block text-label text-ink-dim text-pretty">{hint}</span>
         )}
       </span>
-      <span className={cn(TYPE_CLASS.stat, 'shrink-0 text-right text-[14px]')}>{value}</span>
+      <span className={cn(TYPE_CLASS.stat, 'shrink-0 text-right text-body')}>{value}</span>
       {onPress && <IconChevronRight size={16} className="shrink-0 text-ink-dim" />}
     </>
   );
@@ -243,9 +243,9 @@ export function Accordion({
       >
         {icon !== undefined && <span className="shrink-0 text-ink-dim">{icon}</span>}
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold text-ink">{title}</span>
+          <span className="block text-body font-semibold text-ink">{title}</span>
           {subtitle !== undefined && (
-            <span className="mt-0.5 block text-[12px] text-ink-muted">{subtitle}</span>
+            <span className="mt-0.5 block text-label text-ink-muted">{subtitle}</span>
           )}
         </span>
         <motion.span

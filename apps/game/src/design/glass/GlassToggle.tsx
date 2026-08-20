@@ -107,12 +107,12 @@ export function GlassToggle({
     >
       <span className="min-w-0">
         {label !== undefined && (
-          <span id={labelId} className="block text-[15px] font-medium text-ink">
+          <span id={labelId} className="block text-body font-medium text-ink">
             {label}
           </span>
         )}
         {description !== undefined && (
-          <span id={descId} className="mt-0.5 block text-[13px] text-ink-muted text-pretty">
+          <span id={descId} className="mt-0.5 block text-caption text-ink-muted text-pretty">
             {description}
           </span>
         )}

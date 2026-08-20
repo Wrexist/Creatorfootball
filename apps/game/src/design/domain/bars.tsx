@@ -52,9 +52,9 @@ export const ProgressBar = memo(function ProgressBar({
     <div className={cn('w-full', className)}>
       {(label !== undefined || valueLabel !== undefined) && (
         <div className="mb-1.5 flex items-baseline justify-between gap-2">
-          {label !== undefined && <span className="text-[12px] text-ink-muted">{label}</span>}
+          {label !== undefined && <span className="text-label text-ink-muted">{label}</span>}
           {valueLabel !== undefined && (
-            <span className="tnum text-[12px] font-semibold text-ink">{valueLabel}</span>
+            <span className="tnum text-label font-semibold text-ink">{valueLabel}</span>
           )}
         </div>
       )}
@@ -126,7 +126,7 @@ export const AttributeBar = memo(function AttributeBar({
           108px and the label wraps to a second line rather than being cut. */}
       <span
         className={cn(
-          'w-[92px] min-w-[76px] max-w-[108px] shrink-0 text-[12px] leading-tight text-pretty',
+          'w-[92px] min-w-[76px] max-w-[108px] shrink-0 text-label leading-tight text-pretty',
           emphasis ? 'font-semibold text-ink' : 'text-ink-muted',
         )}
       >
@@ -170,7 +170,7 @@ export const AttributeBar = memo(function AttributeBar({
       </div>
       <span
         className={cn(
-          'tnum w-9 shrink-0 text-right text-[12px] font-semibold',
+          'tnum w-9 shrink-0 text-right text-label font-semibold',
           known ? 'text-ink' : 'text-ink-dim',
         )}
       >

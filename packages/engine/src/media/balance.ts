@@ -14,8 +14,12 @@ export const MEDIA_BALANCE = {
    * near-identical stories and the rest of the authored library never runs.
    */
   maxStoriesPerTrigger: 2,
-  /** Stories at or above this importance are never trimmed. */
-  alwaysPublishImportance: 4,
+  /**
+   * Stories at or above this importance are never trimmed. Round-robin
+   * allocation already visits the biggest story first, so this is now only a
+   * floor for the genuinely unmissable.
+   */
+  alwaysPublishImportance: 5,
   /** Cycles a template id stays "recently used" for anti-repetition. */
   antiRepeatCycles: 3,
   /**

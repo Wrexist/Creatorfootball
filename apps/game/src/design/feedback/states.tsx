@@ -51,11 +51,11 @@ export function EmptyState({
       >
         {icon ?? <IconInfo />}
       </span>
-      <h3 className={cn('font-semibold text-ink', size === 'sm' ? 'text-[15px]' : 'text-[17px]')}>
+      <h3 className={cn('font-semibold text-ink', size === 'sm' ? 'text-body' : 'text-section')}>
         {title}
       </h3>
       {description !== undefined && (
-        <p className="max-w-[36ch] text-[13px] leading-relaxed text-ink-muted text-pretty">
+        <p className="max-w-[36ch] text-caption leading-relaxed text-ink-muted text-pretty">
           {description}
         </p>
       )}
@@ -97,10 +97,10 @@ export function ErrorState({
       >
         <IconWarning />
       </span>
-      <h3 className="text-[17px] font-semibold text-ink">{title}</h3>
-      <p className="max-w-[38ch] text-[13px] leading-relaxed text-ink-muted text-pretty">{description}</p>
+      <h3 className="text-section font-semibold text-ink">{title}</h3>
+      <p className="max-w-[38ch] text-caption leading-relaxed text-ink-muted text-pretty">{description}</p>
       {detail !== undefined && (
-        <code className="max-w-full overflow-x-auto rounded-sm bg-white/[0.05] px-2.5 py-1.5 font-mono text-[11px] text-ink-dim">
+        <code className="max-w-full overflow-x-auto rounded-sm bg-white/[0.05] px-2.5 py-1.5 font-mono text-micro text-ink-dim">
           {detail}
         </code>
       )}

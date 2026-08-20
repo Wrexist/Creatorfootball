@@ -68,8 +68,8 @@ const TONE: Record<PillTone, { soft: string; solid: string }> = {
 };
 
 const SIZE: Record<PillSize, string> = {
-  xs: 'min-h-5 px-1.5 text-[10px] gap-1 [&_svg]:size-3',
-  sm: 'min-h-6 px-2 text-[11px] gap-1 [&_svg]:size-3.5',
+  xs: 'min-h-5 px-1.5 text-micro gap-1 [&_svg]:size-3',
+  sm: 'min-h-6 px-2 text-micro gap-1 [&_svg]:size-3.5',
   md: 'min-h-7 px-2.5 text-xs gap-1.5 [&_svg]:size-4',
 };
 

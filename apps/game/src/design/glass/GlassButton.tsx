@@ -31,7 +31,14 @@ const VARIANT: Record<GlassButtonVariant, string> = {
   primary: cn(
     'bg-volt text-volt-ink font-semibold',
     // The inset hairline stops the flat lime block from looking like a sticker.
-    'shadow-[0_1px_0_0_rgb(255_255_255/0.35)_inset,0_10px_28px_-12px_rgb(200_255_46/0.55)]',
+    // The specular top edge stays; the lime halo that used to sit under it does
+    // not. It was an inline, non-token glow on every primary button in the
+    // product - title screen, club reveal, squad intro, Home, Tactics, Market,
+    // every creation footer - and it was the single strongest "gaming
+    // dashboard" signal in the build, pushing four screens over the 3% volt
+    // pixel budget (5.49% at worst). `.volt-glow` is a hero-moment treatment
+    // and stays that way. The flat volt fill is already unmistakable.
+    'shadow-[0_1px_0_0_rgb(255_255_255/0.35)_inset,0_2px_8px_-3px_rgb(0_0_0/0.6)]',
     'hover:bg-volt-bright active:bg-volt-deep',
   ),
   secondary: cn(
@@ -51,9 +58,9 @@ const VARIANT: Record<GlassButtonVariant, string> = {
 const SIZE: Record<GlassButtonSize, string> = {
   // Even `sm` clears 44px of touch target: the visual box is 36px and the rest
   // is invisible padding via `min-h-11`, so density never costs tappability.
-  sm: 'min-h-11 px-3.5 text-[13px] rounded-md gap-1.5',
-  md: 'min-h-11 px-4.5 py-2.5 text-[15px] rounded-lg gap-2',
-  lg: 'min-h-13 px-6 py-3.5 text-[16px] rounded-xl gap-2.5',
+  sm: 'min-h-11 px-3.5 text-caption rounded-md gap-1.5',
+  md: 'min-h-11 px-4.5 py-2.5 text-body rounded-lg gap-2',
+  lg: 'min-h-13 px-6 py-3.5 text-body rounded-xl gap-2.5',
 };
 
 function Spinner({ className }: { className?: string }): ReactNode {

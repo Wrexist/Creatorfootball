@@ -119,7 +119,7 @@ export function TabBar({
                     <Icon size={23} strokeWidth={active ? 2.2 : 1.5} />
                     {badge > 0 && (
                       <span
-                        className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-pill bg-volt px-1 text-[9px] font-bold leading-none text-volt-ink"
+                        className="absolute -right-2.5 -top-1.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-pill bg-volt px-1 text-micro font-bold leading-none text-volt-ink"
                         aria-label={`${badge} new`}
                       >
                         {badge > 9 ? '9+' : badge}
@@ -128,7 +128,9 @@ export function TabBar({
                   </span>
                   <span
                     className={cn(
-                      'relative text-[10px] leading-none tracking-[0.005em]',
+                      // 11px, the scale floor. Was 10px, one of 35 sub-floor
+                      // sizes in the product.
+                      'relative text-micro leading-none tracking-[0.005em] normal-case',
                       active ? 'font-bold' : 'font-semibold',
                     )}
                   >
@@ -219,12 +221,12 @@ export function SideNav({ value, onChange, badges, header, footer, className }: 
                 <span className="relative">
                   <Icon size={22} strokeWidth={active ? 2.2 : 1.5} />
                   {badge > 0 && (
-                    <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-pill bg-volt px-1 text-[9px] font-bold leading-none text-volt-ink">
+                    <span className="absolute -right-2.5 -top-1.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-pill bg-volt px-1 text-micro font-bold leading-none text-volt-ink">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}
                 </span>
-                <span className="text-[10px] font-semibold lg:text-[14px]">{tab.label}</span>
+                <span className="text-micro font-semibold normal-case lg:text-body">{tab.label}</span>
                 {active && (
                   <span className="absolute inset-y-2 left-0 hidden w-0.5 rounded-pill bg-volt lg:block" aria-hidden="true" />
                 )}

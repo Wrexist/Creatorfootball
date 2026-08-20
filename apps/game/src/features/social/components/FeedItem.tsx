@@ -1,16 +1,20 @@
 import { memo, type ReactNode } from 'react';
 import type { SocialPost as PostData } from '@cf/engine';
 import {
-  CreatorAvatar, FOCUS_RING, GlassPill, IconInfo, IconVerified, SocialPost, cn,
+  CreatorAvatar, FOCUS_RING, GlassPill, IconHeart, IconInfo, IconRepost, IconVerified,
+  NameText, SocialPost, Text, cn,
 } from '@/design';
 import { KIND_LABEL, KIND_RAIL, KIND_TONE, tierFor, type Tier } from '../data';
 
 /**
  * One item in the feed.
  *
- * Three renderings, chosen by weight rather than by kind:
+ * Three renderings, chosen by `post.weight` rather than by kind — the weight is
+ * how much the world engine thought the underlying event mattered, so a record
+ * broken, a hijacked transfer or a derby humiliation physically outweighs a
+ * supporter's throwaway line:
  *
- *   LEAD      the week's real story — full width, kicker, accent rail
+ *   LEAD      the week's real story — display type, accent rail, engagement
  *   STANDARD  the design system's post, as-is
  *   CHATTER   a single dense line, because most of a feed is noise and noise
  *             that takes up a full card stops being scannable
@@ -18,6 +22,9 @@ import { KIND_LABEL, KIND_RAIL, KIND_TONE, tierFor, type Tier } from '../data';
  * Posts carrying a `quoted` parent render as a conversation instead: the thing
  * being replied to sits above with a thread line running into the reply, so a
  * creator argument reads as an argument rather than as two unrelated cards.
+ *
+ * Names go through `NameText`. A creator whose whole identity is their handle
+ * cannot have that handle cut in half.
  */
 
 export interface FeedItemProps {
@@ -36,7 +43,7 @@ const Kicker = memo(function Kicker({
       <GlassPill tone={KIND_TONE[post.kind]} size="xs" filled>
         {KIND_LABEL[post.kind]}
       </GlassPill>
-      <span className="text-[11px] uppercase tracking-[0.14em] text-ink-dim">{timeLabel}</span>
+      <Text role="micro" as="span">{timeLabel}</Text>
     </div>
   );
 });
@@ -60,6 +67,22 @@ const EventLink = memo(function EventLink({
   );
 });
 
+/** Likes and reposts, as figures rather than as icons alone. */
+const Engagement = memo(function Engagement({ post }: { post: PostData }): ReactNode {
+  return (
+    <div className="flex items-center gap-3 text-ink-dim">
+      <span className="inline-flex items-center gap-1">
+        <IconHeart size={13} />
+        <span className="num-broadcast text-[12px]">{post.likes.toLocaleString('en-GB')}</span>
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <IconRepost size={13} />
+        <span className="num-broadcast text-[12px]">{post.reposts.toLocaleString('en-GB')}</span>
+      </span>
+    </div>
+  );
+});
+
 /* --- conversation ------------------------------------------------------- */
 
 const Conversation = memo(function Conversation({
@@ -75,7 +98,7 @@ const Conversation = memo(function Conversation({
         <div className="relative mt-3 pl-9">
           <span
             aria-hidden="true"
-            className="absolute left-3 top-8 bottom-[-10px] w-px bg-white/12"
+            className="absolute bottom-[-10px] left-3 top-8 w-px bg-white/12"
           />
           <span
             aria-hidden="true"
@@ -83,24 +106,22 @@ const Conversation = memo(function Conversation({
           >
             {quoted.authorName.charAt(0).toUpperCase()}
           </span>
-          <p className="text-[12px] font-semibold text-ink-muted">{quoted.authorName}</p>
-          <p className="mt-0.5 text-[13px] leading-relaxed text-ink-muted text-pretty">
-            {quoted.text}
-          </p>
+          <NameText name={quoted.authorName} role="label" lines={2} />
+          <Text role="caption" as="p" className="mt-0.5 text-pretty">{quoted.text}</Text>
         </div>
       )}
 
       <div className="mt-3 flex gap-3">
         <CreatorAvatar seed={post.avatarSeed} size={36} verified={false} />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5">
-            <span className="truncate text-[14px] font-semibold text-ink">{post.authorName}</span>
+          <div className="flex items-center gap-1.5">
+            <NameText name={post.authorName} role="bodyStrong" className="min-w-0 shrink" />
             {post.verified && <IconVerified size={14} className="shrink-0 text-info" label="Verified" />}
-            <span className="truncate text-[13px] text-ink-dim">{post.authorHandle}</span>
-          </p>
-          <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-ink text-pretty">
+            <NameText name={post.authorHandle} role="caption" className="min-w-0 shrink" />
+          </div>
+          <Text role="body" as="p" className="mt-1 whitespace-pre-line text-pretty">
             {post.text}
-          </p>
+          </Text>
           {hasEvent && <EventLink postId={post.id} onOpenEvent={onOpenEvent} />}
         </div>
       </div>
@@ -117,13 +138,13 @@ const Chatter = memo(function Chatter({
     <article className="flex items-start gap-2.5 border-b border-white/[0.06] px-1 py-2">
       <CreatorAvatar seed={post.avatarSeed} size={24} verified={false} />
       <div className="min-w-0 flex-1">
-        <p className="flex items-baseline gap-1.5">
-          <span className="truncate text-[13px] font-semibold text-ink-muted">{post.authorName}</span>
-          <span className="shrink-0 text-[11px] text-ink-dim">{timeLabel}</span>
-        </p>
-        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-ink-muted text-pretty">
+        <div className="flex items-baseline gap-1.5">
+          <NameText name={post.authorName} role="label" className="min-w-0 shrink" />
+          <Text role="micro" as="span" className="shrink-0">{timeLabel}</Text>
+        </div>
+        <Text role="caption" as="p" className="mt-0.5 text-pretty" clamp={2}>
           {post.text}
-        </p>
+        </Text>
       </div>
     </article>
   );
@@ -138,18 +159,20 @@ const Lead = memo(function Lead({
     <article className="glass-2 glass-sheen relative overflow-hidden rounded-lg p-4">
       <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', KIND_RAIL[post.kind])} />
       <Kicker post={post} timeLabel={timeLabel} />
-      <p className="mt-2.5 whitespace-pre-line font-display text-[19px] font-bold leading-snug tracking-[-0.015em] text-ink text-pretty">
+      <Text
+        role="title"
+        as="p"
+        className="mt-2.5 whitespace-pre-line text-[21px] leading-[1.18] text-pretty"
+      >
         {post.text}
-      </p>
-      <div className="mt-3 flex items-center gap-2.5">
+      </Text>
+      <div className="mt-3.5 flex items-center gap-2.5">
         <CreatorAvatar seed={post.avatarSeed} size={32} verified={post.verified} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-semibold text-ink">{post.authorName}</span>
-          <span className="block truncate text-[12px] text-ink-dim">{post.authorHandle}</span>
+          <NameText name={post.authorName} role="bodyStrong" lines={1} />
+          <NameText name={post.authorHandle} role="caption" lines={1} className="mt-0.5" />
         </span>
-        <span className="tnum shrink-0 text-[12px] text-ink-dim">
-          {post.likes.toLocaleString('en-GB')} likes
-        </span>
+        <Engagement post={post} />
       </div>
       {hasEvent && <EventLink postId={post.id} onOpenEvent={onOpenEvent} />}
     </article>

@@ -17,9 +17,9 @@ export interface GlassInputProps extends Omit<InputHTMLAttributes<HTMLInputEleme
 }
 
 const SIZE: Record<NonNullable<GlassInputProps['size']>, string> = {
-  sm: 'min-h-11 px-3 text-[14px] rounded-md',
-  md: 'min-h-12 px-3.5 text-[15px] rounded-lg',
-  lg: 'min-h-14 px-4 text-[17px] rounded-xl',
+  sm: 'min-h-11 px-3 text-body rounded-md',
+  md: 'min-h-12 px-3.5 text-body rounded-lg',
+  lg: 'min-h-14 px-4 text-section rounded-xl',
 };
 
 /**
@@ -59,7 +59,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
         <label
           htmlFor={inputId}
           className={cn(
-            'mb-1.5 block text-[13px] font-semibold tracking-[0.005em] text-ink-muted',
+            'mb-1.5 block text-caption font-semibold tracking-[0.005em] text-ink-muted',
             labelHidden && 'sr-only',
           )}
         >
@@ -89,12 +89,12 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
         {trailing}
       </div>
       {error !== undefined ? (
-        <p id={errorId} role="alert" className="mt-1.5 text-[12px] text-danger">
+        <p id={errorId} role="alert" className="mt-1.5 text-label text-danger">
           {error}
         </p>
       ) : (
         hint !== undefined && (
-          <p id={hintId} className="mt-1.5 text-[12px] text-ink-dim">
+          <p id={hintId} className="mt-1.5 text-label text-ink-dim">
             {hint}
           </p>
         )

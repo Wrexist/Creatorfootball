@@ -28,9 +28,9 @@ export interface StatCardProps {
 }
 
 const VALUE_SIZE = {
-  sm: 'text-[20px]',
-  md: 'text-[28px]',
-  lg: 'text-[40px]',
+  sm: 'text-title',
+  md: 'text-hero',
+  lg: 'text-display',
 } as const;
 
 /**
@@ -109,7 +109,7 @@ export const StatCard = memo(function StatCard({
             />
           )}
           {footnote !== undefined && (
-            <span className={cn(TYPE_CLASS.caption, 'min-w-0 text-[11px] text-ink-dim text-pretty')}>
+            <span className={cn(TYPE_CLASS.caption, 'min-w-0 text-micro text-ink-dim text-pretty')}>
               {footnote}
             </span>
           )}

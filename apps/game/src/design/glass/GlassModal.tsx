@@ -111,12 +111,12 @@ export function GlassModal({
               {(title !== undefined || description !== undefined) && (
                 <header className="px-6 pb-2 pt-6 pr-14">
                   {title !== undefined && (
-                    <h2 id={titleId} className="text-[20px] font-bold tracking-[-0.02em] text-ink">
+                    <h2 id={titleId} className="text-title font-bold tracking-[-0.02em] text-ink">
                       {title}
                     </h2>
                   )}
                   {description !== undefined && (
-                    <p id={descId} className="mt-1.5 text-[14px] leading-relaxed text-ink-muted text-pretty">
+                    <p id={descId} className="mt-1.5 text-body leading-relaxed text-ink-muted text-pretty">
                       {description}
                     </p>
                   )}

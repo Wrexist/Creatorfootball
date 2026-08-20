@@ -89,7 +89,7 @@ export const ClubCard = memo(function ClubCard({
             className={cn('absolute inset-y-1 left-0 w-0.5 rounded-pill', ZONE_TONE[standing.zone])}
           />
         )}
-        <span className={cn(TYPE_CLASS.stat, 'w-5 shrink-0 text-center text-[13px] text-ink-muted')}>
+        <span className={cn(TYPE_CLASS.stat, 'w-5 shrink-0 text-center text-caption text-ink-muted')}>
           {standing?.position ?? '–'}
         </span>
         <ClubBadge visual={club.visual} size={26} flat />
@@ -102,18 +102,18 @@ export const ClubCard = memo(function ClubCard({
             abbr={club.abbreviation}
             role="bodyStrong"
             floor={0.78}
-            className="min-w-0 text-[14px]"
+            className="min-w-0 text-body"
           />
           {isOwn && <span className={cn(TYPE_CLASS.micro, 'shrink-0 text-volt')}>You</span>}
         </span>
         {standing && (
           <>
             <span className="hidden sm:block"><FormGuide results={standing.form} slots={5} /></span>
-            <span className="tnum w-7 text-right text-[13px] text-ink-muted">{standing.played}</span>
-            <span className="tnum w-8 text-right text-[13px] text-ink-muted">
+            <span className="tnum w-7 text-right text-caption text-ink-muted">{standing.played}</span>
+            <span className="tnum w-8 text-right text-caption text-ink-muted">
               {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
             </span>
-            <span className="tnum w-8 text-right text-[15px] font-bold text-ink">{standing.points}</span>
+            <span className="tnum w-8 text-right text-body font-bold text-ink">{standing.points}</span>
           </>
         )}
         {trailing}
@@ -137,7 +137,7 @@ export const ClubCard = memo(function ClubCard({
           abbr={club.abbreviation}
           role="bodyStrong"
           floor={0.8}
-          className="min-w-0 flex-1 text-[14px] font-medium"
+          className="min-w-0 flex-1 text-body font-medium"
         />
         {trailing}
       </Element>
@@ -171,9 +171,9 @@ export const ClubCard = memo(function ClubCard({
             role={featured ? 'title' : 'section'}
             floor={0.72}
             lines={featured ? 2 : 1}
-            className={featured ? 'text-[22px]' : 'text-[16px]'}
+            className={featured ? 'text-title' : 'text-body'}
           />
-          <span className={cn(TYPE_CLASS.caption, 'mt-0.5 block text-[12px]')}>
+          <span className={cn(TYPE_CLASS.caption, 'mt-0.5 block text-label')}>
             {club.city} · est. {club.founded}
           </span>
           {featured && (
@@ -187,7 +187,7 @@ export const ClubCard = memo(function ClubCard({
         {trailing}
       </span>
       {featured && club.motto && (
-        <p className="relative mt-4 border-l-2 border-volt/40 pl-3 text-[13px] italic leading-snug text-ink-muted">
+        <p className="relative mt-4 border-l-2 border-volt/40 pl-3 text-caption italic leading-snug text-ink-muted">
           {club.motto}
         </p>
       )}

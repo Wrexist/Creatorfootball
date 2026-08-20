@@ -8,6 +8,7 @@ import {
   AttributeBar, ClubBadge, CreatorAvatar, CreatorCard, Divider, EmptyState, GlassButton,
   GlassPanel, GlassPill, IconSocial, KeyValueRow, MomentumBar, MoneyLabel, PlayerCard,
   ProgressBar, Screen, SectionHeader, StatCard, StatGrid, formatCount,
+  NameText,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -145,7 +146,13 @@ function CreatorView({ state, creator }: ViewProps): ReactNode {
                 <div className="flex items-center gap-2.5">
                   <ClubBadge visual={club.visual} size={28} label={club.name} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-semibold text-ink">{club.name}</p>
+                    <NameText
+                      name={club.name}
+                      short={club.shortName}
+                      abbr={club.abbreviation}
+                      role="bodyStrong"
+                      lines={2}
+                    />
                     <p className="text-[11px] uppercase tracking-[0.14em] text-ink-dim">
                       {creator.dealWeeksRemaining === null
                         ? 'No fixed term'

@@ -146,12 +146,12 @@ export function GlassSheet({
                 {(title !== undefined || subtitle !== undefined) && (
                   <header className="pb-3 pt-3">
                     {title !== undefined && (
-                      <h2 id={titleId} className="text-[19px] font-bold tracking-[-0.02em] text-ink">
+                      <h2 id={titleId} className="text-title font-bold tracking-[-0.02em] text-ink">
                         {title}
                       </h2>
                     )}
                     {subtitle !== undefined && (
-                      <p className="mt-0.5 text-[13px] text-ink-muted">{subtitle}</p>
+                      <p className="mt-0.5 text-caption text-ink-muted">{subtitle}</p>
                     )}
                   </header>
                 )}
@@ -177,7 +177,7 @@ export function SheetCloseRow({ onClose, label = 'Close' }: { onClose: () => voi
       type="button"
       onClick={onClose}
       className={cn(
-        'min-h-11 w-full rounded-lg text-[15px] font-semibold text-ink-muted hover:text-ink',
+        'min-h-11 w-full rounded-lg text-body font-semibold text-ink-muted hover:text-ink',
         FOCUS_RING,
       )}
     >

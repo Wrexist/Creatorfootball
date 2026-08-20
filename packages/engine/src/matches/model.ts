@@ -180,7 +180,7 @@ interface AggregateSpec {
   readonly roleWeights: Record<SlotRole, number>;
 }
 
-const SPECS: Record<Exclude<keyof TeamAggregates, 'keeper' | 'discipline' | 'outfield'>, AggregateSpec> = {
+const SPECS: Record<Exclude<keyof TeamAggregates, 'keeper' | 'discipline' | 'outfield' | 'traits'>, AggregateSpec> = {
   attack: {
     attributes: [['finishing', 3], ['shooting', 2], ['positioning', 1.2], ['composure', 1.2], ['technique', 1]],
     roleWeights: { GK: 0, DEF: 0.12, MID: 0.5, ATT: 1 },
@@ -439,6 +439,20 @@ export interface ChanceInput {
   readonly header: boolean;
   readonly setPiece: boolean;
   readonly penalty: boolean;
+  /** The chance arrived from a ball in behind: a run at the keeper. */
+  readonly throughBall?: boolean;
+  /**
+   * Aerial edge on a headed chance: the gap between the two sides' `aerial`
+   * aggregates plus whatever a narrow block leaves open at the far post.
+   * Ignored on a shot that is not a header.
+   */
+  readonly aerialEdge?: number;
+  /** The shooter's `shotConversion` trait modifier. */
+  readonly shooterConversion?: number;
+  /** The creator's `creativity` trait modifier. */
+  readonly creatorFlair?: number;
+  /** The attacking side's `volatility`, 1 = neutral. Widens the shot location. */
+  readonly volatility?: number;
   /** 0-1 defensive pressure on the shooter. */
   readonly pressure: number;
   /** Effective finishing of the shooter. */
@@ -473,12 +487,16 @@ export function buildChance(rng: Rng, input: ChanceInput): Chance {
   }
 
   // Better sides get closer and squarer; a shot from a wide setup starts wider.
+  // `volatility` widens both draws: a chaotic side finds better positions and
+  // worse ones, which is what "swings games both ways" has to mean numerically.
+  const swing = 1 + BALANCE.VOLATILITY_LOCATION_WEIGHT * ((input.volatility ?? 1) - 1);
   const quality = clamp01(input.chanceQuality);
-  const advance = lerp(0.04, 0.2, quality) * rng.float(0.4, 1.4);
+  const spread = clamp(swing, 0.5, 2);
+  const advance = lerp(0.04, 0.2, quality) * rng.float(1 - 0.6 * spread, 1 + 0.4 * spread);
   const x = clamp(Math.max(input.zone, BALANCE.FINAL_THIRD_ZONE) + advance, 0.66, 0.97);
 
   const widthSpread = lerp(0.1, 0.3, clamp01((input.widthBias + 1) / 2)) * (input.setPiece ? 0.7 : 1);
-  const offset = rng.normal(0, widthSpread) * lerp(1.15, 0.75, quality);
+  const offset = rng.normal(0, widthSpread * spread) * lerp(1.15, 0.75, quality);
   const y = clamp(0.5 + offset, 0.06, 0.94);
 
   const dx = 1 - x;
@@ -494,15 +512,25 @@ export function buildChance(rng: Rng, input: ChanceInput): Chance {
   // The shooter. Finishing sets the mean, composure narrows the gap under duress.
   const shooter = (input.finishing * 0.72 + input.composure * 0.28);
   xg *= 1 + BALANCE.XG_FINISHING_WEIGHT * ((shooter - 55) / 55);
+  // A finisher's trait is read here as well as through his finishing attribute:
+  // a 14% modifier that reaches xG as 4% is not a trait a player can feel.
+  xg *= Math.max(0.4, 1 + BALANCE.TRAIT_SHOT_CONVERSION_WEIGHT * (input.shooterConversion ?? 0));
 
   // A chance served on a plate is worth more than one dug out alone.
   xg *= 1 + BALANCE.XG_ASSIST_WEIGHT * (clamp01(input.assistQuality) - 0.35);
+  xg *= Math.max(0.5, 1 + BALANCE.TRAIT_CREATIVITY_WEIGHT * (input.creatorFlair ?? 0));
 
   // The keeper is part of chance quality, not only of the save roll.
   xg *= 1 - BALANCE.XG_KEEPER_WEIGHT * ((input.keeper - 55) / 55);
 
   if (input.counter) xg *= BALANCE.XG_COUNTER_BONUS;
-  if (input.header) xg *= BALANCE.XG_HEADER_FACTOR;
+  if (input.throughBall) xg *= BALANCE.XG_THROUGH_BALL_BONUS;
+  if (input.header) {
+    // The aerial aggregate is finally read: who wins the ball in the box, and
+    // how exposed the defending block is to a delivery from wide.
+    xg *= BALANCE.XG_HEADER_FACTOR
+      * Math.max(0.35, 1 + BALANCE.XG_AERIAL_WEIGHT * (input.aerialEdge ?? 0));
+  }
   if (input.setPiece) xg *= 0.9;
 
   xg *= input.multiplier * BALANCE.CONVERSION_SCALE;
@@ -518,10 +546,13 @@ export type ShotResult = 'GOAL' | 'SAVE' | 'BLOCK' | 'MISS' | 'POST';
  * goals agree by construction. Everything after that only decides what the
  * highlight looks like — and who gets credited with a save.
  */
-export function resolveShot(rng: Rng, xg: number, keeper: number, blockPressure: number): ShotResult {
+export function resolveShot(
+  rng: Rng, xg: number, keeper: number, blockPressure: number, keeperTrait = 0,
+): ShotResult {
   if (rng.chance(clamp01(xg))) return 'GOAL';
 
-  const keeperEdge = BALANCE.SAVE_KEEPER_WEIGHT * ((keeper - 55) / 55);
+  const keeperEdge = BALANCE.SAVE_KEEPER_WEIGHT * ((keeper - 55) / 55)
+    + BALANCE.TRAIT_SAVE_WEIGHT * keeperTrait;
   const save = clamp(BALANCE.SAVE_SHARE + keeperEdge, 0.15, 0.65);
   const block = clamp(BALANCE.BLOCK_SHARE * (0.7 + 0.6 * clamp01(blockPressure)), 0.05, 0.45);
   const post = BALANCE.POST_SHARE;
@@ -618,7 +649,14 @@ export function fatigueDelta(input: FatigueInput): number {
   const stamina = input.player.attributes.stamina;
   const staminaFactor = 1 - BALANCE.FATIGUE_STAMINA_WEIGHT * ((stamina - 55) / 55);
   const trait = Math.max(0.4, 1 + traitModifier(input.player.traitIds, 'staminaDrain', input.conditions));
-  const chasing = input.inPossession ? 1 : 1 + BALANCE.FATIGUE_OUT_OF_POSSESSION;
+  // Chasing the ball costs, but how much depends on where you chase it. A
+  // compact low block without the ball is cheap; a high press without the ball
+  // is a sprint. Charging both the same made LOW_BLOCK the most tiring shape
+  // in the game, which inverted its whole reason for existing.
+  const chasing = input.inPossession
+    ? 1
+    : 1 + BALANCE.FATIGUE_OUT_OF_POSSESSION
+      * (1 + BALANCE.FATIGUE_CHASE_AGGRESSION * (clamp01(input.vector.aggression) - 0.5));
   const fitness = 1 + 0.3 * (1 - clamp01(input.player.fitness / 100));
   // The last stretch costs more than the first: fatigue feeds itself.
   const compounding = 1 + 0.35 * clamp01(input.fatigue);

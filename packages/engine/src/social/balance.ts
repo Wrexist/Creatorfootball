@@ -17,6 +17,12 @@ export const SOCIAL_BALANCE = {
    * hook budget and the feed only ever speaks about results.
    */
   maxHooksPerTrigger: 3,
+  /**
+   * Posts per trigger in the final feed. The hook budget can be spent evenly
+   * and still end up concentrated, because the last step trims by weight and
+   * weight tracks importance; this keeps the trim honest.
+   */
+  maxPostsPerTrigger: 4,
   antiRepeatCycles: 2,
   /**
    * Hard anti-repetition window, in cycles. Inside it a template — and the text
@@ -29,11 +35,19 @@ export const SOCIAL_BALANCE = {
   fanCountByImportance: [0, 1, 1, 2, 3, 4] as const,
   creatorCountByImportance: [0, 0, 1, 1, 2, 3] as const,
   rivalCountByImportance: [0, 0, 0, 1, 1, 2] as const,
-  /** Importance at or above which a sponsor and the club account weigh in. */
-  sponsorImportance: 4,
+  /**
+   * Importance at or above which each voice weighs in.
+   *
+   * These were the quietest reason a third of the authored library was
+   * unreachable: most of the world's news is importance 2, and a gate at 3
+   * meant every `@MEDIA` and `@PLAYER` line written for an ordinary week could
+   * never be selected. Importance 1 — a single attribute ticking up — is still
+   * below all of them, which is the distinction that was actually wanted.
+   */
+  sponsorImportance: 3,
   clubImportance: 2,
-  playerImportance: 3,
-  mediaImportance: 3,
+  playerImportance: 2,
+  mediaImportance: 2,
 
   /** Base like rate against author reach. */
   baseEngagementRate: 0.011,

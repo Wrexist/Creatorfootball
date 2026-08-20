@@ -104,7 +104,10 @@ export const BALANCE = {
   /** How much a counter-attack window raises shot frequency. 0-0.5. */
   SHOT_COUNTER_BONUS: 0.22,
   /** Share of final-third possessions that end in a cross rather than a shot. 0.05-0.3. */
-  CROSS_RATE: 0.14,
+  CROSS_RATE: 0.15,
+  /** How much a wide shape raises the cross rate (and a narrow one lowers it).
+   *  Together with XG_AERIAL_WEIGHT this is what WIDE actually buys. 0-1. */
+  CROSS_WIDTH_WEIGHT: 0.6,
   /** Chance a blocked or saved shot produces a corner. 0.2-0.6. */
   CORNER_FROM_BLOCK: 0.36,
   /** Chance a corner produces an immediate shot. 0.2-0.6. */

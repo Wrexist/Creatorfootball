@@ -7,10 +7,11 @@
  * why every screen looked like the same screen and nothing lined up between
  * them.
  *
- * The replacement is a *closed* scale: nine sizes, fifteen named roles, and no
+ * The replacement is a *closed* scale: ten sizes, fifteen named roles, and no
  * arbitrary values anywhere. The sizes live in tokens.css as `--text-*`; a role
  * may only reference one of them.
  *
+ *     68  takeover         full-screen moments only
  *     44  giant / score    the number a screen is built around
  *     40  display          once per screen at most
  *     32  hero             the large screen title
@@ -109,12 +110,12 @@ export const NUMERIC_ROLES: ReadonlySet<TypeRole> = new Set<TypeRole>([
 ]);
 
 /**
- * The nine steps, in px, at the default root size. `FitText` measures in px, so
+ * The ten steps, in px, at the default root size. `FitText` measures in px, so
  * it needs the numeric value; everything else should use the token.
  *
- * These are the *only* nine numbers. A tenth is a bug.
+ * These are the *only* ten numbers. An eleventh is a bug.
  */
-export const TYPE_STEPS = [11, 12, 13, 15, 17, 24, 32, 40, 44] as const;
+export const TYPE_STEPS = [11, 12, 13, 15, 17, 24, 32, 40, 44, 68] as const;
 
 /** The smallest size any text in the product may render at. */
 export const TYPE_FLOOR = 11;

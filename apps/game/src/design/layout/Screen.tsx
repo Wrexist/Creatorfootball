@@ -128,7 +128,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
                 {title}
               </FitText>
             ) : (
-              <span className="font-display text-[17px] font-bold tracking-[-0.02em] text-ink">{title}</span>
+              <span className="font-display text-section font-bold tracking-[-0.02em] text-ink">{title}</span>
             )}
           </motion.h1>
 
@@ -161,12 +161,12 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
               <motion.div style={{ opacity: largeTitleOpacity }} className="pb-3 pt-2">
                 <h2 className={cn(TYPE_CLASS.hero, 'text-balance')}>{title}</h2>
                 {subtitle !== undefined && (
-                  <p className="mt-1 text-[14px] text-ink-muted text-pretty">{subtitle}</p>
+                  <p className="mt-1 text-body text-ink-muted text-pretty">{subtitle}</p>
                 )}
               </motion.div>
             )}
             {wide && subtitle !== undefined && (
-              <p className="pb-3 pt-4 text-[15px] text-ink-muted text-pretty">{subtitle}</p>
+              <p className="pb-3 pt-4 text-body text-ink-muted text-pretty">{subtitle}</p>
             )}
             <motion.div
               variants={m.variants.listContainer}

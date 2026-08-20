@@ -94,9 +94,9 @@ export const NewsCard = memo(function NewsCard({
   const sentimentTone = story.sentiment > 0.25 ? 'positive' : story.sentiment < -0.25 ? 'danger' : 'neutral';
 
   const meta = (
-    <div className={cn(TYPE_CLASS.label, 'flex items-center gap-2 text-[11px] text-ink-dim')}>
+    <div className={cn(TYPE_CLASS.label, 'flex items-center gap-2 text-micro text-ink-dim')}>
       {/* An outlet is a name. Sentence case, fitted, never clipped. */}
-      <NameText name={story.outlet} role="label" floor={0.82} className="min-w-0 shrink text-[11px]" />
+      <NameText name={story.outlet} role="label" floor={0.82} className="min-w-0 shrink text-micro" />
       {timeLabel !== undefined && (
         <>
           <span aria-hidden="true">·</span>
@@ -119,7 +119,7 @@ export const NewsCard = memo(function NewsCard({
         )}
       >
         {meta}
-        <h3 className="text-[14px] font-semibold leading-snug text-ink text-pretty">{story.headline}</h3>
+        <h3 className="text-body font-semibold leading-snug text-ink text-pretty">{story.headline}</h3>
       </Element>
     );
   }
@@ -155,12 +155,12 @@ export const NewsCard = memo(function NewsCard({
         <h3
           className={cn(
             'font-display font-bold leading-tight tracking-[-0.02em] text-ink text-pretty',
-            lead ? 'text-[19px]' : 'text-[15px]',
+            lead ? 'text-title' : 'text-body',
           )}
         >
           {story.headline}
         </h3>
-        <p className={cn('text-[13px] leading-relaxed text-ink-muted text-pretty', lead ? 'line-clamp-3' : 'line-clamp-2')}>
+        <p className={cn('text-caption leading-relaxed text-ink-muted text-pretty', lead ? 'line-clamp-3' : 'line-clamp-2')}>
           {story.body}
         </p>
       </div>
@@ -206,7 +206,7 @@ function ActionButton({
         onClick?.();
       }}
       className={cn(
-        'inline-flex min-h-11 items-center gap-1.5 rounded-md px-1.5 text-[12px] font-medium',
+        'inline-flex min-h-11 items-center gap-1.5 rounded-md px-1.5 text-label font-medium',
         'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         active ? activeClass : 'text-ink-dim',
         !disabled && 'hover:text-ink',
@@ -271,14 +271,14 @@ export const SocialPost = memo(function SocialPost({
               short={post.authorHandle}
               role="bodyStrong"
               floor={0.82}
-              className="min-w-0 shrink text-[14px]"
+              className="min-w-0 shrink text-body"
             />
             {post.verified && <IconVerified size={14} className="shrink-0 text-info" label="Verified" />}
-            <NameText name={post.authorHandle} role="caption" floor={0.85} className="min-w-0 shrink text-[13px] text-ink-dim" />
+            <NameText name={post.authorHandle} role="caption" floor={0.85} className="min-w-0 shrink text-caption text-ink-dim" />
             {timeLabel !== undefined && (
               <>
                 <span className="text-ink-dim" aria-hidden="true">·</span>
-                <span className="tnum shrink-0 text-[13px] text-ink-dim">{timeLabel}</span>
+                <span className="tnum shrink-0 text-caption text-ink-dim">{timeLabel}</span>
               </>
             )}
             {(post.kind === 'RIVAL' || post.kind === 'LEAK' || post.kind === 'SPONSOR') && (
@@ -291,7 +291,7 @@ export const SocialPost = memo(function SocialPost({
           <p
             className={cn(
               'mt-1 whitespace-pre-line leading-relaxed text-ink text-pretty',
-              emphasised ? 'text-[16px]' : 'text-[14px]',
+              emphasised ? 'text-body' : 'text-body',
             )}
           >
             {post.text}
@@ -299,8 +299,8 @@ export const SocialPost = memo(function SocialPost({
 
           {post.quoted && (
             <blockquote className="mt-2.5 rounded-md border border-white/[0.09] px-3 py-2">
-              <p className="text-[12px] font-semibold text-ink-muted">{post.quoted.authorName}</p>
-              <p className="mt-0.5 text-[13px] leading-snug text-ink-muted line-clamp-3">{post.quoted.text}</p>
+              <p className="text-label font-semibold text-ink-muted">{post.quoted.authorName}</p>
+              <p className="mt-0.5 text-caption leading-snug text-ink-muted line-clamp-3">{post.quoted.text}</p>
             </blockquote>
           )}
 

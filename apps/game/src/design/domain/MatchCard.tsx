@@ -158,9 +158,9 @@ export const MatchCard = memo(function MatchCard({
               />
             ) : (
               <div className="flex flex-col items-center">
-                <span className={cn(TYPE_CLASS.label, 'text-[13px] tracking-[0.06em] text-ink-dim')}>vs</span>
+                <span className={cn(TYPE_CLASS.label, 'text-caption tracking-[0.06em] text-ink-dim')}>vs</span>
                 {status !== undefined && (
-                  <span className="tnum mt-1 text-[12px] font-semibold text-ink-muted">{status}</span>
+                  <span className="tnum mt-1 text-label font-semibold text-ink-muted">{status}</span>
                 )}
               </div>
             )}

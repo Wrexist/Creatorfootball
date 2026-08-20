@@ -48,7 +48,7 @@ function SentimentDot({ value }: { value: number }): ReactNode {
   const tone = value >= 25 ? 'bg-positive' : value <= -25 ? 'bg-danger' : 'bg-ink-faint';
   const label = value >= 25 ? 'Supportive' : value <= -25 ? 'Hostile' : 'Neutral';
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] text-ink-muted" title={`Sentiment: ${label}`}>
+    <span className="inline-flex items-center gap-1 text-micro text-ink-muted" title={`Sentiment: ${label}`}>
       <span className={cn('size-1.5 rounded-pill', tone)} aria-hidden="true" />
       {label}
     </span>
@@ -117,7 +117,7 @@ export const CreatorCard = memo(function CreatorCard({
         </span>
 
         {!compact && (
-          <span className={cn(TYPE_CLASS.commentary, 'mt-2 block text-[13px] text-pretty')}>
+          <span className={cn(TYPE_CLASS.commentary, 'mt-2 block text-caption text-pretty')}>
             {creator.bio}
           </span>
         )}

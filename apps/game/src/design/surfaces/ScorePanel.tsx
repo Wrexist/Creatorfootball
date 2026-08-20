@@ -82,7 +82,7 @@ export const ScorePanel = memo(function ScorePanel({
         <Half side={home} align="left" big={big} />
 
         <div className="flex shrink-0 flex-col items-center justify-center px-1">
-          <div className={cn(big ? TYPE_CLASS.score : TYPE_CLASS.score, big ? '' : 'text-[30px]', 'flex items-baseline gap-2')} aria-hidden="true">
+          <div className={cn(big ? TYPE_CLASS.score : TYPE_CLASS.score, big ? '' : 'text-hero', 'flex items-baseline gap-2')} aria-hidden="true">
             <span>{played ? home.score : '-'}</span>
             <span className="text-ink-faint">:</span>
             <span>{played ? away.score : '-'}</span>

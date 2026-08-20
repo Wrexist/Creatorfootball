@@ -201,7 +201,7 @@ export const TraitChip = memo(function TraitChip({
 
   const classes = cn(
     'inline-flex items-center gap-1.5 rounded-pill border font-semibold whitespace-nowrap',
-    size === 'sm' ? 'h-6 px-2.5 text-[11px]' : 'min-h-11 px-3.5 text-[13px]',
+    size === 'sm' ? 'h-6 px-2.5 text-micro normal-case' : 'min-h-11 px-3.5 text-caption',
     TRAIT_TONE[trait.kind],
     className,
   );
@@ -269,7 +269,9 @@ export const FormGuide = memo(function FormGuide({
           aria-hidden="true"
           className={cn(
             'inline-flex items-center justify-center rounded-xs font-bold',
-            size === 'sm' ? 'size-4 text-[9px]' : 'size-6 text-[11px]',
+            // 18px, not 16px: the glyph inside was 9px, two rungs below the
+            // scale's floor, and a form guide is scanned at arm's length.
+            size === 'sm' ? 'size-[18px] text-micro' : 'size-6 text-caption',
             result ? RESULT_TONE[result] : 'bg-white/[0.05] text-transparent',
           )}
         >

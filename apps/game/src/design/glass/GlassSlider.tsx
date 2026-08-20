@@ -68,10 +68,10 @@ export function GlassSlider({
     <div className={cn('w-full', className)}>
       {label !== undefined && (
         <div className={cn('mb-2 flex items-baseline justify-between', labelHidden && 'sr-only')}>
-          <label htmlFor={id} className="text-[13px] font-semibold tracking-[0.005em] text-ink-muted">
+          <label htmlFor={id} className="text-caption font-semibold tracking-[0.005em] text-ink-muted">
             {label}
           </label>
-          <span className="tnum text-[14px] font-semibold text-ink">
+          <span className="tnum text-body font-semibold text-ink">
             {formatValue ? formatValue(value) : value}
           </span>
         </div>
@@ -117,7 +117,7 @@ export function GlassSlider({
       </div>
 
       {marks !== undefined && marks.length > 0 && (
-        <div className="mt-1 flex justify-between text-[11px] text-ink-dim">
+        <div className="mt-1 flex justify-between text-micro text-ink-dim">
           {marks.map((mark) => (
             <span key={mark.value} className={cn(value === mark.value && 'text-ink')}>
               {mark.label}

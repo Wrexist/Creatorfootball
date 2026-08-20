@@ -100,7 +100,7 @@ function StatusFlag({ player }: { player: Player }): ReactNode {
   if (player.injury) {
     return (
       <span
-        className="inline-flex items-center gap-1 rounded-pill bg-danger/85 px-1.5 py-0.5 text-[10px] font-bold text-ink"
+        className="inline-flex items-center gap-1 rounded-pill bg-danger/85 px-1.5 py-0.5 text-micro font-bold text-ink"
         title={player.injury.description}
       >
         <IconInjury size={11} />
@@ -110,7 +110,7 @@ function StatusFlag({ player }: { player: Player }): ReactNode {
   }
   if (player.suspensionMatches > 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-pill bg-warning/85 px-1.5 py-0.5 text-[10px] font-bold text-void">
+      <span className="inline-flex items-center gap-1 rounded-pill bg-warning/85 px-1.5 py-0.5 text-micro font-bold text-void">
         <IconCard size={11} />
         {player.suspensionMatches}
       </span>
@@ -156,7 +156,7 @@ function CompactCard({ player, club, onPress, trailing, dimmed, selected, classN
           />
           <StatusFlag player={player} />
         </span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-muted">
+        <span className="mt-0.5 flex items-center gap-1.5 text-label text-ink-muted">
           <PositionChip position={player.position} size="xs" />
           <span className="tnum">{player.age}</span>
           {player.shirtNumber !== null && <span className="tnum text-ink-dim">#{player.shirtNumber}</span>}
@@ -195,7 +195,7 @@ function MatchdayCard({ player, club, onPress, trailing, dimmed, className }: Pl
           className={cn('absolute inset-0 rounded-[inherit]', FOCUS_RING)}
         />
       )}
-      <span className="tnum w-6 shrink-0 text-center font-display text-[17px] font-bold text-ink-dim">
+      <span className="tnum w-6 shrink-0 text-center font-display text-section font-bold text-ink-dim">
         {player.shirtNumber ?? '–'}
       </span>
       <PlayerPortrait seed={player.portraitSeed} size={36} shape="circle" {...(colors ? { colors } : {})} />
@@ -205,7 +205,7 @@ function MatchdayCard({ player, club, onPress, trailing, dimmed, className }: Pl
           short={shortPlayerName(player)}
           role="bodyStrong"
           floor={0.8}
-          className="text-[14px]"
+          className="text-body"
         />
         <span className="mt-1 flex items-center gap-2">
           <PositionChip position={player.position} size="xs" />
@@ -276,7 +276,7 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
         <span
           className={cn(
             'tnum font-display font-bold leading-none tracking-[-0.05em]',
-            featured ? 'text-[42px]' : 'text-[30px]',
+            featured ? 'text-display' : 'text-hero',
             player.overall >= 88 ? 'text-volt' : 'text-ink',
           )}
         >
@@ -289,7 +289,7 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
       <span className="absolute right-2 top-2 flex flex-col items-end gap-1">
         <StatusFlag player={player} />
         {data.hot && !player.injury && (
-          <span className="inline-flex items-center gap-0.5 rounded-pill bg-volt/18 px-1.5 py-0.5 text-[10px] font-bold text-volt">
+          <span className="inline-flex items-center gap-0.5 rounded-pill bg-volt/18 px-1.5 py-0.5 text-micro font-bold text-volt">
             <IconFlame size={11} />
             {featured ? 'In form' : ''}
           </span>
@@ -307,14 +307,14 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
               name={player.firstName}
               role="caption"
               floor={0.82}
-              className="text-[11px] tracking-[0.01em] text-ink-dim"
+              className="text-micro tracking-[0.01em] text-ink-dim"
             />
             <NameText
               name={player.lastName}
               role="section"
               floor={0.7}
               lines={featured ? 2 : 1}
-              className="text-[17px] leading-tight"
+              className="text-section leading-tight"
             />
           </span>
           {club && <ClubBadge visual={club.visual} size={featured ? 28 : 22} flat />}
@@ -329,10 +329,10 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
         <span className="mt-2.5 flex divide-x divide-white/[0.08] border-t border-white/[0.08]">
           {data.attrs.map((attr) => (
             <span key={attr.key} className="flex flex-1 flex-col items-center gap-0.5 py-1.5">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-dim">
+              <span className="text-micro font-semibold uppercase tracking-[0.1em] text-ink-dim">
                 {attr.short}
               </span>
-              <span className="tnum text-[13px] font-bold text-ink">{attr.value}</span>
+              <span className="tnum text-caption font-bold text-ink">{attr.value}</span>
             </span>
           ))}
         </span>
@@ -341,7 +341,7 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
           <span className="flex items-center justify-between gap-2 border-t border-white/[0.08] px-3 py-2">
             <MoneyLabel amount={price ?? player.marketValue} size="sm" />
             {statusLabel !== undefined && (
-              <span className={cn(TYPE_CLASS.caption, 'min-w-0 text-right text-[11px] leading-tight text-pretty')}>
+              <span className={cn(TYPE_CLASS.caption, 'min-w-0 text-right text-micro leading-tight text-pretty')}>
                 {statusLabel}
               </span>
             )}
@@ -428,7 +428,7 @@ export interface PlayerFormPipProps {
 
 export function PlayerFormPip({ rating, className }: PlayerFormPipProps): ReactNode {
   if (Math.abs(rating) < 0.2) {
-    return <span className={cn('text-[12px] text-ink-dim', className)}>—</span>;
+    return <span className={cn('text-label text-ink-dim', className)}>—</span>;
   }
   const Icon = rating > 0 ? IconTrendUp : IconTrendDown;
   return (

@@ -403,7 +403,7 @@
 
   /* --- the type scale ---------------------------------------------------
 
-     NINE steps. Closed: if a size is not on this list it does not exist, and
+     TEN steps. Closed: if a size is not on this list it does not exist, and
      no component or screen may write `text-[Npx]`.
 
      The audit found 25 distinct pixel sizes in use, with 12px - the second
@@ -414,6 +414,7 @@
      secondary-prose step, and every other invented size collapses onto its
      nearest rung.
 
+         68   takeover        full-screen moments only
          44   giant / score   the number a screen is built around
          40   display         once per screen at most
          32   hero            the large screen title
@@ -433,6 +434,9 @@
      The floor is 11px (0.6875rem) and it is enforced: `FitText` will not shrink
      below it, and nothing in the kit sets a smaller size. */
 
+  /* The tenth step. Full-screen takeovers only: a final scoreline, a trophy.
+     Never inside a card, never on a management screen. */
+  --text-takeover: clamp(3rem, 4.25rem, 92px);
   --text-giant: clamp(2.25rem, 2.75rem, 60px);
   --text-display: clamp(2rem, 2.5rem, 54px);
   --text-hero: clamp(1.625rem, 2rem, 44px);
@@ -668,6 +672,7 @@
     find-and-replace, and so a lint rule has something to point at. React code
     should prefer `<Text role="...">`, which sets weight and tracking too.
   */
+  .t-takeover { font-size: var(--text-takeover); }
   .t-giant   { font-size: var(--text-giant); }
   .t-display { font-size: var(--text-display); }
   .t-hero    { font-size: var(--text-hero); }

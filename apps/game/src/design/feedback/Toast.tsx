@@ -145,9 +145,9 @@ function ToastViewport({
                   {toast.icon ?? tone.icon}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] font-semibold leading-snug text-ink">{toast.title}</span>
+                  <span className="block text-body font-semibold leading-snug text-ink">{toast.title}</span>
                   {toast.description !== undefined && (
-                    <span className="mt-0.5 block text-[12.5px] leading-snug text-ink-muted text-pretty">
+                    <span className="mt-0.5 block text-label leading-snug text-ink-muted text-pretty">
                       {toast.description}
                     </span>
                   )}
@@ -158,7 +158,7 @@ function ToastViewport({
                         toast.action?.onPress();
                         onDismiss(toast.id);
                       }}
-                      className={cn('mt-1.5 min-h-11 text-[13px] font-semibold text-volt', FOCUS_RING)}
+                      className={cn('mt-1.5 min-h-11 text-caption font-semibold text-volt', FOCUS_RING)}
                     >
                       {toast.action.label}
                     </button>

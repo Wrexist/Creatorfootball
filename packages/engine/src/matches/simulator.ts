@@ -17,7 +17,7 @@ import { BALANCE } from './balance';
 import {
   buildChance, computeAggregates, defensivePressure, effectiveAttribute, fatigueDelta,
   foulChance, injuryChance, progressionChance, resolveCard, resolveShot, rollInjury,
-  shotChance, turnoverChance,
+  shotChance, throughBallChance, turnoverChance,
 } from './model';
 import type { EffectiveContext, SlotRole, TeamAggregates, UnitView } from './model';
 import { MomentumTracker, momentumBoost } from './momentum';
@@ -199,6 +199,10 @@ interface TeamRuntime {
   readonly xgAgainst: number[];
   /** How well this side turned up today. Drawn once, applied to every aggregate. */
   readonly performance: number;
+  /** Mean fatigue of the players on the pitch, refreshed every tick. */
+  meanFatigue: number;
+  /** Squad cohesion from `chemistry` and `teammateMorale`, -1..1. */
+  readonly cohesion: number;
   creatorBoostUntil: number;
   lastCreatorMinute: number;
   lastSubTick: number;
@@ -518,15 +522,35 @@ export class MatchSimulator {
 
     const captain = onPitch.find((p) => p.player.id === tactics.captainId) ?? onPitch[1] ?? onPitch[0] ?? null;
 
+    const baseVector = toTacticVector(tactics, {
+      squadQuality,
+      managerTactical: team.managerBonus.tactical,
+    });
+
+    // Squad cohesion. `chemistry` and `teammateMorale` were labelled on the
+    // player profile and read by nothing anywhere in the engine; this is their
+    // consumer. A dressing room that works turns up nearer its ceiling.
+    const cohesion = onPitch.length
+      ? onPitch.reduce((a, p) => a
+        + traitModifier(p.player.traitIds, 'chemistry', p.ctx.conditions)
+        + 0.5 * traitModifier(p.player.traitIds, 'teammateMorale', p.ctx.conditions), 0) / onPitch.length
+      : 0;
+
+    // `volatility` widens the performance draw rather than shifting it: a bold
+    // setup is not better, it is less predictable, in both directions.
+    const swing = Math.max(0.35, 1 + BALANCE.VOLATILITY_PERFORMANCE_WEIGHT * (baseVector.volatility - 1));
+    const performance = clamp(
+      1 + BALANCE.COHESION_WEIGHT * clamp(cohesion, -1, 1)
+      + this.rng.fork(`performance:${side}`).normal(0, BALANCE.TEAM_PERFORMANCE_SIGMA * swing),
+      0.66, 1.34,
+    );
+
     const runtime: TeamRuntime = {
       side,
       team,
       tactics,
       formation,
-      baseVector: toTacticVector(tactics, {
-        squadQuality,
-        managerTactical: team.managerBonus.tactical,
-      }),
+      baseVector,
       all,
       onPitch,
       bench,
@@ -539,10 +563,9 @@ export class MatchSimulator {
       squadQuality,
       xgFor: [],
       xgAgainst: [],
-      performance: clamp(
-        1 + this.rng.fork(`performance:${side}`).normal(0, BALANCE.TEAM_PERFORMANCE_SIGMA),
-        0.72, 1.28,
-      ),
+      performance,
+      meanFatigue: 0,
+      cohesion,
       creatorBoostUntil: -1,
       lastCreatorMinute: -999,
       lastSubTick: -999,
@@ -691,6 +714,8 @@ export class MatchSimulator {
       finalThird,
       momentumBoost: boost,
       homeBoost: this.supportFactor(atk.side),
+      defenceFatigue: def.meanFatigue,
+      leadMargin: atk.side === 'home' ? this.homeScore - this.awayScore : this.awayScore - this.homeScore,
     };
 
     this.phase = finalThird ? 'FINAL_THIRD' : this.zone > 0.45 ? 'PROGRESSION' : 'BUILD_UP';
@@ -723,13 +748,36 @@ export class MatchSimulator {
       return { home: 0, away: 0 };
     }
 
+    // 2b. The ball over the top.
+    //
+    // This is where `spaceBehind` is charged. Outside the final third the side
+    // in possession can try to play a runner in behind the last line; when it
+    // comes off the defence is bypassed entirely and what follows is a run at
+    // the keeper. It is the counterplay to a high line and a high press, and
+    // the reason DIRECT passing, `counterWeight` and a quick forward matter.
+    if (!finalThird && this.rng.chance(throughBallChance({
+      spaceBehind: vd.spaceBehind,
+      counterWeight: va.counterWeight,
+      attackPace: atk.agg.pace,
+      defencePace: def.agg.pace,
+      traitThreat: atk.agg.traits.counterThreat,
+      counterWindow: this.tick <= this.counterUntil,
+    }))) {
+      const xg = this.playThroughBall(atk, def, va, vd, minute);
+      return this.attribute(atk.side, xg);
+    }
+
     // 3. Shot.
     if (finalThird) {
       let p = shotChance(input, this.tick <= this.counterUntil);
       if (inWindow) p *= BALANCE.SWING_WINDOW_SHOT_MULTIPLIER;
       p *= this.opennessFactor();
       if (this.rng.chance(clamp01(p))) {
-        const cross = this.rng.chance(BALANCE.CROSS_RATE);
+        // A wide shape puts the ball into the box more often; a narrow one
+        // works it through the middle. This is what makes width a real choice.
+        const cross = this.rng.chance(clamp01(
+          BALANCE.CROSS_RATE * (1 + BALANCE.CROSS_WIDTH_WEIGHT * va.widthBias),
+        ));
         const xg = this.takeShot(atk, def, va, vd, {
           counter: this.tick <= this.counterUntil,
           header: cross,
@@ -835,13 +883,53 @@ export class MatchSimulator {
     return 0;
   }
 
+  /**
+   * A runner goes in behind. The ball is already past the defensive line, so
+   * the chance is built from a high zone with the through-ball bonus, and the
+   * runner is chosen for pace and for the `counterThreat` trait rather than for
+   * where he happens to stand.
+   */
+  private playThroughBall(
+    atk: TeamRuntime, def: TeamRuntime, va: TacticVector, vd: TacticVector, minute: number,
+  ): number {
+    const runner = this.rng.weighted(atk.onPitch, (rt) => {
+      const base = SHOOTER_WEIGHT[rt.slot.role as SlotRole] ?? 1;
+      if (base <= 0) return 0.01;
+      const pace = effectiveAttribute(rt.player, 'pace', rt.ctx)
+        + effectiveAttribute(rt.player, 'acceleration', rt.ctx);
+      const trait = Math.max(0.3, 1 + 2 * traitModifier(rt.player.traitIds, 'counterThreat', rt.ctx.conditions));
+      return base * (0.3 + pace / 120) * trait;
+    });
+
+    this.zone = clamp(0.86 + this.rng.float(0, 0.08), 0.05, 0.96);
+    this.phase = 'TRANSITION';
+    this.ballHolder = runner.player.id;
+    this.momentumTracker.impulse('BIG_CHANCE', atk.side);
+    this.emit('CHANCE_CREATED', {
+      side: atk.side, player: runner, importance: 3, tags: ['throughBall'],
+    });
+    return this.takeShot(atk, def, va, vd, {
+      counter: true, header: false, setPiece: false, penalty: false, cross: false,
+      throughBall: true, minute,
+    });
+  }
+
   private takeShot(
     atk: TeamRuntime, def: TeamRuntime, va: TacticVector, vd: TacticVector,
-    opts: { counter: boolean; header: boolean; setPiece: boolean; penalty: boolean; cross: boolean; minute: number },
+    opts: {
+      counter: boolean; header: boolean; setPiece: boolean; penalty: boolean; cross: boolean;
+      minute: number; throughBall?: boolean; shooter?: PlayerRuntime;
+    },
   ): number {
-    const shooter = opts.penalty
-      ? (atk.onPitch.find((p) => p.player.id === atk.tactics.penaltyTakerId) ?? this.pick(atk, SHOOTER_WEIGHT))
-      : this.pick(atk, SHOOTER_WEIGHT);
+    // A delivery into the box is attacked by whoever is best in the air, not by
+    // whoever happens to be furthest forward.
+    const shooter = opts.shooter
+      ?? (opts.penalty
+        ? (atk.onPitch.find((p) => p.player.id === atk.tactics.penaltyTakerId) ?? this.pick(atk, SHOOTER_WEIGHT))
+        : opts.header
+          ? this.pick(atk, SHOOTER_WEIGHT, (p) =>
+            Math.max(0.3, 1 + 2.2 * traitModifier(p.player.traitIds, 'aerialThreat', p.ctx.conditions)))
+          : this.pick(atk, SHOOTER_WEIGHT));
 
     const assister = !opts.penalty && !opts.counter && this.rng.chance(0.72)
       ? this.pickOther(atk, CREATOR_WEIGHT, shooter)
@@ -854,6 +942,14 @@ export class MatchSimulator {
       ? clamp01(((effectiveAttribute(assister.player, 'vision', assister.ctx)
         + effectiveAttribute(assister.player, 'passing', assister.ctx)) / 2) / 88)
       : 0.24;
+
+    // Who wins the ball in the box, plus how exposed a narrow block is to a
+    // delivery from the flank. This is the read site for the `aerial` aggregate
+    // and, through it, for the `aerialThreat` trait.
+    const aerialEdge = opts.header
+      ? clamp((atk.agg.aerial - def.agg.aerial) / 55, -0.8, 0.8)
+        + BALANCE.AERIAL_NARROW_EXPOSURE * Math.max(0, -vd.widthBias)
+      : 0;
 
     const inWindow = this.rules.inSwingWindow(this.nominalMinute()) !== null;
     // Support is applied once, to shot volume, and deliberately not again here:
@@ -872,6 +968,13 @@ export class MatchSimulator {
       header: opts.header,
       setPiece: opts.setPiece,
       penalty: opts.penalty,
+      throughBall: opts.throughBall === true,
+      aerialEdge,
+      shooterConversion: traitModifier(shooter.player.traitIds, 'shotConversion', shooter.ctx.conditions),
+      creatorFlair: assister
+        ? traitModifier(assister.player.traitIds, 'creativity', assister.ctx.conditions)
+        : 0,
+      volatility: va.volatility,
       pressure,
       finishing,
       composure,
@@ -897,11 +1000,14 @@ export class MatchSimulator {
     this.emit('SHOT', { side: atk.side, player: shooter, xg: chance.xg, at: this.pointFor(atk.side, chance.x, chance.y), importance: chance.big ? 3 : 2 });
     this.momentumTracker.impulse('SHOT', atk.side);
 
+    const keeper = def.onPitch.find((p) => p.slot.role === 'GK') ?? null;
+    const keeperTrait = keeper
+      ? traitModifier(keeper.player.traitIds, 'saveChance', keeper.ctx.conditions)
+      : 0;
+
     const outcome = opts.penalty
       ? (this.rng.chance(chance.xg) ? 'GOAL' : this.rng.chance(0.6) ? 'SAVE' : 'MISS')
-      : resolveShot(this.rng, chance.xg, def.agg.keeper, pressure);
-
-    const keeper = def.onPitch.find((p) => p.slot.role === 'GK') ?? null;
+      : resolveShot(this.rng, chance.xg, def.agg.keeper, pressure, keeperTrait);
 
     switch (outcome) {
       case 'GOAL': {
@@ -1087,6 +1193,7 @@ export class MatchSimulator {
     for (const team of [this.home, this.away]) {
       const vector = this.effectiveVector(team);
       const inPossession = this.possession === team.side;
+      let total = 0;
       for (const rt of team.onPitch) {
         rt.ticksOn += 1;
         rt.fatigue = clamp01(rt.fatigue + fatigueDelta({
@@ -1098,7 +1205,9 @@ export class MatchSimulator {
         }));
         rt.stats.distanceCovered += 0.0105 * (0.75 + 0.5 * clamp01(rt.player.attributes.stamina / 99)) * (1 - 0.25 * rt.fatigue);
         if (rt.down > 0) rt.down -= 1;
+        total += rt.fatigue;
       }
+      team.meanFatigue = team.onPitch.length ? total / team.onPitch.length : 0;
     }
   }
 

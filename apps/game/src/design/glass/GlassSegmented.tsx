@@ -75,7 +75,7 @@ export function GlassSegmented<T extends string = string>({
             className={cn(
               'relative inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill',
               'font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
-              size === 'sm' ? 'min-h-9 px-3 text-[12px]' : 'min-h-11 px-4 text-[14px]',
+              size === 'sm' ? 'min-h-9 px-3 text-label' : 'min-h-11 px-4 text-body',
               selected ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
               option.disabled && 'pointer-events-none opacity-40',
               FOCUS_RING,

@@ -66,8 +66,8 @@ const SECTIONS = [
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: ReactNode }): ReactNode {
   return (
     <section id={id} className="scroll-mt-24 border-t border-white/[0.07] pt-8">
-      <h2 className="font-display text-[24px] font-bold tracking-[-0.03em] text-ink">{title}</h2>
-      {note && <p className="mt-1 max-w-[62ch] text-[13px] leading-relaxed text-ink-muted">{note}</p>}
+      <h2 className="font-display text-title font-bold tracking-[-0.03em] text-ink">{title}</h2>
+      {note && <p className="mt-1 max-w-[62ch] text-caption leading-relaxed text-ink-muted">{note}</p>}
       <div className="mt-5 flex flex-col gap-6">{children}</div>
     </section>
   );
@@ -77,7 +77,7 @@ function Row({ label, children, className }: { label?: string; children: ReactNo
   return (
     <div>
       {label && (
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-dim">{label}</p>
+        <p className="mb-2 text-micro font-semibold uppercase tracking-[0.16em] text-ink-dim">{label}</p>
       )}
       <div className={cn('flex flex-wrap items-start gap-3', className)}>{children}</div>
     </div>
@@ -121,7 +121,7 @@ function Swatch({ name, className }: { name: string; className: string }): React
   return (
     <div className="w-[104px]">
       <div className={cn('h-14 w-full rounded-md border border-white/10', className)} />
-      <p className="mt-1.5 font-mono text-[10px] text-ink-dim">{name}</p>
+      <p className="mt-1.5 font-mono text-micro text-ink-dim">{name}</p>
     </div>
   );
 }
@@ -219,15 +219,15 @@ function HeroDemos(): ReactNode {
 
       <Row label="Ambient effects (used inside hero surfaces)">
         <SpotlightCard className="w-[260px] p-5">
-          <p className="text-[13px] uppercase tracking-[0.2em] text-ink-dim">Spotlight card</p>
-          <p className="mt-2 text-[15px] text-ink">Move the pointer across this card.</p>
+          <p className="text-caption uppercase tracking-[0.2em] text-ink-dim">Spotlight card</p>
+          <p className="mt-2 text-body text-ink">Move the pointer across this card.</p>
         </SpotlightCard>
         <GlareHover className="w-[260px] rounded-xl glass-2 glass-sheen p-5">
-          <p className="text-[13px] uppercase tracking-[0.2em] text-ink-dim">Glare hover</p>
-          <p className="mt-2 text-[15px] text-ink">A single pass of light on hover.</p>
+          <p className="text-caption uppercase tracking-[0.2em] text-ink-dim">Glare hover</p>
+          <p className="mt-2 text-body text-ink">A single pass of light on hover.</p>
         </GlareHover>
         <div className="relative h-[132px] w-[260px] overflow-hidden rounded-xl glass-2 p-5">
-          <p className="text-[15px] leading-relaxed text-ink">
+          <p className="text-body leading-relaxed text-ink">
             Gradual blur lets a scrolling list dissolve under sticky chrome instead of hitting a hard cut line at the edge of the container.
           </p>
           <GradualBlur side="bottom" height={64} />
@@ -235,9 +235,9 @@ function HeroDemos(): ReactNode {
       </Row>
 
       <Row label="Shiny text">
-        <ShinyText as="span" tone="ink" className="font-display text-[28px] font-bold">Promoted</ShinyText>
-        <ShinyText as="span" tone="volt" className="font-display text-[28px] font-bold">Record broken</ShinyText>
-        <ShinyText as="span" tone="gold" loop className="font-display text-[28px] font-bold">Champions</ShinyText>
+        <ShinyText as="span" tone="ink" className="font-display text-hero font-bold">Promoted</ShinyText>
+        <ShinyText as="span" tone="volt" className="font-display text-hero font-bold">Record broken</ShinyText>
+        <ShinyText as="span" tone="gold" loop className="font-display text-hero font-bold">Champions</ShinyText>
       </Row>
 
       {club && (
@@ -406,8 +406,8 @@ function GalleryBody(): ReactNode {
         <header className="sticky top-0 z-30 glass-3 border-b border-white/[0.07]">
           <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-3 px-5 py-3">
             <div className="mr-auto">
-              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-volt">Creator Football</p>
-              <h1 className="font-display text-[18px] font-bold tracking-[-0.02em] text-ink">Design system</h1>
+              <p className="text-micro font-bold uppercase tracking-[0.24em] text-volt">Creator Football</p>
+              <h1 className="font-display text-title font-bold tracking-[-0.02em] text-ink">Design system</h1>
             </div>
             <GlassSegmented
               value={viewport}
@@ -421,16 +421,16 @@ function GalleryBody(): ReactNode {
               ]}
             />
             <GlassToggle checked={reducedMotion} onChange={setReducedMotion} aria-label="Reduced motion" size="sm" />
-            <span className="text-[12px] text-ink-muted">Reduced motion</span>
+            <span className="text-label text-ink-muted">Reduced motion</span>
             <GlassToggle checked={reducedEffects} onChange={setReducedEffects} aria-label="Reduced effects" size="sm" />
-            <span className="text-[12px] text-ink-muted">Reduced effects</span>
+            <span className="text-label text-ink-muted">Reduced effects</span>
           </div>
           <nav className="scroll-x mx-auto flex max-w-[1180px] gap-1 px-5 pb-2" aria-label="Sections">
             {SECTIONS.map(([id, label]) => (
               <a
                 key={id}
                 href={`#${id}`}
-                className="shrink-0 rounded-pill px-3 py-1.5 text-[12px] font-semibold text-ink-dim hover:bg-white/[0.06] hover:text-ink"
+                className="shrink-0 rounded-pill px-3 py-1.5 text-label font-semibold text-ink-dim hover:bg-white/[0.06] hover:text-ink"
               >
                 {label}
               </a>
@@ -476,7 +476,7 @@ function GalleryBody(): ReactNode {
                       <Text role="caption" className="mt-1">
                         {LEVEL_NOTE[level]}
                       </Text>
-                      <p className="mt-2 font-mono text-[10px] text-ink-dim">
+                      <p className="mt-2 font-mono text-micro text-ink-dim">
                         blur {[12, 20, 32, 48][level - 1]}px
                       </p>
                     </GlassCard>
@@ -510,7 +510,7 @@ function GalleryBody(): ReactNode {
               {(['xs', 'sm', 'md', 'lg', 'xl', '2xl', 'pill'] as const).map((r) => (
                 <div key={r} className="w-[88px]">
                   <div className={cn('h-14 w-full border border-white/12 bg-surface-3', RADIUS_CLASS[r])} />
-                  <p className="mt-1.5 font-mono text-[10px] text-ink-dim">{r}</p>
+                  <p className="mt-1.5 font-mono text-micro text-ink-dim">{r}</p>
                 </div>
               ))}
             </Row>
@@ -525,10 +525,10 @@ function GalleryBody(): ReactNode {
             <div className="flex w-full flex-col divide-y divide-white/[0.06]">
               {TYPE_ROLES.map(({ role, sample, note }) => (
                 <div key={role} className="grid grid-cols-[92px_minmax(0,1fr)] items-baseline gap-4 py-3">
-                  <code className="font-mono text-[10px] text-volt">{role}</code>
+                  <code className="font-mono text-micro text-volt">{role}</code>
                   <div className="min-w-0">
                     <Text role={role} as="p">{sample}</Text>
-                    <p className="mt-1.5 text-[11px] text-ink-dim">{note}</p>
+                    <p className="mt-1.5 text-micro text-ink-dim">{note}</p>
                   </div>
                 </div>
               ))}
@@ -537,7 +537,7 @@ function GalleryBody(): ReactNode {
               <GlassPanel title="League table" className="w-full max-w-sm">
                 {[['Ashvale', 11, 34], ['Northgate', 9, 31], ['Port Meridian', 4, 8]].map(([n, gd, pts]) => (
                   <div key={String(n)} className="flex items-center gap-3 py-1.5">
-                    <span className="min-w-0 flex-1 text-[14px] text-ink">{n}</span>
+                    <span className="min-w-0 flex-1 text-body text-ink">{n}</span>
                     <Numeric role="stat" tone="muted" className="w-10 text-right">+{String(gd)}</Numeric>
                     <Numeric role="stat" className="w-10 text-right">{String(pts)}</Numeric>
                   </div>
@@ -556,7 +556,7 @@ function GalleryBody(): ReactNode {
               <div className="flex w-full flex-wrap gap-4">
                 {[76, 108, 150, 220].map((width) => (
                   <div key={width} className="flex flex-col gap-2">
-                    <p className="font-mono text-[10px] text-ink-dim">{width}px</p>
+                    <p className="font-mono text-micro text-ink-dim">{width}px</p>
                     <div
                       className="flex flex-col gap-2 rounded-md border border-dashed border-white/15 p-2"
                       style={{ width }}
@@ -580,7 +580,7 @@ function GalleryBody(): ReactNode {
               <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2">
                 <GlassPanel title="Truncated (never ship this)" level={1}>
                   {STRESS_NAMES.map((n) => (
-                    <p key={n.name} className="truncate py-1.5 text-[15px] font-semibold text-danger">
+                    <p key={n.name} className="truncate py-1.5 text-body font-semibold text-danger">
                       {n.name}
                     </p>
                   ))}
@@ -705,7 +705,7 @@ function GalleryBody(): ReactNode {
                     bleed={c.visual.primary}
                     texture="pitch"
                     eyebrow="Rivalry"
-                    title={<NameText name={c.name} short={c.shortName} role="title" lines={2} className="text-[20px]" />}
+                    title={<NameText name={c.name} short={c.shortName} role="title" lines={2} className="text-title" />}
                     subtitle={`${c.city} · est. ${c.founded}`}
                     badge={<GlassPill tone="volt" caps size="xs">Live</GlassPill>}
                     onPress={() => undefined}
@@ -731,7 +731,7 @@ function GalleryBody(): ReactNode {
                 return (
                   <div key={name} className="flex flex-col items-center gap-1.5 rounded-md p-2.5 hover:bg-white/[0.05]">
                     <Component size={24} className="text-ink" />
-                    <span className="truncate font-mono text-[9px] text-ink-dim">{name}</span>
+                    <span className="truncate font-mono text-micro text-ink-dim">{name}</span>
                   </div>
                 );
               })}
@@ -859,8 +859,8 @@ function GalleryBody(): ReactNode {
               {GALLERY_IDENTITIES.map((identity) => (
                 <div key={identity.abbr} className="flex flex-col items-center gap-2 rounded-lg p-3 hover:bg-white/[0.04]">
                   <ClubBadge visual={identity.visual} size={84} label={identity.name} />
-                  <p className="text-center text-[12px] font-semibold text-ink">{identity.name}</p>
-                  <p className="text-center font-mono text-[9px] leading-tight text-ink-dim">
+                  <p className="text-center text-label font-semibold text-ink">{identity.name}</p>
+                  <p className="text-center font-mono text-micro leading-tight text-ink-dim">
                     {identity.visual.badgeShape} · {identity.visual.badgeMotif}
                     <br />
                     {identity.visual.style} · {identity.visual.kitPattern}
@@ -903,7 +903,7 @@ function GalleryBody(): ReactNode {
               {(['LOCAL', 'RISING', 'ESTABLISHED', 'MAJOR', 'GLOBAL'] as const).map((tier) => (
                 <div key={tier} className="flex flex-col items-center gap-1.5">
                   <CreatorAvatar seed={`creator-${tier}`} size={56} tier={tier} verified={tier === 'MAJOR' || tier === 'GLOBAL'} />
-                  <span className="font-mono text-[9px] text-ink-dim">{tier}</span>
+                  <span className="font-mono text-micro text-ink-dim">{tier}</span>
                 </div>
               ))}
             </Row>
@@ -1072,7 +1072,7 @@ function GalleryBody(): ReactNode {
             </Row>
             <Row label="Numbers">
               <div className="flex flex-wrap items-center gap-6">
-                <span className="font-display text-[34px] font-bold text-ink"><Counter value={184_320} /></span>
+                <span className="font-display text-hero font-bold text-ink"><Counter value={184_320} /></span>
                 <MoneyLabel amount={18_400_000} size="xl" />
                 <MoneyLabel amount={-420_000} signed size="lg" />
                 <MoneyLabel amount={950} size="md" />
@@ -1191,7 +1191,7 @@ function GalleryBody(): ReactNode {
                   </div>
                 </Accordion>
                 <Accordion title="Mentality" subtitle="Hidden until scouted">
-                  <p className="text-[13px] text-ink-muted">Send a scout to reveal these.</p>
+                  <p className="text-caption text-ink-muted">Send a scout to reveal these.</p>
                 </Accordion>
               </GlassPanel>
             </Row>
@@ -1203,7 +1203,7 @@ function GalleryBody(): ReactNode {
                 <ProgressBar value={32} tone="danger" valueLabel="32%" />
               </GlassPanel>
               <GlassCard level={1} nested className="w-[280px]">
-                <p className="text-[13px] text-ink-muted">A level-1 card marked <code className="font-mono text-ink">nested</code>: solid tint, no second blur.</p>
+                <p className="text-caption text-ink-muted">A level-1 card marked <code className="font-mono text-ink">nested</code>: solid tint, no second blur.</p>
               </GlassCard>
             </Row>
           </Section>

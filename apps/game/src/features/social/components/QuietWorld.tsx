@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import type { Club, Creator, Fixture } from '@cf/engine';
 import {
-  ClubBadge, CreatorAvatar, GlassButton, GlassPanel, GlassPill, HeroSurface,
+  ClubBadge, CreatorAvatar, GlassPanel, GlassPill, HeroSurface,
   IconBall, IconSocial, IconVerified, ListRow, NameText, Text, formatCount,
 } from '@/design';
 
@@ -30,12 +30,11 @@ export interface QuietWorldProps {
   /** Creators already signed to the player's club. */
   creators: readonly Creator[];
   followers: number;
-  onGoToMatchday: () => void;
   onOpenCreator: (creatorId: string) => void;
 }
 
 export function QuietWorld({
-  opponent, fixture, phaseLabel, creators, followers, onGoToMatchday, onOpenCreator,
+  opponent, fixture, phaseLabel, creators, followers, onOpenCreator,
 }: QuietWorldProps): ReactNode {
   const previews: { title: string; detail: string; icon: ReactNode }[] = [
     {
@@ -75,11 +74,6 @@ export function QuietWorld({
         subtitle="Nothing has happened yet, so nobody has said anything yet. Every post in this feed is written by a real event — play a match and the noise starts."
         texture="haze"
         padding="md"
-        footer={
-          <GlassButton variant="primary" icon={<IconBall />} onClick={onGoToMatchday} block>
-            Go to matchday
-          </GlassButton>
-        }
       >
         <div className="flex flex-wrap items-center gap-2">
           <GlassPill size="sm" tone="volt" filled>

@@ -88,7 +88,7 @@ export const MatchEventRow = memo(function MatchEventRow({
     >
       <span
         className={cn(
-          'tnum shrink-0 pt-0.5 text-[12px] font-semibold text-ink-dim',
+          'tnum shrink-0 pt-0.5 text-label font-semibold text-ink-dim',
           dense ? 'w-7' : 'w-8',
         )}
       >
@@ -108,13 +108,13 @@ export const MatchEventRow = memo(function MatchEventRow({
         <span
           className={cn(
             'block leading-snug text-pretty',
-            major ? 'text-[15px] font-semibold text-ink' : 'text-[13px] text-ink-muted',
+            major ? 'text-body font-semibold text-ink' : 'text-caption text-ink-muted',
           )}
         >
           {event.text}
         </span>
         {!dense && major && (
-          <span className="tnum mt-0.5 block text-[11px] text-ink-dim">
+          <span className="tnum mt-0.5 block text-micro text-ink-dim">
             {event.homeScore}–{event.awayScore}
             {event.xg !== undefined && ` · ${event.xg.toFixed(2)} xG`}
           </span>
@@ -194,15 +194,15 @@ export const Timeline = memo(function Timeline({
             </div>
             <div className={cn('min-w-0 flex-1', last ? 'pb-0' : 'pb-4')}>
               <div className="flex items-baseline justify-between gap-3">
-                <span className={cn('text-[14px] font-semibold text-ink', item.pending && 'text-ink-muted')}>
+                <span className={cn('text-body font-semibold text-ink', item.pending && 'text-ink-muted')}>
                   {item.title}
                 </span>
                 {item.time !== undefined && (
-                  <span className="tnum shrink-0 text-[11px] text-ink-dim">{item.time}</span>
+                  <span className="tnum shrink-0 text-micro text-ink-dim">{item.time}</span>
                 )}
               </div>
               {item.description !== undefined && (
-                <p className="mt-0.5 text-[13px] leading-snug text-ink-muted text-pretty">
+                <p className="mt-0.5 text-caption leading-snug text-ink-muted text-pretty">
                   {item.description}
                 </p>
               )}

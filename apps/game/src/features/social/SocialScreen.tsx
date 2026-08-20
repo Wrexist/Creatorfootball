@@ -5,8 +5,8 @@ import {
 } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassIcon, GlassPanel, GlassSegmented, GlassSheet,
-  IconBell, IconSocial, KeyValueRow, ListRow, Screen, SectionHeader, StatBlock, Text,
-  formatCount,
+  IconBall, IconBell, IconSocial, KeyValueRow, ListRow, Screen, SectionHeader, StatBlock,
+  Text, formatCount,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -133,6 +133,19 @@ function SocialView({ state }: { state: GameState }): ReactNode {
         )
       }
       aside={worldIsQuiet ? undefined : reachPanel}
+      /* The one route out of a quiet world lives in the screen's own footer.
+         A button pinned by a screen at its own stacking level ends up beneath
+         the fixed tab bar and stops being tappable; `Screen`'s footer lifts
+         itself clear of the bar, so this is the only correct place for it. */
+      footer={
+        worldIsQuiet ? (
+          <GlassButton variant="primary" size="lg" icon={<IconBall />} block
+            onClick={() => navigate(ROUTES.matchday)}
+          >
+            Go to matchday
+          </GlassButton>
+        ) : undefined
+      }
     >
       {worldIsQuiet ? (
         <QuietWorld
@@ -141,7 +154,6 @@ function SocialView({ state }: { state: GameState }): ReactNode {
           phaseLabel={upcoming ? PHASE_LABELS[upcoming.phase] : PHASE_LABELS[state.clock.phase]}
           creators={creators}
           followers={state.social.clubFollowers}
-          onGoToMatchday={() => navigate(ROUTES.matchday)}
           onOpenCreator={(creatorId) =>
             navigate(buildPath(ROUTES.creator, { creatorId }))}
         />

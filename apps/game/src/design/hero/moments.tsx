@@ -164,18 +164,18 @@ export function HeroReveal({
         {eyebrow !== undefined && (
           <motion.p
             variants={m.variants.rise}
-            className="text-[12px] font-bold uppercase tracking-[0.28em] text-volt"
+            className="text-label font-bold uppercase tracking-[0.28em] text-volt"
           >
             {eyebrow}
           </motion.p>
         )}
         <motion.h2 variants={m.variants.rise} className="max-w-[18ch] text-balance">
-          <ShinyText as="span" tone={tone === 'ink' ? 'ink' : tone} className="font-display text-[40px] font-bold leading-[1.05] tracking-[-0.04em]">
+          <ShinyText as="span" tone={tone === 'ink' ? 'ink' : tone} className="font-display text-display font-bold leading-[1.05] tracking-[-0.04em]">
             {title}
           </ShinyText>
         </motion.h2>
         {subtitle !== undefined && (
-          <motion.p variants={m.variants.rise} className="max-w-[32ch] text-[15px] leading-relaxed text-ink-muted text-pretty">
+          <motion.p variants={m.variants.rise} className="max-w-[32ch] text-body leading-relaxed text-ink-muted text-pretty">
             {subtitle}
           </motion.p>
         )}
@@ -237,7 +237,7 @@ export function GoalBurst({
           Goal
         </span>
         {flavour !== undefined && (
-          <span className="mt-1 text-[13px] font-bold uppercase tracking-[0.3em] text-ink-muted">{flavour}</span>
+          <span className="mt-1 text-caption font-bold uppercase tracking-[0.3em] text-ink-muted">{flavour}</span>
         )}
       </motion.div>
 
@@ -247,11 +247,11 @@ export function GoalBurst({
         transition={{ ...m.transition.medium, delay: m.reduced ? 0 : 0.14 }}
         className="relative mt-5 flex flex-col items-center gap-1"
       >
-        <p className="text-[26px] font-bold tracking-[-0.02em] text-ink">{scorer}</p>
-        <p className="tnum text-[14px] text-ink-muted">
+        <p className="text-hero font-bold tracking-[-0.02em] text-ink">{scorer}</p>
+        <p className="tnum text-body text-ink-muted">
           {minute}&apos;{assist ? ` · assist ${assist}` : ''}
         </p>
-        <p className="tnum mt-3 font-display text-[34px] font-bold tracking-[-0.04em] text-ink">
+        <p className="tnum mt-3 font-display text-hero font-bold tracking-[-0.04em] text-ink">
           {homeScore} – {awayScore}
         </p>
       </motion.div>
@@ -299,15 +299,15 @@ export function TrophyMoment({
         animate="visible"
         className="relative mt-7 flex flex-col items-center gap-2"
       >
-        <motion.p variants={m.variants.rise} className="text-[12px] font-bold uppercase tracking-[0.28em] text-hero-gold">
+        <motion.p variants={m.variants.rise} className="text-label font-bold uppercase tracking-[0.28em] text-hero-gold">
           Champions · {season}
         </motion.p>
         <motion.h2 variants={m.variants.rise} className="max-w-[16ch] text-balance">
-          <ShinyText as="span" tone="gold" loop className="font-display text-[42px] font-bold leading-[1.04] tracking-[-0.04em]">
+          <ShinyText as="span" tone="gold" loop className="font-display text-display font-bold leading-[1.04] tracking-[-0.04em]">
             {competition}
           </ShinyText>
         </motion.h2>
-        <motion.p variants={m.variants.rise} className="text-[17px] font-semibold text-ink">
+        <motion.p variants={m.variants.rise} className="text-section font-semibold text-ink">
           {clubName}
         </motion.p>
 
@@ -315,8 +315,8 @@ export function TrophyMoment({
           <motion.dl variants={m.variants.rise} className="mt-6 flex gap-7">
             {stats.map((stat) => (
               <div key={stat.label} className="flex flex-col items-center">
-                <dd className="tnum font-display text-[24px] font-bold text-ink">{stat.value}</dd>
-                <dt className="mt-0.5 text-[11px] uppercase tracking-[0.16em] text-ink-dim">{stat.label}</dt>
+                <dd className="tnum font-display text-title font-bold text-ink">{stat.value}</dd>
+                <dt className="mt-0.5 text-micro uppercase tracking-[0.16em] text-ink-dim">{stat.label}</dt>
               </div>
             ))}
           </motion.dl>
@@ -370,7 +370,7 @@ export function SigningMoment({
         initial={m.reduced ? { opacity: 0 } : { y: -12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={m.transition.medium}
-        className="relative mb-6 text-[12px] font-bold uppercase tracking-[0.3em] text-volt"
+        className="relative mb-6 text-label font-bold uppercase tracking-[0.3em] text-volt"
       >
         {clubName ? `Signed for ${clubName}` : 'Signed'}
       </motion.p>
@@ -391,9 +391,9 @@ export function SigningMoment({
         transition={{ ...m.transition.medium, delay: m.reduced ? 0 : 0.18 }}
         className="relative mt-7 flex flex-col items-center gap-1.5"
       >
-        <h2 className="font-display text-[28px] font-bold tracking-[-0.03em] text-ink">{playerName}</h2>
+        <h2 className="font-display text-hero font-bold tracking-[-0.03em] text-ink">{playerName}</h2>
         {(fee !== undefined || contract !== undefined) && (
-          <p className="tnum text-[14px] text-ink-muted">
+          <p className="tnum text-body text-ink-muted">
             {fee}
             {fee !== undefined && contract !== undefined ? ' · ' : ''}
             {contract}
