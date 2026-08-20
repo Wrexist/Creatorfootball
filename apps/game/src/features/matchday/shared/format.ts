@@ -180,10 +180,18 @@ export const SPEED_LABEL = {
   INSTANT: 'Skip',
 } as const satisfies Record<string, string>;
 
-/** The full sentence behind the short speed name, for the sheet and for a11y. */
+/**
+ * The full sentence behind the short speed name, for the sheet and for a11y.
+ *
+ * Each one names a wall-clock, because "fast" is meaningless to someone who has
+ * never watched one of these and "about a minute and a half" is not. The
+ * figures are measured against a 30-minute match and include the goal
+ * celebrations and dramatic beats, which is the number the player actually
+ * experiences.
+ */
 export const SPEED_HINT = {
-  SLOW: 'Half pace. Every phase is readable.',
-  NORMAL: 'The default. A match takes a few minutes.',
-  FAST: 'Double pace. Good once you trust your side.',
+  SLOW: 'Around three minutes. Every phase is readable.',
+  NORMAL: 'Around a minute and a half. The default.',
+  FAST: 'Under a minute. Good once you trust your side.',
   INSTANT: 'As fast as the phone can run it.',
 } as const satisfies Record<string, string>;

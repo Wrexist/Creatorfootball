@@ -8,6 +8,7 @@ import type { TacticSetup } from '../tactics/tactics';
 import type { Rng } from '../core/rng';
 import { clamp } from '../core/math';
 import { formatMoney } from '../economy/ledger';
+import { AI_BALANCE as AI } from './balance';
 
 /**
  * AI club behaviour.
@@ -186,6 +187,107 @@ export function profileFor(club: Club): AiProfile {
   return BY_PHILOSOPHY.get(club.philosophy) ?? (AI_PROFILES[2] as AiProfile);
 }
 
+
+/**
+ * How a club responds to failure.
+ *
+ * A twelve-season run finished with two clubs holding every title and the
+ * player's club twelfth in ten of twelve seasons. The cause was not that the
+ * strong clubs were strong — it was that **nothing in this file responded to
+ * a season going wrong**. `desperation` was `position - (1 - reputation/100)`,
+ * which is zero for a club whose reputation already predicts a bad season, so
+ * the clubs at the foot of the table were the only ones that never changed
+ * anything. Champions, meanwhile, faced no pressure of any kind.
+ *
+ * Three responses, all derived from state the club can actually see:
+ *
+ *  - **Failing your own supporters** (`expectationGap`) is felt by everyone,
+ *    including clubs nobody else expects anything from. It opens the wallet.
+ *  - **An old squad going nowhere** starts a *rebuild*: sell hard, buy young,
+ *    put the money into the academy rather than the first team.
+ *  - **Winning** breeds complacency. A club cruising at the top invests less,
+ *    which is the mechanism by which a league changes hands at all.
+ */
+export interface ClubMood {
+  /** 0-1. How badly this season is going against what was expected. */
+  readonly desperation: number;
+  /** Selling the old guard and backing the academy instead. */
+  readonly rebuilding: boolean;
+  /** Comfortably where it wants to be, and behaving like it. */
+  readonly complacent: boolean;
+  /** True when the club has abandoned its usual shape to chase results. */
+  readonly changedApproach: boolean;
+}
+
+export function clubMood(
+  state: GameState,
+  club: Club,
+  profile: AiProfile,
+  positionPressure: number,
+  rng: Rng,
+): ClubMood {
+  const record = club.seasonRecord;
+  const pace = record.played > 0
+    ? (record.won * 3 + record.drawn) / (record.played * 3)
+    : AI.neutralPointsPace;
+  // What the people who turn up every week think they are owed, against what
+  // they are getting. Available to every club at every level of the table.
+  const expectationGap = clamp(club.fans.expectation / 100 - pace, 0, 1);
+  const reputationShortfall = clamp(positionPressure - (1 - club.reputation / 100), 0, 1);
+  const desperation = clamp(
+    Math.max(reputationShortfall, expectationGap * AI.expectationWeight),
+    0, 1,
+  );
+
+  let ages = 0;
+  let counted = 0;
+  for (const id of club.squad) {
+    const player = state.players[id];
+    if (!player) continue;
+    ages += player.age;
+    counted++;
+  }
+  const meanAge = counted > 0 ? ages / counted : AI.rebuildAge;
+
+  const rebuilding = desperation >= AI.rebuildDesperation && meanAge >= AI.rebuildAge;
+  const complacent = positionPressure <= AI.complacencyPosition
+    && club.reputation >= AI.complacencyReputation
+    && desperation <= AI.complacencyDesperation;
+  const changedApproach = desperation >= AI.changeApproachDesperation
+    && rng.chance(AI.changeApproachChance);
+  return { desperation, rebuilding, complacent, changedApproach };
+}
+
+/**
+ * The profile a club is actually playing to this cycle. Mood bends the club's
+ * own identity rather than replacing it — a rebuilding Veteran Core still wants
+ * experience, it just stops paying a premium for thirty-four-year-olds.
+ */
+export function profileUnderMood(profile: AiProfile, mood: ClubMood): AiProfile {
+  if (!mood.rebuilding && !mood.complacent) return profile;
+  const rebuilt: AiProfile = mood.rebuilding
+    ? {
+      ...profile,
+      sellPressure: clamp(profile.sellPressure + AI.rebuildSellPressure, 0, 1),
+      youthPromotionRate: clamp(profile.youthPromotionRate + AI.rebuildYouthRate, 0, 1),
+      potentialWeight: profile.potentialWeight + AI.rebuildPotentialWeight,
+      overallWeight: Math.max(0.2, profile.overallWeight - AI.rebuildOverallWeight),
+      targetAge: [
+        Math.max(16, profile.targetAge[0] - AI.rebuildAgeShift),
+        Math.max(20, profile.targetAge[1] - AI.rebuildAgeShift),
+      ] as const,
+      facilityPriorities: ['academy', 'training_centre', ...profile.facilityPriorities],
+    }
+    : profile;
+  return mood.complacent
+    ? {
+      ...rebuilt,
+      transferAggression: rebuilt.transferAggression * AI.complacencyAggression,
+      reinvestRatio: rebuilt.reinvestRatio * AI.complacencyReinvest,
+    }
+    : rebuilt;
+}
+
 export interface AiTransferIntent {
   readonly playerId: PlayerId;
   readonly maxFee: number;
@@ -352,7 +454,7 @@ export function aiClubTurn(
   };
   if (!club) return empty;
 
-  const profile = profileFor(club);
+  const baseProfile = profileFor(club);
   const local = rng.fork(`ai:${clubId}:${ctx.cycle}`);
   const notes: string[] = [];
 
@@ -365,8 +467,11 @@ export function aiClubTurn(
   const positionPressure = ctx.leaguePosition && ctx.clubCount
     ? clamp((ctx.leaguePosition - 1) / Math.max(1, ctx.clubCount - 1), 0, 1)
     : 0.5;
-  // Falling short of where the club expects to be loosens the purse strings.
-  const desperation = clamp(positionPressure - (1 - club.reputation / 100), 0, 1);
+  const mood = clubMood(state, club, baseProfile, positionPressure, local.fork('mood'));
+  const profile = profileUnderMood(baseProfile, mood);
+  if (mood.rebuilding) notes.push('rebuilding: cashing in on the old guard and backing the academy');
+  if (mood.complacent) notes.push('comfortable: no appetite to spend');
+  const desperation = mood.desperation;
   const transferSpend = Math.round(
     club.finance.transferBudget * profile.reinvestRatio * (1 + desperation * profile.riskTolerance),
   );
@@ -449,10 +554,20 @@ export function aiClubTurn(
   }
 
   // --- tactics ---
+  //
+  // The old behaviour under pressure was to double down on the club's own
+  // profile lean, which is not a response to failure — it is the thing that was
+  // already failing. A club that has run out of patience with its own idea
+  // borrows somebody else's.
   let tacticalShift: Partial<TacticSetup> | null = null;
   const losingBadly = positionPressure > 0.7;
   const cruising = positionPressure < 0.25;
-  if (losingBadly && local.chance(0.35 + profile.riskTolerance * 0.4)) {
+  if (mood.changedApproach) {
+    const alternatives = AI_PROFILES.filter((p) => p.id !== baseProfile.id);
+    const borrowed = local.pick(alternatives);
+    tacticalShift = { ...borrowed.tacticalLean };
+    notes.push(`out of ideas: switching to a ${borrowed.name.toLowerCase()} shape`);
+  } else if (losingBadly && local.chance(0.35 + profile.riskTolerance * 0.4)) {
     tacticalShift = { ...profile.tacticalLean, risk: profile.riskTolerance > 0.6 ? 'RECKLESS' : 'BOLD' };
     notes.push('chasing results: shape pushed forward');
   } else if (cruising && local.chance(0.2)) {

@@ -31,6 +31,13 @@ export const MEDIA_OUTLETS: readonly string[] = [
 ];
 
 let counter = 0;
+/**
+ * `conditions` is how a story declares what has to be true of the save before
+ * it is allowed to run. A line about a record that "stood for a generation" is
+ * false in season one, and false copy is worse than no copy — it tells the
+ * reader that none of it means anything. See `saveHistoryFacts` in
+ * simulation/cascade.ts for the vocabulary.
+ */
 const story = (
   trigger: string,
   importance: number,
@@ -38,10 +45,12 @@ const story = (
   weight: number,
   outlets: readonly string[],
   entries: readonly { headline: string; body: string }[],
+  conditions?: Readonly<Record<string, string | number | boolean>>,
 ): MediaTemplate[] =>
   entries.map((e) => ({
     id: `md_${(counter += 1).toString(36)}_${trigger.toLowerCase()}`,
     trigger, headline: e.headline, body: e.body, outlets, importance, sentiment, weight,
+    ...(conditions ? { conditions } : {}),
   }));
 
 export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
@@ -267,12 +276,43 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
     },
   ]),
 
+  // Three record stories, and which one runs is decided by what the save can
+  // actually claim: a mark that has stood for seasons, a mark taken off a named
+  // predecessor, or a first entry in an empty book.
   ...story('RECORD_BROKEN', 4, 0.7, 8, ['Boot & Ball Weekly', 'The Signal Box Review'], [
     {
       headline: '{player} breaks a record that stood for a generation',
-      body: 'It had survived four managers, two relegations and a rebuild. It did not survive {player}, and the ovation when it fell lasted a full two minutes.',
+      body: 'It had stood for {recordAge} seasons, through everything this club has been through since. It did not survive {player}, and the ovation when it fell lasted a full two minutes.',
     },
-  ]),
+  ], { recordAgeSeasons_gte: 3 }),
+  ...story('RECORD_BROKEN', 3, 0.7, 8, ['The Signal Box Review', 'Pressbox', 'The Chalkboard'], [
+    {
+      headline: '{subject} takes {record} off the books',
+      body: 'The mark that stood before this one is gone. It reads {value} now, and the name against it has changed.',
+    },
+    {
+      headline: '{record} is rewritten at {value}',
+      body: 'Not the sort of number anybody sets out to chase, and not the sort anybody forgets either. {club} have a new entry against it.',
+    },
+    {
+      headline: 'The book gets a new line: {record}',
+      body: '{value}. Somebody in the archive will be updating a page tonight, and somebody in the stand will be telling anyone who will listen that they were there.',
+    },
+    {
+      headline: '{club} push {record} to {value}',
+      body: 'Records like this move in steps, and this was a large one. It will stand until it does not.',
+    },
+  ], { hadPreviousHolder: true }),
+  ...story('RECORD_BROKEN', 3, 0.6, 8, ['Boot & Ball Weekly', 'Pressbox'], [
+    {
+      headline: '{record}: {subject} sets the first mark',
+      body: 'Nobody has held this one before. {value} is the number to beat now, and somebody eventually will.',
+    },
+    {
+      headline: 'A first entry in the book for {club}',
+      body: '{record} stands at {value}. A young club writing the first line of a page it will spend years arguing about.',
+    },
+  ], { hadPreviousHolder: false }),
 
   ...story('SPECIAL_RULE_TRIGGERED', 3, 0.2, 7, ['Frontline Football', 'Matchday Wire'], [
     {

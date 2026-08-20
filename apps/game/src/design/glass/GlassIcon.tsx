@@ -4,7 +4,7 @@ import type { HTMLMotionProps } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
-import { FOCUS_RING, type GlassLevel, glassClass } from './glassLevel';
+import { controlSurface, FOCUS_RING, type GlassLevel } from './glassLevel';
 
 export type GlassIconSize = 'sm' | 'md' | 'lg';
 
@@ -14,6 +14,10 @@ export interface GlassIconProps extends Omit<HTMLMotionProps<'button'>, 'childre
   icon: ReactNode;
   size?: GlassIconSize;
   level?: GlassLevel;
+  /**
+   * Retained for API compatibility and now a no-op: controls never blur, so
+   * there is never a second blurring layer to drop. See `CONTROL_SURFACE`.
+   */
   nested?: boolean;
   variant?: 'glass' | 'ghost' | 'volt' | 'danger';
   /** Pressed/selected state, e.g. a toggled filter button. */
@@ -39,7 +43,7 @@ export const GlassIcon = forwardRef<HTMLButtonElement, GlassIconProps>(function 
     icon,
     size = 'md',
     level = 2,
-    nested = false,
+    nested: _nested = false,
     variant = 'glass',
     active = false,
     loading = false,
@@ -66,7 +70,7 @@ export const GlassIcon = forwardRef<HTMLButtonElement, GlassIconProps>(function 
         'relative inline-flex shrink-0 items-center justify-center',
         'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         SIZE[size],
-        variant === 'glass' && cn(glassClass(level, !nested), 'text-ink hover:bg-white/10'),
+        variant === 'glass' && cn(controlSurface(level), 'text-ink hover:bg-white/12'),
         variant === 'ghost' && 'bg-transparent text-ink-muted hover:bg-white/[0.06] hover:text-ink',
         variant === 'volt' && 'bg-volt text-volt-ink hover:bg-volt-bright',
         variant === 'danger' && 'bg-danger/14 text-danger border border-danger/35 hover:bg-danger/22',

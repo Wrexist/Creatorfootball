@@ -1,6 +1,6 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../cn';
-import { glassClass, type GlassLevel } from './glassLevel';
+import { controlSurface, type GlassLevel } from './glassLevel';
 
 export interface GlassInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
@@ -12,6 +12,10 @@ export interface GlassInputProps extends Omit<InputHTMLAttributes<HTMLInputEleme
   /** Trailing control: a clear button, a unit, a search filter chip. */
   trailing?: ReactNode;
   level?: GlassLevel;
+  /**
+   * Retained for API compatibility and now a no-op: controls never blur, so
+   * there is never a second blurring layer to drop. See `CONTROL_SURFACE`.
+   */
   nested?: boolean;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -39,7 +43,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
     icon,
     trailing,
     level = 1,
-    nested = false,
+    nested: _nested = false,
     size = 'md',
     className,
     disabled,
@@ -69,7 +73,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
       <div
         className={cn(
           'flex items-center gap-2.5 transition-colors duration-[var(--duration-fast)] ease-out-quint',
-          glassClass(level, !nested),
+          controlSurface(level),
           SIZE[size],
           'focus-within:border-volt/60 focus-within:shadow-[0_0_0_3px_rgb(200_255_46/0.12)]',
           error && 'border-danger/60',

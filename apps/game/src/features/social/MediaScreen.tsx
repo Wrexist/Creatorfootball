@@ -108,7 +108,6 @@ function MediaView({ state }: { state: GameState }): ReactNode {
           value={scope}
           onChange={(next) => { setScope(next); setLimit(PAGE); }}
           aria-label="Which stories to show"
-          size="sm"
           block
           nested
         />

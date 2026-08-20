@@ -10,6 +10,8 @@ import {
   BASE_MEDIA_TEMPLATES, BASE_NAME_BANK, BASE_OBJECTIVES, BASE_OFFERS, BASE_PACK,
   BASE_PLAYERS, BASE_SOCIAL_TEMPLATES, BASE_SPONSORS, CLUB_LORE, FACILITY_EFFECT_KEYS,
 } from './index';
+import { FALLBACK_SOCIAL_TEMPLATES } from '../../../social/fallbackTemplates';
+import { FALLBACK_MEDIA_TEMPLATES } from '../../../media/fallbackTemplates';
 import { COMMUNITY_EXAMPLE_PACK } from '../community/example';
 import { LICENSED_EXAMPLE_PACK } from '../licensed/example';
 
@@ -355,5 +357,74 @@ describe('originality and IP guardrails', () => {
     expect(COMMUNITY_EXAMPLE_PACK.data.clubs).toHaveLength(3);
     expect(COMMUNITY_EXAMPLE_PACK.data.players).toHaveLength(6);
     expect(COMMUNITY_EXAMPLE_PACK.data.creators).toHaveLength(4);
+  });
+});
+
+/**
+ * Content that asserts a history the save does not have.
+ *
+ * A record story that says a mark "stood for a generation — it had survived
+ * four managers, two relegations and a rebuild" is simply false in season one
+ * of a club founded this year, and a player who reads it correctly concludes
+ * that none of the rest of it means anything either. So any line that claims
+ * longevity has to declare, in `conditions`, what must be true before it runs.
+ * `saveHistoryFacts` in simulation/cascade.ts publishes the vocabulary.
+ */
+describe('templates never assert a history the save does not have', () => {
+  const HISTORY_CLAIMS = [
+    /stood for a generation/i,
+    /for a generation/i,
+    /\bfor \w+teen years\b/i,
+    /\bfor years\b/i,
+    /first time in years/i,
+    /\bfour managers\b/i,
+    /\btwo relegations\b/i,
+    /grew up with/i,
+    /\bthirty-one years\b/i,
+  ];
+  /** Facts a history claim is allowed to lean on. */
+  const HISTORY_FACTS = [
+    'seasonsPlayed', 'managersEmployed', 'relegations', 'trophiesWon',
+    'clubEverPromoted', 'recordAgeSeasons', 'hadPreviousHolder',
+  ];
+
+  const gatedOnHistory = (conditions: Readonly<Record<string, unknown>> | undefined): boolean => {
+    if (!conditions) return false;
+    return Object.keys(conditions).some(
+      (key) => HISTORY_FACTS.some((fact) => key === fact || key.startsWith(`${fact}_`)),
+    );
+  };
+
+  it('gates every social line that claims longevity', () => {
+    const offenders = [...BASE_SOCIAL_TEMPLATES, ...FALLBACK_SOCIAL_TEMPLATES]
+      .filter((t) => HISTORY_CLAIMS.some((re) => re.test(t.text)))
+      .filter((t) => !gatedOnHistory(t.conditions))
+      .map((t) => `${t.id}: ${t.text}`);
+    expect(offenders).toEqual([]);
+  });
+
+  it('gates every press line that claims longevity', () => {
+    const offenders = [...BASE_MEDIA_TEMPLATES, ...FALLBACK_MEDIA_TEMPLATES]
+      .filter((t) => HISTORY_CLAIMS.some((re) => re.test(t.headline) || re.test(t.body)))
+      .filter((t) => !gatedOnHistory(t.conditions))
+      .map((t) => `${t.id}: ${t.headline}`);
+    expect(offenders).toEqual([]);
+  });
+
+  /**
+   * A club is not a person. Any line built around a pronoun or a person-shaped
+   * verb must take `{player}` (or another person slot) rather than `{subject}`,
+   * which the record hook fills with the club when the record is a club record.
+   */
+  it('never puts a person-shaped sentence on a slot a club can fill', () => {
+    const PERSON_SHAPED = /\b(his|her|he|she|himself|herself)\b/i;
+    const offenders = [...BASE_SOCIAL_TEMPLATES, ...FALLBACK_SOCIAL_TEMPLATES]
+      .filter((t) => PERSON_SHAPED.test(t.text) && /\{subject\}/.test(t.text))
+      .map((t) => `${t.id}: ${t.text}`);
+    const pressOffenders = [...BASE_MEDIA_TEMPLATES, ...FALLBACK_MEDIA_TEMPLATES]
+      .filter((t) => (PERSON_SHAPED.test(t.headline) || PERSON_SHAPED.test(t.body))
+        && (/\{subject\}/.test(t.headline) || /\{subject\}/.test(t.body)))
+      .map((t) => `${t.id}: ${t.headline}`);
+    expect([...offenders, ...pressOffenders]).toEqual([]);
   });
 });

@@ -32,6 +32,8 @@ export interface FeedItemProps {
   timeLabel: string;
   hasEvent: boolean;
   onOpenEvent: (postId: string) => void;
+  /** Editorial rank from `assignTiers`. Falls back to the post's own weight. */
+  tier?: Tier;
   className?: string;
 }
 
@@ -159,10 +161,12 @@ const Lead = memo(function Lead({
     <article className="glass-2 glass-sheen relative overflow-hidden rounded-lg p-4">
       <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', KIND_RAIL[post.kind])} />
       <Kicker post={post} timeLabel={timeLabel} />
+      {/* The lead is the one story of the matchweek, so it gets display type
+          and the room to breathe that goes with being the only one. */}
       <Text
         role="title"
         as="p"
-        className="mt-2.5 whitespace-pre-line text-[21px] leading-[1.18] text-pretty"
+        className="mt-2.5 whitespace-pre-line text-[22px] leading-[1.16] text-pretty"
       >
         {post.text}
       </Text>
@@ -183,7 +187,7 @@ const Lead = memo(function Lead({
 
 export const FeedItem = memo(function FeedItem(props: FeedItemProps): ReactNode {
   const { post, timeLabel, hasEvent, onOpenEvent, className } = props;
-  const tier: Tier = tierFor(post.weight);
+  const tier: Tier = props.tier ?? tierFor(post.weight);
 
   if (post.quoted) {
     return (

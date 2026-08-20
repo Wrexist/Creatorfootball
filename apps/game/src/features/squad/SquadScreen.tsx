@@ -180,9 +180,8 @@ const SquadRow = memo(function SquadRow({
             <span className="flex flex-wrap items-center gap-1.5">
               <PositionChip position={player.position} size="xs" />
               <span className="num-broadcast text-[12px] text-ink-muted">{player.age}</span>
-              {entry.trait
-                ? <TraitChip trait={entry.trait} />
-                : <span className="text-[12px] text-ink-dim">{SQUAD_ROLE_LABELS[role]}</span>}
+              <span className="text-[12px] text-ink-dim">{SQUAD_ROLE_LABELS[role]}</span>
+              {entry.trait && <TraitChip trait={entry.trait} />}
             </span>
             <span className="flex items-center gap-2">
               <span
@@ -197,9 +196,6 @@ const SquadRow = memo(function SquadRow({
               <span className="text-[11px] text-ink-dim">
                 {player.fitness >= 80 ? 'Fresh' : player.fitness >= 55 ? 'Tiring' : 'Needs a rest'}
               </span>
-              {entry.trait && (
-                <span className="text-[11px] text-ink-dim">· {SQUAD_ROLE_LABELS[role]}</span>
-              )}
               {contract && (
                 <span className={cn('text-[11px]', entry.expiring ? 'text-warning' : 'text-ink-dim')}>
                   · {entry.expiring ? `deal ends in ${contract.weeksRemaining}w` : `${contract.weeksRemaining}w left`}

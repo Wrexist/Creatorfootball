@@ -68,7 +68,14 @@ export function SquadIntroScreen(): ReactNode {
     const club = playerClub(gameState);
     const squad = squadOf(gameState, club.id);
     const formation = formationById(club.tactics.formationId);
-    const shapes = formationsFor(7).filter((f) => FIRST_SHAPE_IDS.includes(f.id));
+    // Ordered by `FIRST_SHAPE_IDS`, not by the engine's own list order, so the
+    // three read as a ladder: bodies behind the ball, then balance, then bodies
+    // in front of it. A player who understands nothing else about tactics can
+    // still tell what they are choosing between.
+    const available = formationsFor(7);
+    const shapes = FIRST_SHAPE_IDS
+      .map((id) => available.find((f) => f.id === id))
+      .filter((f): f is Formation => f !== undefined);
     return {
       club,
       squad,
@@ -141,19 +148,16 @@ export function SquadIntroScreen(): ReactNode {
       step="squad"
       title="Your squad"
       subtitle={`${squad.length} players. Three of them you will remember.`}
+      /* One button, and it is the one that starts the match. "Start over" used
+         to sit directly beneath it inside this same sticky bar, which put a
+         destructive action *after* the primary one — a keyboard or
+         switch-control walk to "the last control on the screen" landed on
+         "delete my club". It is still available, at the foot of the page,
+         where a destructive escape hatch belongs. */
       footer={
-        <div className="flex flex-col gap-2">
-          <GlassButton variant="primary" size="lg" block onClick={kickOff}>
-            {opponent ? `Play ${opponent.shortName}` : 'Play your first match'}
-          </GlassButton>
-          <button
-            type="button"
-            onClick={() => void startOver()}
-            className="min-h-11 text-[13px] font-semibold text-ink-dim hover:text-ink"
-          >
-            Start over instead
-          </button>
-        </div>
+        <GlassButton variant="primary" size="lg" block onClick={kickOff}>
+          {opponent ? `Play ${opponent.shortName}` : 'Play your first match'}
+        </GlassButton>
       }
     >
       <div ref={headingRef} tabIndex={-1} aria-label="Step 3 of 3, squad" className="outline-none" />
@@ -253,6 +257,16 @@ export function SquadIntroScreen(): ReactNode {
           )}
         </GlassPanel>
       )}
+
+      <div className="flex justify-center pt-2">
+        <button
+          type="button"
+          onClick={() => void startOver()}
+          className="min-h-11 px-3 text-[13px] font-semibold text-ink-dim hover:text-ink"
+        >
+          Delete this club and start over
+        </button>
+      </div>
     </CreationScreen>
   );
 }

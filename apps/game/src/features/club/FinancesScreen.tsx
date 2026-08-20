@@ -74,9 +74,9 @@ const TransactionRow = memo(function TransactionRow({
   return (
     <div className="flex items-center gap-3 border-b border-white/[0.06] py-2 last:border-b-0">
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] text-ink">{tx.memo}</span>
+        <span className="line-clamp-2 block text-[13px] text-ink text-pretty">{tx.memo}</span>
         <span className="block text-[11px] text-ink-dim">
-          {label(tx.kind)} · cycle {tx.cycle}
+          {label(tx.kind)} · week {tx.cycle}
         </span>
       </span>
       <span className={cn('tnum shrink-0 text-[13px] font-semibold', inbound ? 'text-positive' : 'text-ink-muted')}>

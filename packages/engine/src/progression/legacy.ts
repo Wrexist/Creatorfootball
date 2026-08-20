@@ -91,12 +91,14 @@ export function detectRecords(
       feeHolder = player ? { id: player.id, name: player.displayName } : null;
     }
   }
-  if (biggestWin > (existing['BIGGEST_WIN']?.value ?? 0)) {
+  const standingWin = existing['BIGGEST_WIN']?.value ?? 0;
+  if (biggestWin >= standingWin + (standingWin > 0 ? (P.recordMinImprovement['BIGGEST_WIN'] ?? 1) : 1)) {
     out.push({
       key: 'BIGGEST_WIN', label: 'Biggest winning margin', value: biggestWin, clubId,
     });
   }
-  if (biggestFee > (existing['RECORD_SIGNING']?.value ?? 0)) {
+  const standingFee = existing['RECORD_SIGNING']?.value ?? 0;
+  if (biggestFee > standingFee * (standingFee > 0 ? P.recordSigningStep : 1)) {
     out.push({
       key: 'RECORD_SIGNING', label: 'Record signing', value: biggestFee, clubId,
       ...(feeHolder ? { holderId: feeHolder.id, holderName: feeHolder.name } : {}),

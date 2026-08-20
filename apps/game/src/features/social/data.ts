@@ -28,6 +28,47 @@ export function tierFor(weight: number): Tier {
   return 'CHATTER';
 }
 
+/** A post has to clear this before it can be a lead at all. */
+const LEAD_FLOOR = 0.78;
+
+/**
+ * Editorial hierarchy, not just a size lookup.
+ *
+ * `tierFor` alone produced a feed of nothing but leads: a matchweek generates
+ * several genuinely important posts, they all clear the weight threshold, and
+ * three consecutive full-size cards is the same wall of sameness as three
+ * identical rows. A front page does not work that way — one story is the story,
+ * and everything else is arranged around it.
+ *
+ * So the lead is scarce *per matchweek*: the single heaviest post of a given
+ * cycle runs large, its nearest rivals run at standard size, and the rest falls
+ * to chatter. The weight the world engine assigned still decides everything —
+ * it now decides rank rather than just crossing a line.
+ */
+export function assignTiers(posts: readonly SocialPost[]): Map<string, Tier> {
+  const byCycle = new Map<number, SocialPost[]>();
+  for (const post of posts) {
+    const list = byCycle.get(post.cycle);
+    if (list) list.push(post);
+    else byCycle.set(post.cycle, [post]);
+  }
+
+  const tiers = new Map<string, Tier>();
+  for (const [, group] of byCycle) {
+    const ranked = group.slice().sort((a, b) => b.weight - a.weight);
+    ranked.forEach((post, index) => {
+      const base = tierFor(post.weight);
+      if (index === 0 && post.weight >= LEAD_FLOOR) {
+        tiers.set(post.id, 'LEAD');
+        return;
+      }
+      // Runners-up keep their substance but give up the front page.
+      tiers.set(post.id, base === 'LEAD' ? 'STANDARD' : base);
+    });
+  }
+  return tiers;
+}
+
 export const KIND_LABEL: Record<SocialPost['kind'], string> = {
   FAN: 'Supporter',
   CREATOR: 'Creator',

@@ -503,7 +503,7 @@ function SearchView({ state }: { state: GameState }): ReactNode {
             placeholder="Search by name"
             value={query}
             icon={<IconSearch />}
-            size="sm"
+            size="md"
             nested
             onChange={(event) => { setQuery(event.target.value); setLimit(PAGE); }}
             className="flex-1"
@@ -539,7 +539,6 @@ function SearchView({ state }: { state: GameState }): ReactNode {
           value={draft.sort}
           onChange={(sort) => setDraft({ ...draft, sort })}
           aria-label="Sort results"
-          size="sm"
           block
         />
       </div>

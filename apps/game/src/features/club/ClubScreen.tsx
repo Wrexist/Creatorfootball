@@ -318,9 +318,8 @@ function ClubBody({ state }: { state: GameState }): ReactNode {
           label="Facilities"
           meaning={data.projects.length
             ? `${data.projects.length} ${data.projects.length === 1 ? 'build is' : 'builds are'} under way`
-            : `Nothing being built. Upkeep is ${formatMoney(data.upkeep)} a week.`}
+            : `Nothing being built. They cost ${formatMoney(data.upkeep)} a week to keep open.`}
           value={`${data.facilityTotal}/${data.facilityMax}`}
-          attention={data.projects.length === 0}
           onPress={() => navigate(ROUTES.facilities)}
         />
         <HubRow

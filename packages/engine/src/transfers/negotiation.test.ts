@@ -245,3 +245,51 @@ describe('completeTransfer', () => {
     expect(outcome.ok).toBe(false);
   });
 });
+
+/**
+ * Hijacking used to be a dice roll with no term for the offer at all: 47% of
+ * negotiations were lost to a rival at 150% of the asking price, which made the
+ * modal outcome of the entire transfer system something the player could not
+ * influence by any means available to them.
+ */
+describe('overpaying buys security', () => {
+  const richRivals: RivalClub[] = [
+    { clubId: 'club_a' as never, name: 'Ardwick', reputation: 78, spendingPower: 90_000_000 },
+    { clubId: 'club_b' as never, name: 'Beckwith', reputation: 74, spendingPower: 90_000_000 },
+    { clubId: 'club_c' as never, name: 'Cranmoor', reputation: 71, spendingPower: 90_000_000 },
+  ];
+
+  const hijackRate = (multiplier: number): number => {
+    let hijacked = 0;
+    const runs = 240;
+    for (let i = 0; i < runs; i++) {
+      const { ctx } = scenario({ rivals: richRivals });
+      const result = runToConclusion({ ...ctx, id: `neg_${multiplier}_${i}` }, `hijack:${multiplier}:${i}`,
+        (neg) => ({ ...neg.theirDemand, fee: Math.round(neg.theirDemand.fee * multiplier) }));
+      if (result.negotiation.stage === 'HIJACKED') hijacked++;
+    }
+    return hijacked / runs;
+  };
+
+  it('loses far fewer deals to a rival as the offer strengthens', () => {
+    const atPar = hijackRate(1);
+    const wellOver = hijackRate(1.5);
+    const decisive = hijackRate(2);
+    expect(atPar).toBeGreaterThan(decisive);
+    expect(wellOver).toBeLessThan(atPar);
+    // Not merely directional: paying double should roughly halve the risk.
+    expect(decisive).toBeLessThan(atPar * 0.6);
+  });
+
+  it('keeps a well-funded, well-run negotiation out of coin-flip territory', () => {
+    expect(hijackRate(1)).toBeLessThan(0.3);
+  });
+
+  it('never lets a rival take a player nobody else was chasing', () => {
+    const { ctx } = scenario({ rivals: [] });
+    for (let i = 0; i < 40; i++) {
+      const result = runToConclusion({ ...ctx, id: `solo_${i}` }, `solo:${i}`, meetDemand);
+      expect(result.negotiation.stage).not.toBe('HIJACKED');
+    }
+  });
+});

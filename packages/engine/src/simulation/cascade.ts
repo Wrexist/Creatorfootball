@@ -10,7 +10,7 @@ import { CASCADE_BALANCE as C } from './balance';
 import {
   clubToken, personToken,
   type ClubToken, type ContentHook, type HookFacts, type PersonToken, type SocialPostKind,
-  type TokenMap,
+  type PlainToken, type TokenMap,
 } from './ports';
 import { sentimentBand } from './templating';
 
@@ -538,13 +538,23 @@ const recordRule: RuleFor<'RECORD_BROKEN'> = (e, ctx) => {
   // unrenderable for a club record, which is the correct outcome — `subject`
   // lets the pack pick a club-shaped line deliberately.
   const holder = p.holderId ? ctx.playerName(p.holderId) : null;
+  // How long the record it replaced had actually stood. Zero means there was no
+  // previous holder at all — a first entry in the book, which is a very
+  // different sentence from a mark that survived a generation.
+  const previous = ctx.state.legacy.records[p.record];
+  const recordAgeSeasons = previous ? Math.max(0, ctx.state.clock.season - previous.season) : 0;
   const tokens: TokenMap = {
     club: clubName, record: p.record, value: p.value,
     ...(holder ? { player: holder } : {}),
     subject: holder ?? clubName,
+    ...(recordAgeSeasons > 0 ? { recordAge: recordAgeSeasons } : {}),
   };
   const facts: HookFacts = {
-    record: p.record, value: p.value, subjectKind: holder ? 'PLAYER' : 'CLUB',
+    record: p.record,
+    value: p.value,
+    subjectKind: holder ? 'PLAYER' : 'CLUB',
+    hadPreviousHolder: previous !== undefined,
+    recordAgeSeasons,
   };
   const entities = [...clubEntity(ctx, p.clubId), ...playerEntity(ctx, p.holderId)];
   return {
@@ -1300,6 +1310,18 @@ const RULES: { [K in DomainEventType]?: RuleFor<K> } = {
   MATCH_SCHEDULED: fixtureRule,
 };
 
+/**
+ * Every domain event type the cascade can turn into content, derived from the
+ * rule table itself.
+ *
+ * Exported so tests can walk the real inventory instead of a hand-maintained
+ * list. A hand-written list of "what we emit" stayed green while two thirds of
+ * the authored library was unreachable, because it only ever proved that
+ * somebody had written a list.
+ */
+export const CASCADE_RULE_TYPES: readonly DomainEventType[] =
+  Object.keys(RULES).sort() as DomainEventType[];
+
 // --- follow-ups ------------------------------------------------------------
 
 /**
@@ -1429,6 +1451,55 @@ function hottestRival(ctx: CascadeCtx, clubId: ClubId): ClubId | null {
     }
   }
   return best;
+}
+
+
+/**
+ * What this save can honestly claim about itself.
+ *
+ * A template that says a record "stood for a generation — it had survived four
+ * managers, two relegations and a rebuild" is *false* in season one of a club
+ * founded this year, and content that is transparently false is worse than no
+ * content: it tells the player none of it means anything. So the save publishes
+ * its real history as facts, and any line that asserts longevity has to declare
+ * a condition against them. An unknown fact never matches, so a template that
+ * keys on history a save does not have is skipped rather than printed.
+ *
+ * Vocabulary published here — usable in any template's `conditions`:
+ *   seasonsPlayed, managersEmployed, relegations, trophiesWon, clubEverPromoted
+ */
+function saveHistoryFacts(state: GameState): HookFacts {
+  const clubId = state.playerClubId;
+  let managerChanges = 0;
+  let relegations = 0;
+  let promotions = 0;
+  for (const e of state.eventLog) {
+    if (e.type === 'MANAGER_SACKED' && e.payload.clubId === clubId) managerChanges++;
+    if (e.type === 'RELEGATED' && e.payload.clubId === clubId) relegations++;
+    if (e.type === 'PROMOTED' && e.payload.clubId === clubId) promotions++;
+  }
+  return {
+    seasonsPlayed: Math.max(0, state.clock.season - 1),
+    managersEmployed: managerChanges + 1,
+    relegations,
+    trophiesWon: state.legacy.trophies.length,
+    clubEverPromoted: promotions > 0,
+  };
+}
+
+/**
+ * Drop an entity token that is really the same entity as another slot in the
+ * same sentence. "{club} and {opponent} cannot be separated" is a fine line and
+ * a terrible one when both slots hold the same club.
+ */
+function withoutDuplicateEntities(tokens: TokenMap): TokenMap {
+  const club = tokens.club;
+  if (!club) return tokens;
+  const out: Record<string, PlainToken | undefined> = { ...tokens };
+  for (const key of ['opponent', 'rival', 'buyer', 'champion'] as const) {
+    if (out[key] === club) delete out[key];
+  }
+  return out as TokenMap;
 }
 
 // --- driver ----------------------------------------------------------------
@@ -1589,7 +1660,23 @@ export function expandCascade(
     (chains[anchor.id] ?? (chains[anchor.id] = [])).push(node);
   }
 
-  return { derivedEvents, nodes, deltas, mediaHooks, socialHooks, chains };
+  // Every hook carries the save's real history, so a template may declare what
+  // it needs to be true before it is allowed to say it.
+  const history = saveHistoryFacts(state);
+  const grounded = (h: ContentHook): ContentHook => ({
+    ...h,
+    facts: { ...history, ...h.facts },
+    tokens: withoutDuplicateEntities(h.tokens),
+  });
+
+  return {
+    derivedEvents,
+    nodes,
+    deltas,
+    mediaHooks: mediaHooks.map(grounded),
+    socialHooks: socialHooks.map(grounded),
+    chains,
+  };
 }
 
 function scaleDelta(d: WorldDelta, factor: number): WorldDelta {

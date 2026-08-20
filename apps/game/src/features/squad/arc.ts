@@ -41,6 +41,13 @@ export interface PlayerArc {
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 
+/**
+ * Engine copy ("minor injury", "hamstring strain") is written lower case for
+ * use mid-sentence. Screens that open a sentence with it need this.
+ */
+export const sentenceCase = (text: string): string =>
+  (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
+
 const when = (season: number, week: number): string =>
   (week > 0 ? `S${season} · wk ${week}` : `Season ${season}`);
 
@@ -198,6 +205,20 @@ export function playerArc(state: GameState, player: Player): PlayerArc {
     });
   }
 
+  const renewal = [...log]
+    .reverse()
+    .find((e) => e.type === 'CONTRACT_SIGNED' && e.payload.playerId === player.id && e.cycle > 0);
+  if (renewal && renewal.type === 'CONTRACT_SIGNED') {
+    entries.push({
+      id: `renewal:${renewal.id}`,
+      cycle: renewal.cycle,
+      when: when(renewal.season, renewal.week),
+      tone: 'volt',
+      title: 'Signed a new deal',
+      detail: `${renewal.payload.years} more ${plural(renewal.payload.years, 'year', 'years')} at ${formatMoney(renewal.payload.wage)} a week.`,
+    });
+  }
+
   /* --- completed seasons ---------------------------------------------- */
 
   for (const season of player.history) {
@@ -227,7 +248,13 @@ export function playerArc(state: GameState, player: Player): PlayerArc {
     tone: 'volt',
     title: `Rated ${player.overall}, ${player.age} years old`,
     detail: player.form.appearances > 0
-      ? `${player.form.appearances} ${plural(player.form.appearances, 'appearance', 'appearances')} this season, ${player.form.goals} ${plural(player.form.goals, 'goal', 'goals')} and ${player.form.assists} ${plural(player.form.assists, 'assist', 'assists')}.`
+      ? [
+        `${player.form.appearances} ${plural(player.form.appearances, 'appearance', 'appearances')} this season`,
+        `${player.form.goals} ${plural(player.form.goals, 'goal', 'goals')} and ${player.form.assists} ${plural(player.form.assists, 'assist', 'assists')}`,
+        ...(player.form.cleanSheets > 0
+          ? [`${player.form.cleanSheets} clean ${plural(player.form.cleanSheets, 'sheet', 'sheets')}`]
+          : []),
+      ].join(', ') + '.'
       : 'He has not played a competitive game for you yet.',
   });
 

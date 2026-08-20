@@ -101,7 +101,7 @@ const FacilityCard = memo(function FacilityCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate text-[16px] font-semibold text-ink">{def.name}</h3>
+            <h3 className="text-[16px] font-semibold text-ink text-pretty">{def.name}</h3>
             {building && <GlassPill tone="info" size="xs" icon={<IconClock />}>Building</GlassPill>}
             {!next && !building && <GlassPill tone="volt" size="xs" icon={<IconCheck />}>Maxed</GlassPill>}
           </div>

@@ -95,9 +95,18 @@ export const BALANCE = {
    */
   GAME_STATE_EASE_MARGIN: 3,
   /** Shot-rate reduction per goal of margin beyond the threshold. 0-0.2. */
-  GAME_STATE_EASE_PER_GOAL: 0.085,
+  GAME_STATE_EASE_PER_GOAL: 0.11,
   /** Cap on that reduction, so a leader never stops playing entirely. 0-0.6. */
-  GAME_STATE_EASE_MAX: 0.34,
+  GAME_STATE_EASE_MAX: 0.42,
+  /**
+   * Goals a side can score before it eases off regardless of the margin.
+   *
+   * The margin term alone does nothing about a 13-13, and a thirty-minute
+   * match in which one side has already scored six is not one in which they
+   * are still chasing a seventh at the same rate. This is the term that keeps
+   * the absurd end of the distribution out of a real fixture list. 4-8.
+   */
+  GAME_STATE_ROUT_GOALS: 5,
   /** Share of turnovers recorded as a tackle rather than an interception. 0.3-0.7. */
   TACKLE_SHARE: 0.45,
   /** Ticks of elevated counter threat after winning the ball high. 2-10. */
@@ -107,11 +116,35 @@ export const BALANCE = {
 
   // ---------------------------------------------------------------- shots ---
   /** Base per-tick shot probability in the final third at parity. 0.2-0.5. */
-  SHOT_BASE: 0.205,
-  /** How much `attackVolume` scales shot frequency. 0.3-1.2. */
-  SHOT_VOLUME_WEIGHT: 0.85,
+  SHOT_BASE: 0.2,
+  /**
+   * How much `attackVolume` scales shot frequency.
+   *
+   * Deliberately below 1: an attacking instruction should buy chances, not
+   * multiply them. At 0.85 a league full of aggressive AI shapes scored a goal
+   * a game more than two neutral sides did, which is how a 6.4-goal engine
+   * produced an 8-goal fixture list. 0.3-1.2.
+   */
+  SHOT_VOLUME_WEIGHT: 0.7,
   /** How much a counter-attack window raises shot frequency. 0-0.5. */
   SHOT_COUNTER_BONUS: 0.22,
+  /**
+   * Hard ceiling on the per-tick shot probability AFTER the swing-window and
+   * openness multipliers are applied.
+   *
+   * `shotChance` clamps itself, but the simulator then multiplies the result by
+   * the window multiplier and by the match's openness draw, and those two
+   * compound: an open match inside a window could reach a shot on every single
+   * final-third tick, which is where 20-goal scorelines came from. A side can
+   * be relentless; it cannot shoot every six seconds. 0.4-0.8.
+   */
+  SHOT_CHANCE_CEILING: 0.64,
+  /**
+   * Hard ceiling on the stacked xG multiplier (openness x momentum x creator
+   * lift x swing window). Same compounding problem at the other end of the
+   * pipeline. 1.2-2.0.
+   */
+  XG_MULTIPLIER_CEILING: 1.78,
   /** Share of final-third possessions that end in a cross rather than a shot. 0.05-0.3. */
   CROSS_RATE: 0.15,
   /** How much a wide shape raises the cross rate (and a narrow one lowers it).
@@ -144,7 +177,7 @@ export const BALANCE = {
    */
   /** Per-tick chance of a ball over the top at a neutral line, outside the
    *  final third. 0.002-0.02. */
-  THROUGH_BALL_BASE: 0.0028,
+  THROUGH_BALL_BASE: 0.0017,
   /** Multiplier inside a counter window — the moment the space is really
    *  there, right after a turnover. 1-8. */
   THROUGH_BALL_COUNTER_MULT: 4.0,
@@ -170,16 +203,25 @@ export const BALANCE = {
   /** Multiplier range from defensive pressure: 1 = free header, this = crowded out. 0.35-0.8. */
   XG_PRESSURE_FLOOR: 0.55,
   /** How much the shooter's finishing (vs. a 55 baseline) scales xG. 0.2-0.9. */
-  XG_FINISHING_WEIGHT: 0.3,
+  XG_FINISHING_WEIGHT: 0.26,
   /** How much assist quality scales xG. 0.1-0.6. */
   XG_ASSIST_WEIGHT: 0.3,
-  /** How much the keeper's quality (vs. a 55 baseline) suppresses xG. 0.1-0.6. */
-  XG_KEEPER_WEIGHT: 0.14,
+  /**
+   * How much the keeper's quality (vs. a 55 baseline) suppresses xG. 0.1-0.6.
+   *
+   * Held close to XG_FINISHING_WEIGHT on purpose. When finishing outweighed
+   * goalkeeping by better than two to one, every quality mismatch raised the
+   * TOTAL rather than just the margin — the favourite's extra conversion was
+   * not offset by the favourite's better keeper — and a league with a
+   * twenty-five point spread scored a goal and a half a game more than two
+   * even sides did.
+   */
+  XG_KEEPER_WEIGHT: 0.24,
   /** Multiplier applied to xG when the shot arrives on the counter. 1.0-1.6. */
   XG_COUNTER_BONUS: 1.18,
   /** Multiplier applied to xG for a shot arriving from a ball in behind: this
    *  is a run at the keeper, not a shot through bodies. 1.2-2.0. */
-  XG_THROUGH_BALL_BONUS: 1.5,
+  XG_THROUGH_BALL_BONUS: 1.7,
   /** How much the aerial-quality gap between the two sides scales a headed
    *  chance. This is where the `aerialThreat` trait and the `aerial` team
    *  aggregate are read. 0-1.2. */
@@ -187,6 +229,17 @@ export const BALANCE = {
   /** How much a narrow defensive block is exposed to a delivery from wide.
    *  This is what makes WIDE a genuine answer to NARROW. 0-1. */
   AERIAL_NARROW_EXPOSURE: 0.45,
+  // ------------------------------------------------------ trait read sites ---
+  /**
+   * How hard a trait modifier lands where the model reads it.
+   *
+   * Traits used to reach the simulation only by sharpening one attribute,
+   * which meant a modifier advertised on the card as +14% arrived at the
+   * scoreboard as about +4% — measurably nothing. Each weight below is a
+   * direct read at the point the trait claims to act, sized so that a squad
+   * carrying the trait is distinguishable from one that does not over a
+   * thousand paired matches.
+   */
   /** How much the shooter's `shotConversion` trait scales xG directly, on top
    *  of the finishing attribute it already sharpens. 0-1.2. */
   TRAIT_SHOT_CONVERSION_WEIGHT: 0.6,
@@ -212,6 +265,8 @@ export const BALANCE = {
    * the whole team, which is exactly the size this should be. 0-0.3.
    */
   COHESION_WEIGHT: 0.13,
+
+  // ------------------------------------------------------------- xG (cont) ---
   /** Multiplier applied to xG for a headed chance from a cross. 0.5-1.0. */
   XG_HEADER_FACTOR: 0.86,
   /** xG assigned to the format's one-on-one penalty run. 0.6-0.85. */
@@ -222,22 +277,31 @@ export const BALANCE = {
   /** xG threshold above which a chance is a "big chance". 0.2-0.45. */
   BIG_CHANCE_XG: 0.3,
   /** Global conversion trim. The single knob for "the league scores too much". 0.6-1.4. */
-  CONVERSION_SCALE: 0.73,
+  CONVERSION_SCALE: 0.725,
   /**
    * How much a team's level varies from match to match — the "which version of
    * them turned up" term. Drawn once per team per match and applied to every
    * aggregate. This is the single biggest source of upsets, and the reason a
    * heavy favourite tops out below 90% instead of running away with every
-   * fixture. 0-0.15.
+   * fixture.
+   *
+   * It carries more of the engine's overdispersion than it used to: a
+   * TEAM-level draw widens the spread of team goals without correlating the two
+   * scorelines, where a MATCH-level draw widens both at once and is therefore
+   * what produces a 14-11. Same variance, far less absurdity. 0-0.2.
    */
-  TEAM_PERFORMANCE_SIGMA: 0.105,
+  TEAM_PERFORMANCE_SIGMA: 0.13,
   /**
    * Per-match openness. Every match draws one shared multiplier on chance
    * creation for BOTH sides. This is what makes goal counts overdispersed
    * relative to Poisson (the dossier's negative-binomial requirement) and what
-   * correlates the two scorelines, so 6-5 and 0-1 both happen. 0-0.3.
+   * correlates the two scorelines, so 6-5 and 0-1 both happen.
+   *
+   * It is applied exactly once, to chance creation. It used to be applied to
+   * the shot rate AND again to xG, which squared it and produced a tail of
+   * twenty-goal fixtures. 0-0.3.
    */
-  MATCH_OPENNESS_SIGMA: 0.15,
+  MATCH_OPENNESS_SIGMA: 0.235,
   /**
    * How much a side's `volatility` widens its own performance draw.
    *
@@ -408,7 +472,7 @@ export const BALANCE = {
    * it can never move win probability by more than about six percentage points,
    * the size of the measured real-world home effect. 0-0.08.
    */
-  SUPPORT_ADVANTAGE_MAX: 0.03,
+  SUPPORT_ADVANTAGE_MAX: 0.024,
   /** Attendance treated as "full house" for the atmosphere term. */
   ATTENDANCE_REFERENCE: 20000,
   /** How much rivalry intensity raises match volatility. 0-0.5. */
@@ -453,9 +517,9 @@ export const BALANCE = {
    * ticks and possession still has to get there. Tuned against the measured
    * window-to-normal goal ratio, whose documented target is 2-4x. 1.2-2.6.
    */
-  SWING_WINDOW_SHOT_MULTIPLIER: 2.05,
+  SWING_WINDOW_SHOT_MULTIPLIER: 2.25,
   /** xG multiplier inside a swing window. 1.0-1.8. */
-  SWING_WINDOW_XG_MULTIPLIER: 1.42,
+  SWING_WINDOW_XG_MULTIPLIER: 1.46,
   /** Vector deltas applied to BOTH teams for the length of any swing window. */
   SWING_WINDOW_MODIFIERS: {
     attackVolume: 0.34,

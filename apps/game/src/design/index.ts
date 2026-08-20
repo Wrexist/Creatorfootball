@@ -65,7 +65,7 @@ export * from './icons';
 
 /* --- glass primitives -------------------------------------------------- */
 export {
-  GLASS_CLASS, GLASS_FLAT_CLASS, glassClass, RADIUS_CLASS, FOCUS_RING, TOUCH_TARGET,
+  GLASS_CLASS, GLASS_FLAT_CLASS, CONTROL_SURFACE, controlSurface, glassClass, RADIUS_CLASS, FOCUS_RING, TOUCH_TARGET,
   type GlassLevel, type RadiusToken,
 } from './glass/glassLevel';
 export { Portal } from './glass/Portal';
@@ -111,7 +111,8 @@ export {
   type BarTone,
 } from './domain/bars';
 export {
-  Counter, MoneyLabel, TrendIndicator, ScoreDisplay, formatMoney, formatCount, setCurrencySymbol,
+  Counter, MoneyLabel, TrendIndicator, ScoreDisplay,
+  formatMoney, formatCount, formatDelta, formatWeeks, setCurrencySymbol,
   type CounterProps, type MoneyLabelProps, type TrendIndicatorProps, type ScoreDisplayProps,
 } from './domain/numbers';
 export {

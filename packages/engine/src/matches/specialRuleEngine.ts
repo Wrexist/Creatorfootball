@@ -39,8 +39,14 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     latestPhase: 1,
     // Teams get *more* careful when a mistake costs two, so this window is
     // tighter and higher-quality rather than louder. The doubling is the effect.
-    modifiers: { defensiveSolidity: 0.1, chanceQuality: 0.16, attackVolume: -0.04, volatility: 0.3 },
+    // A mistake costing two makes both sides careful: this window is tighter
+    // and higher-quality rather than louder, and the doubling is the whole
+    // effect. Without that suppression the window's scoreboard rate ran at
+    // 3.6x normal play and a rule pool containing this card added more than a
+    // goal a game to the league average on its own.
+    modifiers: { defensiveSolidity: 0.32, chanceQuality: 0.3, attackVolume: -0.36, volatility: 0.3 },
     goalMultiplier: 2,
+    windowShotScale: 0.5,
     rarity: 'COMMON',
     accent: '#F5A524',
   }),
@@ -138,6 +144,7 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     latestPhase: 1,
     modifiers: { attackVolume: 0.36, chanceQuality: -0.3, possessionBias: -0.06, volatility: 0.2 },
     goalMultiplier: 2,
+    windowShotScale: 0.82,
     rarity: 'COMMON',
     accent: '#FACC15',
   }),
@@ -328,6 +335,20 @@ export class SpecialRuleEngine {
       multiplier *= rule.goalMultiplier;
     }
     return multiplier;
+  }
+
+  /**
+   * How much the live rules scale the swing window's shot rate for this side.
+   * A rule that doubles the scoreboard has to tighten the football underneath
+   * it, or the two multiply.
+   */
+  windowShotScale(side: Side): number {
+    let scale = 1;
+    for (const l of this.live) {
+      if (l.target !== 'both' && l.target !== side) continue;
+      scale *= l.definition.windowShotScale ?? 1;
+    }
+    return scale;
   }
 
   /** Outfielders each side must take off right now. Only Thin Ranks uses this. */

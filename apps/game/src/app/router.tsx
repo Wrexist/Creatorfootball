@@ -1,6 +1,6 @@
 import { lazy, type ReactNode } from 'react';
 import {
-  Navigate, Outlet, Route, Routes, useLocation, useNavigate, type Location,
+  Navigate, Outlet, Route, Routes, useNavigate, type Location,
 } from 'react-router-dom';
 import { nextFixture } from '@cf/engine';
 import { EmptyState, GlassButton, Screen, Skeleton, SkeletonRegion } from '@/design';

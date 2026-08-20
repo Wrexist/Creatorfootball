@@ -314,7 +314,7 @@ function MarketView({ state }: { state: GameState }): ReactNode {
             label="Search players by name"
             labelHidden
             icon={<IconSearch />}
-            size="sm"
+            size="md"
             nested
             className="min-w-0 flex-1"
           />

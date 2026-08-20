@@ -7,8 +7,8 @@ import {
   type TacticSetup, type TacticVector,
 } from '@cf/engine';
 import {
-  Divider, EmptyState, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet, KeyValueRow,
-  PlayerPortrait, PositionChip, RatingBadge, Screen, SectionHeader, cn,
+  Divider, EmptyState, FitText, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
+  KeyValueRow, NameText, PlayerPortrait, PositionChip, RatingBadge, Screen, SectionHeader, cn,
   IconCheck, IconInjury, IconStar, IconSwap, IconTactics, IconWarning,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
@@ -95,9 +95,18 @@ const Token = memo(function Token({
               />
             )}
           </span>
-          <span className="max-w-full truncate text-[10px] font-semibold leading-tight text-ink">
+          {/* The slot is 60-odd pixels wide and a surname is content, so it is
+              fitted rather than cut: it shrinks to the type floor, then falls
+              back to the first part of a double-barrelled name. */}
+          <FitText
+            size={11}
+            min={9}
+            lines={2}
+            alternates={[player.lastName.split(/[\s-]/)[0] ?? player.lastName]}
+            className="max-w-full text-center font-semibold leading-tight text-ink"
+          >
             {player.lastName}
-          </span>
+          </FitText>
           <span className="tnum text-[10px] font-bold leading-none text-volt">{player.overall}</span>
         </>
       ) : (
@@ -616,7 +625,11 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
             >
               <PlayerPortrait seed={player.portraitSeed} size={34} shape="squircle" colors={colors} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] font-semibold text-ink">{player.displayName}</span>
+                <NameText
+                  name={player.displayName}
+                  short={`${player.firstName.charAt(0)}. ${player.lastName}`}
+                  role="bodyStrong"
+                />
                 <span className="block text-[12px] text-ink-muted">
                   {duty === 'captainId'
                     ? `Leadership ${Math.round(player.mental.leadership)}`
@@ -708,9 +721,9 @@ const SettingCard = memo(function SettingCard({
 
   return (
     <GlassPanel padding="md">
-      <div className="flex items-baseline justify-between gap-3">
+      <div>
         <h3 className="text-[15px] font-semibold text-ink">{setting.label}</h3>
-        <span className="truncate text-[12px] text-ink-dim">{setting.question}</span>
+        <p className="mt-0.5 text-[12px] text-ink-dim text-pretty">{setting.question}</p>
       </div>
 
       <div className="mt-3">

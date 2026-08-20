@@ -74,12 +74,15 @@ export function TabBar({
           // itself inside it, so `--nav-height` still describes the space a
           // screen has to leave clear.
           floating
-            ? 'chrome-float mx-3 mb-1 rounded-[22px]'
+            // Seven destinations at a 44pt target plus gutters do not fit a
+            // 320pt phone, so the island gives its side margins back below
+            // 360pt to buy each destination its full 44px.
+            ? 'chrome-float mb-1 mx-1.5 rounded-[18px] min-[360px]:mx-3 min-[360px]:rounded-[22px]'
             : 'chrome-surface border-t border-white/[0.07]',
         )}
         style={{ height: floating ? 'calc(var(--nav-height) - 6px)' : 'var(--nav-height)' }}
       >
-        <ul className="flex w-full items-stretch px-1">
+        <ul className="flex w-full items-stretch px-0 min-[360px]:px-1">
           {TAB_DESTINATIONS.map((tab) => {
             const active = tab.id === value;
             const badge = badges?.[tab.id] ?? 0;
@@ -89,6 +92,9 @@ export function TabBar({
                 <button
                   type="button"
                   aria-current={active ? 'page' : undefined}
+                  // The label is hidden on the narrowest devices, so the
+                  // accessible name comes from here and is always present.
+                  aria-label={tab.label}
                   onClick={() => {
                     if (active) return;
                     haptics.selection();
@@ -128,9 +134,12 @@ export function TabBar({
                   </span>
                   <span
                     className={cn(
-                      // 11px, the scale floor. Was 10px, one of 35 sub-floor
-                      // sizes in the product.
-                      'relative text-micro leading-none tracking-[0.005em] normal-case',
+                      // 11px, the scale floor - it was 10px, one of 35
+                      // sub-floor sizes in the product. Below 360pt there is no
+                      // room for a label that clears the floor next to a 44px
+                      // target, so the labels drop and the icons carry the bar.
+                      'relative hidden text-micro leading-none tracking-[0.005em] normal-case',
+                      'min-[360px]:block',
                       active ? 'font-bold' : 'font-semibold',
                     )}
                   >

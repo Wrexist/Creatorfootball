@@ -32,7 +32,7 @@ export interface TargetCardProps {
 const HEADLINE_TONE = (story: TargetStory): 'volt' | 'warning' | 'danger' | 'info' | 'neutral' => {
   if (story.headline === 'Priced to move' || story.headline === 'Free agent — no fee') return 'volt';
   if (story.headline === 'Priced to stay') return 'danger';
-  if (story.headline.endsWith('circling')) return 'warning';
+  if (story.headline.endsWith('circling') || story.headline === 'One rival watching') return 'warning';
   if (story.headline === 'Deal running down') return 'info';
   return 'neutral';
 };
@@ -69,7 +69,7 @@ export const TargetCard = memo(function TargetCard({
             role="section"
             lines={2}
           />
-          <div className="mt-1 flex items-center gap-1.5">
+          <div className="mt-1.5 flex items-center gap-2">
             <PositionChip position={player.position} size="xs" />
             <Text role="micro" as="span">{player.age}</Text>
             {club && <ClubBadge visual={club.visual} size={14} flat label={club.name} />}
@@ -84,8 +84,11 @@ export const TargetCard = memo(function TargetCard({
         </GlassPill>
       </div>
 
-      <Text role="caption" as="p" className="mt-2 text-pretty" clamp={3}>
-        {story.suitors > 0 ? story.suitorLine : story.priceLine}
+      {/* A short, whole sentence rather than three clamped lines of a long
+          one: a card that ends in an ellipsis is a card that did not decide
+          what it wanted to say. */}
+      <Text role="caption" as="p" className="mt-2 text-pretty">
+        {story.cardLine}
       </Text>
 
       <div className="mt-auto flex items-end justify-between gap-2 pt-3">

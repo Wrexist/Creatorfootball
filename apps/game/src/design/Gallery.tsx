@@ -18,13 +18,14 @@ import {
 } from './index';
 import {
   DataCell, DataGrid, FitText, HeroSurface, ListRow, MediaCard, NameText, Numeric,
-  ScorePanel, StatBlock, Text, type TypeRole,
+  ScorePanel, StatBlock, Text, FitBox, type TypeRole,
 } from './index';
 import {
   GALLERY_CLUBS, GALLERY_CREATORS, GALLERY_EVENTS, GALLERY_IDENTITIES, GALLERY_PLAYERS,
   GALLERY_POSTS, GALLERY_STANDINGS, GALLERY_STORIES,
 } from './Gallery.fixtures';
 import { IconBell, IconChevronRight, IconPlus, IconSearch, IconStar, IconTrophy } from './icons';
+import { formatCount, formatDelta, formatMoney, formatWeeks } from './index';
 
 /**
  * The component gallery.
@@ -65,7 +66,7 @@ const SECTIONS = [
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: ReactNode }): ReactNode {
   return (
-    <section id={id} className="scroll-mt-[140px] border-t border-white/[0.07] pt-8">
+    <section id={id} className="scroll-mt-[240px] border-t border-white/[0.07] pt-8">
       <h2 className="font-display text-title font-bold tracking-[-0.03em] text-ink">{title}</h2>
       {note && <p className="mt-1 max-w-[62ch] text-caption leading-relaxed text-ink-muted">{note}</p>}
       <div className="mt-5 flex flex-col gap-6">{children}</div>
@@ -144,7 +145,7 @@ function OverlayDemos(): ReactNode {
         <GlassButton variant="danger" onClick={() => setConfirm(true)}>Destructive confirm</GlassButton>
       </Row>
       <Row label="Toasts">
-        <GlassButton size="sm" onClick={() => toast.show({ title: 'Training complete', description: 'Three players improved this cycle.' })}>Neutral</GlassButton>
+        <GlassButton size="sm" onClick={() => toast.show({ title: 'Training complete', description: 'Three players improved this week.' })}>Neutral</GlassButton>
         <GlassButton size="sm" onClick={() => toast.success('Transfer complete', 'K. Vantor has signed a 3-year deal.')}>Success</GlassButton>
         <GlassButton size="sm" onClick={() => toast.warning('Wage budget tight', 'You are within 4% of the cap.')}>Warning</GlassButton>
         <GlassButton size="sm" onClick={() => toast.error('Negotiation collapsed', 'Northgate hijacked the deal.')}>Error (persistent)</GlassButton>
@@ -297,7 +298,7 @@ function ScreenDemo(): ReactNode {
 
   return (
     <div className="flex flex-wrap gap-6">
-      <div className="relative h-[740px] w-[390px] shrink-0 overflow-hidden rounded-[38px] border border-white/12 bg-base shadow-lift">
+      <div className="relative h-[740px] w-full max-w-[390px] shrink-0 overflow-hidden rounded-[38px] border border-white/12 bg-base shadow-lift">
         <Screen
           title="Club"
           subtitle="Ashvale Phoenix · 4th"
@@ -339,6 +340,30 @@ function ScreenDemo(): ReactNode {
           </div>
         </Screen>
         <TabBar value={tab} onChange={setTab} className="absolute" badges={{ social: 5 }} />
+      </div>
+
+      <div className="flex w-full max-w-[390px] shrink-0 flex-col gap-4">
+        <p className="text-label text-ink-dim">
+          Tab bar — floating island (default) and anchored, over live content
+        </p>
+        {(['floating', 'anchored'] as const).map((appearance) => (
+          <div
+            key={appearance}
+            className="relative h-[190px] w-full overflow-hidden rounded-2xl border border-white/12 bg-base"
+          >
+            <div className="scroll-y absolute inset-0 p-4 pb-24">
+              <p className="text-body text-ink">
+                Content scrolls behind the chrome. The scrim is what keeps this
+                paragraph from competing with the navigation labels: it stays a
+                suggestion of movement rather than a second column of words.
+              </p>
+              <p className="mt-2 text-body text-ink">
+                Ashvale Phoenix 2 - 1 Saltpine Harriers Athletic, 78 minutes.
+              </p>
+            </div>
+            <TabBar value={tab} onChange={setTab} appearance={appearance} className="absolute" badges={{ social: 5 }} />
+          </div>
+        ))}
       </div>
 
       <div className="flex h-[560px] min-w-[420px] flex-1 overflow-hidden rounded-2xl border border-white/12 bg-base">
@@ -595,11 +620,26 @@ function GalleryBody(): ReactNode {
                 </GlassPanel>
               </div>
             </Row>
+            <Row label="FitBox — for values that are not a plain string">
+              <div className="grid w-full max-w-lg grid-cols-2 gap-3">
+                <StatCard label="Transfer budget" value={8_400_000} prefix="£" delta={-1_200_000} />
+                <StatCard label="Wage bill, uncompacted" value={1_284_000} prefix="£" />
+                <StatCard label="Fan sentiment" value={71} suffix="%" delta={4.28} history={[52, 58, 61, 59, 66, 71]} />
+                <StatCard label="Attendance" value={24_500} delta={-8.157399521093865} />
+              </div>
+            </Row>
             <Row label="FitText on free text — shrinks to the floor, then wraps">
               <div className="w-[190px] rounded-md border border-dashed border-white/15 p-3">
-                <FitText size={22} min={13} lines={2} className="font-display font-bold tracking-[-0.03em] text-ink">
+                <FitText role="title" min={13} lines={2} className="font-display font-bold tracking-[-0.03em] text-ink">
                   Kingsway Royals Association Football Club
                 </FitText>
+              </div>
+              <div className="w-[150px] rounded-md border border-dashed border-white/15 p-3">
+                {/* FitBox measures whatever ends up inside it, so it works on a
+                    live Counter as well as on a string. */}
+                <FitBox role="giant" className="num-broadcast num-tight font-extrabold text-ink">
+                  <Counter value={8_400_000} prefix="£" />
+                </FitBox>
               </div>
             </Row>
           </Section>
@@ -1058,6 +1098,34 @@ function GalleryBody(): ReactNode {
                   <AttributeBar label="Vision" value={70} range={[54, 86]} />
                 </div>
               </div>
+            </Row>
+            <Row label="Formatters — nothing raw ever reaches a screen">
+              <GlassPanel level={1} className="w-full max-w-lg">
+                <div className="flex flex-col divide-y divide-white/[0.06]">
+                  {([
+                    ['formatDelta(-8.157399521093865)', formatDelta(-8.157399521093865)],
+                    ['formatDelta(4)', formatDelta(4)],
+                    ['formatDelta(-1200)', formatDelta(-1200)],
+                    ['formatDelta(-0.000001)', formatDelta(-0.000001)],
+                    ['formatWeeks(3)', formatWeeks(3)],
+                    ['formatWeeks(1, "long")', formatWeeks(1, 'long')],
+                    ['formatMoney(8400000)', formatMoney(8_400_000)],
+                    ['formatCount(96000)', formatCount(96_000)],
+                  ] as const).map(([call, out]) => (
+                    <div key={call} className="flex items-center justify-between gap-3 py-2">
+                      <code className="min-w-0 font-mono text-micro text-ink-dim">{call}</code>
+                      <span className="num-broadcast shrink-0 text-section text-ink">{out}</span>
+                    </div>
+                  ))}
+                </div>
+              </GlassPanel>
+            </Row>
+            <Row label="Trend indicators — the default path rounds">
+              <TrendIndicator delta={-8.157399521093865} />
+              <TrendIndicator delta={4} />
+              <TrendIndicator delta={-1200} invert />
+              <TrendIndicator delta={0} />
+              <TrendIndicator delta={12.5} size="md" />
             </Row>
             <Row label="Momentum">
               <div className="flex w-full max-w-md flex-col gap-3">

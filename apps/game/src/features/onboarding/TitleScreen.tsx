@@ -8,6 +8,7 @@ import {
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { BrandMark } from './BrandMark';
+import { StadiumNight } from './StadiumNight';
 
 /**
  * The title screen.
@@ -38,7 +39,7 @@ export function TitleScreen(): ReactNode {
   const canContinue = phase === 'READY' && meta !== null;
 
   useEffect(() => {
-    headingRef.current?.focus();
+    headingRef.current?.focus({ preventScroll: true });
   }, []);
 
   const startNewCareer = async (): Promise<void> => {
@@ -60,16 +61,10 @@ export function TitleScreen(): ReactNode {
 
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-base">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(86% 52% at 50% 8%, rgba(200,255,46,0.10), transparent 68%)' }}
-      />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
-        style={{ background: 'linear-gradient(to top, rgba(5,6,7,0.9), transparent)' }}
-      />
+      {/* Beat 0:00-0:25. The hero is the screen, not a band across the top of
+          it — the copy and the CTA sit *on* the ground rather than above and
+          below a hole where a picture should be. */}
+      <StadiumNight />
 
       <div
         className="scroll-y relative flex flex-1 flex-col justify-between px-6 pb-[calc(var(--safe-bottom)+28px)] pt-[calc(var(--safe-top)+40px)]"

@@ -217,7 +217,6 @@ function StoreView({ state }: { state: GameState }): ReactNode {
         value={category}
         onChange={setCategory}
         aria-label="Filter the catalogue"
-        size="sm"
         block
       />
 

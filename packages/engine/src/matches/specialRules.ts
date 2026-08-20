@@ -32,6 +32,16 @@ export interface SpecialRuleDefinition {
   readonly opponentModifiers?: Readonly<Record<string, number>>;
   /** Goals scored while active are multiplied by this. */
   readonly goalMultiplier?: number;
+  /**
+   * Scales the swing window's shot-rate multiplier while this rule is live.
+   *
+   * A rule that multiplies the SCOREBOARD has to divide the football, or the
+   * window runs at the normal swing rate and then doubles it: a fixture list
+   * whose pool contained Double Reward scored a goal and a half a game more
+   * than one that did not. Below 1 the window is tighter and every chance
+   * carries more; above 1 it is looser. Defaults to 1.
+   */
+  readonly windowShotScale?: number;
   readonly rarity: 'COMMON' | 'RARE' | 'EPIC';
   readonly accent: string;
 }

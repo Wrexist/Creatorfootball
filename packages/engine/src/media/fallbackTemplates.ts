@@ -51,7 +51,11 @@ export const FALLBACK_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   { id: 'fm_creator_1', trigger: 'CREATOR_JOINED', headline: '{creator} joins {club} as {role}', body: 'A partnership that will be measured in reach as much as results.', outlets: ['ClipCity'], importance: 3, sentiment: 0.5, weight: 10 },
 
   // --- history ---
-  { id: 'fm_rec_1', trigger: 'RECORD_BROKEN', headline: '{record}: {player} into the record books', body: 'The number is {value}. It has stood a long time and it stands no longer.', outlets: ['The Touchline', 'Bootroom Digest'], importance: 5, sentiment: 0.85, weight: 10 },
+  // Built-in cover for a record with nothing behind it yet. Once the book has a
+  // previous holder the authored pack has four better lines for the moment, so
+  // this one stands down rather than carrying every record story in the season.
+  { id: 'fm_rec_1', trigger: 'RECORD_BROKEN', headline: '{record}: {subject} into the record books', body: 'The number is {value}, and the name against it changed today.', outlets: ['The Touchline', 'Bootroom Digest'], importance: 5, sentiment: 0.85, weight: 10, conditions: { hadPreviousHolder: false } },
+  { id: 'fm_rec_3', trigger: 'RECORD_BROKEN', headline: '{record} now reads {value}', body: 'The previous mark has gone. {club} will not mind how it looked.', outlets: ['Bootroom Digest', 'Pitchside Weekly'], importance: 4, sentiment: 0.8, weight: 10, conditions: { hadPreviousHolder: true } },
   { id: 'fm_rec_2', trigger: 'RECORD_REACTION', headline: 'What {player} did still does not feel real', body: 'A week on from {record}, {club} are still being asked about it.', outlets: ['Bootroom Digest'], importance: 3, sentiment: 0.6, weight: 10 },
   { id: 'fm_trophy_1', trigger: 'TROPHY_WON', headline: '{club} win the {competition}', body: 'Champions. Every argument about this squad ends here.', outlets: ['The Touchline', 'Matchday Wire'], importance: 5, sentiment: 0.95, weight: 10 },
   { id: 'fm_trophy_2', trigger: 'TROPHY_AFTERGLOW', headline: 'How {club} won the {competition}', body: 'The long version, told by the people who were in the room.', outlets: ['Counter Press'], importance: 3, sentiment: 0.8, weight: 10 },

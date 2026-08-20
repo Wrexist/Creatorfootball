@@ -58,7 +58,6 @@ function StandingsView({ state }: { state: GameState }): ReactNode {
           value={mode}
           onChange={setMode}
           aria-label="Table ordering"
-          size="sm"
           block
           nested
         />

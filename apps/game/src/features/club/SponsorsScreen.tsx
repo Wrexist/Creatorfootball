@@ -41,7 +41,7 @@ const DealCard = memo(function DealCard({ deal }: { deal: SponsorDeal }): ReactN
     <GlassPanel padding="md">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[16px] font-semibold text-ink">{deal.name}</h3>
+          <h3 className="text-[16px] font-semibold text-ink text-pretty">{deal.name}</h3>
           <p className="mt-0.5 text-[12px] uppercase tracking-[0.12em] text-ink-dim">{SLOT_LABELS[deal.slot]}</p>
         </div>
         <div className="shrink-0 text-right">
@@ -103,7 +103,7 @@ const OfferCard = memo(function OfferCard({
     <GlassPanel padding="md" accent={offer.signingFee > 0 ? 'volt' : 'none'}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[16px] font-semibold text-ink">{offer.name}</h3>
+          <h3 className="text-[16px] font-semibold text-ink text-pretty">{offer.name}</h3>
           <p className="mt-0.5 text-[12px] uppercase tracking-[0.12em] text-ink-dim">{SLOT_LABELS[offer.slot]}</p>
         </div>
         <div className="shrink-0 text-right">

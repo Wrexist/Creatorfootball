@@ -5,7 +5,7 @@ import {
   type GameState, type LegacyState,
 } from '@cf/engine';
 import {
-  ClubBadge, EmptyState, GlareHover, GlassButton, GlassPanel, GlassPill, KeyValueRow,
+  ClubBadge, EmptyState, GlareHover, GlassButton, GlassPanel, GlassPill, KeyValueRow, NameText,
   PlayerPortrait, Screen, SectionHeader, ShinyText, SpotlightCard, StatCard, StatGrid, TrophyMoment,
   cn, IconStar, IconTrophy,
 } from '@/design';
@@ -237,8 +237,8 @@ function TrophyRoomBody({ state }: { state: GameState }): ReactNode {
                   colors={portraitColors}
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold text-ink">{legend.name}</span>
-                  <span className="block truncate text-[12px] text-ink-muted">{legend.reason}</span>
+                  <NameText name={legend.name} role="bodyStrong" />
+                  <span className="line-clamp-2 block text-[12px] text-ink-muted text-pretty">{legend.reason}</span>
                 </span>
                 <GlassPill size="xs" tone="special">S{legend.season}</GlassPill>
               </button>

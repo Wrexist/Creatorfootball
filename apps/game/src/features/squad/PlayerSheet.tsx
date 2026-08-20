@@ -7,11 +7,11 @@ import {
 } from '@cf/engine';
 import {
   AttributeBar, DataCell, DataGrid, Divider, GlassButton, GlassPanel, GlassPill, GlassSheet,
-  NameText, PlayerPortrait, PositionChip, ProgressBar, RatingBadge, Sparkline, Text, Timeline,
+  PlayerPortrait, PositionChip, ProgressBar, RatingBadge, Sparkline, Text, Timeline,
   TraitChip, formatMoney,
   IconBall, IconInjury, IconScout, IconStar,
 } from '@/design';
-import { playerArc } from './arc';
+import { playerArc, sentenceCase } from './arc';
 
 /**
  * The player sheet.
@@ -97,9 +97,10 @@ function SheetBody({ state, player }: { state: GameState; player: Player }): Rea
       {/* --- identity --------------------------------------------------- */}
       <div className="flex items-center gap-4">
         <PlayerPortrait seed={player.portraitSeed} size={84} shape="squircle" kit colors={colours} />
+        {/* The sheet header above already names him; repeating it here would
+            push everything that is actually new below the fold. */}
         <div className="min-w-0 flex-1">
-          <NameText name={player.displayName} role="title" lines={2} />
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <PositionChip position={player.position} size="sm" />
             {player.secondaryPositions.map((position) => (
               <PositionChip key={position} position={position} size="xs" />
@@ -128,7 +129,7 @@ function SheetBody({ state, player }: { state: GameState; player: Player }): Rea
           <div className="flex items-center gap-2.5">
             <IconInjury size={18} className="shrink-0 text-danger" />
             <Text role="caption" as="p" className="text-ink text-pretty">
-              <strong className="font-semibold">{player.injury.description}.</strong>{' '}
+              <strong className="font-semibold">{sentenceCase(player.injury.description)}.</strong>{' '}
               He is unavailable for about {player.injury.weeksRemaining} more weeks.
             </Text>
           </div>

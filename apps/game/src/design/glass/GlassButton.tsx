@@ -4,7 +4,7 @@ import type { HTMLMotionProps } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
-import { FOCUS_RING } from './glassLevel';
+import { controlSurface, FOCUS_RING } from './glassLevel';
 
 export type GlassButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type GlassButtonSize = 'sm' | 'md' | 'lg';
@@ -42,7 +42,7 @@ const VARIANT: Record<GlassButtonVariant, string> = {
     'hover:bg-volt-bright active:bg-volt-deep',
   ),
   secondary: cn(
-    'glass-2 glass-sheen text-ink font-semibold',
+    cn(controlSurface(2), 'glass-sheen text-ink font-semibold'),
     'hover:bg-white/10',
   ),
   ghost: cn(

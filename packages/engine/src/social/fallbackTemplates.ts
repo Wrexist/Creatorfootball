@@ -101,7 +101,8 @@ export const FALLBACK_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   // --- CLUB / FANS / MANAGER ---
   t('fs_unrest_fan', 'FAN_UNREST', 'FAN', '{reason}. that is the third time this season. the mood around this club is rotten', -0.8),
   t('fs_unrest_cr', 'FAN_UNREST', 'CREATOR', 'the atmosphere at {club} has turned. that is much harder to fix than form.', -0.6, 10, { tone: 'DRAMATIC' }),
-  t('fs_buzz_fan', 'FAN_BUZZ', 'FAN', 'first time in years the place has felt like this. {reason}. buzzing', 0.8),
+  t('fs_buzz_fan', 'FAN_BUZZ', 'FAN', 'first time in years the place has felt like this. {reason}. buzzing', 0.8, 10, { seasonsPlayed_gte: 2 }),
+  t('fs_buzz_fan_new', 'FAN_BUZZ', 'FAN', 'the place has not felt like this all season. {reason}. buzzing', 0.8),
   t('fs_buzz_cr', 'FAN_BUZZ', 'CREATOR', 'whatever {club} are doing right now, it is working, and the crowd can feel it.', 0.7, 10, { tone: 'HYPE' }),
   t('fs_riv_fan', 'RIVALRY_HEAT', 'FAN', 'this fixture is not a game any more. {reason}.', -0.4),
   t('fs_riv_rival', 'RIVALRY_HEAT', 'RIVAL', 'we will see you in the return fixture, {club}. bring a bigger squad', -0.7),
@@ -121,8 +122,9 @@ export const FALLBACK_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   // --- HISTORY ---
   t('fs_rec_club', 'RECORD_BROKEN', 'CLUB', '{record}. {value}. {player} is in the history books.', 0.9),
   t('fs_rec_fan', 'RECORD_BROKEN', 'FAN', 'we watched {player} break {record} in person. tell your kids', 0.95),
+  t('fs_rec_club_only', 'RECORD_BROKEN', 'CLUB', '{record}. {value}. A new mark for {club}.', 0.9),
   t('fs_rec_cr', 'RECORD_BROKEN', 'CREATOR', '{record} at {value}. Records like that outlive everyone who argued about them.', 0.8, 10, { tone: 'DRAMATIC' }),
-  t('fs_rec_media', 'RECORD_BROKEN', 'MEDIA', 'RECORD | {player} sets a new mark: {record} ({value}).', 0.7),
+  t('fs_rec_media', 'RECORD_BROKEN', 'MEDIA', 'RECORD | {subject} sets a new mark: {record} ({value}).', 0.7),
   t('fs_recreact_fan', 'RECORD_REACTION', 'FAN', 'still thinking about {player} and {record}. what a time to support this club', 0.8),
   t('fs_trophy_club', 'TROPHY_WON', 'CLUB', 'CHAMPIONS. {club} win the {competition}.', 1),
   t('fs_trophy_fan', 'TROPHY_WON', 'FAN', 'WE WON THE {competition}. I AM CRYING IN A CAR PARK', 1),

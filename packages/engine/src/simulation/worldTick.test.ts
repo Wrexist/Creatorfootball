@@ -6,7 +6,7 @@ import type { GameState } from '../game/state';
 import type { Ledger } from '../economy/ledger';
 import { WORLD_BALANCE } from './balance';
 import { buildTestWorld, makeTestEvent } from './fixtures';
-import { tickWorld, type WorldTickContext } from './worldTick';
+import { squadCohesion, squadMoraleSpread, tickWorld, type WorldTickContext } from './worldTick';
 
 const ctxFor = (ledger: Ledger, over: Partial<WorldTickContext> = {}): WorldTickContext => ({
   at: 1_700_000_000_000,
@@ -193,5 +193,99 @@ describe('the tick wires the cascade into state', () => {
     expect(result.stories).toEqual([]);
     expect(result.posts).toEqual([]);
     expect(result.emergent).toEqual([]);
+  });
+});
+
+/**
+ * `chemistry`, `teammateMorale` and `moraleResilience` were three trait
+ * modifier keys read by no code anywhere in the repo, while being labelled on
+ * the player profile screen — the product advertising effects that did not
+ * exist. These are their consumers.
+ */
+describe('the dressing room reads the world trait keys', () => {
+  const withTraits = (state: GameState, traitId: string | null): GameState => {
+    const club = state.clubs[state.playerClubId];
+    if (!club) throw new Error('fixture club missing');
+    const players = { ...state.players };
+    for (const player of Object.values(state.players)) {
+      players[player.id] = {
+        ...player,
+        traitIds: player.clubId === club.id && traitId ? [traitId] : [],
+      };
+    }
+    return { ...state, players };
+  };
+
+  const meanMorale = (state: GameState): number => {
+    const club = state.clubs[state.playerClubId];
+    const squad = (club?.squad ?? []).map((id) => state.players[id]).filter((p) => !!p);
+    return squad.reduce((total, p) => total + (p?.mental.morale ?? 0), 0) / Math.max(1, squad.length);
+  };
+
+  const drift = (traitId: string | null, cycles: number, startMorale?: number): GameState => {
+    const world = buildTestWorld();
+    let state = withTraits(world.state, traitId);
+    if (startMorale !== undefined) {
+      const club = state.clubs[state.playerClubId];
+      const players = { ...state.players };
+      for (const id of club?.squad ?? []) {
+        const player = players[id];
+        if (player) players[id] = { ...player, mental: { ...player.mental, morale: startMorale } };
+      }
+      state = {
+        ...state,
+        players,
+        clubs: {
+          ...state.clubs,
+          [state.playerClubId]: {
+            ...club!,
+            seasonRecord: { played: 10, won: 0, drawn: 0, lost: 10, goalsFor: 3, goalsAgainst: 28 },
+          },
+        },
+      };
+    }
+    for (let i = 0; i < cycles; i++) {
+      state = tickWorld(state, new Rng(`drift:${i}`), ctxFor(world.ledger, { skipContent: true })).state;
+      state = { ...state, clock: { ...state.clock, cycle: state.clock.cycle + 1 } };
+    }
+    return state;
+  };
+
+  it('chemistry moves squad cohesion in both directions', () => {
+    const cohesive = drift('team_player', 1);
+    const fractious = drift('selfish', 1);
+    const neutral = drift(null, 1);
+    const club = (s: GameState) => s.clubs[s.playerClubId]!;
+    expect(squadCohesion(club(cohesive), cohesive.players))
+      .toBeGreaterThan(squadCohesion(club(neutral), neutral.players));
+    expect(squadCohesion(club(fractious), fractious.players))
+      .toBeLessThan(squadCohesion(club(neutral), neutral.players));
+  });
+
+  it('cohesion pulls form, which the match model reads', () => {
+    const cohesive = drift('team_player', 8);
+    const fractious = drift('selfish', 8);
+    const meanForm = (s: GameState): number => {
+      const squad = s.clubs[s.playerClubId]!.squad.map((id) => s.players[id]);
+      return squad.reduce((t, p) => t + (p?.form.rating ?? 0), 0) / squad.length;
+    };
+    expect(meanForm(cohesive) - meanForm(fractious)).toBeGreaterThan(0.15);
+  });
+
+  it('teammateMorale raises the level the whole squad settles at', () => {
+    const led = drift('leader', 10);
+    const neutral = drift(null, 10);
+    expect(squadMoraleSpread(led.clubs[led.playerClubId]!, led.players)).toBeGreaterThan(0);
+    expect(meanMorale(led) - meanMorale(neutral)).toBeGreaterThan(5);
+  });
+
+  it('moraleResilience decides how far a bad run drags a player down', () => {
+    const fragile = meanMorale(drift('glass_confidence', 8, 90));
+    const neutral = meanMorale(drift(null, 8, 90));
+    const resilient = meanMorale(drift('cult_hero', 8, 90));
+    expect(fragile).toBeLessThan(neutral);
+    expect(resilient).toBeGreaterThan(neutral);
+    // Large enough that a player could notice it, not a rounding error.
+    expect(resilient - fragile).toBeGreaterThan(8);
   });
 });

@@ -1,7 +1,7 @@
 import type { ClubId, ContractId, CreatorId, EventId, RivalryId, SponsorId, TransferId } from '../core/brand';
 import type { AnyDomainEvent, DomainEventPayloads, DomainEventType, EntityRef, EventImportance } from '../core/events';
 import type {
-  GameState, Negotiation, NewsStory, SocialPost, SponsorState, TransferListing,
+  GameState, Negotiation, NewsStory, SocialPost, TransferListing,
 } from '../game/state';
 import type { Player } from '../players/player';
 import type { Club } from '../clubs/club';

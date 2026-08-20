@@ -193,7 +193,7 @@ export const WORLD_BALANCE = {
     /** Morale points per unit of cohesion above neutral. */
     moralePerCohesion: 40,
     /** Morale points contributed per unit of summed squad `teammateMorale`. */
-    moralePerTeammatePoint: 7,
+    moralePerTeammatePoint: 5,
     /** Share of the gap to the resting point closed each cycle. */
     moraleDriftRate: 0.22,
     /** Form rating (-1..1) a squad drifts toward per unit of cohesion above neutral. */
@@ -261,4 +261,55 @@ export const EMERGENT_BALANCE = {
   titleRaceProgress: 0.6,
   /** Cycles before the same emergent story may be told about the same subject again. */
   cooldownCycles: 8,
+} as const;
+
+/**
+ * How AI clubs react to how their season is going.
+ *
+ * Twelve seasons produced two champions and a player's club that finished
+ * twelfth ten times, because nothing in `aiClub.ts` responded to failure at
+ * all. These are the numbers that decide whether a league can change hands.
+ */
+export const AI_BALANCE = {
+  /** Points-per-available share assumed before a season has any matches in it. */
+  neutralPointsPace: 0.4,
+  /**
+   * How heavily failing your own supporters' expectations counts, against
+   * failing the expectations your reputation sets. This is the term that lets a
+   * small club feel pressure at all — the old formula gave a low-reputation
+   * club sitting last a desperation of exactly zero, forever.
+   */
+  expectationWeight: 1.1,
+
+  /** Desperation at or above which an ageing squad is torn up rather than patched. */
+  rebuildDesperation: 0.35,
+  /** Mean squad age at or above which the answer is a rebuild, not a signing. */
+  rebuildAge: 27.5,
+  rebuildSellPressure: 0.3,
+  rebuildYouthRate: 0.35,
+  rebuildPotentialWeight: 0.4,
+  rebuildOverallWeight: 0.3,
+  /** Years the target age band shifts down by while rebuilding. */
+  rebuildAgeShift: 4,
+
+  /** Desperation at or above which a club will abandon its own tactical identity. */
+  changeApproachDesperation: 0.45,
+  /** Chance per cycle that it actually does, once it has reached that point. */
+  changeApproachChance: 0.25,
+
+  /** Normalised league position at or below which a club counts as cruising. */
+  complacencyPosition: 0.2,
+  /** Reputation at or above which cruising turns into complacency. */
+  complacencyReputation: 70,
+  /**
+   * Desperation below which a club at the top counts as comfortable. Not zero:
+   * a big club's supporters always want more, so a strict reading of
+   * "meeting expectations" would mean no champion is ever complacent and the
+   * lever that lets a title change hands would never fire.
+   */
+  complacencyDesperation: 0.2,
+  /** What complacency does to spending. A champion that stops investing is how
+   *  a title changes hands; without this the strongest club compounds forever. */
+  complacencyAggression: 0.6,
+  complacencyReinvest: 0.55,
 } as const;

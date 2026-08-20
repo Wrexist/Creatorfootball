@@ -55,6 +55,8 @@ export interface TargetStory {
   readonly scouted: boolean;
   /** The single line worth leading a card with. */
   readonly headline: string;
+  /** A short second line for a rail card, sized to fit without clamping. */
+  readonly cardLine: string;
 }
 
 const money = (value: number): string => {
@@ -110,13 +112,31 @@ export function buildTargetStory(
     ? `Rated ${player.overall}, with a ceiling of ${player.potential}.`
     : `Our scouts put him around ${estimate}, ceiling somewhere between ${potentialLow} and ${potentialHigh}. Send a scout to narrow it.`;
 
+  // Ordered by how much the signal actually changes what you would do. Price
+  // band comes last: with a role premium and a big-club tax on top, most quotes
+  // sit above market value, so leading with it made every card say the same
+  // thing — which is the sameness this screen was rebuilt to remove.
+  const runningDown = contract !== undefined && contract.weeksRemaining <= 8;
   const headline = sellingClub === null
     ? 'Free agent — no fee'
-    : ratio >= 1.35 ? 'Priced to stay'
-      : ratio <= 0.9 ? 'Priced to move'
-        : suitors >= 2 ? `${suitors} clubs circling`
-          : contract && contract.weeksRemaining <= 8 ? 'Deal running down'
-            : 'Available at his value';
+    : runningDown ? 'Deal running down'
+      : suitors >= 2 ? `${suitors} clubs circling`
+        : ratio <= 0.9 ? 'Priced to move'
+          : suitors === 1 ? 'One rival watching'
+            : ratio >= 1.35 ? 'Priced to stay'
+              : 'Available at his value';
+
+  const cardLine = sellingClub === null
+    ? `No fee. He wants ${money(wage)} a week.`
+    : runningDown
+      ? `${contract.weeksRemaining} weeks left on his deal — ${money(asking)} now.`
+      : suitors >= 2
+        ? `${suitors} clubs watching. Asking ${money(asking)}.`
+        : ratio <= 0.9
+          ? `${money(asking)} for a player valued at ${money(value)}.`
+          : ratio >= 1.35
+            ? `${money(asking)} against a ${money(value)} valuation.`
+            : `Asking ${money(asking)}, about what he is worth.`;
 
   return {
     asking,
@@ -134,6 +154,7 @@ export function buildTargetStory(
     abilityLine,
     scouted,
     headline,
+    cardLine,
   };
 }
 

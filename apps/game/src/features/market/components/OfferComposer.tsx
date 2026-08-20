@@ -159,7 +159,6 @@ export function OfferComposer({
                   value={terms.role as SquadRole}
                   onChange={(role) => patch({ role })}
                   aria-label="Squad role"
-                  size="sm"
                   block
                   nested
                 />

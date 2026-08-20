@@ -13,6 +13,7 @@ import { tickWorld } from '../simulation/worldTick';
 import { runFinancialCycle } from '../economy/cycle';
 import { refreshMarket } from '../transfers/market';
 import { generateSponsorOffers, signSponsorOffer } from '../sponsors/sponsors';
+import { advanceScouting } from '../transfers/scouting';
 import { facilityEffect } from '../facilities/facilities';
 import { renewContract } from '../contracts/wages';
 import { defaultValuationContext, wageDemand } from '../transfers/valuation';
@@ -20,7 +21,7 @@ import { asId } from '../core/brand';
 import type { ContractId } from '../core/brand';
 import { emptyBonuses } from '../contracts/contract';
 import { updateRivalry, rivalryFor } from '../rivalries/rivalries';
-import { rollObjectives, updateObjectiveProgress, applyObjectiveUpdates } from '../progression/objectives';
+import { rollObjectives } from '../progression/objectives';
 import { updateLegacy } from '../progression/legacy';
 import { ContentRegistry, BASE_PACK, type CreatorSeasonConfigDef } from '../content';
 import { applyMatchResult } from './applyResult';
@@ -284,6 +285,31 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   next = world.state;
   allEvents.push(...world.events);
 
+  // --- 5b. scouts report back ------------------------------------------
+  // Nothing called advanceScouting, so an assignment the player paid for never
+  // progressed and a report was never delivered. Progressive disclosure — the
+  // whole point of scouting, and the thing that makes it a competitive edge —
+  // simply did not happen in a real save.
+  const scoutOutcome = advanceScouting(next, rng.fork('scouting'), {
+    clubId: playerClubId,
+    cycle: next.clock.cycle,
+    registry,
+    managerScouting: next.managers[next.playerManagerId]?.attributes.scouting ?? 50,
+  });
+
+  if (Object.keys(scoutOutcome.players).length > 0) {
+    next = { ...next, players: { ...next.players, ...scoutOutcome.players } };
+  }
+  next = { ...next, scouting: scoutOutcome.scouting };
+
+  for (const report of scoutOutcome.reports) {
+    allEvents.push(events.make('SCOUT_REPORT_READY', {
+      playerId: report.playerId,
+      clubId: playerClubId,
+      confidence: report.confidenceAfter,
+    }, { importance: 2, entities: [events.playerRef(report.playerId)] }));
+  }
+
   // --- 6. revalue the market ------------------------------------------
   // Without this, players develop but their price tags never move, and the
   // brake the design depends on — a growing club facing bigger fees and bigger
@@ -308,8 +334,10 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   };
 
   // --- 7. objectives and legacy are pure consumers of the stream --------
-  const objectiveUpdates = updateObjectiveProgress(next, allEvents);
-  next = { ...next, objectives: applyObjectiveUpdates(next, objectiveUpdates) };
+  // The world tick already folded this cycle's events into objective progress.
+  // Doing it again here over the same events double-counted every objective —
+  // two goals scored advanced a "score ten goals" target by four.
+  const objectiveUpdates = world.objectiveUpdates;
 
   const rolled = rollObjectives(next, rng.fork('objectives'), registry);
   if (rolled.length > 0) {

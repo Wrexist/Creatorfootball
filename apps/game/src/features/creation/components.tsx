@@ -254,7 +254,7 @@ export function SelectCard({
         whileTap={m.safe({ scale: 0.99 })}
         transition={m.spring.press}
         className={cn(
-          'relative block w-full rounded-[var(--radius-lg)] p-4 text-left',
+          'relative block w-full rounded-[var(--radius-lg)] p-3.5 text-left',
           'transition-colors duration-[var(--duration-fast)] ease-out-quint',
           !selected && 'hover:bg-white/[0.025]',
           FOCUS_RING,
@@ -262,7 +262,7 @@ export function SelectCard({
       >
         {children}
       </motion.button>
-      {extra !== undefined && <div className="px-4 pb-1 pl-6">{extra}</div>}
+      {extra !== undefined && <div className="px-3.5 pb-0.5 pl-6">{extra}</div>}
     </div>
   );
 }

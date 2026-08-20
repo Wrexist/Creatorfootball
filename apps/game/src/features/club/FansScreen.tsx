@@ -335,7 +335,7 @@ function FunnelStage({
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">{label}</p>
         <p className="tnum font-display text-[20px] font-bold leading-tight tracking-[-0.03em] text-ink">{value}</p>
-        <p className="truncate text-[11px] text-ink-dim">{detail}</p>
+        <p className="line-clamp-2 text-[11px] text-ink-dim text-pretty">{detail}</p>
       </div>
     </div>
   );

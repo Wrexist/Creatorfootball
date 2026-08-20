@@ -162,6 +162,9 @@ const ZONE_WORD: Record<StandingRow['zone'], string> = {
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 
+/** Engine copy is lower case; these strings open a sentence in the interface. */
+const sentence = (text: string): string => (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
+
 /**
  * How far into the season we are, and whether the table is evidence yet.
  *
@@ -324,8 +327,10 @@ function matchBeats(state: GameState, fixture: Fixture, us: Club, them: Club): B
 /* --- the lead --------------------------------------------------------- */
 
 /**
- * A result only leads while it is still news — the cycle it happened in. After
- * that the player has read it, and the next fixture takes the screen back.
+ * A result only leads while it is still news. The cycle counter is bumped at
+ * the *end* of the week the match was played in, so "this week's result" is a
+ * delta of one; anything older has been read and the next fixture takes the
+ * screen back.
  */
 function freshResult(state: GameState, club: Club): Lead | null {
   const fixture = lastFixture(state, club.id);
@@ -335,7 +340,7 @@ function freshResult(state: GameState, club: Club): Lead | null {
     .reverse()
     .find((e) => (e.type === 'MATCH_WON' || e.type === 'MATCH_LOST' || e.type === 'MATCH_DRAWN')
       && e.entities.some((ref) => ref.kind === 'club' && ref.id === club.id));
-  if (!event || state.clock.cycle - event.cycle > 0) return null;
+  if (!event || state.clock.cycle - event.cycle > 1) return null;
 
   const home = fixture.homeClubId === club.id;
   const us = home ? fixture.homeScore : fixture.awayScore;
@@ -388,7 +393,19 @@ function objectiveCard(state: GameState, objective: Objective, claimable: boolea
       : `${objective.description} ${reward ? `It pays ${reward.label.toLowerCase()}.` : ''}`.trim(),
     actionLabel: claimable ? 'Claim it' : 'See objectives',
     route: claimable ? '/rewards' : '/objectives',
-    progress: { value: objective.progress, max: Math.max(1, objective.target), label: `${Math.round(objective.progress)} of ${objective.target}` },
+    // Some objectives count *up* to a target and some are satisfied by a value
+    // going *down* (a league position of 6 or better). A progress bar is only
+    // honest for the first kind — drawing "11 of 6" as a full green bar would
+    // tell the player they had finished something they had not started.
+    ...(objective.progress <= objective.target
+      ? {
+        progress: {
+          value: objective.progress,
+          max: Math.max(1, objective.target),
+          label: `${Math.round(objective.progress)} of ${objective.target}`,
+        },
+      }
+      : {}),
     score: score(
       claimable ? 0.85 : cyclesLeft !== null && cyclesLeft <= 3 ? 0.7 : 0.2 + ratio * 0.3,
       0.3 + objective.importance * 0.12,
@@ -436,7 +453,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
         tone: 'danger',
         glyph: 'injury',
         headline: `${key.displayName} is injured.`,
-        meaning: `${key.injury?.description ?? 'Injured'} — out for about ${weeks} ${plural(weeks, 'week', 'weeks')}. He is rated ${key.overall}.`,
+        meaning: `${sentence(key.injury?.description ?? 'Injured')} — out for about ${weeks} ${plural(weeks, 'week', 'weeks')}. He is rated ${key.overall}.`,
         actionLabel: 'Open his profile',
         route: `/squad/player/${key.id}`,
         playerId: key.id,

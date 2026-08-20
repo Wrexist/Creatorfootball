@@ -305,6 +305,8 @@ export interface PossessionInput {
   readonly defenceFatigue: number;
   /** Goals the team in possession is ahead by; negative when behind. */
   readonly leadMargin: number;
+  /** Goals the team in possession has scored so far. */
+  readonly goalsScored: number;
 }
 
 /**
@@ -375,7 +377,7 @@ export function shotChance(input: PossessionInput, counterWindow: boolean): numb
   if (counterWindow) p += BALANCE.SHOT_COUNTER_BONUS * input.attackVector.counterWeight;
   p *= 1 + input.momentumBoost;
   p *= input.homeBoost;
-  p *= gameManagement(input.leadMargin);
+  p *= gameManagement(input.leadMargin, input.goalsScored);
   return clamp(p, 0.05, 0.75);
 }
 
@@ -385,8 +387,11 @@ export function shotChance(input: PossessionInput, counterWindow: boolean): numb
  * in FRONT, and the side behind gets nothing for being behind — a compensating
  * bonus would make every comeback feel manufactured.
  */
-export function gameManagement(leadMargin: number): number {
-  const excess = Math.max(0, leadMargin - BALANCE.GAME_STATE_EASE_MARGIN);
+export function gameManagement(leadMargin: number, goalsScored = 0): number {
+  const excess = Math.max(
+    leadMargin - BALANCE.GAME_STATE_EASE_MARGIN,
+    goalsScored - BALANCE.GAME_STATE_ROUT_GOALS,
+  );
   if (excess <= 0) return 1;
   return 1 - Math.min(BALANCE.GAME_STATE_EASE_MAX, excess * BALANCE.GAME_STATE_EASE_PER_GOAL);
 }

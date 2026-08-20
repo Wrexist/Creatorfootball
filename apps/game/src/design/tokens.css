@@ -379,12 +379,12 @@
 
   --glass-3-sheen: rgb(255 255 255 / 0.24);
   --glass-3-shade: rgb(0 0 0 / 0.4);
-  --glass-3-pool: rgb(255 255 255 / 0.045);
+  --glass-3-pool: rgb(255 255 255 / 0.038);
   --glass-3-cast: 0 4px 10px -4px rgb(0 0 0 / 0.6), 0 22px 56px -22px rgb(0 0 0 / 0.88);
 
   --glass-4-sheen: rgb(255 255 255 / 0.34);
   --glass-4-shade: rgb(0 0 0 / 0.5);
-  --glass-4-pool: rgb(255 255 255 / 0.062);
+  --glass-4-pool: rgb(255 255 255 / 0.024);
   --glass-4-cast: 0 6px 14px -6px rgb(0 0 0 / 0.65), 0 34px 88px -30px rgb(0 0 0 / 0.95);
 
   /* Environmental bleed. `saturate` alone pulls colour through the panel from
@@ -697,10 +697,19 @@
   /* Floating chrome — the tab bar island. Chrome keeps its scrim (content
      behind it must stay illegible) but gains the edge and cast of a real
      object sitting above the app. */
+  /*
+    The floating navigation island.
+    The scrim is the non-negotiable part. Chrome is chrome: whatever scrolls
+    beneath it has to become background, not a second column of text competing
+    with the navigation labels. 91% of the base leaves content behind the bar at
+    roughly 1.2:1 against it - present as a suggestion of movement, not as
+    words - while the blur, the saturation boost, the specular top edge and the
+    cast shadow still read as a solid object floating above the app.
+  */
   .chrome-float {
     background:
       radial-gradient(120% 140% at 30% -30%, rgb(255 255 255 / 0.07) 0%, transparent 60%),
-      color-mix(in srgb, var(--color-base) 84%, transparent);
+      color-mix(in srgb, var(--color-base) 91%, transparent);
     backdrop-filter: blur(var(--blur-glass-4)) saturate(200%) brightness(1.1);
     -webkit-backdrop-filter: blur(var(--blur-glass-4)) saturate(200%) brightness(1.1);
     border: 1px solid rgb(255 255 255 / 0.1);

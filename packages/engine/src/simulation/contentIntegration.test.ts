@@ -9,6 +9,7 @@ import { generateStories } from '../media/mediaEngine';
 import { generatePosts } from '../social/socialEngine';
 import { rivalryFor, seedRivalries } from '../rivalries/rivalries';
 import { AI_PROFILES, profileFor } from './aiClub';
+import { CASCADE_RULE_TYPES, expandCascade } from './cascade';
 import { buildTestWorld, makeTestEvent } from './fixtures';
 import { TRIGGER_FALLBACKS } from './templating';
 
@@ -60,20 +61,113 @@ describe('rivalry seeding against real club templates', () => {
 });
 
 describe('trigger vocabulary', () => {
-  /** Every trigger the cascade and the emergent detectors can emit. */
-  const EMITTED = [
-    'RED_CARD', 'SUSPENSION_AFTERMATH', 'MARQUEE_SIGNING', 'SIGNING', 'DEBUT_WATCH',
-    'SHOCK_DEFEAT', 'DEFEAT', 'DERBY_DEFEAT', 'DEFEAT_FALLOUT', 'WIN', 'STATEMENT_WIN', 'DERBY_WIN',
-    'GOAL', 'SPECIAL_GOAL', 'WONDERKID', 'BREAKOUT_INTEREST', 'INJURY_BLOW', 'RECORD_BROKEN',
-    'RECORD_REACTION', 'FAN_UNREST', 'FAN_BUZZ', 'RIVALRY_HEAT', 'TRANSFER_HIJACK', 'TROPHY_WON',
-    'TROPHY_AFTERGLOW', 'MANAGER_SACKED', 'SPONSOR_SIGNED', 'CREATOR_JOINED',
-    'PLAYER_UNHAPPY', 'PLAYER_LIFTED',
-  ];
+  /**
+   * Every trigger the cascade can emit, derived from the cascade itself rather
+   * than hand-maintained.
+   *
+   * The previous version of this list was a literal array inside this file. It
+   * was green while 85% of the authored library was unreachable, because a
+   * hand-written list of what the code emits proves only that somebody wrote a
+   * list. This walks the rules instead: one synthetic event of every declared
+   * domain type, through `expandCascade`, collecting the triggers that come out.
+   */
+  const CLUB = 'club_0';
+  const RIVAL = 'club_1';
+  const PLAYER = 'p_0_5';
+  /** One representative payload per rule, so the rule can actually run. */
+  const SAMPLE: Partial<Record<string, Record<string, unknown>>> = {
+    RED_CARD: { playerId: PLAYER, clubId: CLUB, matchId: 'm1', minute: 30 },
+    PLAYER_MORALE_CHANGED: { playerId: PLAYER, clubId: CLUB, from: 60, to: 40, reason: 'dropped' },
+    FAN_SENTIMENT_CHANGED: { clubId: CLUB, from: 60, to: 40, reason: 'a bad month' },
+    RIVALRY_INTENSIFIED: { rivalryId: 'r1', clubA: CLUB, clubB: RIVAL, intensity: 8, reason: 'a bad night' },
+    PLAYER_SIGNED: { playerId: PLAYER, clubId: CLUB, fee: 20_000_000, wage: 80_000 },
+    MATCH_LOST: { matchId: 'm1', clubId: CLUB, opponentId: RIVAL, homeScore: 0, awayScore: 4, margin: 4 },
+    MATCH_WON: { matchId: 'm1', clubId: CLUB, opponentId: RIVAL, homeScore: 4, awayScore: 0, margin: 4 },
+    MATCH_DRAWN: { matchId: 'm1', clubId: CLUB, opponentId: RIVAL, score: 1 },
+    PLAYER_BREAKOUT: { playerId: PLAYER, clubId: CLUB, overall: 74 },
+    PLAYER_INJURED: { playerId: PLAYER, clubId: CLUB, weeksOut: 8, severity: 'SERIOUS' },
+    PLAYER_RECOVERED: { playerId: PLAYER, clubId: CLUB },
+    PLAYER_RELEASED: { playerId: PLAYER, clubId: CLUB },
+    PLAYER_SOLD: { playerId: PLAYER, fromClubId: CLUB, toClubId: RIVAL, fee: 9_000_000 },
+    PLAYER_DEVELOPED: { playerId: PLAYER, clubId: CLUB, attribute: 'finishing', from: 60, to: 63 },
+    RECORD_BROKEN: { clubId: CLUB, record: 'Most goals in a season', value: 24, holderId: PLAYER },
+    TRANSFER_HIJACKED: { playerId: PLAYER, byClubId: RIVAL, fromClubId: CLUB },
+    TRANSFER_COMPLETED: { transferId: 't1', playerId: PLAYER, fromClubId: RIVAL, toClubId: CLUB, fee: 4_000_000 },
+    TRANSFER_BID_MADE: { transferId: 't1', playerId: PLAYER, fromClubId: RIVAL, toClubId: CLUB, amount: 4_000_000 },
+    TRANSFER_BID_REJECTED: { transferId: 't1', playerId: PLAYER, reason: 'nowhere near' },
+    GOAL_SCORED: { matchId: 'm1', clubId: CLUB, scorerId: PLAYER, minute: 28, homeScore: 1, awayScore: 0 },
+    TROPHY_WON: { clubId: CLUB, competition: 'The Creator Cup', season: 1 },
+    MANAGER_SACKED: { clubId: CLUB, managerName: 'A. Manager' },
+    SPONSOR_SIGNED: { clubId: CLUB, sponsorId: 'spn_1', value: 400_000 },
+    SPONSOR_LOST: { clubId: CLUB, sponsorId: 'spn_1', reason: 'performance clause' },
+    CREATOR_JOINED: { creatorId: 'cr_0', clubId: CLUB, role: 'AMBASSADOR' },
+    CREATOR_MOMENT: { creatorId: 'cr_0', clubId: CLUB, kind: 'clip', reach: 2_000_000 },
+    MOTM_AWARDED: { playerId: PLAYER, clubId: CLUB, matchId: 'm1', rating: 8.4 },
+    CONTRACT_SIGNED: { contractId: 'ct1', playerId: PLAYER, clubId: CLUB, years: 3, wage: 30_000 },
+    CONTRACT_EXPIRING: { playerId: PLAYER, clubId: CLUB, weeksLeft: 12 },
+    FACILITY_UPGRADED: { clubId: CLUB, facilityId: 'academy', level: 3 },
+    ATTENDANCE_RECORDED: { clubId: CLUB, matchId: 'm1', attendance: 10_000, capacity: 10_000 },
+    SEASON_STARTED: { seasonId: 'season_1', season: 2 },
+    SEASON_COMPLETED: { seasonId: 'season_1', season: 1, championClubId: RIVAL, playerPosition: 9 },
+    YOUTH_PROSPECT_PROMOTED: { playerId: PLAYER, clubId: CLUB },
+    OBJECTIVE_COMPLETED: { objectiveId: 'o1', title: 'Shut the door', rewardSummary: '£50,000' },
+    OBJECTIVE_FAILED: { objectiveId: 'o1', title: 'Shut the door' },
+    REPUTATION_CHANGED: { clubId: CLUB, from: 50, to: 54, reason: 'results' },
+    BALANCE_LOW: { clubId: CLUB, balance: 40_000 },
+    RIVALRY_CREATED: { rivalryId: 'r2', clubA: CLUB, clubB: RIVAL },
+    SCOUT_REPORT_READY: { playerId: PLAYER, clubId: CLUB, confidence: 0.8 },
+    MATCH_SCHEDULED: { matchId: 'm2', homeClubId: CLUB, awayClubId: RIVAL, week: 4 },
+  };
 
-  it('reaches authored content for every trigger, directly or through an alias', () => {
+  const emittedTriggers = (): string[] => {
+    const { state } = buildTestWorld();
+    const triggers = new Set<string>();
+    let n = 0;
+    for (const type of CASCADE_RULE_TYPES) {
+      const payload = SAMPLE[type];
+      if (!payload) continue;
+      const event = makeTestEvent(type, payload as never, { id: `tv_${(n += 1)}`, importance: 4 });
+      const result = expandCascade([event], state, { cycle: state.clock.cycle, skipFollowUps: true });
+      for (const hook of [...result.mediaHooks, ...result.socialHooks]) triggers.add(hook.trigger);
+    }
+    return [...triggers].sort();
+  };
+
+  it('has a sample payload for every rule the cascade declares', () => {
+    expect(CASCADE_RULE_TYPES.filter((type) => !SAMPLE[type])).toEqual([]);
+  });
+
+  it('turns most of the declared event vocabulary into content', () => {
+    // A few types belong to the match engine and cannot be produced here, but
+    // the bulk must be, or the authored library cannot be reached at all.
+    expect(CASCADE_RULE_TYPES.length).toBeGreaterThanOrEqual(30);
+    expect(emittedTriggers().length).toBeGreaterThanOrEqual(24);
+  });
+
+  it('reaches authored content for every trigger the cascade actually emits', () => {
     const social = new Set(registry.socialTemplates().map((t) => t.trigger));
     const media = new Set(registry.mediaTemplates().map((t) => t.trigger));
-    const uncovered = EMITTED.filter((trigger) => {
+    const uncovered = emittedTriggers().filter((trigger) => {
+      const alias = TRIGGER_FALLBACKS[trigger];
+      const reaches = (set: ReadonlySet<string>): boolean => set.has(trigger) || (!!alias && set.has(alias));
+      return !reaches(social) && !reaches(media);
+    });
+    expect(uncovered).toEqual([]);
+  });
+
+  /** Semantic trigger names the cascade uses that are not domain event types. */
+  const LEGACY_TRIGGERS = [
+    'SUSPENSION_AFTERMATH', 'MARQUEE_SIGNING', 'SIGNING', 'DEBUT_WATCH',
+    'SHOCK_DEFEAT', 'DEFEAT', 'DERBY_DEFEAT', 'DEFEAT_FALLOUT', 'WIN', 'STATEMENT_WIN', 'DERBY_WIN',
+    'GOAL', 'SPECIAL_GOAL', 'WONDERKID', 'BREAKOUT_INTEREST', 'INJURY_BLOW',
+    'RECORD_REACTION', 'FAN_UNREST', 'FAN_BUZZ', 'RIVALRY_HEAT', 'TRANSFER_HIJACK',
+    'TROPHY_AFTERGLOW', 'PLAYER_UNHAPPY', 'PLAYER_LIFTED',
+  ];
+
+  it('reaches authored content for every semantic trigger name too', () => {
+    const social = new Set(registry.socialTemplates().map((t) => t.trigger));
+    const media = new Set(registry.mediaTemplates().map((t) => t.trigger));
+    const uncovered = LEGACY_TRIGGERS.filter((trigger) => {
       const alias = TRIGGER_FALLBACKS[trigger];
       const reaches = (set: ReadonlySet<string>): boolean => set.has(trigger) || (!!alias && set.has(alias));
       return !reaches(social) && !reaches(media);

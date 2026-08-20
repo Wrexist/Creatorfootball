@@ -10,14 +10,14 @@ import {
 } from '@cf/engine';
 import {
   Accordion, AttributeBar, ClubBadge, DataCell, DataGrid, Divider, EmptyState, GlassButton,
-  GlassPanel, GlassPill, GlassSheet, ListRow, NameText, PlayerPortrait, PositionChip, ProgressBar,
+  GlassPanel, GlassPill, GlassSheet, ListRow, PlayerPortrait, PositionChip, ProgressBar,
   RatingBadge, Screen, Sparkline, StatBlock, Text, Timeline, TraitChip, cn, formatMoney, rgba,
   IconBall, IconCard, IconInjury, IconScout, IconSocial, IconStar, IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
-import { playerArc } from './arc';
+import { playerArc, sentenceCase } from './arc';
 
 /**
  * Player profile — a signature screen.
@@ -198,15 +198,11 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
               colors={portraitColors}
               label={player.displayName}
             />
+            {/* No name here: the screen's own large title carries it two lines
+                below, and printing it twice is how a hero stops reading as a
+                hero. This block is the identity *around* the name. */}
             <div className="min-w-0 flex-1 pb-1">
-              <NameText
-                name={player.displayName}
-                short={`${player.firstName.charAt(0)}. ${player.lastName}`}
-                role="title"
-                lines={2}
-                as="h2"
-              />
-              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <PositionChip position={player.position} size="md" />
                 {player.secondaryPositions.map((position) => (
                   <PositionChip key={position} position={position} size="xs" />
@@ -258,7 +254,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
           <div className="flex items-center gap-2.5">
             <IconInjury size={18} className="shrink-0 text-danger" />
             <Text role="caption" as="p" className="text-ink text-pretty">
-              <strong className="font-semibold">{player.injury.description}.</strong>{' '}
+              <strong className="font-semibold">{sentenceCase(player.injury.description)}.</strong>{' '}
               He cannot play for about {player.injury.weeksRemaining} more weeks.
             </Text>
           </div>

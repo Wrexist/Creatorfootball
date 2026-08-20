@@ -86,6 +86,27 @@ function contractFor(state: GameState, player: Player) {
   return player.contractId ? state.contracts[player.contractId] ?? null : null;
 }
 
+/**
+ * The bars a signing has to clear to be worth the player's attention.
+ *
+ * `tempting` is the *median* of the starting seven: a player who would walk
+ * into the middle of the side, not merely displace its weakest link. `minimum`
+ * is that weakest link, used only when nothing affordable clears the real bar —
+ * the window is allowed to be thin, it is not allowed to be empty.
+ */
+function starterBars(
+  state: GameState,
+  squad: readonly PlayerId[],
+): { tempting: number; minimum: number } {
+  const overalls = squad
+    .map((id) => state.players[id]?.overall ?? 0)
+    .sort((a, b) => b - a)
+    .slice(0, 7);
+  const minimum = overalls[overalls.length - 1] ?? 0;
+  const tempting = overalls[Math.floor(overalls.length / 2)] ?? minimum;
+  return { tempting, minimum };
+}
+
 /** Squad overalls of a player's club, excluding himself — used for asking price. */
 function squadOveralls(state: GameState, player: Player): number[] {
   if (!player.clubId) return [];
@@ -234,6 +255,69 @@ export function refreshMarket(state: GameState, rng: Rng, ctx: MarketContext): M
       interestedClubIds,
       listedCycle: existing?.listedCycle ?? ctx.cycle,
     };
+  }
+
+  // --- the window's promise ------------------------------------------------
+  //
+  // An open window that contains nothing the player can both afford and use is
+  // not a decision, and the audit found exactly that: the best reachable signing
+  // was rated 61 against a weakest starter of 60. This pass guarantees a floor
+  // on *visibility* — it reveals players whose clubs were already willing to
+  // sell, at their real asking price, that happen to be affordable and better
+  // than what the player has. It invents nobody and discounts nothing; if the
+  // eligible pool holds no affordable upgrade, the window stays quiet.
+  if (ctx.windowOpen) {
+    const buyer = state.clubs[state.playerClubId];
+    const budget = buyer?.finance.transferBudget ?? 0;
+    const bars = buyer ? starterBars(state, buyer.squad) : { tempting: 0, minimum: 0 };
+    const bar = bars.tempting + M.UPGRADE_MARGIN;
+    const floorBar = bars.minimum + M.UPGRADE_MARGIN;
+    let upgrades = 0;
+    for (const listing of Object.values(listings)) {
+      const p = state.players[listing.playerId];
+      if (p && p.overall >= bar && listing.askingPrice <= budget) upgrades++;
+    }
+    if (buyer && upgrades < M.WINDOW_MIN_UPGRADES) {
+      const hopefuls = candidates
+        .filter(({ player }) => !listings[player.id]
+          && player.overall >= floorBar
+          && player.clubId !== state.playerClubId
+          && isListable(state, player, ctx))
+        .map(({ player }) => {
+          const contract = contractFor(state, player);
+          const club = player.clubId ? state.clubs[player.clubId] ?? null : null;
+          const valuationCtx: ValuationContext = {
+            ...base, contract, suitorCount: 0, sellingSquadOveralls: squadOveralls(state, player),
+          };
+          return {
+            player,
+            price: club ? askingPrice(player, club, valuationCtx) : 0,
+            wage: wageDemand(player, valuationCtx),
+            contractWeeks: contract?.weeksRemaining ?? 0,
+            clubId: club?.id ?? null,
+          };
+        })
+        .filter((x) => x.price <= budget)
+        // Best player first among those within reach: the window should tempt,
+        // not merely tick a box.
+        .sort((a, b) => b.player.overall - a.player.overall
+          || a.price - b.price
+          || (a.player.id < b.player.id ? -1 : 1));
+
+      for (const hopeful of hopefuls) {
+        if (upgrades >= M.WINDOW_MIN_UPGRADES) break;
+        listings[hopeful.player.id] = {
+          playerId: hopeful.player.id,
+          clubId: hopeful.clubId,
+          askingPrice: hopeful.price,
+          wageDemand: hopeful.wage,
+          availability: 'AVAILABLE',
+          interestedClubIds: [],
+          listedCycle: ctx.cycle,
+        };
+        upgrades++;
+      }
+    }
   }
 
   // Rumours are grounded: they only ever come from a listing that has interest.

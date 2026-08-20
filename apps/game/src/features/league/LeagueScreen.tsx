@@ -171,7 +171,6 @@ function LeagueView({ state }: { state: GameState }): ReactNode {
           phaseLabel={phaseLabelOf(upcoming)}
           kicker="Next up"
           size="lg"
-          {...(competition ? { competitionLabel: competition.name } : {})}
           onPress={() => navigate(buildPath(ROUTES.matchPreview, { fixtureId: upcoming.id }))}
         />
       ) : (
@@ -234,12 +233,11 @@ function LeagueView({ state }: { state: GameState }): ReactNode {
             <StatBlock
               label="Points"
               value={ourRow.points}
-              unit="pts"
               tone="volt"
               caption={`${ourRow.won} won, ${ourRow.drawn} drawn, ${ourRow.lost} lost`}
             />
             <StatBlock
-              label="Goal difference"
+              label="Goals"
               value={ourRow.goalDifference > 0 ? `+${ourRow.goalDifference}` : ourRow.goalDifference}
               tone={ourRow.goalDifference > 0 ? 'positive' : ourRow.goalDifference < 0 ? 'danger' : 'neutral'}
               caption={`Scored ${ourRow.goalsFor}, conceded ${ourRow.goalsAgainst}`}
@@ -302,12 +300,15 @@ function LeagueView({ state }: { state: GameState }): ReactNode {
                 title={
                   <NameText name={row.player.displayName} role="bodyStrong" lines={2} />
                 }
-                subtitle={row.clubId ? clubs.side(row.clubId).name : 'No club'}
+                subtitle={
+                  `${row.clubId ? clubs.side(row.clubId).shortName : 'No club'} · ` +
+                  `${row.assists} ${row.assists === 1 ? 'assist' : 'assists'}`
+                }
                 trailing={
-                  <span className="text-right">
+                  <span className="w-12 text-right">
                     <Numeric role="stat" className="block">{row.goals}</Numeric>
                     <Text role="micro" as="span" className="mt-0.5 block">
-                      {row.goals === 1 ? 'goal' : 'goals'} · {row.assists} a
+                      {row.goals === 1 ? 'goal' : 'goals'}
                     </Text>
                   </span>
                 }

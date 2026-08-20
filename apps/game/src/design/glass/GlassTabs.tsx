@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
-import { FOCUS_RING } from './glassLevel';
+import { controlSurface, FOCUS_RING } from './glassLevel';
 
 export interface TabItem<T extends string = string> {
   readonly id: T;
@@ -78,7 +78,7 @@ export function GlassTabs<T extends string = string>({
       className={cn(
         'relative flex items-stretch',
         appearance === 'underline' && 'gap-1 border-b border-white/[0.07]',
-        appearance === 'enclosed' && 'gap-1 rounded-pill glass-1 p-1',
+        appearance === 'enclosed' && cn('gap-1 rounded-pill p-1', controlSurface(1)),
         scrollable ? 'scroll-x flex-nowrap' : 'w-full',
         className,
       )}

@@ -5,12 +5,14 @@ import {
 } from '@cf/engine';
 import {
   Divider, EmptyState, GlassPanel, GlassPill, GlassSegmented, IconCalendar, IconFlame,
-  MatchCard, Screen, SectionHeader, cn, type MatchCardSide,
+  Screen, SectionHeader, cn, type MatchCardSide,
+  Text,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup } from './clubs';
 import { useCalendar, type Matchweek } from './data';
+import { FixtureCard } from './components/FixtureCard';
 
 /**
  * The season calendar.
@@ -43,13 +45,25 @@ const SCOPES = [
   { value: 'ALL' as const, label: 'Whole league' },
 ];
 
+/**
+ * Special rules in play that week.
+ *
+ * Five loud pills per matchweek, repeated down a twenty-two week calendar, is
+ * more chrome than the fixtures themselves. Three are named and the rest are
+ * counted; the full list is one tap away on the match preview.
+ */
+const SHOWN_RULES = 3;
+
 const RuleChips = memo(function RuleChips({
   rules,
 }: { rules: readonly SpecialRuleId[] }): ReactNode {
   if (rules.length === 0) return null;
+  const shown = rules.slice(0, SHOWN_RULES);
+  const extra = rules.length - shown.length;
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      {rules.map((id) => {
+    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+      <Text role="micro" as="span">Rules in play</Text>
+      {shown.map((id) => {
         const rule = specialRuleById(id);
         return (
           <GlassPill key={id} tone="special" size="xs" title={rule.description}>
@@ -57,6 +71,11 @@ const RuleChips = memo(function RuleChips({
           </GlassPill>
         );
       })}
+      {extra > 0 && (
+        <GlassPill tone="special" size="xs">
+          {extra} more
+        </GlassPill>
+      )}
     </div>
   );
 });
@@ -83,38 +102,36 @@ const WeekBlock = memo(function WeekBlock({
     <section className="flex flex-col gap-2">
       <div
         className={cn(
-          'flex items-center gap-2 rounded-md px-1 py-1',
+          'flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md px-1 py-1',
           week.isCurrent && 'bg-volt/[0.08]',
         )}
       >
         <GlassPill tone={PHASE_TONE[week.phase] ?? 'neutral'} size="xs" filled={week.isCurrent}>
           {week.phaseLabel}
         </GlassPill>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+        {/* Sentence case, not uppercase: "MATCHWEEK 12" is a third wider for
+            no extra meaning, and at 375px it wrapped onto a second line beside
+            the phase pill. */}
+        <Text role="label" as="span" className="shrink-0 whitespace-nowrap text-ink-dim">
           Matchweek {week.week}
-        </span>
+        </Text>
         {week.hasDerby && (
           <GlassPill tone="danger" size="xs" icon={<IconFlame size={11} />}>
             Derby
           </GlassPill>
         )}
-        {week.played && (
-          <span className="ml-auto text-[11px] uppercase tracking-[0.14em] text-ink-dim">Played</span>
-        )}
+
       </div>
 
       <div className="flex flex-col gap-2">
         {fixtures.map((fixture) => (
-          <MatchCard
+          <FixtureCard
             key={fixture.id}
+            fixture={fixture}
             home={side(fixture.homeClubId)}
             away={side(fixture.awayClubId)}
-            variant={fixture.status === 'COMPLETED' ? 'result' : 'upcoming'}
-            homeScore={fixture.homeScore}
-            awayScore={fixture.awayScore}
-            status={fixture.status === 'COMPLETED' ? 'FT' : fixture.stageLabel ?? `MW ${fixture.week}`}
-            importance={fixture.importance}
-            isDerby={fixture.isDerby}
+            phaseLabel={week.phaseLabel}
+            showPhase={false}
             onPress={() => onOpen(fixture)}
           />
         ))}
@@ -156,7 +173,6 @@ function FixturesView({ state }: { state: GameState }): ReactNode {
           value={scope}
           onChange={setScope}
           aria-label="Which fixtures to show"
-          size="sm"
           block
           nested
         />

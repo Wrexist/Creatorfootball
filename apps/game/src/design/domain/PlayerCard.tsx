@@ -10,7 +10,7 @@ import { FOCUS_RING } from '../glass/glassLevel';
 import { PlayerPortrait } from './PlayerPortrait';
 import { ClubBadge } from './ClubBadge';
 import { PositionChip, RatingBadge, TraitChip } from './chips';
-import { MoneyLabel } from './numbers';
+import { MoneyLabel, formatWeeks } from './numbers';
 import { IconCard, IconFlame, IconInjury, IconTrendDown, IconTrendUp } from '../icons';
 import { NameText } from '../typography/Text';
 import { TYPE_CLASS } from '../typography/type';
@@ -101,18 +101,31 @@ function StatusFlag({ player }: { player: Player }): ReactNode {
     return (
       <span
         className="inline-flex items-center gap-1 rounded-pill bg-danger/85 px-1.5 py-0.5 text-micro font-bold text-ink"
-        title={player.injury.description}
+        // Weeks, not cycles. The short form is on the badge; the full phrase is
+        // in the tooltip and in the accessible name, and both say the same
+        // thing - the two used to disagree.
+        title={`${player.injury.description} — out for ${formatWeeks(player.injury.weeksRemaining, 'long')}`}
       >
         <IconInjury size={11} />
-        {player.injury.weeksRemaining}w
+        <span aria-hidden="true">{formatWeeks(player.injury.weeksRemaining)}</span>
+        <span className="sr-only">
+          Injured, out for {formatWeeks(player.injury.weeksRemaining, 'long')}
+        </span>
       </span>
     );
   }
   if (player.suspensionMatches > 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-pill bg-warning/85 px-1.5 py-0.5 text-micro font-bold text-void">
+      <span
+        className="inline-flex items-center gap-1 rounded-pill bg-warning/85 px-1.5 py-0.5 text-micro font-bold text-void"
+        title={`Suspended for ${player.suspensionMatches} ${player.suspensionMatches === 1 ? 'match' : 'matches'}`}
+      >
         <IconCard size={11} />
-        {player.suspensionMatches}
+        <span aria-hidden="true">{player.suspensionMatches}</span>
+        <span className="sr-only">
+          Suspended for {player.suspensionMatches}{' '}
+          {player.suspensionMatches === 1 ? 'match' : 'matches'}
+        </span>
       </span>
     );
   }

@@ -132,7 +132,6 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
               value={settings.matchSpeed}
               onChange={(matchSpeed) => updateSettings({ matchSpeed })}
               aria-label="Match speed"
-              size="sm"
               block
               nested
             />
@@ -144,7 +143,6 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
               value={settings.presentation}
               onChange={(presentation) => updateSettings({ presentation })}
               aria-label="Match presentation"
-              size="sm"
               block
               nested
             />
@@ -199,7 +197,6 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
           value={settings.difficulty}
           onChange={(difficulty) => updateSettings({ difficulty })}
           aria-label="Difficulty"
-          size="sm"
           block
           nested
         />
@@ -214,7 +211,6 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
           value={settings.region || 'GLOBAL'}
           onChange={(region) => updateSettings({ region })}
           aria-label="Region"
-          size="sm"
           block
           nested
         />

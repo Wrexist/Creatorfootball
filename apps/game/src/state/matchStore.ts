@@ -20,11 +20,36 @@ import type {
 export type MatchSpeed = 'SLOW' | 'NORMAL' | 'FAST' | 'INSTANT';
 export type PlaybackState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'AWAITING_DECISION' | 'COMPLETE';
 
-/** Real milliseconds per simulation tick at each speed. */
+/**
+ * Real milliseconds per simulation tick at each speed.
+ *
+ * These are a *presentation* schedule and nothing else. The simulator's tick
+ * sequence, its RNG stream and its `MatchResult` are identical whether a tick
+ * is drained after 0ms or 620ms; changing these numbers cannot change a single
+ * football outcome.
+ *
+ * The ladder was retuned against measurement. A match is 30 minutes at
+ * `BALANCE.TICKS_PER_MINUTE` = 10, so 300-odd ticks, and the drain loop itself
+ * costs ~31ms per tick on the reference device. At the old NORMAL of 340ms that
+ * put a full match at roughly two and a half minutes of pure playback before
+ * any celebration, decision or dramatic beat was added — measured at 154s to
+ * reach the 25th minute — against a documented 10-15 minute *session* that also
+ * has to hold the preview, the post-match sequence and the week's management.
+ * The match was eating the session, and NORMAL is the setting most players will
+ * never change, so it is the one that has to be right.
+ *
+ * NORMAL now runs a 30-minute match in about a minute of pure playback, which
+ * lands near 90 seconds once goals, decisions and the automatic dramatic
+ * slow-down have taken their share. SLOW is kept genuinely slow for a player
+ * who wants to read every phase, and the gap between NORMAL and SLOW is now
+ * wide enough that the automatic slow-down at a clear chance reads as a real
+ * change of pace rather than a slightly slower version of something already
+ * slow.
+ */
 const TICK_INTERVAL: Record<MatchSpeed, number> = {
-  SLOW: 620,
-  NORMAL: 340,
-  FAST: 150,
+  SLOW: 400,
+  NORMAL: 170,
+  FAST: 70,
   INSTANT: 0,
 };
 

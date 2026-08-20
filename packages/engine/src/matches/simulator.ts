@@ -291,7 +291,10 @@ export class MatchSimulator {
     );
 
     const opennessStream = this.rng.fork('openness');
-    this.openness = clamp(1 + opennessStream.normal(0, BALANCE.MATCH_OPENNESS_SIGMA), 0.62, 1.5);
+    // The clamp is deliberately asymmetric. The bottom of the range is a dull
+    // match, which nobody complains about; the top is a fourteen-goal one,
+    // which costs the competition its credibility.
+    this.openness = clamp(1 + opennessStream.normal(0, BALANCE.MATCH_OPENNESS_SIGMA), 0.58, 1.42);
 
     this.home = this.buildTeam('home', setup.home);
     this.away = this.buildTeam('away', setup.away);
@@ -544,7 +547,7 @@ export class MatchSimulator {
     const performance = clamp(
       1 + BALANCE.COHESION_WEIGHT * clamp(cohesion, -1, 1)
       + this.rng.fork(`performance:${side}`).normal(0, BALANCE.TEAM_PERFORMANCE_SIGMA * swing),
-      0.66, 1.34,
+      0.6, 1.4,
     );
 
     const runtime: TeamRuntime = {
@@ -718,6 +721,7 @@ export class MatchSimulator {
       homeBoost: this.supportFactor(atk.side),
       defenceFatigue: def.meanFatigue,
       leadMargin: atk.side === 'home' ? this.homeScore - this.awayScore : this.awayScore - this.homeScore,
+      goalsScored: atk.side === 'home' ? this.homeScore : this.awayScore,
     };
 
     this.phase = finalThird ? 'FINAL_THIRD' : this.zone > 0.45 ? 'PROGRESSION' : 'BUILD_UP';
@@ -772,8 +776,10 @@ export class MatchSimulator {
     // 3. Shot.
     if (finalThird) {
       let p = shotChance(input, this.tick <= this.counterUntil);
-      if (inWindow) p *= BALANCE.SWING_WINDOW_SHOT_MULTIPLIER;
-      p *= this.opennessFactor();
+      if (inWindow) p *= BALANCE.SWING_WINDOW_SHOT_MULTIPLIER * this.rules.windowShotScale(atk.side);
+      // The ceiling stops the window multiplier from turning a final third into
+      // a shooting gallery on every tick.
+      p = Math.min(p, BALANCE.SHOT_CHANCE_CEILING);
       if (this.rng.chance(clamp01(p))) {
         // A wide shape puts the ball into the box more often; a narrow one
         // works it through the middle. This is what makes width a real choice.
@@ -968,10 +974,21 @@ export class MatchSimulator {
     // Support is applied once, to shot volume, and deliberately not again here:
     // compounding it through xG as well doubles a modifier that is capped by
     // design at a swing smaller than a real home advantage.
+    //
+    // The same argument applies to the match's openness draw, and it was NOT
+    // being honoured: openness multiplied the shot rate in the tick loop and
+    // then multiplied xG again here, so an open match was hit with the same
+    // draw twice — up to 2.25x on the goal rate from a single number, which is
+    // where the twenty-goal fixtures lived. It is applied exactly once now, and
+    // here rather than on the shot rate, because the shot rate is
+    // self-limiting: raising it ends possessions sooner, so most of the draw
+    // was cancelling itself out and the scoreline distribution had collapsed to
+    // Poisson. Conversion is where an open game actually shows up.
     let multiplier = this.opennessFactor()
       * (1 + momentumBoost(this.momentumTracker.current, atk.side));
     if (this.tick <= atk.creatorBoostUntil) multiplier *= 1 + BALANCE.CREATOR_MOMENT_BOOST;
     if (inWindow) multiplier *= BALANCE.SWING_WINDOW_XG_MULTIPLIER;
+    multiplier = Math.min(multiplier, BALANCE.XG_MULTIPLIER_CEILING);
 
     const chance = buildChance(this.rng, {
       zone: this.zone,

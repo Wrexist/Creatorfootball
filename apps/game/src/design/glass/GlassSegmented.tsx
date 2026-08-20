@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
-import { FOCUS_RING, type GlassLevel, glassClass } from './glassLevel';
+import { controlSurface, FOCUS_RING, type GlassLevel } from './glassLevel';
 import { FitText } from '../typography/FitText';
 
 export interface SegmentedOption<T extends string = string> {
@@ -18,6 +18,10 @@ export interface GlassSegmentedProps<T extends string = string> {
   value: T;
   onChange: (value: T) => void;
   level?: GlassLevel;
+  /**
+   * Retained for API compatibility and now a no-op: controls never blur, so
+   * there is never a second blurring layer to drop. See `CONTROL_SURFACE`.
+   */
   nested?: boolean;
   size?: 'sm' | 'md';
   block?: boolean;
@@ -38,7 +42,7 @@ export function GlassSegmented<T extends string = string>({
   value,
   onChange,
   level = 1,
-  nested = false,
+  nested: _nested = false,
   size = 'md',
   block = true,
   className,
@@ -53,7 +57,7 @@ export function GlassSegmented<T extends string = string>({
       aria-label={ariaLabel}
       className={cn(
         'inline-flex items-stretch gap-0.5 rounded-pill p-1',
-        glassClass(level, !nested),
+        controlSurface(level),
         block && 'flex w-full',
         className,
       )}

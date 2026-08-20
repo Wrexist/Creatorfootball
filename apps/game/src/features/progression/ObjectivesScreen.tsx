@@ -2,11 +2,13 @@ import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rewardSummary, type GameState, type Objective } from '@cf/engine';
 import {
-  Divider, EmptyState, GlassButton, GlassPanel, GlassPill, HeroSurface, IconCheck, IconTrophy, ListRow, ProgressBar, Screen, SectionHeader, StatBlock, Text, useToast,
+  Divider, GlassButton, GlassPanel, GlassPill, HeroSurface, IconCheck, ListRow,
+  ProgressBar, Screen, SectionHeader, StatBlock, Text, useToast,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { claimReward } from './engine';
+import { objectiveProgress } from './progress';
 
 /**
  * Objectives.
@@ -44,9 +46,7 @@ interface ObjectiveCardProps {
 const ObjectiveCard = memo(function ObjectiveCard({
   objective, cycle, claiming, onClaim,
 }: ObjectiveCardProps): ReactNode {
-  const pct = objective.target > 0
-    ? Math.min(100, Math.round((objective.progress / objective.target) * 100))
-    : 0;
+  const shown = objectiveProgress(objective);
   const claimable = objective.status === 'COMPLETED';
   const claimed = objective.status === 'CLAIMED';
   const expiresIn = objective.expiresCycle === null ? null : objective.expiresCycle - cycle;
@@ -54,7 +54,7 @@ const ObjectiveCard = memo(function ObjectiveCard({
   return (
     <GlassPanel
       padding="md"
-      accent={claimable ? 'volt' : objective.status === 'FAILED' ? 'danger' : 'none'}
+      accent={claimable ? 'volt' : objective.status === 'FAILED' || shown.missingTarget ? 'danger' : 'none'}
     >
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
@@ -63,6 +63,9 @@ const ObjectiveCard = memo(function ObjectiveCard({
               {SOURCE_LABEL[objective.source]}
             </GlassPill>
             {objective.importance >= 4 && <GlassPill tone="warning" size="xs">Major</GlassPill>}
+            {shown.missingTarget && !shown.settled && (
+              <GlassPill tone="danger" size="xs" filled>Behind</GlassPill>
+            )}
             {expiresIn !== null && expiresIn <= 3 && !claimed && (
               <GlassPill tone={expiresIn <= 1 ? 'danger' : 'warning'} size="xs">
                 {expiresIn <= 0 ? 'Expired' : expiresIn === 1 ? 'Last week' : `${expiresIn} weeks left`}
@@ -86,18 +89,21 @@ const ObjectiveCard = memo(function ObjectiveCard({
         )}
       </div>
 
+      {/* Progress is drawn through `objectiveProgress`, which inverts
+          maximum-type targets and refuses to draw a full bar for anything the
+          engine has not actually marked complete. */}
       <ProgressBar
         className="mt-3"
-        value={pct}
-        tone={claimable || claimed ? 'positive' : objective.status === 'FAILED' ? 'danger' : 'volt'}
-        label={
-          claimed ? 'Done and paid'
-            : claimable ? 'Done — waiting on you'
-              : objective.status === 'FAILED' ? 'Missed'
-                : `${objective.progress} of ${objective.target} so far`
-        }
-        valueLabel={`${pct}%`}
+        value={shown.percent}
+        tone={shown.tone}
+        label={shown.label}
+        valueLabel={shown.valueLabel}
       />
+      {shown.missingTarget && !shown.settled && (
+        <Text role="caption" as="p" className="mt-1.5 text-danger text-pretty">
+          You are not meeting this one at the moment.
+        </Text>
+      )}
 
       {/* What it pays, stated before the button that pays it. */}
       <div className="mt-3">

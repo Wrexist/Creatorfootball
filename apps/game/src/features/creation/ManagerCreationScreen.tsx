@@ -95,7 +95,7 @@ function ModifierRow({ archetype }: { archetype: ManagerArchetype }): ReactNode 
 
 function TradeLine({ tone, children }: { tone: 'good' | 'bad'; children: ReactNode }): ReactNode {
   return (
-    <p className="mt-2 flex items-start gap-2 text-[13px] leading-snug text-ink-muted text-pretty">
+    <p className="mt-1.5 flex items-start gap-2 text-[13px] leading-snug text-ink-muted text-pretty">
       <span
         aria-hidden="true"
         className={cn(
@@ -193,7 +193,7 @@ function PickOne({
 
   return (
     <>
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2">
         {PREMADE_MANAGERS.map((manager) => {
           const archetype = MANAGER_ARCHETYPES.find((a) => a.id === manager.archetypeId);
           const selected = state.premadeManagerId === manager.id;
@@ -217,7 +217,7 @@ function PickOne({
               <div className="flex gap-3.5 pl-2">
                 <ManagerPortrait
                   appearance={premadeAppearance.get(manager.id) ?? state.appearance}
-                  size={56}
+                  size={52}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
@@ -234,7 +234,7 @@ function PickOne({
                       {archetype.name}
                     </p>
                   )}
-                  <Text role="caption" className="mt-1.5 leading-relaxed text-pretty">
+                  <Text role="caption" className="mt-1 leading-snug text-pretty">
                     {firstSentence(manager.bio)}
                   </Text>
                   {selected && restAfterFirstSentence(manager.bio) !== '' && (

@@ -96,6 +96,48 @@ export function formatMoney(amount: number, compact = true): string {
   return `${sign}${currencySymbol}${Math.round(abs)}`;
 }
 
+/**
+ * A delta, formatted for a human.
+ *
+ * This is the default `TrendIndicator` uses, and it exists because the old
+ * default did not round: any caller that omitted `deltaFormat` inherited raw
+ * float passthrough, and the post-match screen printed
+ * `-8.157399521093865` - twice, on a tile whose *value* was rounded while its
+ * delta was not. Anything that can reach a screen unrounded eventually will.
+ *
+ * The rule: integers keep their precision and get thousands separators; a
+ * fraction is rounded to one decimal below 100 and to a whole number above it,
+ * where a tenth of a point is noise. Callers who need something else pass
+ * `format`, which is still honoured in full.
+ */
+export function formatDelta(value: number, decimals?: number): string {
+  const abs = Math.abs(value);
+  const places = decimals ?? (Number.isInteger(abs) ? 0 : abs < 100 ? 1 : 0);
+  const rounded = Number(abs.toFixed(places));
+  // Sign comes from the *rounded* magnitude, so a delta of -0.0001 reads as
+  // "0" rather than the nonsense "-0".
+  const sign = rounded === 0 ? '' : value > 0 ? '+' : '-';
+  return `${sign}${rounded.toLocaleString('en-GB', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: places,
+  })}`;
+}
+
+/**
+ * A duration, in the product's one unit of time: the week.
+ *
+ * The engine calls its tick a "cycle" and that vocabulary had leaked into the
+ * interface, so the same field read as "a week" on one screen, "a cycle" on the
+ * next, and `63w` in an element whose tooltip said "63 cycles remaining".
+ * Players understand matchweeks. Every duration the kit renders comes through
+ * here, so the three cannot drift apart again.
+ */
+export function formatWeeks(weeks: number, style: 'short' | 'long' = 'short'): string {
+  const n = Math.max(0, Math.round(weeks));
+  if (style === 'short') return `${n}w`;
+  return n === 1 ? '1 week' : `${n} weeks`;
+}
+
 /** Follower counts, impressions, attendance — anywhere a raw integer is noise. */
 export function formatCount(value: number): string {
   const abs = Math.abs(value);
@@ -152,6 +194,8 @@ export interface TrendIndicatorProps {
   /** For metrics where rising is bad: debt, wage bill, injury count. */
   invert?: boolean;
   format?: (value: number) => string;
+  /** Decimal places for the default format. Omit to let `formatDelta` decide. */
+  decimals?: number;
   size?: 'sm' | 'md';
   /** Hide the number and show direction only. */
   iconOnly?: boolean;
@@ -162,6 +206,7 @@ export const TrendIndicator = memo(function TrendIndicator({
   delta,
   invert = false,
   format,
+  decimals,
   size = 'sm',
   iconOnly = false,
   className,
@@ -170,7 +215,8 @@ export const TrendIndicator = memo(function TrendIndicator({
   const up = delta > 0;
   const good = invert ? !up : up;
   const Icon = up ? IconTrendUp : IconTrendDown;
-  const text = format ? format(delta) : `${up ? '+' : ''}${delta}`;
+  // Never raw passthrough. A caller's `format` still wins outright.
+  const text = format ? format(delta) : formatDelta(delta, decimals);
 
   return (
     <span

@@ -10,7 +10,7 @@ import {
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
-import { describeEvent, useEventIndex, useFeed, type FeedFilter } from './data';
+import { assignTiers, describeEvent, useEventIndex, useFeed, type FeedFilter } from './data';
 import { FeedItem } from './components/FeedItem';
 import { QuietWorld } from './components/QuietWorld';
 
@@ -52,6 +52,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
   const [openEventFor, setOpenEventFor] = useState<string | null>(null);
 
   const posts = useFeed(state, filter, limit);
+  const tiers = useMemo(() => assignTiers(posts), [posts]);
   const events = useEventIndex(state);
   const reach = useMemo(() => socialReach(state), [state]);
   const creators = useMemo(() => clubCreators(state, state.playerClubId), [state]);
@@ -126,7 +127,6 @@ function SocialView({ state }: { state: GameState }): ReactNode {
             value={filter}
             onChange={(next) => { setFilter(next); setLimit(PAGE); }}
             aria-label="Filter the feed"
-            size="sm"
             block
             nested
           />
@@ -179,7 +179,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
             <>
               <SectionHeader
                 title="The feed"
-                subtitle="The biggest story of the week runs biggest. Nothing here is invented — every post traces to something that happened."
+                subtitle="One story leads each matchweek; the rest is arranged around it. Nothing here is invented — every post traces back to something that happened."
               />
               <div className="flex flex-col gap-3">
                 {posts.map((post) => (
@@ -189,6 +189,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
                     timeLabel={relative(state.clock.cycle, post.cycle)}
                     hasEvent={Boolean(post.relatedEventId && events.has(post.relatedEventId))}
                     onOpenEvent={setOpenEventFor}
+                    {...(tiers.get(post.id) ? { tier: tiers.get(post.id) } : {})}
                   />
                 ))}
               </div>

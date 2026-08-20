@@ -20,6 +20,12 @@ import type { SocialTemplate } from '../../schema';
 type Author = SocialTemplate['authorKind'];
 
 let counter = 0;
+/**
+ * `conditions` is how a post declares what has to be true of the save before it
+ * is allowed to run — see `saveHistoryFacts` in simulation/cascade.ts. A line
+ * that invents a history the save does not have reads as a bug to the player,
+ * and it costs the feed all of its credibility at once.
+ */
 const post = (
   trigger: string,
   authorKind: Author,
@@ -27,10 +33,12 @@ const post = (
   weight: number,
   texts: readonly string[],
   tags: readonly string[] = [],
+  conditions?: Readonly<Record<string, string | number | boolean>>,
 ): SocialTemplate[] =>
   texts.map((text) => ({
     id: `sp_${(counter += 1).toString(36)}_${trigger.toLowerCase()}`,
     trigger, authorKind, text, sentiment, weight, tags,
+    ...(conditions ? { conditions } : {}),
   }));
 
 export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
@@ -40,7 +48,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'We were awful for twenty minutes and won anyway. That is what good teams do, apparently. {club}.',
     '{player} was unplayable today. Genuinely unplayable.',
     'Best I have felt walking out of that ground in two years.',
-    'I have watched {club} for nineteen years and I have never enjoyed a {score} more.',
+    'Every one of those points was earned. {score}. Nothing sweeter than that.',
   ], ['result']),
   ...post('MATCH_WON', 'CLUB', 0.7, 2, [
     'Full time: {club} {score} {opponent}. Back to work.',
@@ -454,15 +462,27 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'Into the record books: {club}, {record}, {value}.',
   ], ['record']),
   ...post('RECORD_BROKEN', 'FAN', 0.7, 3, [
-    'That record stood for thirty-one years. Thirty-one.',
     'I was there for {record}. Framing the ticket.',
     'Whatever else happens this season, {subject} did that.',
   ], ['record']),
+  // Only sayable once the record book has something in it worth beating.
+  ...post('RECORD_BROKEN', 'FAN', 0.7, 3, [
+    'That record stood for {recordAge} seasons. {recordAge}.',
+    'Grew up with that record. Never thought I would see it go.',
+  ], ['record'], { recordAgeSeasons_gte: 2 }),
   ...post('RECORD_BROKEN', 'MEDIA', 0.4, 3, [
-    'A record that has stood for a generation falls to {player}.',
     'RECORD | {subject} sets a new mark: {record} ({value}).',
     '{club} rewrite their own history: {record} now stands at {value}.',
+    'New entry in the {club} record book — {record}, {value}.',
+    '{record} moves to {value}. The old number lasted longer than most.',
   ], ['record']),
+  ...post('RECORD_BROKEN', 'CREATOR', 0.5, 4, [
+    'Records are the only thing in this sport nobody can argue with. {record}: {value}.',
+    'Put {value} on a shirt. {record}. Done.',
+  ], ['record']),
+  ...post('RECORD_BROKEN', 'MEDIA', 0.4, 3, [
+    'A record that has stood for a generation falls to {player}.',
+  ], ['record'], { recordAgeSeasons_gte: 3 }),
 
   /* ------------------------------------------------------ CONTRACT_SIGNED */
   ...post('CONTRACT_SIGNED', 'CLUB', 0.6, 2, [

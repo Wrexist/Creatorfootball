@@ -8,7 +8,7 @@ import {
 } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet, KeyValueRow,
-  PlayerPortrait, PositionChip, ProgressBar, Screen, SectionHeader, StatCard, StatGrid, cn,
+  NameText, PlayerPortrait, PositionChip, ProgressBar, Screen, SectionHeader, StatCard, StatGrid, cn,
   IconCheck, IconInjury, IconStar, IconTraining, IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
@@ -328,10 +328,10 @@ function TrainingBody({ state }: { state: GameState }): ReactNode {
                 )}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold text-ink">
+                  <span className="block text-[14px] font-semibold text-ink text-pretty">
                     {player?.displayName ?? 'Unknown player'}
                   </span>
-                  <span className="block truncate text-[12px] text-ink-muted">{result.note}</span>
+                  <span className="line-clamp-2 block text-[12px] text-ink-muted text-pretty">{result.note}</span>
                 </span>
                 <span
                   className={cn(
@@ -376,7 +376,11 @@ function TrainingBody({ state }: { state: GameState }): ReactNode {
             >
               <PlayerPortrait seed={player.portraitSeed} size={34} shape="squircle" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] font-semibold text-ink">{player.displayName}</span>
+                <NameText
+                  name={player.displayName}
+                  short={`${player.firstName.charAt(0)}. ${player.lastName}`}
+                  role="bodyStrong"
+                />
                 <span className="block text-[12px] text-ink-muted">
                   {data.focus[player.id]
                     ? `Focusing on ${ATTRIBUTE_LABELS[data.focus[player.id] as AttributeKey] ?? data.focus[player.id]}`

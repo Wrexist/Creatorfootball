@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BASE_CLUBS, PHILOSOPHY_LABELS, playerClub, trackEvent,
@@ -6,9 +6,9 @@ import {
   type ClubVisualIdentity, type FanCulture,
 } from '@cf/engine';
 import {
-  Accordion, ClubBadge, GlassButton, GlassIcon, GlassInput, GlassPanel, GlassPill,
-  IconArrowLeft, IconCheck, IconSwap, MoneyLabel, NameText, ProgressBar, SectionHeader,
-  Text, useToast,
+  Accordion, ClubBadge, FOCUS_RING, GlassButton, GlassIcon, GlassInput, GlassPanel,
+  GlassPill, IconArrowLeft, IconCheck, IconSwap, MoneyLabel, NameText, ProgressBar,
+  SectionHeader, Text, useToast,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -196,7 +196,20 @@ export function ClubCreationScreen(): ReactNode {
 
 /* --- the default path: twelve clubs that already exist ----------------- */
 
-function ClubChoiceCard({ brief }: { brief: ClubBrief }): ReactNode {
+/**
+ * `prominent` is for the three the screen opens on.
+ *
+ * The procedural crest system is the best visual asset in this product, and a
+ * 54px icon in a list is the one presentation guaranteed to waste it. The three
+ * featured clubs get the crest at 78px with the home kit under it, so the first
+ * thing a player sees on this screen is twelve years of invented history drawn
+ * properly. The other nine, inside the disclosure, stay compact — that is a
+ * list you are scanning, not a thing you are being sold.
+ */
+function ClubChoiceCard({ brief, prominent = false }: {
+  brief: ClubBrief;
+  prominent?: boolean;
+}): ReactNode {
   const state = useCreationStore();
   const { club, tierCopy } = brief;
   const selected = state.takeoverClubId === club.id;
@@ -231,7 +244,20 @@ function ClubChoiceCard({ brief }: { brief: ClubBrief }): ReactNode {
       } : {})}
     >
       <div className="flex gap-3.5 pl-2">
-        <ClubBadge visual={templateVisual(club)} size={54} />
+        <div className="flex shrink-0 flex-col items-center gap-2.5">
+          <ClubBadge
+            visual={templateVisual(club)}
+            size={prominent ? 78 : 54}
+            label={`${club.name} badge`}
+          />
+          {prominent && (
+            <KitPreview
+              visual={templateVisual(club)}
+              size={46}
+              label={`${club.name} home kit`}
+            />
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -307,33 +333,56 @@ function ClubChoiceCard({ brief }: { brief: ClubBrief }): ReactNode {
 
 function TakeOneOver(): ReactNode {
   const state = useCreationStore();
+  const [showAll, setShowAll] = useState(false);
+  const restId = useId();
 
   return (
     <>
       <div>
+        {/* The disclosure lives in the section header's action slot rather than
+            in a panel below the cards, because that is what it is: a control on
+            the scope of this section, not a fourth thing to choose. It also
+            means the first three real choices are the first three real controls
+            after the back button — which matters for anything walking the
+            screen in order, keyboard or otherwise. */}
         <SectionHeader
           title="Three ways to start"
           subtitle="Win the league, entertain them, or keep the lights on."
+          action={
+            <button
+              type="button"
+              aria-expanded={showAll}
+              aria-controls={restId}
+              onClick={() => setShowAll((open) => !open)}
+              className={`min-h-11 shrink-0 px-1 text-[13px] font-semibold text-ink-dim hover:text-ink ${FOCUS_RING}`}
+            >
+              {showAll ? 'Show three' : 'All twelve'}
+            </button>
+          }
         />
         <div className="mt-3 flex flex-col gap-2.5">
           {FEATURED_BRIEFS.map((brief) => (
-            <ClubChoiceCard key={brief.club.id} brief={brief} />
+            <ClubChoiceCard key={brief.club.id} brief={brief} prominent />
           ))}
         </div>
       </div>
 
-      <GlassPanel level={1} radius="lg" padding="md" nested>
-        <Accordion
-          title="See all twelve"
-          subtitle="The other nine clubs in the league, strongest first"
-        >
-          <div className="flex flex-col gap-2.5">
-            {REMAINING_BRIEFS.map((brief) => (
-              <ClubChoiceCard key={brief.club.id} brief={brief} />
-            ))}
-          </div>
-        </Accordion>
-      </GlassPanel>
+      <div id={restId}>
+        {showAll && (
+          <>
+            <SectionHeader
+              title="The other nine"
+              subtitle="Everybody else in this league, strongest first."
+              size="sm"
+            />
+            <div className="mt-3 flex flex-col gap-2.5">
+              {REMAINING_BRIEFS.map((brief) => (
+                <ClubChoiceCard key={brief.club.id} brief={brief} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       <SecondaryPath
         title="Rather start with nothing?"

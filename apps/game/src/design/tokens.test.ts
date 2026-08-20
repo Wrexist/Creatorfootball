@@ -77,6 +77,26 @@ describe('glass fallbacks', () => {
     }
   });
 
+  /**
+   * The kit's headline performance rule is that a blurring layer never contains
+   * another. Controls are the way it gets broken: a button, an icon button, an
+   * input, a segmented control and an enclosed tab set all live *inside*
+   * something, so a glass level of their own is automatically a nested blur.
+   * Measured before this was fixed: depth 2 on /home and /market.
+   */
+  it('keeps blurring surfaces out of every control', () => {
+    const CONTROLS = [
+      'GlassButton.tsx', 'GlassIcon.tsx', 'GlassInput.tsx',
+      'GlassSegmented.tsx', 'GlassTabs.tsx', 'GlassPill.tsx', 'GlassToggle.tsx',
+    ];
+    for (const file of CONTROLS) {
+      const source = readFileSync(join(DESIGN_DIR, 'glass', file), 'utf8');
+      const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+      expect(code, `${file} carries a blurring surface`).not.toMatch(/glass-[1-4]\b/);
+      expect(code, `${file} calls glassClass`).not.toMatch(/glassClass\(/);
+    }
+  });
+
   it('never animates or transitions backdrop-filter', () => {
     expect(TOKENS).not.toMatch(/transition[^;]*backdrop-filter/);
     expect(TOKENS).not.toMatch(/@keyframes[^}]*backdrop-filter/);

@@ -94,6 +94,8 @@ export function MatchLiveScreen(): ReactNode {
     if (!sim) { setFailed(true); return; }
 
     simRef.current = sim;
+    // eslint-disable-next-line no-console
+    console.log('[DBG] simulator created for', fixtureId, new Error().stack);
     useMatchStore.getState().attach(sim);
     setReady(true);
     // Deliberately not `play()` here: the walk-out sequence starts the match
