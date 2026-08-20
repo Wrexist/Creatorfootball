@@ -18,3 +18,4 @@ artifacts/
 # probes here; they are never part of the product.
 tools/sim/src/zz*.ts
 tools/sim/src/__*.ts
+tools/sim/src/_audit/
