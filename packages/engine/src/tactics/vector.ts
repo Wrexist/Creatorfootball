@@ -27,7 +27,7 @@ const TEMPO: Record<TacticSetup['tempo'], Delta> = {
   PATIENT:  { possessionBias: +0.10, chanceQuality: +0.10, attackVolume: -0.10, counterWeight: -0.10, fatigueRate: -0.05, volatility: -0.06 },
   BALANCED: {},
   QUICK:    { attackVolume: +0.09, counterWeight: +0.08, possessionBias: -0.05, chanceQuality: -0.05, fatigueRate: +0.08 },
-  FRANTIC:  { attackVolume: +0.18, volatility: +0.24, chanceQuality: -0.08, possessionBias: -0.12, fatigueRate: +0.10, foulRate: +0.06 },
+  FRANTIC:  { attackVolume: +0.18, volatility: +0.24, chanceQuality: -0.06, possessionBias: -0.12, fatigueRate: +0.07, foulRate: +0.06 },
 };
 
 /**

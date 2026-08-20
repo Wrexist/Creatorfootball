@@ -14,8 +14,16 @@ export const TRANSFER_BALANCE = {
    * Multiplier applied per point of overall above (or below) league average.
    * Compounding rather than linear: the gap between an 80 and an 86 must feel
    * enormous, because that is the gap that decides titles.
+   *
+   * Lowered from 1.118. At 1.118 a league spanning 25 overall points spanned
+   * *two orders of magnitude* in price — the top of the market was 100x the
+   * bottom, the best player a club at the foot of the table could reach was
+   * rated 61 against a weakest starter of 60, and the transfer window was not a
+   * decision. 1.095 keeps the top of the market unreachable-but-visible (~30x)
+   * while putting the tier immediately above the player inside a season's
+   * budget, which is where the whole emotional point of the system lives.
    */
-  VALUE_PER_OVERALL: 1.118,
+  VALUE_PER_OVERALL: 1.095,
   /** A squad filler still costs something; nobody is free. */
   MIN_VALUE: 25_000,
   /** Hard ceiling so a runaway save cannot produce nonsense numbers. */
@@ -52,8 +60,13 @@ export const TRANSFER_BALANCE = {
   DEMAND_PER_SUITOR: 0.07,
   DEMAND_CAP: 0.35,
 
-  /** Contract weeks at or above which there is no run-down discount at all. */
-  CONTRACT_SAFE_WEEKS: 40,
+  /**
+   * Contract weeks at or above which there is no run-down discount at all.
+   * Raised from 40 (under two seasons) to 60 so that a player in the final year
+   * of his deal is visibly cheaper — the single most reliable route to an
+   * affordable upgrade for a club that cannot outbid anyone.
+   */
+  CONTRACT_SAFE_WEEKS: 60,
   /** Multiplier at zero weeks remaining — the "he can leave for nothing" cliff. */
   CONTRACT_EXPIRING_MULT: 0.22,
   /** A free agent commands no fee, but the wage demand rises to compensate. */
@@ -236,6 +249,27 @@ export const MARKET_BALANCE = {
   LISTING_RATE: 0.09,
   /** Squad size above which AI clubs start listing fringe players. */
   SQUAD_COMFORT_SIZE: 20,
+  /**
+   * Squad size above which a club will listen on anyone outside its best
+   * `DEPTH_PROTECTED` players. A twenty-man squad with eleven starters has
+   * assets it is not using, and refusing to model that is what left the market
+   * stocked exclusively with players nobody wanted.
+   */
+  DEPTH_SQUAD_SIZE: 16,
+  DEPTH_PROTECTED: 12,
+  /**
+   * The window's promise.
+   *
+   * An open window must reliably put a few genuinely tempting, affordable
+   * upgrades in front of the player, or the one strategic decision of the
+   * between-match loop resolves to "there is nothing to buy". This is a floor
+   * on *visibility*, not a cheat: it only reveals players their clubs were
+   * already willing to sell, at their real asking price. If nothing eligible is
+   * affordable, nothing appears.
+   */
+  WINDOW_MIN_UPGRADES: 4,
+  /** How far above the weakest starter a listing must be to count as an upgrade. */
+  UPGRADE_MARGIN: 2,
   /** A player under this share of his role's promised minutes is listable. */
   NEGLECTED_MINUTES_RATIO: 0.5,
   /** Free agents generated per refresh when the pool is thin. */

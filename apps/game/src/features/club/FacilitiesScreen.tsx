@@ -124,7 +124,7 @@ const FacilityCard = memo(function FacilityCard({
       {building ? (
         <div className="mt-3 rounded-md bg-info/10 p-3">
           <p className="text-[13px] font-semibold text-info">
-            Level {building.targetLevel} arrives in {building.cyclesRemaining} cycle{building.cyclesRemaining === 1 ? '' : 's'}
+            Level {building.targetLevel} arrives in {building.cyclesRemaining} week{building.cyclesRemaining === 1 ? '' : 's'}
           </p>
           <p className="mt-1 text-[12px] text-ink-muted">
             The money has already left. Nothing changes until the work finishes.
@@ -138,8 +138,8 @@ const FacilityCard = memo(function FacilityCard({
           <p className="mt-1 text-[13px] leading-relaxed text-ink text-pretty">{next.effect}</p>
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <GlassPill tone={row.affordable ? 'neutral' : 'danger'} size="sm">{formatMoney(next.cost)}</GlassPill>
-            <GlassPill size="sm" icon={<IconClock />}>{next.cycles === 0 ? 'Immediate' : `${next.cycles} cycles`}</GlassPill>
-            <GlassPill size="sm">{formatMoney(def.upkeepPerCycle[next.level] ?? 0)}/cycle upkeep</GlassPill>
+            <GlassPill size="sm" icon={<IconClock />}>{next.cycles === 0 ? 'Immediate' : `${next.cycles} weeks`}</GlassPill>
+            <GlassPill size="sm">{formatMoney(def.upkeepPerCycle[next.level] ?? 0)}/wk upkeep</GlassPill>
           </div>
           <div className="mt-3">
             <GlassButton
@@ -305,7 +305,7 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
       }
       aside={
         <GlassPanel title="Running costs" padding="md">
-          <KeyValueRow label="Upkeep" value={`${formatMoney(data.upkeep)}/cycle`} hint="Paid whether you use them or not" />
+          <KeyValueRow label="Upkeep" value={`${formatMoney(data.upkeep)}/wk`} hint="Paid whether you use them or not" />
           <KeyValueRow label="Cash" value={formatMoney(data.balance)} />
           <KeyValueRow label="In progress" value={data.projects.length} divided={false} hint="Two builds at once is the limit" />
         </GlassPanel>
@@ -324,7 +324,7 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
 
       <StatGrid columns={2}>
         <StatCard label="Cash" value={<span>{formatMoney(data.balance)}</span>} footnote="Available to spend now" />
-        <StatCard label="Upkeep" value={<span>{formatMoney(data.upkeep)}</span>} tone="warning" footnote="Every cycle, forever" />
+        <StatCard label="Upkeep" value={<span>{formatMoney(data.upkeep)}</span>} tone="warning" footnote="Every week, forever" />
       </StatGrid>
 
       {data.projects.length > 0 && (
@@ -386,8 +386,8 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
             <p className="text-[14px] leading-relaxed text-ink text-pretty">{pendingNext.effect}</p>
             <GlassPanel nested level={1} padding="sm">
               <KeyValueRow label="Cost now" value={formatMoney(pendingNext.cost)} emphasis />
-              <KeyValueRow label="Ready in" value={pendingNext.cycles === 0 ? 'Immediately' : `${pendingNext.cycles} cycles`} />
-              <KeyValueRow label="Upkeep after" value={`${formatMoney(pending.upkeepPerCycle[pendingNext.level] ?? 0)}/cycle`} />
+              <KeyValueRow label="Ready in" value={pendingNext.cycles === 0 ? 'Immediately' : `${pendingNext.cycles} weeks`} />
+              <KeyValueRow label="Upkeep after" value={`${formatMoney(pending.upkeepPerCycle[pendingNext.level] ?? 0)}/wk`} />
               <KeyValueRow label="Cash left" value={formatMoney(data.balance - pendingNext.cost)} divided={false} />
             </GlassPanel>
             <p className="text-[12px] leading-relaxed text-ink-muted text-pretty">

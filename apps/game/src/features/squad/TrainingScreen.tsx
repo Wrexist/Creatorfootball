@@ -207,7 +207,7 @@ function TrainingBody({ state }: { state: GameState }): ReactNode {
           suffix=" pts"
           icon={<IconStar size={13} />}
           tone="volt"
-          footnote="Average attribute points per player, per cycle"
+          footnote="Average attribute points per player, per week"
         />
         <StatCard
           label="Injury risk"
@@ -216,7 +216,7 @@ function TrainingBody({ state }: { state: GameState }): ReactNode {
           suffix="%"
           icon={<IconInjury size={13} />}
           tone={data.risk > 1.2 ? 'danger' : 'positive'}
-          footnote="Per player, per cycle"
+          footnote="Per player, per week"
         />
       </StatGrid>
 

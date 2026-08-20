@@ -253,7 +253,19 @@ export const BALANCE = {
    * How much `volatility` widens the shot-location distribution inside
    * `buildChance`. A chaotic side takes worse shots and better ones. 0-1.5.
    */
-  VOLATILITY_LOCATION_WEIGHT: 0.7,
+  VOLATILITY_LOCATION_WEIGHT: 0.5,
+  /**
+   * Mean correction for the widening above.
+   *
+   * xG is a concave function of how square and how close the shot is, so
+   * widening the location distribution lowers its mean *by construction*. Left
+   * uncorrected, `volatility` was not variance at all — it was an 11% tax on
+   * chance quality wearing variance as a disguise, which is precisely the trap
+   * a "swinginess" stat has to avoid. This restores the mean so a volatile side
+   * takes better shots and worse ones rather than uniformly worse ones. Tuned
+   * by measuring xG-per-shot at RECKLESS against the default. 0-0.5.
+   */
+  VOLATILITY_XG_COMPENSATION: 0.21,
 
   // ------------------------------------------------------- shot resolution ---
   /** Of shots that do not score, the share the keeper saves at parity. 0.25-0.5. */

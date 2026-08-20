@@ -171,10 +171,28 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
     else toast.error(report.title, report.detail);
   };
 
+  const anythingYet =
+    active.length > 0 || seasonTargets.length > 0 || state.objectives.completed.length > 0;
+
   return (
     <Screen
       title="Objectives"
-      subtitle={claimable > 0 ? `${claimable} ready to claim` : `${active.length} in progress`}
+      subtitle={
+        claimable > 0
+          ? `${claimable} ready to claim`
+          : anythingYet
+            ? `${active.length + seasonTargets.length} on the board`
+            : 'The board has not set anything yet'
+      }
+      /* The one thing to do when the board is empty. In the screen's footer
+         so it clears the fixed tab bar rather than hiding beneath it. */
+      footer={
+        anythingYet ? undefined : (
+          <GlassButton variant="primary" size="lg" block onClick={() => navigate(ROUTES.matchday)}>
+            Go to matchday
+          </GlassButton>
+        )
+      }
       aside={
         <>
           <GlassPanel title="Where they come from" padding="md">
@@ -217,26 +235,41 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
         padding="md"
         {...(claimable > 0 ? { trailing: <GlassPill tone="volt" size="sm" filled>Ready</GlassPill> } : {})}
       >
-        <div className="grid grid-cols-3 gap-3">
-          <StatBlock
-            label="In progress"
-            value={active.length}
-            tone="neutral"
-            caption="Being worked on"
-          />
-          <StatBlock
-            label="Ready"
-            value={claimable}
-            tone={claimable > 0 ? 'volt' : 'neutral'}
-            caption="Waiting on you"
-          />
-          <StatBlock
-            label="Settled"
-            value={state.objectives.completed.length}
-            tone="neutral"
-            caption="Done this career"
-          />
-        </div>
+        {/* Three zeroes are not a summary. The counters appear once there is
+            something to count; before that the headline says it all. */}
+        {anythingYet ? (
+          <div className="grid grid-cols-3 gap-3">
+            <StatBlock label="In progress" value={active.length} tone="neutral" caption="Being worked on" />
+            <StatBlock
+              label="Ready"
+              value={claimable}
+              tone={claimable > 0 ? 'volt' : 'neutral'}
+              caption="Waiting on you"
+            />
+            <StatBlock
+              label="Settled"
+              value={state.objectives.completed.length}
+              tone="neutral"
+              caption="Done this career"
+            />
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2.5">
+            {[
+              ['The board', 'Results, league position and how much you spend getting there.'],
+              ['Your sponsors', 'Reach, visibility and keeping their name in good company.'],
+              ['The supporters', 'Derbies, entertaining football and not selling their favourites.'],
+            ].map(([who, what]) => (
+              <li key={who} className="flex gap-2.5">
+                <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-pill bg-volt/60" />
+                <span className="min-w-0">
+                  <Text role="section" as="span" className="block">{who}</Text>
+                  <Text role="caption" as="span" className="block text-pretty">{what}</Text>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </HeroSurface>
 
       {seasonTargets.length > 0 && (
@@ -257,34 +290,22 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
         </>
       )}
 
-      <SectionHeader
-        title="In progress"
-        subtitle="Anything finished and unpaid is at the top"
-      />
-      {active.length === 0 ? (
-        <GlassPanel padding="md">
-          <EmptyState
-            size="sm"
-            icon={<IconTrophy />}
-            title="Nothing on the board"
-            description="Objectives arrive from the board, your sponsors and the supporters as the season moves. Play a matchweek and something will be asked of you."
-            action={
-              <GlassButton variant="secondary" size="sm" onClick={() => navigate(ROUTES.matchday)}>
-                Go to matchday
-              </GlassButton>
-            }
+      {active.length > 0 && (
+        <>
+          <SectionHeader
+            title="In progress"
+            subtitle="Anything finished and unpaid is at the top"
           />
-        </GlassPanel>
-      ) : (
-        active.map((objective) => (
-          <ObjectiveCard
-            key={objective.id}
-            objective={objective}
-            cycle={state.clock.cycle}
-            claiming={claimingId === objective.id}
-            onClaim={handleClaim}
-          />
-        ))
+          {active.map((objective) => (
+            <ObjectiveCard
+              key={objective.id}
+              objective={objective}
+              cycle={state.clock.cycle}
+              claiming={claimingId === objective.id}
+              onClaim={handleClaim}
+            />
+          ))}
+        </>
       )}
 
       {completed.length > 0 && (

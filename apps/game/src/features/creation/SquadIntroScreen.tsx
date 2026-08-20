@@ -5,7 +5,7 @@ import {
   squadOf, trackEvent, type Formation,
 } from '@cf/engine';
 import {
-  CardRail, GlassButton, GlassPanel, GlassPill, IconCheck, NameText, PlayerCard,
+  GlassButton, GlassPanel, GlassPill, IconCheck, NameText, PlayerCard,
   SectionHeader, Text, useConfirm,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
@@ -36,9 +36,14 @@ import { FIRST_SHAPE_IDS, SHAPE_CONSEQUENCE, squadShapeNote, squadStory } from '
  * strength and no valuation is computed in this file.
  */
 
+/**
+ * Volt is not in here on purpose. It belongs to the one action on the screen —
+ * the button that starts the match — and spending it on a taxonomy label is how
+ * a brand colour stops meaning "do this".
+ */
 const ROLE_TONE = {
-  STAR: 'volt',
-  PROSPECT: 'positive',
+  STAR: 'positive',
+  PROSPECT: 'info',
   PROBLEM: 'danger',
 } as const;
 
@@ -158,19 +163,28 @@ export function SquadIntroScreen(): ReactNode {
           title="The three worth knowing"
           subtitle="Your best, your future, and the one they will aim at."
         />
-        <CardRail itemWidth={196} bleed ariaLabel="The three players to know">
+        {/* Three rows, not a rail. A rail can only show two of three cards on a
+            393pt screen, and the beat is "exactly three players" — the third
+            one being behind a swipe is the difference between a promise kept
+            and a promise implied. Rows also give the sentence beside each
+            player room to be read. */}
+        <ul className="mt-3 flex flex-col gap-3">
           {cards.map((card) => (
-            <div key={card.player.id} className="flex flex-col gap-2">
-              <GlassPill tone={ROLE_TONE[card.role]} size="xs" filled>{card.label}</GlassPill>
-              <PlayerCard
-                player={card.player}
-                variant="featured"
-                club={{ name: club.name, abbreviation: club.abbreviation, visual: club.visual }}
-              />
-              <Text role="caption" className="text-pretty">{card.line}</Text>
-            </div>
+            <li key={card.player.id} className="flex items-start gap-3.5">
+              <div className="w-[132px] shrink-0">
+                <PlayerCard
+                  player={card.player}
+                  variant="standard"
+                  club={{ name: club.name, abbreviation: club.abbreviation, visual: club.visual }}
+                />
+              </div>
+              <div className="min-w-0 flex-1 pt-1">
+                <GlassPill tone={ROLE_TONE[card.role]} size="xs">{card.label}</GlassPill>
+                <Text role="body" className="mt-2 text-pretty">{card.line}</Text>
+              </div>
+            </li>
           ))}
-        </CardRail>
+        </ul>
       </div>
 
       {/* The one tactical decision the beat sheet asks for, explained by the

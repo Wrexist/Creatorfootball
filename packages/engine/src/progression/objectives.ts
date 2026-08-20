@@ -7,7 +7,7 @@ import type { Ledger, PostContext, Transaction } from '../economy/ledger';
 import { clubAccount, worldAccount } from '../economy/ledger';
 import { clamp } from '../core/math';
 import { points as leaguePoints } from '../clubs/club';
-import type { ContentRegistryPort } from '../simulation/ports';
+import { clubToken, type ContentRegistryPort, type TokenMap } from '../simulation/ports';
 import { matchesConditions, renderTemplate } from '../simulation/templating';
 import { objectiveKind, type ObjectiveContext, type ObjectiveKindDef } from '../objectives/kinds';
 import { FALLBACK_OBJECTIVE_TEMPLATES } from '../objectives/fallbackTemplates';
@@ -194,7 +194,10 @@ export function rollObjectives(
 
   const cycle = state.clock.cycle;
   return chosen.map((candidate) => {
-    const tokens = { target: candidate.target, club: state.clubs[ctx.clubId]?.name ?? 'the club' };
+    const tokens: TokenMap = {
+      target: candidate.target,
+      club: clubToken(state.clubs[ctx.clubId]?.name ?? 'the club'),
+    };
     const title = renderTemplate(candidate.template.title, tokens) ?? candidate.template.title;
     const description = renderTemplate(candidate.template.description, tokens) ?? candidate.template.description;
     const progress = candidate.kind.measure ? candidate.kind.measure(state, ctx.clubId) : 0;

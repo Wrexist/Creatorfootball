@@ -33,8 +33,49 @@ export type SocialPostKind = SocialPost['kind'];
  */
 export type HookFacts = Readonly<Record<string, string | number | boolean>>;
 
-/** Values substituted into `{token}` slots in a template. */
-export type TokenMap = Readonly<Record<string, string | number>>;
+/**
+ * Entity tokens carry their kind.
+ *
+ * A club name was reaching a slot written for a person, producing "Northgate
+ * Rovers writes his name into the history of Northgate Rovers" — a sentence
+ * that is wrong twice and that tells the reader none of this means anything.
+ * The two kinds are branded so that the compiler, not a code review, is what
+ * stops a club being substituted into `{player}`.
+ *
+ * `personToken` / `clubToken` are the only ways to make one, and the branding
+ * is erased at runtime: these are ordinary strings when rendered.
+ */
+declare const TOKEN_KIND: unique symbol;
+export type PersonToken = string & { readonly [TOKEN_KIND]: 'person' };
+export type ClubToken = string & { readonly [TOKEN_KIND]: 'club' };
+export type EntityToken = PersonToken | ClubToken;
+
+export const personToken = (name: string): PersonToken => name as PersonToken;
+export const clubToken = (name: string): ClubToken => name as ClubToken;
+
+/** Anything that is not a named entity: scores, fees, minutes, counts. */
+export type PlainToken = string | number;
+
+/**
+ * Values substituted into `{token}` slots in a template.
+ *
+ * The named slots below are typed by the kind of thing that belongs in them.
+ * `subject` deliberately accepts either, for lines that work whichever it is
+ * (a club record and a player record are both "a record {subject} broke").
+ */
+export interface TokenMap {
+  readonly player?: PersonToken;
+  readonly manager?: PersonToken;
+  readonly creator?: PersonToken;
+  readonly scorer?: PersonToken;
+  readonly club?: ClubToken;
+  readonly opponent?: ClubToken;
+  readonly rival?: ClubToken;
+  readonly buyer?: ClubToken;
+  readonly champion?: ClubToken;
+  readonly subject?: EntityToken;
+  readonly [key: string]: PlainToken | undefined;
+}
 
 /**
  * A reaction opportunity produced by the cascade. Media and social both consume

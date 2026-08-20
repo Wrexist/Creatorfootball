@@ -39,7 +39,7 @@ const GROUP_ORDER: readonly PositionGroup[] = ['GK', 'DEF', 'MID', 'ATT'];
 const MINIMUM_COVER: Record<PositionGroup, number> = { GK: 2, DEF: 4, MID: 5, ATT: 3 };
 
 /** Anybody at or under this is young enough that the ceiling is the story. */
-const PROSPECT_AGE = 22;
+const PROSPECT_AGE = 23;
 
 const byOverall = (a: Player, b: Player): number => b.overall - a.overall;
 
@@ -102,7 +102,12 @@ export function squadStory(
       role: 'PROSPECT',
       player: prospect,
       label: 'The prospect',
-      line: `${prospect.age} years old and nowhere near finished. Play him and find out.`,
+      // The number on his card will be low, and it should be: the point of a
+      // prospect is the gap between what he is and what he could be. Saying so
+      // in words is what stops the card reading as a mistake.
+      line:
+        `The highest ceiling in the building, and he is ${prospect.age}. ` +
+        'Nowhere near finished. Play him and find out.',
     });
   }
   if (problem) {

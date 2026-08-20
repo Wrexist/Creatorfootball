@@ -170,12 +170,12 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
       aside={
         <>
           <GlassPanel title="Standing orders" padding="md">
-            <KeyValueRow label="Wage bill" value={`${formatMoney(data.wages)}/cycle`} hint={`Budget ${formatMoney(club.finance.wageBudgetPerCycle)}`} />
-            <KeyValueRow label="Facility upkeep" value={`${formatMoney(data.upkeep)}/cycle`} />
+            <KeyValueRow label="Wage bill" value={`${formatMoney(data.wages)}/wk`} hint={`Budget ${formatMoney(club.finance.wageBudgetPerCycle)}`} />
+            <KeyValueRow label="Facility upkeep" value={`${formatMoney(data.upkeep)}/wk`} />
             <KeyValueRow label="Transfer budget" value={formatMoney(club.finance.transferBudget)} />
             <KeyValueRow label="Debt" value={formatMoney(club.finance.debt)} divided={false} />
           </GlassPanel>
-          <GlassPanel title="Last cycle" padding="md">
+          <GlassPanel title="Last week" padding="md">
             <KeyValueRow label="Income" value={formatMoney(club.finance.lastCycleIncome)} />
             <KeyValueRow label="Expenditure" value={formatMoney(club.finance.lastCycleExpenditure)} />
             <KeyValueRow
@@ -197,7 +197,7 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
           footnote="Cash available now"
         />
         <StatCard
-          label={period === 'season' ? 'Season net' : period === 'recent' ? 'Net, last 6 cycles' : 'Net, all time'}
+          label={period === 'season' ? 'Season net' : period === 'recent' ? 'Net, last 6 weeks' : 'Net, all time'}
           value={<span>{formatMoney(net)}</span>}
           tone={net >= 0 ? 'positive' : 'danger'}
           footnote={`${formatMoney(data.incomeTotal)} in · ${formatMoney(data.spendTotal)} out`}
@@ -226,7 +226,7 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
           <div className="mt-3 flex items-start gap-2.5">
             <IconWarning size={17} className="mt-0.5 shrink-0 text-danger" />
             <p className="text-[12px] leading-relaxed text-danger text-pretty">
-              You are over the wage allowance. Every cycle this continues eats into cash you would otherwise spend on
+              You are over the wage allowance. Every week this continues eats into cash you would otherwise spend on
               facilities or fees — and the board notices before the fans do.
             </p>
           </div>

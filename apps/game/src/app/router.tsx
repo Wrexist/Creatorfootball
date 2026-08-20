@@ -76,17 +76,38 @@ export function ScreenFallback(): ReactNode {
  * a shared link, a stale home-screen shortcut, a bookmark after a reset — and
  * it must land somewhere sensible rather than crashing on the first selector
  * that assumes a club.
+ *
+ * The guard's one hard rule: **it may only decide once boot has decided.**
+ * `BOOTING` is not "no save", it is "we have not looked yet", and treating the
+ * two as the same thing is what made a deep link bounce to the title screen on
+ * roughly one load in twenty-seven — whenever the first render landed before
+ * `loadGame` resolved. Because the bounce is a `replace`, the player could not
+ * even go back to the link they followed. `CREATING` is the same story from the
+ * other end: a game is being built right now, so waiting is correct and
+ * redirecting is not.
+ *
+ * There is deliberately no `state.from` here any more. It had no consumer, and
+ * with the boot race fixed there is nothing left for it to describe: the only
+ * redirects that survive are "there is genuinely no save" and "the save is
+ * broken", and in both of those the destination the player asked for cannot be
+ * restored by remembering it — there is no game to open it against.
  */
 function RequireGame(): ReactNode {
   const phase = useGameStore((s) => s.phase);
-  const location = useLocation();
   if (phase === 'READY') return <Outlet />;
-  return <Navigate to={ROUTES.onboarding} replace state={{ from: location.pathname }} />;
+  if (phase === 'BOOTING' || phase === 'CREATING') return <ScreenFallback />;
+  return <Navigate to={ROUTES.onboarding} replace />;
 }
 
-/** Where `/` goes once boot has decided what exists. */
+/**
+ * Where `/` goes once boot has decided what exists — and not one render before.
+ * Same race as `RequireGame`: sending a returning player to the title screen
+ * because the save had not finished loading is a bug they experience as "it
+ * forgot my club".
+ */
 function BootRedirect(): ReactNode {
   const phase = useGameStore((s) => s.phase);
+  if (phase === 'BOOTING' || phase === 'CREATING') return <ScreenFallback />;
   return <Navigate to={phase === 'READY' ? ROUTES.home : ROUTES.onboarding} replace />;
 }
 

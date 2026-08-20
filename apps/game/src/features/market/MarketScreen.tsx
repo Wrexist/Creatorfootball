@@ -11,7 +11,7 @@ import {
 } from '@cf/engine';
 import {
   CardRail, ClubBadge, Divider, EmptyState, GlassButton, GlassIcon, GlassInput, GlassPanel,
-  GlassPill, HeroSurface, IconFilter, IconMarket, IconScout, IconSearch, IconSort, IconStar,
+  GlassPill, HeroSurface, IconFilter, IconMarket, IconScout, IconSearch, IconStar,
   ListRow, MoneyLabel, NameText, ProgressBar, Screen, SectionHeader, StatBlock, Text,
   useToast,
 } from '@/design';
@@ -161,14 +161,7 @@ const RailSection = memo(function RailSection({
   return (
     <section className="flex flex-col gap-2">
       <SectionHeader title={rail.title} subtitle={rail.blurb} />
-      {rail.players.length === 0 ? (
-        <GlassPanel padding="sm" nested level={1}>
-          <Text role="caption" as="p" className="text-ink-dim text-pretty">
-            {rail.emptyLine}
-          </Text>
-        </GlassPanel>
-      ) : (
-        <CardRail itemWidth={228} ariaLabel={`${rail.title} players`}>
+      <CardRail itemWidth={228} ariaLabel={`${rail.title} players`}>
           {rail.players.map((player: Player) => (
             <TargetCard
               key={player.id}
@@ -181,8 +174,7 @@ const RailSection = memo(function RailSection({
               onPress={onOpen}
             />
           ))}
-        </CardRail>
-      )}
+      </CardRail>
     </section>
   );
 });
@@ -198,6 +190,8 @@ function MarketView({ state }: { state: GameState }): ReactNode {
   const headroom = useHeadroom(state);
   const negotiations = useOurNegotiations(state);
   const rails = useMarketRails(state);
+  const filledRails = useMemo(() => rails.filter((r) => r.players.length > 0), [rails]);
+  const emptyRails = useMemo(() => rails.filter((r) => r.players.length === 0), [rails]);
   const window = windowState(state);
   const cycle = state.clock.cycle;
 
@@ -354,14 +348,9 @@ function MarketView({ state }: { state: GameState }): ReactNode {
         texture="stadium"
         padding="md"
         footer={
-          <div className="grid w-full grid-cols-2 gap-2">
-            <GlassButton variant="primary" icon={<IconSort />} onClick={() => navigate(ROUTES.playerSearch)} block>
-              Browse and filter
-            </GlassButton>
-            <GlassButton variant="secondary" icon={<IconScout />} onClick={() => navigate(ROUTES.scouting)} block>
-              Scouting
-            </GlassButton>
-          </div>
+          <GlassButton variant="primary" onClick={() => navigate(ROUTES.playerSearch)} block>
+            Browse, filter and sort every player
+          </GlassButton>
         }
       />
 
@@ -391,9 +380,35 @@ function MarketView({ state }: { state: GameState }): ReactNode {
         )}
       </GlassPanel>
 
-      {rails.map((rail) => (
+      {/* A rail with nothing in it is a heading, a paragraph and an apology.
+          Six of those on day one is the dead space the review complained
+          about — so empty rails collapse into a single honest note instead. */}
+      {filledRails.map((rail) => (
         <RailSection key={rail.id} rail={rail} state={state} clubs={clubs} onOpen={openPlayer} />
       ))}
+
+      {emptyRails.length > 0 && (
+        <GlassPanel
+          title={filledRails.length > 0 ? 'Not showing yet' : 'The market has not opened up yet'}
+          padding="md"
+        >
+          <div className="flex flex-col">
+            {emptyRails.map((rail, index) => (
+              <ListRow
+                key={rail.id}
+                density="compact"
+                divided={index < emptyRails.length - 1}
+                title={rail.title}
+                subtitle={rail.emptyLine}
+              />
+            ))}
+          </div>
+          <Text role="caption" as="p" className="mt-3 text-ink-dim text-pretty">
+            Each of these fills in on its own as the season moves. Nothing is locked behind a
+            purchase.
+          </Text>
+        </GlassPanel>
+      )}
 
       <GlassPanel padding="md">
         <SectionHeader

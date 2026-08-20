@@ -7,7 +7,11 @@ import { formatMoney } from '../economy/ledger';
 import { clamp } from '../core/math';
 import { fanReactionMultiplier, rivalryFor, rivalryKey } from '../rivalries/rivalries';
 import { CASCADE_BALANCE as C } from './balance';
-import type { ContentHook, HookFacts, SocialPostKind, TokenMap } from './ports';
+import {
+  clubToken, personToken,
+  type ClubToken, type ContentHook, type HookFacts, type PersonToken, type SocialPostKind,
+  type TokenMap,
+} from './ports';
 import { sentimentBand } from './templating';
 
 /**
@@ -74,8 +78,13 @@ interface CascadeCtx {
   readonly cycle: number;
   readonly playerClubId: ClubId;
   readonly pressure: ReadonlyMap<string, number>;
-  clubName(id: string | undefined): string;
-  playerName(id: string | undefined): string;
+  /**
+   * Entity names come back *tagged*. A club name can then never be assigned to
+   * a `{player}` slot without the compiler saying so, which is the fix for
+   * "Northgate Rovers writes his name into the history of Northgate Rovers".
+   */
+  clubName(id: string | undefined): ClubToken;
+  playerName(id: string | undefined): PersonToken;
   derbyHeat(a: ClubId | undefined, b: ClubId | undefined): number;
   /** Who the club was playing in this match, when the fixture is known. */
   opponentIn(matchId: string | undefined, clubId: ClubId): ClubId | undefined;
@@ -629,10 +638,10 @@ const sackRule: RuleFor<'MANAGER_SACKED'> = (e, ctx) => {
   return {
     nodes: [{ id: 'sack', kind: 'MEDIA', label: `${p.managerName} leaves ${clubName}`, sourceEventId: e.id }],
     deltas: [{ kind: 'FAN_SENTIMENT', clubId: p.clubId, delta: 2, reason: 'Change at the top' }],
-    media: [{ trigger: 'MANAGER_SACKED', importance: 5, sentiment: -0.4, tokens: { club: clubName, manager: p.managerName }, facts: {}, entities, clubId: p.clubId, tags: ['manager'] }],
+    media: [{ trigger: 'MANAGER_SACKED', importance: 5, sentiment: -0.4, tokens: { club: clubName, manager: personToken(p.managerName) }, facts: {}, entities, clubId: p.clubId, tags: ['manager'] }],
     social: [{
       trigger: 'MANAGER_SACKED', importance: 4, sentiment: -0.3,
-      tokens: { club: clubName, manager: p.managerName }, facts: {}, entities, clubId: p.clubId,
+      tokens: { club: clubName, manager: personToken(p.managerName) }, facts: {}, entities, clubId: p.clubId,
       audiences: ['MEDIA', 'FAN', 'RIVAL', 'CREATOR'], tags: ['manager'],
     }],
   };
@@ -675,12 +684,12 @@ const creatorJoinRule: RuleFor<'CREATOR_JOINED'> = (e, ctx) => {
     deltas: [{ kind: 'FAN_EXCITEMENT', clubId: p.clubId, delta: 4, reason: 'Creator signing' }],
     media: [{
       trigger: 'CREATOR_JOINED', importance: 3, sentiment: 0.5,
-      tokens: { creator: creator.displayName, club: clubName, role: p.role },
+      tokens: { creator: personToken(creator.displayName), club: clubName, role: p.role },
       facts: { tier: creator.tier, role: p.role }, entities, clubId: p.clubId, tags: ['creator'],
     }],
     social: [{
       trigger: 'CREATOR_JOINED', importance: 3, sentiment: 0.6,
-      tokens: { creator: creator.displayName, club: clubName, role: p.role },
+      tokens: { creator: personToken(creator.displayName), club: clubName, role: p.role },
       facts: { tier: creator.tier, role: p.role }, entities, clubId: p.clubId,
       audiences: ['CREATOR', 'CLUB', 'FAN'], tags: ['creator'],
     }],
@@ -1208,7 +1217,7 @@ const creatorMomentRule: RuleFor<'CREATOR_MOMENT'> = (e, ctx) => {
     ...clubEntity(ctx, p.clubId),
   ];
   const tokens: TokenMap = {
-    creator: creator.displayName, club, reach: compactCount(p.reach), kind: p.kind,
+    creator: personToken(creator.displayName), club, reach: compactCount(p.reach), kind: p.kind,
   };
   return {
     nodes: [{ id: 'moment', kind: 'SOCIAL', label: `${creator.displayName} goes viral`, sourceEventId: e.id }],
@@ -1460,8 +1469,8 @@ export function expandCascade(
     cycle,
     playerClubId: state.playerClubId,
     pressure,
-    clubName: (id) => (id ? state.clubs[id]?.name ?? 'the club' : 'the club'),
-    playerName: (id) => (id ? state.players[id]?.displayName ?? 'the player' : 'the player'),
+    clubName: (id) => clubToken(id ? state.clubs[id]?.name ?? 'the club' : 'the club'),
+    playerName: (id) => personToken(id ? state.players[id]?.displayName ?? 'the player' : 'the player'),
     derbyHeat: (a, b) => {
       if (!a) return 0;
       if (!b) {
@@ -1563,7 +1572,7 @@ export function expandCascade(
       trigger: crisis ? 'MANAGER_CRISIS' : 'MANAGER_PRESSURE',
       importance: (crisis ? 5 : 3) as EventImportance,
       sentiment: crisis ? -0.85 : -0.5,
-      tokens: { club: clubName, manager },
+      tokens: { club: clubName, manager: personToken(manager) },
       facts: { pressure: Math.round(clubPressure), crisis },
       entities: clubEntity(ctx, state.playerClubId),
       clubId: state.playerClubId,

@@ -110,9 +110,12 @@ export function QuietWorld({
 
       {opponent && (
         <GlassPanel title="Who you play first" padding="md">
-          <ListRow
-            leading={<ClubBadge visual={opponent.visual} size={34} label={opponent.name} />}
-            title={
+          {/* The follower count goes underneath rather than in the trailing
+              slot: a wide pill on the right squeezes the name column until a
+              two-word club name needs two lines. */}
+          <div className="flex items-start gap-3">
+            <ClubBadge visual={opponent.visual} size={38} label={opponent.name} />
+            <div className="min-w-0 flex-1">
               <NameText
                 name={opponent.name}
                 short={opponent.shortName}
@@ -120,15 +123,14 @@ export function QuietWorld({
                 role="section"
                 lines={2}
               />
-            }
-            subtitle={opponent.motto}
-            divided={false}
-            trailing={
-              <GlassPill size="xs">
-                {formatCount(opponent.fans.onlineFollowers)} followers
-              </GlassPill>
-            }
-          />
+              <Text role="caption" as="p" className="mt-1 text-pretty">{opponent.motto}</Text>
+              <div className="mt-2">
+                <GlassPill size="xs">
+                  {formatCount(opponent.fans.onlineFollowers)} followers of their own
+                </GlassPill>
+              </div>
+            </div>
+          </div>
         </GlassPanel>
       )}
 

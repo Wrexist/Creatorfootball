@@ -441,7 +441,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
         >
           {data.contract ? (
             <>
-              <ListRow title="Wage" subtitle="Paid every cycle" trailing={<Text role="stat">{formatMoney(data.contract.wage)}</Text>} />
+              <ListRow title="Wage" subtitle="Paid every week" trailing={<Text role="stat">{formatMoney(data.contract.wage)}</Text>} />
               <ListRow
                 title="Time left"
                 subtitle={`Of a ${data.contract.totalWeeks}-week deal`}

@@ -7,7 +7,10 @@ import { mean } from '../core/math';
 import { formatMoney } from '../economy/ledger';
 import { RIVALRY_BALANCE } from '../rivalries/balance';
 import { EMERGENT_BALANCE } from './balance';
-import type { ContentHook, HookFacts, SocialPostKind, TokenMap } from './ports';
+import {
+  clubToken, personToken,
+  type ContentHook, type HookFacts, type SocialPostKind, type TokenMap,
+} from './ports';
 import { sentimentBand } from './templating';
 
 /**
@@ -149,7 +152,7 @@ const detectDerbyKing: Detector = (state, index, cycle) => {
         kind: 'DERBY_KING', trigger: 'EMERGENT_DERBY_KING',
         importance: 4, sentiment: 0.7,
         clubId: clubId as ClubId, playerId: playerId as PlayerId,
-        tokens: { player: player.displayName, club: club?.name ?? 'the club', count: EMERGENT_BALANCE.derbyStreak },
+        tokens: { player: personToken(player.displayName), club: clubToken(club?.name ?? 'the club'), count: EMERGENT_BALANCE.derbyStreak },
         facts: { count: EMERGENT_BALANCE.derbyStreak, derby: true },
         entities: [...playerEntity(state, playerId), ...clubEntity(state, clubId)],
         evidence: recent.map((f) => `Scored in derby week ${f.week}`),
@@ -187,7 +190,7 @@ const detectCleanSheetRun: Detector = (state, index, cycle) => {
       kind: 'CLEAN_SHEET_RUN', trigger: 'EMERGENT_CLEAN_SHEET_RUN',
       importance: 3, sentiment: 0.65,
       clubId: clubId as ClubId, playerId: keeper.id,
-      tokens: { player: keeper.displayName, club: club.name, count: streak },
+      tokens: { player: personToken(keeper.displayName), club: clubToken(club.name), count: streak },
       facts: { count: streak, streak },
       entities: [...playerEntity(state, keeper.id), ...clubEntity(state, clubId)],
       evidence: [`${streak} consecutive matches without conceding`],
@@ -219,7 +222,7 @@ const detectFlopSigning: Detector = (state, index, cycle) => {
       kind: 'FLOP_SIGNING', trigger: 'EMERGENT_FLOP_SIGNING',
       importance: 4, sentiment: -0.65,
       clubId, playerId,
-      tokens: { player: player.displayName, club: club.name, fee: formatMoney(fee), count: player.form.appearances },
+      tokens: { player: personToken(player.displayName), club: clubToken(club.name), fee: formatMoney(fee), count: player.form.appearances },
       facts: { fee, count: player.form.appearances, rating: Math.round(rating * 10) / 10 },
       entities: [...playerEntity(state, playerId), ...clubEntity(state, clubId)],
       evidence: [
@@ -261,7 +264,7 @@ const detectBreakoutArc: Detector = (state, index, cycle) => {
       kind: 'BREAKOUT_ARC', trigger: 'EMERGENT_BREAKOUT_ARC',
       importance: 4, sentiment: 0.7,
       clubId: player.clubId, playerId: player.id,
-      tokens: { player: player.displayName, club: club?.name ?? 'the club', count: Math.round(gain), age: player.age, overall: player.overall },
+      tokens: { player: personToken(player.displayName), club: clubToken(club?.name ?? 'the club'), count: Math.round(gain), age: player.age, overall: player.overall },
       facts: { count: Math.round(gain), age: player.age, overall: player.overall },
       entities: [...playerEntity(state, playerId), ...clubEntity(state, player.clubId)],
       evidence: [`+${Math.round(gain)} attribute points this season`, `age ${player.age}`],
@@ -299,7 +302,7 @@ const detectRuns: Detector = (state, index, cycle) => {
         id: `em_unbeaten_${clubId}_${cycle}`,
         kind: 'UNBEATEN_RUN', trigger: 'EMERGENT_UNBEATEN_RUN',
         importance: 3, sentiment: 0.7, clubId: clubId as ClubId,
-        tokens: { club: club.name, count: unbeaten },
+        tokens: { club: clubToken(club.name), count: unbeaten },
         facts: { count: unbeaten, streak: unbeaten },
         entities: clubEntity(state, clubId),
         evidence: [`${unbeaten} matches unbeaten`],
@@ -312,7 +315,7 @@ const detectRuns: Detector = (state, index, cycle) => {
         id: `em_winless_${clubId}_${cycle}`,
         kind: 'WINLESS_RUN', trigger: 'EMERGENT_WINLESS_RUN',
         importance: 4, sentiment: -0.65, clubId: clubId as ClubId,
-        tokens: { club: club.name, count: winless },
+        tokens: { club: clubToken(club.name), count: winless },
         facts: { count: winless, streak: winless },
         entities: clubEntity(state, clubId),
         evidence: [`${winless} matches without a win`],
@@ -345,7 +348,7 @@ const detectRivalryBoiling: Detector = (state, index, cycle) => {
       kind: 'RIVALRY_BOILING', trigger: 'EMERGENT_RIVALRY_BOILING',
       importance: 4, sentiment: -0.45,
       clubId: rivalry.clubAId, opponentClubId: rivalry.clubBId,
-      tokens: { club: a.name, rival: b.name, opponent: b.name, intensity: Math.round(rivalry.intensity), count: recentIncidents },
+      tokens: { club: clubToken(a.name), rival: clubToken(b.name), opponent: clubToken(b.name), intensity: Math.round(rivalry.intensity), count: recentIncidents },
       facts: { intensity: Math.round(rivalry.intensity), derby: true, count: recentIncidents },
       entities: [...clubEntity(state, rivalry.clubAId), ...clubEntity(state, rivalry.clubBId)],
       evidence: [`intensity ${Math.round(rivalry.intensity)}`, `${recentIncidents} recent incidents`],
@@ -373,7 +376,7 @@ const detectRecordChase: Detector = (state, index, cycle) => {
       kind: 'RECORD_CHASE', trigger: 'EMERGENT_RECORD_CHASE',
       importance: 4, sentiment: 0.6,
       clubId: player.clubId, playerId: player.id,
-      tokens: { player: player.displayName, club: club?.name ?? 'the club', record: 'the club goalscoring record', value: record.value, count: player.form.goals },
+      tokens: { player: personToken(player.displayName), club: clubToken(club?.name ?? 'the club'), record: 'the club goalscoring record', value: record.value, count: player.form.goals },
       facts: { record: 'PLAYER_SEASON_GOALS', value: record.value, count: player.form.goals },
       entities: [...playerEntity(state, player.id), ...clubEntity(state, player.clubId)],
       evidence: [`${player.form.goals} goals, record is ${record.value}`],
@@ -404,7 +407,10 @@ const detectTitleRace: Detector = (state, index, cycle) => {
     kind: 'TITLE_RACE', trigger: 'EMERGENT_TITLE_RACE',
     importance: 5, sentiment: 0.3,
     clubId: first.club.id, opponentClubId: second.club.id,
-    tokens: { club: first.club.name, rival: second.club.name, opponent: second.club.name, count: first.pts - second.pts },
+    tokens: {
+      club: clubToken(first.club.name), rival: clubToken(second.club.name),
+      opponent: clubToken(second.club.name), count: first.pts - second.pts,
+    },
     facts: { count: first.pts - second.pts },
     entities: [...clubEntity(state, first.club.id), ...clubEntity(state, second.club.id)],
     evidence: [`${first.pts} v ${second.pts} points with ${season.totalWeeks - season.currentWeek} weeks left`],

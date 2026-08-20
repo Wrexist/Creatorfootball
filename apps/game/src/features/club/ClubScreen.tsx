@@ -318,7 +318,7 @@ function ClubBody({ state }: { state: GameState }): ReactNode {
           label="Facilities"
           meaning={data.projects.length
             ? `${data.projects.length} ${data.projects.length === 1 ? 'build is' : 'builds are'} under way`
-            : `Nothing being built. Upkeep is ${formatMoney(data.upkeep)} a cycle.`}
+            : `Nothing being built. Upkeep is ${formatMoney(data.upkeep)} a week.`}
           value={`${data.facilityTotal}/${data.facilityMax}`}
           attention={data.projects.length === 0}
           onPress={() => navigate(ROUTES.facilities)}
@@ -375,7 +375,7 @@ function ClubBody({ state }: { state: GameState }): ReactNode {
         <Text role="section" as="h2">Creators attached to the club</Text>
         <Text role="caption" className="mt-0.5 text-ink-dim">
           {data.creators.length
-            ? `They put you in front of ${formatCount(data.creators.reduce((sum, c) => sum + creatorReach(c), 0))} people a cycle`
+            ? `They put you in front of ${formatCount(data.creators.reduce((sum, c) => sum + creatorReach(c), 0))} people a week`
             : 'Nobody is carrying your name online yet'}
         </Text>
       </div>

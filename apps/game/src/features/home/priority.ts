@@ -162,6 +162,24 @@ const ZONE_WORD: Record<StandingRow['zone'], string> = {
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 
+/**
+ * How far into the season we are, and whether the table is evidence yet.
+ *
+ * One match into a twenty-two game season the standings are noise, and telling
+ * a brand-new manager "you are in the drop zone, every point is survival" is
+ * simply false — it is also the first thing the product would ever say to them.
+ * Nothing on this screen may dramatise a league position until roughly a
+ * quarter of the fixtures have been played; before that the honest line is that
+ * it is early.
+ */
+function seasonProgress(state: GameState): { played: number; total: number; early: boolean } {
+  const table = standings(state);
+  const played = table.find((r) => r.clubId === state.playerClubId)?.played ?? 0;
+  const total = state.seasons[state.currentSeasonId]?.totalWeeks ?? 0;
+  const settled = total > 0 ? Math.max(4, Math.ceil(total * 0.25)) : 4;
+  return { played, total, early: played < settled };
+}
+
 function streakWord(form: readonly ('W' | 'D' | 'L')[]): { run: number; kind: 'W' | 'D' | 'L' } | null {
   if (form.length < 3) return null;
   const last = form[form.length - 1];
@@ -186,6 +204,12 @@ function stakeLine(state: GameState, fixture: Fixture, opponent: Club, club: Clu
   }
   if (!context || played === 0) {
     return `First points of the season are on the table against ${opponent.shortName}.`;
+  }
+
+  // Early on the table is not evidence, so the stakes come from the fixture
+  // itself rather than from a position that has not settled.
+  if (seasonProgress(state).early) {
+    return `Only ${played} ${plural(played, 'game', 'games')} played, so the table means very little yet. Three points here are three you will not have to chase later.`;
   }
 
   const index = table.findIndex((r) => r.clubId === club.id);
@@ -321,7 +345,12 @@ function freshResult(state: GameState, club: Club): Lead | null {
 
   const outcome: 'W' | 'D' | 'L' = us > them ? 'W' : us < them ? 'L' : 'D';
   const context = leaguePosition(state);
-  const position = context ? `You sit ${ordinal(context.position)} in ${ZONE_WORD[context.zone]}.` : '';
+  const progress = seasonProgress(state);
+  const position = !context
+    ? ''
+    : progress.early
+      ? `You sit ${ordinal(context.position)}, though after ${progress.played} ${plural(progress.played, 'game', 'games')} the table is not telling you much yet.`
+      : `You sit ${ordinal(context.position)} in ${ZONE_WORD[context.zone]}.`;
 
   const headline = outcome === 'W'
     ? `You beat ${opponent.shortName} ${us}–${them}.`
@@ -496,7 +525,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
       tone: 'warning',
       glyph: 'money',
       headline: 'The club is carrying debt.',
-      meaning: 'It is repaid out of your income every cycle, which is money you cannot spend on players.',
+      meaning: 'It is repaid out of your income every week, which is money you cannot spend on players.',
       actionLabel: 'Open finances',
       route: '/club/finances',
       score: score(0.35, 0.45, 0.2, 0.2),
@@ -537,31 +566,44 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
   const table = standings(state);
   const row = table.find((r) => r.clubId === club.id);
   if (context && row && row.played > 0) {
+    const progress = seasonProgress(state);
     const tight = context.pointsToAbove !== null && context.pointsToAbove <= 3;
     const threatened = context.pointsFromBelow !== null && context.pointsFromBelow <= 2;
     const index = table.findIndex((r) => r.clubId === club.id);
     const above = index > 0 ? table[index - 1] : undefined;
-    const meaning = above && tight && above.zone !== context.zone
-      ? `${context.pointsToAbove === 0 ? 'You are level on points with' : `You are ${context.pointsToAbove} ${plural(context.pointsToAbove ?? 0, 'point', 'points')} behind`} ${clubById(state, above.clubId)?.shortName ?? ordinal(context.position - 1)}, and ${ZONE_WORD[above.zone]} start there.`
-      : threatened
-        ? `Only ${context.pointsFromBelow} ${plural(context.pointsFromBelow ?? 0, 'point', 'points')} separate you from ${ordinal(context.position + 1)}.`
-        : `${row.points} ${plural(row.points, 'point', 'points')} from ${row.played} ${plural(row.played, 'game', 'games')}, sitting in ${ZONE_WORD[context.zone]}.`;
+
+    // Before the table settles the card states the facts and says so; the zone
+    // language ("the drop zone", "survival") is held back until it is true.
+    const meaning = progress.early
+      ? `${row.points} ${plural(row.points, 'point', 'points')} from ${row.played} ${plural(row.played, 'game', 'games')}. It takes about ${Math.max(4, Math.ceil(progress.total * 0.25))} games before the table means anything.`
+      : above && tight && above.zone !== context.zone
+        ? `${context.pointsToAbove === 0 ? 'You are level on points with' : `You are ${context.pointsToAbove} ${plural(context.pointsToAbove ?? 0, 'point', 'points')} behind`} ${clubById(state, above.clubId)?.shortName ?? ordinal(context.position - 1)}, and ${ZONE_WORD[above.zone]} start there.`
+        : threatened
+          ? `Only ${context.pointsFromBelow} ${plural(context.pointsFromBelow ?? 0, 'point', 'points')} separate you from ${ordinal(context.position + 1)}.`
+          : `${row.points} ${plural(row.points, 'point', 'points')} from ${row.played} ${plural(row.played, 'game', 'games')}, sitting in ${ZONE_WORD[context.zone]}.`;
+
     out.push({
       id: 'league:position',
       family: 'LEAGUE',
-      tone: context.zone === 'RELEGATION' ? 'danger' : context.zone === 'MID' ? 'neutral' : 'volt',
+      tone: progress.early
+        ? 'neutral'
+        : context.zone === 'RELEGATION' ? 'danger' : context.zone === 'MID' ? 'neutral' : 'volt',
       glyph: 'league',
-      headline: `You are ${ordinal(context.position)} in the league.`,
+      headline: progress.early
+        ? `${ordinal(context.position)} after ${row.played} ${plural(row.played, 'game', 'games')}.`
+        : `You are ${ordinal(context.position)} in the league.`,
       meaning,
       actionLabel: 'Open the table',
       route: '/league/standings',
-      metric: { value: ordinal(context.position), caption: ZONE_WORD[context.zone] },
-      score: score(
-        (tight ? 0.5 : 0.15) + (threatened ? 0.25 : 0),
-        0.45 + (context.zone === 'RELEGATION' ? 0.35 : 0) + (context.zone === 'CHAMPION' ? 0.2 : 0),
-        0.4,
-        0.35 + (context.zone === 'RELEGATION' ? 0.3 : 0),
-      ),
+      metric: { value: ordinal(context.position), caption: progress.early ? 'so far' : ZONE_WORD[context.zone] },
+      score: progress.early
+        ? score(0.1, 0.25, 0.4, 0.15)
+        : score(
+          (tight ? 0.5 : 0.15) + (threatened ? 0.25 : 0),
+          0.45 + (context.zone === 'RELEGATION' ? 0.35 : 0) + (context.zone === 'CHAMPION' ? 0.2 : 0),
+          0.4,
+          0.35 + (context.zone === 'RELEGATION' ? 0.3 : 0),
+        ),
     });
   }
 

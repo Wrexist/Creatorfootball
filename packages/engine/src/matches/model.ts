@@ -549,6 +549,9 @@ export function buildChance(rng: Rng, input: ChanceInput): Chance {
   }
   if (input.setPiece) xg *= 0.9;
 
+  // Restore the mean the location widening above removed (see the constant).
+  xg *= 1 + BALANCE.VOLATILITY_XG_COMPENSATION * ((input.volatility ?? 1) - 1);
+
   xg *= input.multiplier * BALANCE.CONVERSION_SCALE;
 
   const value = clamp(xg, BALANCE.XG_MIN, 0.92);

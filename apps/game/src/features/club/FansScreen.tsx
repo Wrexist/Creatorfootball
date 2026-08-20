@@ -292,7 +292,7 @@ function FansBody({ state }: { state: GameState }): ReactNode {
 
         <p className={cn('mt-3 text-[12px] leading-relaxed text-pretty', price > data.fair ? 'text-warning' : 'text-ink-muted')}>
           {price > data.fair
-            ? 'Above the fair price you take a sentiment penalty every cycle on top of the empty seats — and sentiment is what sponsors and attendance both read.'
+            ? 'Above the fair price you take a sentiment penalty every week on top of the empty seats — and sentiment is what sponsors and attendance both read.'
             : price < data.fair
               ? 'Below the fair price the ground fills and the mood lifts, and you are leaving money on the table every week.'
               : 'Priced exactly where fans expect. Neither a bonus nor a penalty.'}
@@ -312,7 +312,7 @@ function FansBody({ state }: { state: GameState }): ReactNode {
 
       <StatGrid columns={2}>
         <StatCard label="Season tickets" value={club.fans.seasonTicketHolders} footnote="A soft floor, not a guarantee" />
-        <StatCard label="Online followers" value={<span>{formatCount(club.fans.onlineFollowers)}</span>} footnote="Churns every cycle" tone="info" />
+        <StatCard label="Online followers" value={<span>{formatCount(club.fans.onlineFollowers)}</span>} footnote="Churns every week" tone="info" />
       </StatGrid>
     </Screen>
   );

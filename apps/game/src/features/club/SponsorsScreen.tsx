@@ -48,7 +48,7 @@ const DealCard = memo(function DealCard({ deal }: { deal: SponsorDeal }): ReactN
           <p className="tnum font-display text-[20px] font-bold tracking-[-0.03em] text-ink">
             {formatMoney(deal.valuePerCycle)}
           </p>
-          <p className="text-[11px] text-ink-dim">per cycle</p>
+          <p className="text-[11px] text-ink-dim">per week</p>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ const DealCard = memo(function DealCard({ deal }: { deal: SponsorDeal }): ReactN
       <div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-2.5">
         <span className="text-[12px] text-ink-muted">Time remaining</span>
         <GlassPill size="sm" tone={deal.weeksRemaining <= 4 ? 'warning' : 'neutral'} icon={<IconClock />}>
-          {deal.weeksRemaining} cycles
+          {deal.weeksRemaining} weeks
         </GlassPill>
       </div>
     </GlassPanel>
@@ -110,12 +110,12 @@ const OfferCard = memo(function OfferCard({
           <p className="tnum font-display text-[20px] font-bold tracking-[-0.03em] text-volt">
             {formatMoney(offer.valuePerCycle)}
           </p>
-          <p className="text-[11px] text-ink-dim">per cycle</p>
+          <p className="text-[11px] text-ink-dim">per week</p>
         </div>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
-        <GlassPill size="sm">{offer.weeks} cycles</GlassPill>
+        <GlassPill size="sm">{offer.weeks} weeks</GlassPill>
         {offer.signingFee > 0 && <GlassPill size="sm" tone="volt">{formatMoney(offer.signingFee)} up front</GlassPill>}
         <GlassPill size="sm" tone={cyclesLeft <= 1 ? 'danger' : 'neutral'}>
           {cyclesLeft <= 0 ? 'Expires now' : `Open ${cyclesLeft} more cycles`}
@@ -221,7 +221,7 @@ function SponsorsBody({ state }: { state: GameState }): ReactNode {
   return (
     <Screen
       title="Sponsors"
-      subtitle={`${formatMoney(data.perCycle)} a cycle from ${data.active.length} partner${data.active.length === 1 ? '' : 's'}`}
+      subtitle={`${formatMoney(data.perCycle)} a week from ${data.active.length} partner${data.active.length === 1 ? '' : 's'}`}
       onBack={() => navigate(ROUTES.club)}
       headerAccessory={
         <GlassSegmented
@@ -272,7 +272,7 @@ function SponsorsBody({ state }: { state: GameState }): ReactNode {
       </GlassPanel>
 
       <StatGrid columns={2}>
-        <StatCard label="Per cycle" value={<span>{formatMoney(data.perCycle)}</span>} icon={<IconSponsor size={13} />} footnote="Guaranteed commercial income" />
+        <StatCard label="Per week" value={<span>{formatMoney(data.perCycle)}</span>} icon={<IconSponsor size={13} />} footnote="Guaranteed commercial income" />
         <StatCard
           label="Mean satisfaction"
           value={data.active.length
@@ -329,7 +329,7 @@ function SponsorsBody({ state }: { state: GameState }): ReactNode {
           pending ? (
             <div className="flex flex-col gap-2">
               <GlassButton variant="primary" block onClick={() => sign(pending)}>
-                Sign for {formatMoney(pending.valuePerCycle)} a cycle
+                Sign for {formatMoney(pending.valuePerCycle)} a week
               </GlassButton>
               <GlassButton variant="ghost" block onClick={() => setPending(null)}>Leave it</GlassButton>
             </div>
@@ -339,9 +339,9 @@ function SponsorsBody({ state }: { state: GameState }): ReactNode {
         {pending && (
           <div className="flex flex-col gap-3">
             <GlassPanel nested level={1} padding="sm">
-              <KeyValueRow label="Value" value={`${formatMoney(pending.valuePerCycle)}/cycle`} emphasis />
+              <KeyValueRow label="Value" value={`${formatMoney(pending.valuePerCycle)}/wk`} emphasis />
               <KeyValueRow label="Signing fee" value={formatMoney(pending.signingFee)} hint="Paid immediately" />
-              <KeyValueRow label="Length" value={`${pending.weeks} cycles`} />
+              <KeyValueRow label="Length" value={`${pending.weeks} weeks`} />
               <KeyValueRow
                 label="Total if it runs"
                 value={formatMoney(pending.signingFee + pending.valuePerCycle * pending.weeks)}

@@ -5,7 +5,7 @@ import type { Rng } from '../core/rng';
 import type { GameState, TransferListing, TransferRumour } from '../game/state';
 import { POSITIONS, type Position } from '../players/positions';
 import type { Player } from '../players/player';
-import { MARKET_BALANCE as M } from './balance';
+import { MARKET_BALANCE as M, TRANSFER_BALANCE as T } from './balance';
 import { estimatedOverall } from './scouting';
 import { askingPrice, marketValue, wageDemand, type ValuationContext } from './valuation';
 
@@ -116,10 +116,39 @@ function isListable(state: GameState, player: Player, ctx: MarketContext): boole
   const neglected =
     contract.minutesAvailable > 240 &&
     contract.minutesPlayed / Math.max(1, contract.minutesAvailable) < M.NEGLECTED_MINUTES_RATIO;
-  const runningDown = contract.weeksRemaining <= 20;
+  // The last year of a deal, not the last five months. A club that cannot sell
+  // now gets nothing later, and this is the route by which a good player
+  // becomes affordable to a club that cannot outbid anybody.
+  const runningDown = contract.weeksRemaining <= T.CONTRACT_SAFE_WEEKS;
   const surplusVeteran = player.age >= 31 && rolePromiseDelta(contract) < 0;
+  // Depth a club is not using. Every one of the old conditions described a
+  // player somebody had already given up on, which is why the reachable market
+  // contained nothing worth buying; a squad of twenty with eleven starters has
+  // real assets sitting in it and would listen on any of them.
+  const surplusToDepth = club.squad.length >= M.DEPTH_SQUAD_SIZE
+    && squadRank(state, player) >= M.DEPTH_PROTECTED;
+  // A club in the red sells because it has to.
+  const distressed = club.finance.debt > 0 || club.finance.transferBudget <= 0;
 
-  return (squadTooBig && neglected) || (runningDown && ctx.windowOpen) || surplusVeteran;
+  return (squadTooBig && neglected)
+    || (runningDown && ctx.windowOpen)
+    || surplusVeteran
+    || (surplusToDepth && ctx.windowOpen)
+    || (distressed && ctx.windowOpen);
+}
+
+/** Where a player sits in his own club's pecking order, 0 = best. */
+function squadRank(state: GameState, player: Player): number {
+  if (!player.clubId) return 99;
+  const club = state.clubs[player.clubId];
+  if (!club) return 99;
+  let better = 0;
+  for (const id of club.squad) {
+    if (id === player.id) continue;
+    const other = state.players[id];
+    if (other && other.overall > player.overall) better++;
+  }
+  return better;
 }
 
 function availabilityFor(

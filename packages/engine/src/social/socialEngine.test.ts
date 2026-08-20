@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
 import type { ClubId, MatchId, PlayerId } from '../core/brand';
 import { expandCascade } from '../simulation/cascade';
+import { clubToken } from '../simulation/ports';
 import { buildTestWorld, makeTestEvent, withEvents } from '../simulation/fixtures';
 import { generatePosts, socialReach } from './socialEngine';
 
@@ -177,7 +178,7 @@ describe('emergent hooks reach the feed', () => {
         depth: 0,
         importance: 3,
         sentiment: 0.7,
-        tokens: { club: 'Club 0', count: 6 },
+        tokens: { club: clubToken('Club 0'), count: 6 },
         facts: { count: 6 },
         entities: [{ kind: 'club', id: 'club_0', name: 'Club 0' }],
         clubId: 'club_0' as ClubId,
