@@ -1,6 +1,6 @@
 import { type ElementType, type ReactNode } from 'react';
 import { cn } from '../cn';
-import { TYPE_CLASS, TYPE_SIZE, type TypeRole } from './type';
+import { snapToScale, TYPE_CLASS, TYPE_SIZE, TYPE_FLOOR, type TypeRole } from './type';
 import { EntityName, type EntityNameProps } from './FitText';
 
 /**
@@ -117,7 +117,8 @@ export function NameText({
     <EntityName
       {...rest}
       size={size}
-      min={min ?? Math.max(9, Math.round(size * floor))}
+      // The floor lands on a rung, and never below the scale's own floor.
+      min={min ?? Math.max(TYPE_FLOOR, snapToScale(size * floor))}
       className={cn(TYPE_CLASS[role], className)}
     />
   );

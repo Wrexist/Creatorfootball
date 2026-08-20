@@ -97,13 +97,20 @@ export function effectiveAttribute(p: Player, key: AttributeKey, ctx: EffectiveC
     ),
   );
   const form = 1 + BALANCE.FORM_WEIGHT * clamp(p.form.rating, -1, 1);
-  const confidence = 1 + BALANCE.CONFIDENCE_WEIGHT * ((p.mental.confidence - 50) / 50);
+
+  // Morale resilience: how much of a bad head a player carries onto the pitch.
+  // It only ever bites downward — a resilient player is not better when things
+  // are going well, he is simply harder to knock over when they are not.
+  const resilience = clamp(traitModifier(p.traitIds, 'moraleResilience', ctx.conditions), -0.6, 0.6);
+  const confidenceGap = (p.mental.confidence - 50) / 50;
+  const confidence = 1 + BALANCE.CONFIDENCE_WEIGHT * confidenceGap
+    * (confidenceGap < 0 ? 1 - resilience : 1);
 
   const sensitivity = ATMOSPHERE_SENSITIVITY[key] ?? 0.4;
   const atmosphere = 1 + BALANCE.ATMOSPHERE_WEIGHT * ctx.atmosphere * sensitivity;
 
   // Pressure only bites players who cannot handle it; a 90 stays a 90.
-  const exposure = 1 - clamp01(p.mental.pressureHandling / 100);
+  const exposure = (1 - clamp01(p.mental.pressureHandling / 100)) * Math.max(0, 1 - resilience);
   const pressure = 1 - BALANCE.PRESSURE_WEIGHT * ctx.pressure * exposure * sensitivity;
 
   const traitKey = TRAIT_FOR_ATTRIBUTE[key];
@@ -143,15 +150,30 @@ export interface TeamAggregates {
   readonly defence: number;
   /** Ability to win the ball back high and repeatedly. */
   readonly pressing: number;
-  /** Set-piece and cross threat. */
+  /** Set-piece and cross threat, including the `aerialThreat` trait. */
   readonly aerial: number;
+  /** Raw running speed of the unit; drives the ball over the top. */
+  readonly pace: number;
   /** The keeper, alone. */
   readonly keeper: number;
   /** Mean discipline, 0-99; drives the card model. */
   readonly discipline: number;
   /** Outfielders currently on the pitch. */
   readonly outfield: number;
+  /**
+   * Mean trait modifier across the side for the keys the model reads at team
+   * level rather than through a single attribute. Computed here so no read site
+   * has to walk the squad again.
+   */
+  readonly traits: Readonly<Record<TeamTraitKey, number>>;
 }
+
+/** Trait keys the model reads as a team-level mean. */
+export const TEAM_TRAIT_KEYS = [
+  'passAccuracy', 'dribbleSuccess', 'pressResistance', 'tackleSuccess',
+  'duelWin', 'counterThreat', 'aerialThreat', 'chemistry', 'teammateMorale',
+] as const;
+export type TeamTraitKey = (typeof TEAM_TRAIT_KEYS)[number];
 
 interface AggregateSpec {
   readonly attributes: readonly (readonly [AttributeKey, number])[];
@@ -183,6 +205,16 @@ const SPECS: Record<Exclude<keyof TeamAggregates, 'keeper' | 'discipline' | 'out
     attributes: [['strength', 2.4], ['physical', 2], ['positioning', 1.4], ['finishing', 1]],
     roleWeights: { GK: 0, DEF: 0.9, MID: 0.6, ATT: 1 },
   },
+  pace: {
+    attributes: [['pace', 3], ['acceleration', 2.4], ['stamina', 1]],
+    roleWeights: { GK: 0, DEF: 0.75, MID: 0.9, ATT: 1 },
+  },
+};
+
+/** Aggregates that take a direct per-player trait multiplier on top of their attributes. */
+const AGGREGATE_TRAIT: Partial<Record<keyof typeof SPECS, TraitModifierKey>> = {
+  aerial: 'aerialThreat',
+  pace: 'counterThreat',
 };
 
 /**
@@ -206,7 +238,9 @@ export function computeAggregates(units: readonly UnitView[], expectedOutfield: 
         sub += effectiveAttribute(u.player, key, u.ctx) * w;
         subWeight += w;
       }
-      total += (sub / subWeight) * rw;
+      const traitKey = AGGREGATE_TRAIT[name as keyof typeof SPECS];
+      const traitScale = traitKey ? traitMultiplier(u.player.traitIds, traitKey, u.ctx.conditions) : 1;
+      total += (sub / subWeight) * traitScale * rw;
       weight += rw;
     }
     result[name] = weight > 0 ? total / weight : 40;
@@ -225,6 +259,13 @@ export function computeAggregates(units: readonly UnitView[], expectedOutfield: 
     ? units.reduce((a, u) => a + u.player.mental.discipline, 0) / units.length
     : 50;
 
+  const traits: Record<string, number> = {};
+  for (const key of TEAM_TRAIT_KEYS) {
+    let total = 0;
+    for (const u of units) total += traitModifier(u.player.traitIds, key, u.ctx.conditions);
+    traits[key] = units.length ? total / units.length : 0;
+  }
+
   const size = expectedOutfield > 0 ? outfield / expectedOutfield : 1;
   const defenceManpower = 0.4 + 0.6 * size;
   const pressManpower = 0.35 + 0.65 * size;
@@ -237,9 +278,11 @@ export function computeAggregates(units: readonly UnitView[], expectedOutfield: 
     defence: (result['defence'] as number) * defenceManpower,
     pressing: (result['pressing'] as number) * pressManpower,
     aerial: result['aerial'] as number,
+    pace: (result['pace'] as number) * (0.8 + 0.2 * size),
     keeper,
     discipline,
     outfield,
+    traits: traits as Readonly<Record<TeamTraitKey, number>>,
   };
 }
 
@@ -258,28 +301,60 @@ export interface PossessionInput {
   readonly momentumBoost: number;
   /** Crowd/home multiplier for the team in possession. */
   readonly homeBoost: number;
+  /** Mean fatigue of the defending side, 0-1. A spent press stops pressing. */
+  readonly defenceFatigue: number;
+  /** Goals the team in possession is ahead by; negative when behind. */
+  readonly leadMargin: number;
 }
+
+/**
+ * Diminishing returns on the quality gap.
+ *
+ * Every term that reads the attack-minus-defence gap goes through this. A tanh
+ * leaves a ten-point gap behaving as it always did and stops a thirty-point one
+ * from being three times as large at four terms simultaneously — which is what
+ * turned a real fixture list into a run of 15-1 scorelines while the
+ * evenly-matched aggregate audit stayed green.
+ */
+export const gapTerm = (gap: number, max: number): number =>
+  Math.tanh(gap / BALANCE.RATING_GAP_SOFTNESS) * max;
 
 /** Probability a progression attempt moves the ball meaningfully forward. */
 export function progressionChance(input: PossessionInput): number {
   const atk = input.attack.progression * (0.9 + 0.2 * input.attackVector.possessionBias);
   const def = input.defence.defence * input.defenceVector.defensiveSolidity;
-  const edge = ((atk - def) / 10) * BALANCE.PROGRESSION_EDGE;
-  const pressDrag = 0.09 * input.defenceVector.aggression;
-  return clamp(BALANCE.PROGRESSION_BASE + edge - pressDrag + input.momentumBoost * 0.5, 0.22, 0.92);
+  const edge = gapTerm(atk - def, BALANCE.PROGRESSION_EDGE_MAX);
+  // A press that has run itself into the ground stops dragging on anybody.
+  const pressDrag = 0.09 * input.defenceVector.aggression * pressUpkeep(input.defenceFatigue);
+  // Players who keep the ball under pressure move it forward more often.
+  const trait = BALANCE.TRAIT_PROGRESSION_WEIGHT
+    * (input.attack.traits.passAccuracy + input.attack.traits.dribbleSuccess) * 0.5;
+  return clamp(
+    (BALANCE.PROGRESSION_BASE + edge - pressDrag + input.momentumBoost * 0.5) * (1 + trait),
+    0.22, 0.92,
+  );
 }
+
+/** What is left of a pressing instruction once the legs have gone, 0-1. */
+export const pressUpkeep = (fatigue: number): number =>
+  Math.max(0.25, 1 - BALANCE.PRESS_FATIGUE_DECAY * clamp01(fatigue));
 
 /** Probability the defending team wins the ball on this tick. */
 export function turnoverChance(input: PossessionInput): number {
   // Softened: pressing quality is a nudge, not a second strength multiplier.
   const pressQuality = 0.55 + 0.45 * (input.defence.pressing / 55);
-  const press = BALANCE.TURNOVER_PRESS * input.defenceVector.pressRecovery * 2 * pressQuality;
+  // The press is only worth what the pressing side can still run.
+  const press = BALANCE.TURNOVER_PRESS * input.defenceVector.pressRecovery * 2 * pressQuality
+    * pressUpkeep(input.defenceFatigue)
+    * (1 + BALANCE.TRAIT_TACKLE_WEIGHT
+      * (input.defence.traits.tackleSuccess + input.defence.traits.duelWin) * 0.5);
 
   const atk = input.attack.progression * (0.92 + 0.16 * input.attackVector.possessionBias);
   const def = input.defence.defence * input.defenceVector.defensiveSolidity;
-  const edge = ((def - atk) / 10) * BALANCE.TURNOVER_EDGE;
+  const edge = gapTerm(def - atk, BALANCE.TURNOVER_EDGE_MAX);
 
-  let p = BALANCE.TURNOVER_BASE + press + edge;
+  let p = (BALANCE.TURNOVER_BASE + press + edge)
+    * Math.max(0.4, 1 - BALANCE.TRAIT_PRESS_RESISTANCE_WEIGHT * input.attack.traits.pressResistance);
   if (input.finalThird) p *= BALANCE.TURNOVER_FINAL_THIRD;
   p *= 1 - input.momentumBoost * 0.5;
   p *= 1 - 0.12 * (input.attackVector.possessionBias - 0.5) * 2;
@@ -296,7 +371,57 @@ export function shotChance(input: PossessionInput, counterWindow: boolean): numb
   if (counterWindow) p += BALANCE.SHOT_COUNTER_BONUS * input.attackVector.counterWeight;
   p *= 1 + input.momentumBoost;
   p *= input.homeBoost;
+  p *= gameManagement(input.leadMargin);
   return clamp(p, 0.05, 0.75);
+}
+
+/**
+ * A side four goals up in a thirty-minute match stops chasing a fifth. This is
+ * the only place the scoreline touches the model, it only ever slows the side
+ * in FRONT, and the side behind gets nothing for being behind — a compensating
+ * bonus would make every comeback feel manufactured.
+ */
+export function gameManagement(leadMargin: number): number {
+  const excess = Math.max(0, leadMargin - BALANCE.GAME_STATE_EASE_MARGIN);
+  if (excess <= 0) return 1;
+  return 1 - Math.min(BALANCE.GAME_STATE_EASE_MAX, excess * BALANCE.GAME_STATE_EASE_PER_GOAL);
+}
+
+// --------------------------------------------------------------------------
+// The ball over the top
+// --------------------------------------------------------------------------
+
+export interface ThroughBallInput {
+  /** The DEFENDING side's `spaceBehind`, 0-1. */
+  readonly spaceBehind: number;
+  /** The attacking side's `counterWeight`, 0-1. */
+  readonly counterWeight: number;
+  /** Attacking side's `pace` aggregate. */
+  readonly attackPace: number;
+  /** Defending side's `pace` aggregate — the recovery runners. */
+  readonly defencePace: number;
+  /** Mean `counterThreat` trait modifier of the attacking side. */
+  readonly traitThreat: number;
+  /** True in the ticks straight after a turnover, when the space is real. */
+  readonly counterWindow: boolean;
+}
+
+/**
+ * Per-tick probability that the side in possession plays a ball in behind the
+ * last line and puts a runner through. This is the consumer `spaceBehind` never
+ * had: without it a high line and a high press cost nothing but 0.14 offsides.
+ */
+export function throughBallChance(input: ThroughBallInput): number {
+  const space = Math.pow(clamp01(input.spaceBehind) / 0.5, BALANCE.THROUGH_BALL_SPACE_EXPONENT);
+  const intent = 1 + BALANCE.THROUGH_BALL_COUNTER_WEIGHT * (clamp01(input.counterWeight) - 0.5) * 2;
+  const legs = 1 + BALANCE.THROUGH_BALL_PACE_WEIGHT
+    * clamp((input.attackPace - input.defencePace) / 55, -0.6, 0.6);
+  const trait = Math.max(0.3, 1 + BALANCE.THROUGH_BALL_TRAIT_WEIGHT * input.traitThreat);
+  const window = input.counterWindow ? BALANCE.THROUGH_BALL_COUNTER_MULT : 1;
+  return clamp(
+    BALANCE.THROUGH_BALL_BASE * space * Math.max(0.2, intent) * Math.max(0.3, legs) * trait * window,
+    0, 0.35,
+  );
 }
 
 // --------------------------------------------------------------------------

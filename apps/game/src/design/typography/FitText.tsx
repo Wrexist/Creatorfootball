@@ -36,8 +36,10 @@ import { snapToScale, TYPE_FLOOR, TYPE_SIZE, type TypeRole } from './type';
 export interface FitTextProps {
   /** The string to fit. Must be a string - this primitive measures text. */
   children: string;
-  /** Starting (and maximum) font size in px. */
+  /** Starting (and maximum) font size in px. Must be a rung of the scale. */
   size?: number;
+  /** Take the ceiling from a type role instead of naming a number. Preferred. */
+  role?: TypeRole;
   /**
    * Smallest size this text may shrink to before other strategies apply.
    * Clamped to the scale's 11px floor - nothing in the product renders text
@@ -82,7 +84,8 @@ const SEP = '\u001F';
 
 export function FitText({
   children,
-  size = 15,
+  size,
+  role,
   min = TYPE_FLOOR,
   snap = true,
   alternates,
@@ -93,6 +96,8 @@ export function FitText({
   className,
   style,
 }: FitTextProps): ReactNode {
+  // Ceiling from an explicit size, else from the role, else the body step.
+  const ceiling = size ?? (role ? TYPE_SIZE[role] : TYPE_SIZE.body);
   // The floor can be raised by a caller but never lowered past the scale's own.
   const floor = Math.max(TYPE_FLOOR, min);
   const quantise = useCallback(
@@ -103,7 +108,7 @@ export function FitText({
   const hostRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<HTMLSpanElement | null>(null);
   const lastWidth = useRef(-1);
-  const [fitted, setFitted] = useState<Fitted>({ text: children, size, wrap: lines > 1 });
+  const [fitted, setFitted] = useState<Fitted>({ text: children, size: ceiling, wrap: lines > 1 });
 
   // Candidates, longest first, de-duplicated. The full string always leads.
   // Packed onto the ASCII unit separator so the measuring callback has one
@@ -144,8 +149,8 @@ export function FitText({
       // of slack absorbs sub-pixel rounding in the layout above us.
       const exact = ((available - 0.5) / naturalAtReference) * REFERENCE;
       const fittedSize = quantise(exact);
-      if (fittedSize >= size) {
-        result = { text: candidate, size, wrap: false };
+      if (fittedSize >= ceiling) {
+        result = { text: candidate, size: ceiling, wrap: false };
         break;
       }
       if (fittedSize >= floor) {
@@ -164,7 +169,7 @@ export function FitText({
         const naturalAtReference = node.scrollWidth;
         if (naturalAtReference <= 0) continue;
         const exact = ((available * lines * RAG_LOSS) / naturalAtReference) * REFERENCE;
-        const fittedSize = Math.min(size, quantise(exact));
+        const fittedSize = Math.min(ceiling, quantise(exact));
         if (fittedSize >= floor) {
           result = { text: candidate, size: fittedSize, wrap: true };
           break;
@@ -183,7 +188,7 @@ export function FitText({
         ? current
         : next,
     );
-  }, [candidateKey, size, floor, quantise, lines]);
+  }, [candidateKey, ceiling, floor, quantise, lines]);
 
   useLayoutEffect(() => {
     lastWidth.current = -1;

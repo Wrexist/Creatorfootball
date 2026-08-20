@@ -9,7 +9,7 @@ import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort } from '../simulation/ports';
 import {
   blendTemplates, matchesConditions, pickTemplate, renderTemplate, seedFrom, sentimentBand,
-  templatesForTrigger, type TemplateRecency,
+  templatesForTrigger, diversifyByTrigger, type TemplateRecency,
 } from '../simulation/templating';
 import { MEDIA_BALANCE as M, OUTLETS, outletByName, type Outlet } from './balance';
 import { FALLBACK_MEDIA_TEMPLATES } from './fallbackTemplates';
@@ -176,17 +176,10 @@ export function generateStories(
   // that must not be trimmed, but with twelve clubs playing every week it let a
   // single trigger publish eleven near-identical stories a cycle and crowd out
   // every other kind the pack can write. One trigger, a couple of stories.
-  const perTrigger = new Map<string, number>();
-  const chosen: Candidate[] = [];
-  for (let i = 0; i < candidates.length; i++) {
-    const candidate = candidates[i];
-    if (!candidate) continue;
-    const used = perTrigger.get(candidate.hook.trigger) ?? 0;
-    if (used >= M.maxStoriesPerTrigger) continue;
-    if (chosen.length >= limit && candidate.importance < M.alwaysPublishImportance) continue;
-    perTrigger.set(candidate.hook.trigger, used + 1);
-    chosen.push(candidate);
-  }
+  const chosen = diversifyByTrigger(
+    candidates.map((c) => ({ ...c, trigger: c.hook.trigger })),
+    { limit, perTrigger: M.maxStoriesPerTrigger },
+  );
 
   // 2. Render. A template we cannot fill is skipped rather than published half-baked.
   const { recency, blocked: usedTemplates, seen: seenTemplates } = templateRecency(state, cycle);

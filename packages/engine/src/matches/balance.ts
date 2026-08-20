@@ -54,16 +54,41 @@ export const BALANCE = {
   RECYCLE_STEP: 0.055,
   /** Base per-tick probability that a progression attempt succeeds at parity. 0.4-0.85. */
   PROGRESSION_BASE: 0.66,
-  /** How strongly the attack/defence rating gap swings progression. 0.02-0.14. */
-  PROGRESSION_EDGE: 0.008,
+  /** Maximum progression-probability swing the rating gap may produce, in
+   *  either direction. The gap enters through a tanh (see RATING_GAP_SOFTNESS),
+   *  so this is the value a runaway mismatch converges on. 0.005-0.05. */
+  PROGRESSION_EDGE_MAX: 0.0165,
   /** Base per-tick turnover probability at parity outside the final third. 0.1-0.3. */
   TURNOVER_BASE: 0.15,
   /** Extra turnover probability at maximum press. 0.02-0.15. */
   TURNOVER_PRESS: 0.07,
   /** Turnover probability multiplier once inside the final third. 1.0-2.0. */
   TURNOVER_FINAL_THIRD: 1.4,
-  /** How strongly the rating gap swings turnovers. 0.02-0.14. */
-  TURNOVER_EDGE: 0.0075,
+  /** Maximum turnover-probability swing the rating gap may produce. 0.005-0.05. */
+  TURNOVER_EDGE_MAX: 0.0155,
+  /**
+   * Rating points at which the gap term reaches ~76% of its maximum.
+   *
+   * The gap used to enter linearly, so a 30-point mismatch was three times a
+   * 10-point one at every term at once and the league produced 15-1 results.
+   * A tanh keeps small gaps behaving exactly as before and saturates the
+   * extremes: quality still tells, it just stops compounding without limit.
+   * Lower = a small gap already decides matches; higher = quality tells slowly.
+   * 8-30.
+   */
+  RATING_GAP_SOFTNESS: 17,
+  /**
+   * Goal margin at which the side in front starts managing the game instead of
+   * chasing more. Below this nothing changes. This is game management, not
+   * rubber-banding: the trailing side gets NO compensating bonus, it is only
+   * the leader who eases off, which is what a real 5-0 looks like at minute 20.
+   * 2-5.
+   */
+  GAME_STATE_EASE_MARGIN: 3,
+  /** Shot-rate reduction per goal of margin beyond the threshold. 0-0.2. */
+  GAME_STATE_EASE_PER_GOAL: 0.085,
+  /** Cap on that reduction, so a leader never stops playing entirely. 0-0.6. */
+  GAME_STATE_EASE_MAX: 0.34,
   /** Share of turnovers recorded as a tackle rather than an interception. 0.3-0.7. */
   TACKLE_SHARE: 0.45,
   /** Ticks of elevated counter threat after winning the ball high. 2-10. */
@@ -91,6 +116,36 @@ export const BALANCE = {
   /** How much a high defensive line raises the offside rate. 0-1.5. */
   OFFSIDE_LINE_WEIGHT: 0.9,
 
+  // --------------------------------------------------- the ball over the top ---
+  /**
+   * The price of a high line, charged.
+   *
+   * `spaceBehind` used to have one consumer worth 0.14 offsides a match, which
+   * meant a high line and a high press were close to free. These five constants
+   * are the counterplay: outside the final third, the team in possession may
+   * play a ball in behind the last line, and if it comes off the runner is
+   * through on the keeper. The rate scales with the DEFENDING side's
+   * `spaceBehind` and with the attacking side's counter-attacking intent and
+   * raw pace, so a high line is only expensive against someone equipped to run
+   * at it — which is what makes DIRECT passing, `counterWeight`, LOW_BLOCK and
+   * the `speedster` trait all mean something at once.
+   */
+  /** Per-tick chance of a ball over the top at a neutral line, outside the
+   *  final third. 0.002-0.02. */
+  THROUGH_BALL_BASE: 0.0075,
+  /** Multiplier inside a counter window — the moment the space is really
+   *  there, right after a turnover. 1-8. */
+  THROUGH_BALL_COUNTER_MULT: 4.0,
+  /** How sharply `spaceBehind` scales the rate: rate x (space / 0.5) ^ this.
+   *  1 = linear, higher = a high line is punished disproportionately. 1-3. */
+  THROUGH_BALL_SPACE_EXPONENT: 1.9,
+  /** How much the attacking side's pace advantage scales the rate. 0-2. */
+  THROUGH_BALL_PACE_WEIGHT: 0.85,
+  /** How much the attacking side's `counterWeight` scales the rate. 0-2. */
+  THROUGH_BALL_COUNTER_WEIGHT: 0.9,
+  /** How much the runner's `counterThreat` trait scales the rate. 0-3. */
+  THROUGH_BALL_TRAIT_WEIGHT: 1.6,
+
   // ------------------------------------------------------------------- xG ---
   /** xG of a shot from the centre of the six-yard box with no pressure. 0.5-0.95. */
   XG_MAX: 0.78,
@@ -110,6 +165,41 @@ export const BALANCE = {
   XG_KEEPER_WEIGHT: 0.14,
   /** Multiplier applied to xG when the shot arrives on the counter. 1.0-1.6. */
   XG_COUNTER_BONUS: 1.18,
+  /** Multiplier applied to xG for a shot arriving from a ball in behind: this
+   *  is a run at the keeper, not a shot through bodies. 1.2-2.0. */
+  XG_THROUGH_BALL_BONUS: 1.5,
+  /** How much the aerial-quality gap between the two sides scales a headed
+   *  chance. This is where the `aerialThreat` trait and the `aerial` team
+   *  aggregate are read. 0-1.2. */
+  XG_AERIAL_WEIGHT: 0.6,
+  /** How much a narrow defensive block is exposed to a delivery from wide.
+   *  This is what makes WIDE a genuine answer to NARROW. 0-1. */
+  AERIAL_NARROW_EXPOSURE: 0.45,
+  /** How much the shooter's `shotConversion` trait scales xG directly, on top
+   *  of the finishing attribute it already sharpens. 0-1.2. */
+  TRAIT_SHOT_CONVERSION_WEIGHT: 0.6,
+  /** How much the creator's `creativity` trait scales the quality of the pass
+   *  that made the chance. 0-1. */
+  TRAIT_CREATIVITY_WEIGHT: 0.5,
+  /** How much a team's mean `pressResistance` trait suppresses turnovers
+   *  against it. 0-0.8. */
+  TRAIT_PRESS_RESISTANCE_WEIGHT: 0.45,
+  /** How much a team's mean `tackleSuccess`/`duelWin` traits raise the
+   *  turnovers it wins. 0-0.8. */
+  TRAIT_TACKLE_WEIGHT: 0.4,
+  /** How much a team's mean `passAccuracy`/`dribbleSuccess` traits raise its
+   *  progression. 0-0.8. */
+  TRAIT_PROGRESSION_WEIGHT: 0.35,
+  /** How much the keeper's `saveChance` trait moves the save share. 0-0.8. */
+  TRAIT_SAVE_WEIGHT: 0.45,
+  /**
+   * Squad cohesion: the mean of `chemistry` and `teammateMorale` across the
+   * starting side, applied once to every aggregate. Both keys had no consumer
+   * anywhere in the engine while the profile screen labelled them for the
+   * player. A dressing room that works is worth a couple of overall points to
+   * the whole team, which is exactly the size this should be. 0-0.3.
+   */
+  COHESION_WEIGHT: 0.13,
   /** Multiplier applied to xG for a headed chance from a cross. 0.5-1.0. */
   XG_HEADER_FACTOR: 0.78,
   /** xG assigned to the format's one-on-one penalty run. 0.6-0.85. */
@@ -133,6 +223,22 @@ export const BALANCE = {
    * correlates the two scorelines, so 6-5 and 0-1 both happen. 0-0.3.
    */
   MATCH_OPENNESS_SIGMA: 0.15,
+  /**
+   * How much a side's `volatility` widens its own performance draw.
+   *
+   * `volatility` is written by eleven tactic tables and every live decision and
+   * was read by nothing, while the UI showed it to the player as "Swinginess".
+   * This is its first real consumer: a bold or reckless setup does not turn up
+   * at a predictable level, it turns up at a *less* predictable one. That is a
+   * genuine two-way bet — it converts draws into wins and wins into defeats —
+   * rather than a bonus. 0-1.5.
+   */
+  VOLATILITY_PERFORMANCE_WEIGHT: 0.95,
+  /**
+   * How much `volatility` widens the shot-location distribution inside
+   * `buildChance`. A chaotic side takes worse shots and better ones. 0-1.5.
+   */
+  VOLATILITY_LOCATION_WEIGHT: 0.7,
 
   // ------------------------------------------------------- shot resolution ---
   /** Of shots that do not score, the share the keeper saves at parity. 0.25-0.5. */
@@ -177,7 +283,7 @@ export const BALANCE = {
    * and team-minutes is the classic calibration bug in this class of model.
    * Target 0.08-0.14 injuries per team per match. 0.0001-0.0006.
    */
-  INJURY_BASE: 0.00026,
+  INJURY_BASE: 0.00021,
   /** How much fatigue multiplies injury risk (at fatigue 1.0). 0-3. */
   INJURY_FATIGUE_WEIGHT: 1.6,
   /** How much a physical tactical setup multiplies injury risk. 0-1. */
@@ -190,14 +296,40 @@ export const BALANCE = {
   INJURED_CAPACITY: 0.62,
 
   // ---------------------------------------------------------------- fatigue ---
-  /** Fatigue accrued per tick by a 55-stamina player at neutral tactics. 0.0006-0.003. */
-  FATIGUE_PER_TICK: 0.00135,
+  /**
+   * Fatigue accrued per tick by a 55-stamina player at neutral tactics.
+   *
+   * Thirty minutes is a short window for legs to be a price, so this is
+   * deliberately steeper than an eleven-a-side equivalent: over a full match a
+   * starter loses roughly a third of his freshness at neutral instructions and
+   * closer to half at a full press. That gap is what a high press is supposed
+   * to be paid for in. 0.0006-0.004.
+   */
+  FATIGUE_PER_TICK: 0.0026,
   /** How much stamina (vs. 55 baseline) reduces the drain. 0.2-1.0. */
   FATIGUE_STAMINA_WEIGHT: 0.6,
-  /** Extra drain for the team without the ball, chasing it. 0-0.6. */
-  FATIGUE_OUT_OF_POSSESSION: 0.25,
-  /** Effective-attribute loss at fatigue 1.0. 0.15-0.45. */
-  FATIGUE_ATTR_PENALTY: 0.3,
+  /**
+   * Extra drain for the team without the ball, chasing it — scaled by how far
+   * up the pitch that team chases. A low block without the ball is compact and
+   * cheap; a high press without the ball is a sprint. Charging both the same
+   * made LOW_BLOCK end matches MORE tired than the default, which inverted its
+   * advertised benefit. 0-0.6.
+   */
+  FATIGUE_OUT_OF_POSSESSION: 0.3,
+  /** How strongly the chasing team's own aggression scales that extra drain.
+   *  0 = every shape chases equally; 1 = only a high press really runs. 0-1.5. */
+  FATIGUE_CHASE_AGGRESSION: 1.1,
+  /** Effective-attribute loss at fatigue 1.0. 0.15-0.5. */
+  FATIGUE_ATTR_PENALTY: 0.42,
+  /**
+   * How much a pressing side's own accumulated fatigue erodes its press.
+   *
+   * A press that cannot be sustained is the whole point of pressing: at the end
+   * of a match a spent team still standing high wins the ball back far less
+   * often than the instruction claims. Without this, `pressRecovery` was a
+   * constant for ninety ticks of dead legs. 0-1.
+   */
+  PRESS_FATIGUE_DECAY: 0.62,
   /** Fatigue a substitute starts on relative to a starter. 0-0.15. */
   SUB_START_FATIGUE: 0.03,
   /** Fatigue above which the AI starts wanting to substitute. 0.3-0.8. */
@@ -286,16 +418,24 @@ export const BALANCE = {
    * 2-5.
    */
   SWING_WINDOW_MINUTES: 3,
-  /** Shot-rate multiplier inside a swing window (fewer bodies, more space). 1.2-2.2. */
-  SWING_WINDOW_SHOT_MULTIPLIER: 1.45,
-  /** xG multiplier inside a swing window. 1.0-1.6. */
-  SWING_WINDOW_XG_MULTIPLIER: 1.25,
+  /**
+   * Shot-rate multiplier inside a swing window (fewer bodies, more space).
+   *
+   * The realised goal rate inside a window is well below the product of this
+   * and the xG multiplier, because the shot term only applies on final-third
+   * ticks and possession still has to get there. Tuned against the measured
+   * window-to-normal goal ratio, whose documented target is 2-4x. 1.2-2.6.
+   */
+  SWING_WINDOW_SHOT_MULTIPLIER: 2.05,
+  /** xG multiplier inside a swing window. 1.0-1.8. */
+  SWING_WINDOW_XG_MULTIPLIER: 1.42,
   /** Vector deltas applied to BOTH teams for the length of any swing window. */
   SWING_WINDOW_MODIFIERS: {
-    attackVolume: 0.2,
-    defensiveSolidity: -0.16,
-    volatility: 0.25,
+    attackVolume: 0.34,
+    defensiveSolidity: -0.24,
+    volatility: 0.3,
     fatigueRate: 0.12,
+    spaceBehind: 0.12,
   } as Readonly<Record<string, number>>,
   /** Minimum match minutes between a played rule card and the next one. 2-10. */
   SPECIAL_RULE_GAP_MINUTES: 4,

@@ -1,26 +1,31 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socialReach, type GameState } from '@cf/engine';
+import {
+  PHASE_LABELS, clubCreators, nextFixture, socialReach, type GameState,
+} from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassIcon, GlassPanel, GlassSegmented, GlassSheet,
-  IconBell, IconSocial, IconTrendUp, KeyValueRow, Screen, SectionHeader, StatCard, StatGrid,
+  IconBell, IconSocial, KeyValueRow, ListRow, Screen, SectionHeader, StatBlock, Text,
   formatCount,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
-import {
-  describeEvent, useEventIndex, useFeed, type FeedFilter,
-} from './data';
+import { describeEvent, useEventIndex, useFeed, type FeedFilter } from './data';
 import { FeedItem } from './components/FeedItem';
+import { QuietWorld } from './components/QuietWorld';
 
 /**
  * The feed.
  *
  * This is the football ecosystem talking about your club: supporters, creators,
- * the press, rival fans, players, sponsors and the occasional leak. It is empty
- * on day one, and that is correct — nothing has happened yet. The moment
- * something does, it appears here, and the size of the post is set by how much
- * the world thinks it matters.
+ * the press, rival fans, players, sponsors and the occasional leak.
+ *
+ * Two things carry the screen. On day one there is no feed, and rather than an
+ * apology for that, `QuietWorld` builds the anticipation — who you play first,
+ * who is already following, and the one button that turns the world on. Once
+ * posts exist, the feed is *edited* rather than listed: `post.weight` decides
+ * whether a story runs as a lead, a standard post or a line of chatter, so a
+ * derby defeat physically outweighs a fan's throwaway joke.
  */
 
 const PAGE = 30;
@@ -49,6 +54,15 @@ function SocialView({ state }: { state: GameState }): ReactNode {
   const posts = useFeed(state, filter, limit);
   const events = useEventIndex(state);
   const reach = useMemo(() => socialReach(state), [state]);
+  const creators = useMemo(() => clubCreators(state, state.playerClubId), [state]);
+  const upcoming = useMemo(() => nextFixture(state), [state]);
+
+  const opponent = upcoming
+    ? state.clubs[
+        upcoming.homeClubId === state.playerClubId ? upcoming.awayClubId : upcoming.homeClubId
+      ]
+    : undefined;
+
   const unreadStories = useMemo(
     () => state.media.stories.filter((story) => !story.read).length,
     [state.media.stories],
@@ -58,48 +72,44 @@ function SocialView({ state }: { state: GameState }): ReactNode {
   const openedEvent = openedPost?.relatedEventId ? events.get(openedPost.relatedEventId) : undefined;
   const described = openedEvent ? describeEvent(openedEvent) : null;
 
-  const totalForFilter = useMemo(
-    () => state.social.posts.length,
-    [state.social.posts.length],
-  );
+  const totalPosts = state.social.posts.length;
+  const worldIsQuiet = totalPosts === 0;
 
-  const stats = (
+  /* Reach is a footnote on day one and a headline once it moves, so it is
+     rendered as two numbers with a plain line each rather than a dashboard. */
+  const reachPanel = (
     <GlassPanel title="Your reach" padding="md">
-      <StatGrid columns={2}>
-        <StatCard
+      <div className="grid grid-cols-2 gap-3">
+        <StatBlock
           label="Followers"
           value={formatCount(state.social.clubFollowers)}
-          nested
-          level={1}
-          size="sm"
-          icon={<IconSocial />}
+          tone="volt"
+          caption={
+            reach.followerDelta === 0
+              ? 'Unchanged this week'
+              : `${reach.followerDelta > 0 ? '+' : ''}${formatCount(reach.followerDelta)} this week`
+          }
         />
-        <StatCard
-          label="Weekly impressions"
-          value={formatCount(state.social.weeklyImpressions)}
-          nested
-          level={1}
-          size="sm"
-          icon={<IconTrendUp />}
+        <StatBlock
+          label="Impressions"
+          value={formatCount(reach.impressions)}
+          caption="Times your club was seen this week"
         />
-      </StatGrid>
-      <Divider className="my-3" />
-      <KeyValueRow label="Impressions this week" value={formatCount(reach.impressions)} />
-      <KeyValueRow
-        label="Follower change"
-        value={`${reach.followerDelta >= 0 ? '+' : ''}${formatCount(reach.followerDelta)}`}
-        divided={false}
-      />
-      <p className="mt-2 text-[12px] leading-relaxed text-ink-dim text-pretty">
+      </div>
+      <Text role="caption" as="p" className="mt-3 text-ink-dim text-pretty">
         Reach follows your creators and your results. It is not something you buy.
-      </p>
+      </Text>
     </GlassPanel>
   );
 
   return (
     <Screen
       title="Social"
-      subtitle={totalForFilter > 0 ? `${totalForFilter} posts about your club` : undefined}
+      subtitle={
+        worldIsQuiet
+          ? 'Nobody has posted about your club yet'
+          : `${totalPosts} posts about your club`
+      }
       actions={
         <GlassIcon
           label={unreadStories > 0 ? `Media, ${unreadStories} unread` : 'Media'}
@@ -110,62 +120,72 @@ function SocialView({ state }: { state: GameState }): ReactNode {
         />
       }
       headerAccessory={
-        <GlassSegmented
-          options={FILTERS}
-          value={filter}
-          onChange={(next) => { setFilter(next); setLimit(PAGE); }}
-          aria-label="Filter the feed"
-          size="sm"
-          block
-          nested
-        />
+        worldIsQuiet ? undefined : (
+          <GlassSegmented
+            options={FILTERS}
+            value={filter}
+            onChange={(next) => { setFilter(next); setLimit(PAGE); }}
+            aria-label="Filter the feed"
+            size="sm"
+            block
+            nested
+          />
+        )
       }
-      aside={stats}
+      aside={worldIsQuiet ? undefined : reachPanel}
     >
-      <div className="md:hidden">{stats}</div>
-
-      {posts.length === 0 ? (
-        <EmptyState
-          icon={<IconSocial />}
-          title={filter === 'ALL' ? 'Nothing has happened yet' : 'Nothing from them yet'}
-          description={
-            filter === 'ALL'
-              ? 'Every post here traces back to something real — a result, a signing, an injury, a row. Play a matchweek and the world will start talking.'
-              : 'Nobody in this corner of the ecosystem has said anything about you. Change that on the pitch.'
-          }
-          action={
-            filter !== 'ALL' ? (
-              <GlassButton variant="secondary" size="sm" onClick={() => setFilter('ALL')}>
-                Show everything
-              </GlassButton>
-            ) : (
-              <GlassButton variant="secondary" size="sm" onClick={() => navigate(ROUTES.matchday)}>
-                Go to matchday
-              </GlassButton>
-            )
-          }
+      {worldIsQuiet ? (
+        <QuietWorld
+          opponent={opponent}
+          fixture={upcoming ?? undefined}
+          phaseLabel={upcoming ? PHASE_LABELS[upcoming.phase] : PHASE_LABELS[state.clock.phase]}
+          creators={creators}
+          followers={state.social.clubFollowers}
+          onGoToMatchday={() => navigate(ROUTES.matchday)}
+          onOpenCreator={(creatorId) =>
+            navigate(buildPath(ROUTES.creator, { creatorId }))}
         />
       ) : (
         <>
-          <SectionHeader
-            title="The feed"
-            subtitle="Sized by how much the world cares"
-          />
-          <div className="flex flex-col gap-3">
-            {posts.map((post) => (
-              <FeedItem
-                key={post.id}
-                post={post}
-                timeLabel={relative(state.clock.cycle, post.cycle)}
-                hasEvent={Boolean(post.relatedEventId && events.has(post.relatedEventId))}
-                onOpenEvent={setOpenEventFor}
+          <div className="md:hidden">{reachPanel}</div>
+
+          {posts.length === 0 ? (
+            <GlassPanel padding="md">
+              <EmptyState
+                size="sm"
+                icon={<IconSocial />}
+                title="Nothing from them yet"
+                description="Nobody in this corner of the ecosystem has said anything about you. Change that on the pitch, or look at everything."
+                action={
+                  <GlassButton variant="secondary" size="sm" onClick={() => setFilter('ALL')}>
+                    Show everything
+                  </GlassButton>
+                }
               />
-            ))}
-          </div>
-          {posts.length >= limit && (
-            <GlassButton variant="secondary" block onClick={() => setLimit((n) => n + PAGE)}>
-              Load older posts
-            </GlassButton>
+            </GlassPanel>
+          ) : (
+            <>
+              <SectionHeader
+                title="The feed"
+                subtitle="The biggest story of the week runs biggest. Nothing here is invented — every post traces to something that happened."
+              />
+              <div className="flex flex-col gap-3">
+                {posts.map((post) => (
+                  <FeedItem
+                    key={post.id}
+                    post={post}
+                    timeLabel={relative(state.clock.cycle, post.cycle)}
+                    hasEvent={Boolean(post.relatedEventId && events.has(post.relatedEventId))}
+                    onOpenEvent={setOpenEventFor}
+                  />
+                ))}
+              </div>
+              {posts.length >= limit && (
+                <GlassButton variant="secondary" block onClick={() => setLimit((n) => n + PAGE)}>
+                  Load older posts
+                </GlassButton>
+              )}
+            </>
           )}
         </>
       )}
@@ -179,39 +199,41 @@ function SocialView({ state }: { state: GameState }): ReactNode {
       >
         {described && openedEvent ? (
           <div className="flex flex-col gap-3">
-            <p className="text-[15px] leading-relaxed text-ink text-pretty">{described.detail}</p>
+            <Text role="body" as="p" className="text-pretty">{described.detail}</Text>
             <Divider label="Who it involved" />
             <ul className="flex flex-col gap-1.5">
               {openedEvent.entities.map((entity) => {
                 const isCreator = entity.kind === 'creator' && state.creators[entity.id] !== undefined;
                 return (
                   <li key={`${entity.kind}-${entity.id}`}>
-                    <KeyValueRow
-                      label={entity.name}
-                      value={entity.kind}
-                      divided={false}
-                      {...(isCreator
-                        ? {
-                            onPress: () => {
-                              setOpenEventFor(null);
-                              navigate(buildPath(ROUTES.creator, { creatorId: entity.id }));
-                            },
-                          }
-                        : {})}
-                    />
+                    {isCreator ? (
+                      <ListRow
+                        density="compact"
+                        divided={false}
+                        title={entity.name}
+                        subtitle={entity.kind}
+                        chevron
+                        onPress={() => {
+                          setOpenEventFor(null);
+                          navigate(buildPath(ROUTES.creator, { creatorId: entity.id }));
+                        }}
+                      />
+                    ) : (
+                      <KeyValueRow label={entity.name} value={entity.kind} divided={false} />
+                    )}
                   </li>
                 );
               })}
             </ul>
-            <p className="text-[12px] leading-relaxed text-ink-dim text-pretty">
+            <Text role="caption" as="p" className="text-ink-dim text-pretty">
               Every post in this feed is generated from an event like this one. If a post has no
               event behind it, that is a bug — not a flourish.
-            </p>
+            </Text>
           </div>
         ) : (
-          <p className="text-[14px] text-ink-muted">
+          <Text role="body" as="p" tone="muted">
             The event behind this post has aged out of the journal.
-          </p>
+          </Text>
         )}
       </GlassSheet>
     </Screen>

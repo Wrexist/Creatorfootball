@@ -9,8 +9,8 @@ import type { CascadeResult } from '../simulation/cascade';
 import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort, SocialPostKind } from '../simulation/ports';
 import {
-  blendTemplates, matchesConditions, pickTemplate, renderTemplate, seedFrom, templatesForTrigger,
-  type TemplateRecency,
+  blendTemplates, diversifyByTrigger, matchesConditions, pickTemplate, renderTemplate, seedFrom,
+  templatesForTrigger, type TemplateRecency,
 } from '../simulation/templating';
 import { rivalriesOf, rivalOpponent } from '../rivalries/rivalries';
 import { OUTLETS } from '../media/balance';
@@ -295,22 +295,17 @@ export function generatePosts(
   // week of heavy defeats spending the entire budget on one trigger and hiding
   // every other kind of story the pack can tell.
   const seen = new Set<string>();
-  const perTrigger = new Map<string, number>();
-  const hooks = allHooks
-    .filter((h) => {
-      const key = `${h.sourceEventId}:${h.trigger}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .sort((a, b) => b.importance - a.importance || (a.sourceEventId < b.sourceEventId ? -1 : 1))
-    .filter((h) => {
-      const used = perTrigger.get(h.trigger) ?? 0;
-      if (used >= S.maxHooksPerTrigger) return false;
-      perTrigger.set(h.trigger, used + 1);
-      return true;
-    })
-    .slice(0, S.maxHooksPerCycle);
+  const hooks = diversifyByTrigger(
+    allHooks
+      .filter((h) => {
+        const key = `${h.sourceEventId}:${h.trigger}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => b.importance - a.importance || (a.sourceEventId < b.sourceEventId ? -1 : 1)),
+    { limit: S.maxHooksPerCycle, perTrigger: S.maxHooksPerTrigger },
+  );
 
   const posts: SocialPost[] = [];
   // A feed that repeats itself reads as generated. One line, once per cycle —
@@ -376,9 +371,26 @@ export function generatePosts(
     ...posts,
     ...generateDebates(posts, hooks, byKey, recent, blocked, state, rng, cycle),
   ];
-  return withDebates
-    .sort((a, b) => b.weight - a.weight || (a.id < b.id ? -1 : 1))
-    .slice(0, opts.maxPosts ?? S.maxPostsPerCycle);
+  // Trim by weight, but not so hard that the diversity won upstream is thrown
+  // away here: a single trigger may not take more than its share of the feed.
+  const limit = opts.maxPosts ?? S.maxPostsPerCycle;
+  const takenPerTrigger = new Map<string, number>();
+  const kept: SocialPost[] = [];
+  const overflow: SocialPost[] = [];
+  for (const post of withDebates.sort((a, b) => b.weight - a.weight || (a.id < b.id ? -1 : 1))) {
+    const trigger = post.tags.find((t) => t.startsWith('trigger:')) ?? 'trigger:debate';
+    const used = takenPerTrigger.get(trigger) ?? 0;
+    if (used >= S.maxPostsPerTrigger) { overflow.push(post); continue; }
+    takenPerTrigger.set(trigger, used + 1);
+    kept.push(post);
+    if (kept.length >= limit) break;
+  }
+  // Only if diversity could not fill the feed do the crowded-out posts return.
+  for (const post of overflow) {
+    if (kept.length >= limit) break;
+    kept.push(post);
+  }
+  return kept.sort((a, b) => b.weight - a.weight || (a.id < b.id ? -1 : 1));
 }
 
 /**

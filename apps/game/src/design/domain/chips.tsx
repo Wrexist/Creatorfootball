@@ -3,6 +3,7 @@ import type { Position, TraitDefinition } from '@cf/engine';
 import { positionGroup } from '@cf/engine';
 import { cn } from '../cn';
 import { FOCUS_RING } from '../glass/glassLevel';
+import { TYPE_CLASS } from '../typography/type';
 
 /* --- RatingBadge ------------------------------------------------------ */
 
@@ -15,6 +16,12 @@ export interface RatingBadgeProps {
   size?: RatingSize;
   /** `plate` for the card treatment, `bare` for inline numbers in a table. */
   variant?: 'plate' | 'bare';
+  /**
+   * This rating just moved. The only condition under which a rating is allowed
+   * to use the accent - a number that changed is a state, a number that is
+   * merely high is data.
+   */
+  changed?: boolean;
   label?: string;
   className?: string;
 }
@@ -24,24 +31,39 @@ export interface RatingBadgeProps {
  *
  * A gradient makes 71 and 74 look identical, which defeats the point: the
  * player is scanning a list for the one number that changes their decision.
- * Discrete bands make squad quality legible at a glance, and the top band is
- * the only place a rating is allowed to use volt.
+ * Discrete bands make squad quality legible at a glance.
+ *
+ * The bands are a **neutral ramp**, not a semantic one. They used to run
+ * volt / positive / ink / ink-muted / ink-dim, which meant every squad list in
+ * the product carried volt elements that were data rather than state - an 89
+ * overall is not "live", it is just a number, and it was competing with the
+ * one genuinely actionable thing on the screen. Brightness alone separates the
+ * five bands perfectly well at a glance.
+ *
+ * Volt returns for exactly one case, and it is a state: `changed`, a rating
+ * that has just moved. That is the accent doing its job.
  */
-function band(value: number, scale: RatingScale): { text: string; plate: string } {
+function band(
+  value: number,
+  scale: RatingScale,
+  changed: boolean,
+): { text: string; plate: string } {
   const normalised = scale === 'match' ? (value / 10) * 100 : value;
-  if (normalised >= 88) return { text: 'text-volt', plate: 'bg-volt text-volt-ink' };
-  if (normalised >= 78) return { text: 'text-positive', plate: 'bg-positive/18 text-positive border border-positive/35' };
-  if (normalised >= 68) return { text: 'text-ink', plate: 'bg-white/10 text-ink border border-white/14' };
-  if (normalised >= 56) return { text: 'text-ink-muted', plate: 'bg-white/[0.06] text-ink-muted border border-white/10' };
-  return { text: 'text-ink-dim', plate: 'bg-white/[0.04] text-ink-dim border border-white/[0.07]' };
+  if (changed) return { text: 'text-volt', plate: 'bg-volt text-volt-ink' };
+  if (normalised >= 88) return { text: 'text-ink', plate: 'bg-white/[0.22] text-ink border border-white/25' };
+  if (normalised >= 78) return { text: 'text-ink', plate: 'bg-white/[0.14] text-ink border border-white/[0.18]' };
+  if (normalised >= 68) return { text: 'text-ink', plate: 'bg-white/[0.09] text-ink border border-white/[0.13]' };
+  if (normalised >= 56) return { text: 'text-ink-muted', plate: 'bg-white/[0.055] text-ink-muted border border-white/10' };
+  return { text: 'text-ink-dim', plate: 'bg-white/[0.035] text-ink-dim border border-white/[0.07]' };
 }
 
+/** Sizes are rungs of the closed scale; there is no 22 or 34 any more. */
 const RATING_SIZE: Record<RatingSize, string> = {
-  xs: 'text-[11px] min-w-6 h-5 px-1 rounded-xs',
-  sm: 'text-[13px] min-w-7 h-6 px-1.5 rounded-sm',
-  md: 'text-[15px] min-w-9 h-8 px-2 rounded-md',
-  lg: 'text-[22px] min-w-12 h-11 px-2.5 rounded-lg',
-  xl: 'text-[34px] min-w-16 h-14 px-3 rounded-xl',
+  xs: 'text-micro min-w-6 h-5 px-1 rounded-xs',
+  sm: 'text-caption min-w-7 h-6 px-1.5 rounded-sm',
+  md: 'text-body min-w-9 h-8 px-2 rounded-md',
+  lg: 'text-title min-w-12 h-11 px-2.5 rounded-lg',
+  xl: 'text-display min-w-16 h-14 px-3 rounded-xl',
 };
 
 export const RatingBadge = memo(function RatingBadge({
@@ -49,17 +71,18 @@ export const RatingBadge = memo(function RatingBadge({
   scale = 'overall',
   size = 'md',
   variant = 'plate',
+  changed = false,
   label,
   className,
 }: RatingBadgeProps): ReactNode {
-  const tone = band(value, scale);
+  const tone = band(value, scale, changed);
   const display =
     scale === 'match' ? value.toFixed(1) : scale === 'percent' ? `${Math.round(value)}%` : Math.round(value);
 
   return (
     <span
       className={cn(
-        'tnum inline-flex items-center justify-center font-bold tracking-[-0.02em] font-display',
+        'num-broadcast inline-flex items-center justify-center font-bold tracking-[-0.03em]',
         RATING_SIZE[size],
         variant === 'plate' ? tone.plate : cn(tone.text, 'p-0'),
         className,
@@ -74,16 +97,31 @@ export const RatingBadge = memo(function RatingBadge({
 /* --- PositionChip ----------------------------------------------------- */
 
 /**
- * One hue per line of the pitch. `danger` is deliberately not used for
- * attackers even though red is the football convention — in this product red
- * already means "something went wrong", and a squad list full of red strikers
- * would train the player to ignore the colour that matters.
+ * A position is a **category, not a state**, so it gets a neutral ramp.
+ *
+ * This used to spend four of the five semantic tokens - warning on keepers,
+ * info on defenders, positive on midfielders, special on attackers - on a label
+ * that appears on every player row in the product. Once a goalkeeper is
+ * permanently amber and a striker permanently purple, an actual warning and an
+ * actual rule card have nothing left to say. The source comment showed the team
+ * had already reasoned its way to not using `danger` here; the same reasoning
+ * applies to the other four.
+ *
+ * It also failed contrast, and for the reason every contrast failure in this
+ * product failed: **a token painted onto a tint of its own hue.** `info` on
+ * `glass-2` is a comfortable 6.05:1; `info` on `info/16` measured 3.88:1, and
+ * `outOfPosition`'s `opacity-60` took it to roughly 2.5:1.
+ *
+ * The replacement carries the line of the pitch in *brightness* rather than
+ * hue - four steps of white, back to front - and puts the text on the surface
+ * rather than on its own colour. Measured on glass-1 over base: 6.45:1 at the
+ * front, 6.80:1 at the back.
  */
 const GROUP_TONE = {
-  GK: 'bg-warning/16 text-warning border-warning/30',
-  DEF: 'bg-info/16 text-info border-info/30',
-  MID: 'bg-positive/16 text-positive border-positive/30',
-  ATT: 'bg-special/16 text-special border-special/30',
+  GK: 'bg-white/[0.04] text-ink-muted border-white/[0.14]',
+  DEF: 'bg-white/[0.05] text-ink-muted border-white/[0.16]',
+  MID: 'bg-white/[0.06] text-ink-muted border-white/[0.18]',
+  ATT: 'bg-white/[0.08] text-ink border-white/[0.22]',
 } as const;
 
 export interface PositionChipProps {
@@ -103,12 +141,19 @@ export const PositionChip = memo(function PositionChip({
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center rounded-xs border font-bold uppercase tracking-[0.06em]',
-        size === 'xs' && 'h-4 min-w-7 px-1 text-[9px]',
-        size === 'sm' && 'h-5 min-w-8 px-1.5 text-[10px]',
-        size === 'md' && 'h-6 min-w-10 px-2 text-[11px]',
+        'inline-flex items-center justify-center rounded-xs border font-bold uppercase tracking-[0.08em]',
+        // Every size sits at or above the scale's 11px floor. The old xs and sm
+        // steps were 9px and 10px, which is where the 3.88:1 measurement came
+        // from as much as the tint did.
+        TYPE_CLASS.micro,
+        'text-micro text-ink-muted',
+        size === 'xs' && 'h-[18px] min-w-7 px-1',
+        size === 'sm' && 'h-5 min-w-8 px-1.5',
+        size === 'md' && 'h-6 min-w-10 px-2',
         GROUP_TONE[positionGroup(position)],
-        outOfPosition && 'opacity-60 line-through decoration-1',
+        // Never `opacity`: dimming a chip that already sits at 6.4:1 is what
+        // took it to 2.5:1. A line-through says "out of position" on its own.
+        outOfPosition && 'line-through decoration-1 decoration-ink-faint',
         className,
       )}
     >

@@ -122,6 +122,16 @@ export default tseslint.config(
     },
   },
 
+  // --- end-to-end scripts drive a real browser from Node ---
+  {
+    files: ['apps/game/e2e/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+      sourceType: 'module',
+    },
+    rules: { 'no-restricted-syntax': 'off', '@typescript-eslint/no-unused-vars': 'off' },
+  },
+
   // --- headless tools may use Node ---
   {
     files: ['tools/**/*.ts'],

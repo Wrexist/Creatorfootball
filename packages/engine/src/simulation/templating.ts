@@ -128,6 +128,41 @@ export function pickTemplate<T extends Weighted>(
   });
 }
 
+/**
+ * Choose which hooks get to speak this cycle.
+ *
+ * Straight importance ordering looked right and was the single biggest reason
+ * the authored library never reached a player: a matchweek produces a dozen
+ * importance-4 result hooks, they fill the budget every single cycle, and the
+ * quieter half of the world — a contract signed, a prospect promoted, a ground
+ * two-thirds empty — is never heard from. So allocation is round-robin over
+ * triggers instead: every distinct trigger present this cycle gets one slot
+ * before any trigger gets a second, and groups are visited in order of their
+ * best hook, so the biggest story is still first.
+ */
+export function diversifyByTrigger<T extends { readonly trigger: string; readonly importance: number }>(
+  hooks: readonly T[],
+  opts: { readonly limit: number; readonly perTrigger: number },
+): T[] {
+  const groups = new Map<string, T[]>();
+  for (const hook of hooks) {
+    const list = groups.get(hook.trigger);
+    if (list) list.push(hook); else groups.set(hook.trigger, [hook]);
+  }
+  const ordered = [...groups.values()].sort(
+    (a, b) => (b[0]?.importance ?? 0) - (a[0]?.importance ?? 0),
+  );
+  const out: T[] = [];
+  for (let round = 0; round < opts.perTrigger; round++) {
+    for (const group of ordered) {
+      if (out.length >= opts.limit) return out;
+      const hook = group[round];
+      if (hook) out.push(hook);
+    }
+  }
+  return out;
+}
+
 /** Band a -1..1 sentiment so content can key on it as a string. */
 export const sentimentBand = (s: number): 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' =>
   (s > 0.15 ? 'POSITIVE' : s < -0.15 ? 'NEGATIVE' : 'NEUTRAL');
