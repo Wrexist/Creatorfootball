@@ -14,6 +14,7 @@ import type { Manager } from '../creators/manager';
 import type { Creator } from '../creators/creator';
 import type { Competition, Fixture, Season } from '../league/types';
 import { generateFixtures } from '../league/fixtures';
+import { seedRivalries } from '../rivalries/rivalries';
 import { emptyBonuses } from '../contracts/contract';
 import { defaultValuationContext, marketValue, wageDemand } from '../transfers/valuation';
 import {
@@ -350,6 +351,16 @@ export function createNewGame(opts: NewGameOptions): GameState {
     enabledSpecialRules: ['DOUBLE_GOAL', 'POWER_PLAY', 'LAST_STAND', 'ALL_IN', 'CREATOR_MOMENT'],
   };
 
+  // Rivalries must exist before the first fixture list is built, because the
+  // schedule reads them to mark derbies and to weight importance. They were
+  // previously left empty in real saves, which silently disabled every derby
+  // modifier, the rivalry cascade, and the whole Rivalries screen.
+  const seededRivalries = seedRivalries(
+    Object.values(clubs),
+    templates,
+    rng.fork('rivalries'),
+  );
+
   const totalWeeks = ((clubIds.length - 1) * config.rounds);
   const fixtureList = generateFixtures(
     {
@@ -453,7 +464,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
       clubFollowers: (clubs[playerClubId] as Club).fans.onlineFollowers,
       weeklyImpressions: 0,
     },
-    rivalries: {},
+    rivalries: seededRivalries,
     objectives: { active: [], completed: [], seasonTargets: [] },
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 3, cosmeticIds: [], facilityCredits: 0 },

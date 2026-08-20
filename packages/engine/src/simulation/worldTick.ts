@@ -479,6 +479,11 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
           clubs[seller.id] = {
             ...seller,
             squad: seller.squad.filter((id) => id !== player.id),
+            // Academy players are listed in youthSquad, not squad. Filtering
+            // only the senior list left a sold prospect registered at both
+            // clubs at once — the duplicate-ownership corruption that silently
+            // doubles a player's value and that the save validator hunts for.
+            youthSquad: seller.youthSquad.filter((id) => id !== player.id),
             finance: { ...seller.finance, transferBudget: seller.finance.transferBudget + fee },
           };
           emit('PLAYER_SOLD', { playerId: player.id, fromClubId: seller.id, toClubId: buyer.id, fee }, 2,

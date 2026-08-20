@@ -87,7 +87,16 @@ export const TRANSFER_BALANCE = {
 
 export const WAGE_BALANCE = {
   /** Weekly wage for a league-average player. */
-  BASE_WAGE_AT_AVERAGE: 9_000,
+  /**
+   * Weekly wage for a league-average player, before every other modifier.
+   *
+   * Calibrated so a club's wage bill lands in football's normal 50-70% band
+   * against its own turnover. At 9,000 the bottom club's squad cost 148% of
+   * everything it earned on the day the save was created — structurally
+   * insolvent before a ball was kicked, which then blocked squad replenishment
+   * and started a decline no player could recover from.
+   */
+  BASE_WAGE_AT_AVERAGE: 4_600,
   /** Compounding per point of overall above average — wages inflate faster than fees at the top. */
   WAGE_PER_OVERALL: 1.088,
   MIN_WAGE: 900,

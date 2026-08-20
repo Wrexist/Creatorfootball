@@ -31,20 +31,86 @@ function playSeason(seed: string, weeks = 22) {
 }
 
 describe('a full season', () => {
-  it('plays every fixture and leaves a coherent, valid world', () => {
+  it('plays every fixture and rolls into the next season', () => {
     const { state } = playSeason('season-a');
 
     expect(validateState(state)).toEqual([]);
 
-    const fixtures = Object.values(state.fixtures);
-    expect(fixtures.every((f) => f.status === 'COMPLETED')).toBe(true);
-    expect(state.clock.week).toBe(22);
+    // Completing the final matchweek rolls the world forward rather than
+    // leaving the clock counting weeks that contain no football.
+    expect(state.clock.season).toBe(2);
+    expect(state.clock.week).toBe(0);
+    expect(state.clock.phase).toBe('PRE_SEASON');
 
-    // Every club played every fixture exactly once.
+    const fixtures = Object.values(state.fixtures);
+    const finished = fixtures.filter((f) => f.status === 'COMPLETED');
+    const upcoming = fixtures.filter((f) => f.status === 'SCHEDULED');
+    expect(finished).toHaveLength(132);
+    expect(upcoming).toHaveLength(132);
+
+    // Season records reset for the new campaign, and the old one is recorded.
     for (const club of Object.values(state.clubs)) {
-      expect(club.seasonRecord.played).toBe(22);
-      expect(club.seasonRecord.won + club.seasonRecord.drawn + club.seasonRecord.lost).toBe(22);
+      expect(club.seasonRecord.played).toBe(0);
     }
+    expect(state.legacy.seasonSummaries).toHaveLength(1);
+    expect(state.seasons[state.currentSeasonId]?.number).toBe(2);
+  });
+
+  it('crowns a champion and records the season that produced it', () => {
+    const { state } = playSeason('season-champion');
+    const closed = Object.values(state.seasons).find((s) => s.completed);
+    expect(closed).toBeDefined();
+    expect(closed?.championClubId).toBeTruthy();
+    expect(closed?.playerFinalPosition).toBeGreaterThan(0);
+
+    const summary = state.legacy.seasonSummaries[0];
+    expect(summary?.played).toBe(22);
+    expect(summary!.won + summary!.drawn + summary!.lost).toBe(22);
+  });
+
+  it('ages the squad, retires the finished and promotes from the academy', () => {
+    const before = newGame('season-ageing');
+    const { state: after } = playSeason('season-ageing');
+
+    const stillHere = Object.keys(after.players).filter((id) => before.players[id]);
+    // Everyone who survived is a year older.
+    for (const id of stillHere.slice(0, 40)) {
+      expect(after.players[id]!.age).toBe(before.players[id]!.age + 1);
+    }
+    // Nobody carries last season's bans into a new campaign, and everyone who
+    // came through the old season starts it fresh.
+    expect(Object.values(after.players).every((p) => p.suspensionMatches === 0)).toBe(true);
+    for (const id of stillHere.slice(0, 40)) {
+      expect(after.players[id]!.fitness).toBe(100);
+      expect(after.players[id]!.form.appearances).toBe(0);
+    }
+    // The academy took on a new intake, so the league does not run dry.
+    expect(Object.keys(after.players).length).toBeGreaterThan(Object.keys(before.players).length);
+  });
+
+  it('does not let a club decay to nothing across several seasons', () => {
+    // The failure this guards against is a death spiral: sponsorship lapses,
+    // the wage budget shrinks with the income, the club cannot replace players
+    // it loses, results collapse, and the decline compounds beyond recovery.
+    let state = newGame('season-decay');
+    for (let cycle = 0; cycle < 66; cycle++) {
+      state = advanceCycle(state, { now: START + cycle * CYCLE_MS }).state;
+    }
+    const club = state.clubs[state.playerClubId]!;
+    expect(state.clock.season).toBe(4);
+    expect(validateState(state)).toEqual([]);
+
+    // Every club can still field a side with cover, league-wide.
+    for (const c of Object.values(state.clubs)) {
+      expect(c.squad.length).toBeGreaterThanOrEqual(9);
+    }
+    // The pool regenerates rather than draining: retirements are replaced by
+    // an academy intake, which is what stops the league running out of players.
+    expect(Object.keys(state.players).length).toBeGreaterThan(216);
+    // Reputation has a floor, so a bad run cannot start an unrecoverable slide.
+    expect(club.reputation).toBeGreaterThanOrEqual(20);
+    // Commercial income never falls to nothing.
+    expect(state.sponsors.active.length).toBeGreaterThan(0);
   });
 
   it('produces a table where points reconcile with results', () => {
@@ -148,9 +214,19 @@ describe('a full season', () => {
   });
 
   it('advances the narrative calendar rather than counting anonymous weeks', () => {
-    const { state, summaries } = playSeason('season-i');
-    expect(summaries).toHaveLength(22);
-    expect(state.clock.phase).toBe('PLAYOFFS');
-    expect(summaries.at(-1)?.seasonComplete).toBe(true);
+    let state = newGame('season-i');
+    const phases: string[] = [];
+    for (let i = 0; i < 22; i++) {
+      const result = advanceCycle(state, { now: START + i * CYCLE_MS });
+      state = result.state;
+      phases.push(state.clock.phase);
+      if (i === 21) expect(result.summary.seasonComplete).toBe(true);
+    }
+    // The player moves through named beats, not anonymous week numbers.
+    expect(new Set(phases).size).toBeGreaterThanOrEqual(6);
+    expect(phases).toContain('OPENING_FIXTURES');
+    expect(phases).toContain('TRANSFER_WINDOW');
+    // And the final week hands over to the next campaign.
+    expect(state.clock.phase).toBe('PRE_SEASON');
   });
 });

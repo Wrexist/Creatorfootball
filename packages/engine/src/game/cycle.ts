@@ -12,7 +12,7 @@ import { simulateMatch } from '../matches/simulator';
 import { tickWorld } from '../simulation/worldTick';
 import { runFinancialCycle } from '../economy/cycle';
 import { refreshMarket } from '../transfers/market';
-import { generateSponsorOffers } from '../sponsors/sponsors';
+import { generateSponsorOffers, signSponsorOffer } from '../sponsors/sponsors';
 import { facilityEffect } from '../facilities/facilities';
 import { renewContract } from '../contracts/wages';
 import { defaultValuationContext, wageDemand } from '../transfers/valuation';
@@ -25,6 +25,7 @@ import { updateLegacy } from '../progression/legacy';
 import { ContentRegistry, BASE_PACK, type CreatorSeasonConfigDef } from '../content';
 import { applyMatchResult } from './applyResult';
 import { buildMatchSetup } from './matchSetup';
+import { rolloverSeason } from './seasonRollover';
 import { GameEventFactory } from './eventFactory';
 import { appendEvents, patchClub, patchPlayer, setContract, transferPlayer } from './mutations';
 import { clubCreators, recentForm, squadWageBill } from './selectors';
@@ -227,7 +228,37 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
     next.sponsors.active,
   );
 
-  if (sponsorOffers.length > 0) {
+  // A club is never simply without a shirt sponsor.
+  //
+  // Deals expire, and with no player present to sign a replacement the club's
+  // commercial income fell to zero — which cut the wage budget, which stopped
+  // squad replenishment, which cost results, which cost fans, which cut income
+  // again. That spiral is what turned a mid-table side into seven players over
+  // three seasons. A real club in that position takes whatever deal is on the
+  // table; the player's job is to negotiate a *better* one, not to prevent the
+  // club from having any.
+  const liveOffers = [...next.sponsors.available, ...sponsorOffers];
+  if (next.sponsors.active.length === 0 && liveOffers.length > 0) {
+    const best = liveOffers.reduce((top, o) => (o.valuePerCycle > top.valuePerCycle ? o : top), liveOffers[0]!);
+    const signed = signSponsorOffer(finance.club, best, ledger, {
+      cycle: next.clock.cycle, season: next.clock.season, at: opts.now,
+    });
+    if (signed.ok && signed.deal) {
+      next = {
+        ...next,
+        sponsors: {
+          available: liveOffers.filter((o) => o.id !== best.id),
+          active: [signed.deal],
+        },
+      };
+      allEvents.push(events.make('SPONSOR_SIGNED', {
+        clubId: playerClubId,
+        sponsorId: best.sponsorId as never,
+        value: best.valuePerCycle,
+      }, { importance: 2, entities: [events.clubRef(playerClubId)] }));
+      notes.push(`${best.name} step in as ${best.slot.toLowerCase()} partner.`);
+    }
+  } else if (sponsorOffers.length > 0) {
     // Offers expire; carry forward only the ones still on the table so the
     // screen never shows a deal that has quietly lapsed.
     const live = next.sponsors.available.filter((o) => o.expiresCycle > next.clock.cycle);
@@ -321,6 +352,22 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
       lastSeenCycle: next.clock.cycle + 1,
     },
   };
+
+  // --- 9. when the fixtures run out, roll into the next season ---------
+  // Without this the clock keeps counting weeks that contain no football and
+  // the world quietly decays: squads shed players nobody replaces, sponsorship
+  // lapses with nothing to renew against, and reputation drains to nothing.
+  if (seasonComplete) {
+    const rolled = rolloverSeason(next, rng.fork('rollover'), ledger, events, { now: opts.now, registry });
+    next = { ...rolled.state, ledger: ledger.snapshot() };
+    allEvents.push(...rolled.events);
+    notes.push(
+      `Season ${state.clock.season} complete. ${rolled.retired.length} players retired, ` +
+      `${rolled.promoted.length} promoted from the academy.`,
+    );
+    // Idempotency keys for the season just gone can never fire again.
+    ledger.pruneKeys(next.clock.cycle);
+  }
 
   next = appendEvents(next, allEvents);
   next = events.commit(next);
@@ -519,6 +566,16 @@ function replenishSquads(
   let next = state;
   const emitted: AnyDomainEvent[] = [];
   const minimum = Math.max(11, squadSize - 2);
+  /**
+   * Below this, wage discipline stops applying.
+   *
+   * A club that is over budget could previously never sign anyone — including
+   * when it was down to eight players and physically could not field a team.
+   * Not fulfilling a fixture is not a choice a club gets to make, so beneath
+   * this threshold it signs whoever is available and deals with the wage bill
+   * afterwards, which is exactly what a real club in that position does.
+   */
+  const EMERGENCY_SIZE = 13;
 
   const freeAgents = Object.values(state.players)
     .filter((p) => p.clubId === null)
@@ -537,10 +594,15 @@ function replenishSquads(
     const valuation = defaultValuationContext({ leagueAverageOverall: 62 });
 
     while (size < minimum) {
+      const desperate = size < EMERGENCY_SIZE;
       const budgetLeft = club.finance.wageBudgetPerCycle * 1.2 - squadWageBill(next, club.id);
+      const ceiling = desperate
+        ? Number.POSITIVE_INFINITY
+        : Math.max(budgetLeft, club.finance.wageBudgetPerCycle * 0.04);
+
       const candidate = freeAgents.find((p) => {
         if (taken.has(p.id)) return false;
-        return wageDemand(p, valuation) <= Math.max(budgetLeft, club.finance.wageBudgetPerCycle * 0.04);
+        return wageDemand(p, valuation) <= ceiling;
       });
       if (!candidate) break;
 
