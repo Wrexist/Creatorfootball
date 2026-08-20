@@ -17,9 +17,22 @@ export default defineConfig({
     // heavier management screens are split out so the first paint stays fast.
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          motion: ['motion'],
+        manualChunks(id) {
+          // Split by *why* a module loads, not merely by where it lives.
+          // The fictional universe is a large static payload read only when a
+          // save is created or a pack inspected, and the engine is stable code
+          // a returning player already has cached — neither belongs on the
+          // critical path with the shell.
+          if (id.includes('packages/engine/src/content/packs')) return 'content';
+          if (id.includes('packages/engine/src')) return 'engine';
+          if (!id.includes('node_modules')) return undefined;
+          if (/node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)) {
+            return 'vendor';
+          }
+          if (/node_modules\/(motion|framer-motion|motion-dom|motion-utils)\//.test(id)) {
+            return 'motion';
+          }
+          return undefined;
         },
       },
     },

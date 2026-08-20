@@ -13,3 +13,8 @@ android/
 *.tsbuildinfo
 /tmp/
 artifacts/
+
+# Scratch scripts for the headless audit harness. Auditors write throwaway
+# probes here; they are never part of the product.
+tools/sim/src/zz*.ts
+tools/sim/src/__*.ts

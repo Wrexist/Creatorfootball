@@ -8,13 +8,43 @@
  */
 
 /** Non-cryptographic string hash used to derive stream seeds from labels. */
-export function hashString(str: string): number {
-  let h = 2166136261 >>> 0;
+export function hashString(str: string, offset = 2166136261): number {
+  let h = offset >>> 0;
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i);
     h = Math.imul(h, 16777619) >>> 0;
   }
   return h >>> 0;
+}
+
+/** murmur3 finaliser: full avalanche, so one changed input bit moves half the output. */
+function fmix32(h: number): number {
+  let x = h >>> 0;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x85ebca6b);
+  x ^= x >>> 13;
+  x = Math.imul(x, 0xc2b2ae35);
+  x ^= x >>> 16;
+  return x >>> 0;
+}
+
+/**
+ * Four independent 32-bit lanes for the generator's state.
+ *
+ * The lanes used to be one hash XORed with four constants, which meant the
+ * generator's real state space was 2^32 rather than 2^128 — two seeds colliding
+ * in that single hash produced byte-identical worlds, and the lanes were
+ * linearly related to one another at the start of every stream. Each lane is
+ * now hashed from a distinct FNV basis and finalised separately, so the seed
+ * space is the full width of the state and the lanes are independent.
+ */
+function seedLanes(seed: string): [number, number, number, number] {
+  return [
+    fmix32(hashString(seed, 0x811c9dc5)),
+    fmix32(hashString(seed, 0x1000193)),
+    fmix32(hashString(`${seed}#1`, 0x9e3779b9)),
+    fmix32(hashString(`${seed}#2`, 0x85ebca6b)),
+  ];
 }
 
 /** sfc32 — fast, small state, excellent statistical quality for game use. */
@@ -43,8 +73,8 @@ export class Rng {
   private forkedLabels = new Set<string>();
 
   constructor(readonly seed: string, skip = 0) {
-    const h = hashString(seed);
-    this.next = sfc32(h ^ 0x9e3779b9, h ^ 0x85ebca6b, h ^ 0xc2b2ae35, h ^ 0x27d4eb2f);
+    const [a, b, c, d] = seedLanes(seed);
+    this.next = sfc32(a, b, c, d);
     // Discard the first values: sfc32 needs a short warm-up to decorrelate.
     for (let i = 0; i < 12; i++) this.next();
     for (let i = 0; i < skip; i++) this.raw();

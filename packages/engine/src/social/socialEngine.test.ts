@@ -122,12 +122,22 @@ describe('arguments', () => {
     const polarising = makeTestEvent('PLAYER_SIGNED', {
       playerId: 'p_1_3' as PlayerId, clubId: 'club_0' as ClubId, fee: 30_000_000, wage: 120_000,
     }, { id: 'ev_polar', importance: 5 });
-    let found = false;
-    for (const seed of ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10']) {
-      const posts = generatePosts([polarising], state, new Rng(seed), null, { maxPosts: 40 });
-      if (posts.some((p) => p.quoted && p.tags.includes('debate'))) { found = true; break; }
+    // Assert the RATE, not "at least one of ten fixed seeds". Debates fire on
+    // roughly 8-9% of polarising signings, so a ten-seed sweep had a 41% chance
+    // of finding nothing — this test was passing by luck and broke the first
+    // time the underlying random streams changed for an unrelated reason.
+    let hits = 0;
+    const samples = 300;
+    for (let i = 0; i < samples; i++) {
+      const posts = generatePosts([polarising], state, new Rng(`debate-${i}`), null, { maxPosts: 40 });
+      if (posts.some((p) => p.quoted && p.tags.includes('debate'))) hits += 1;
     }
-    expect(found).toBe(true);
+    const rate = hits / samples;
+    // Wide band on purpose: this pins down "creators sometimes argue, but not
+    // every time", which is the actual design intent, without freezing a
+    // balance constant that designers should be free to tune.
+    expect(rate).toBeGreaterThan(0.02);
+    expect(rate).toBeLessThan(0.35);
   });
 });
 
