@@ -76,7 +76,10 @@ const SideRow = memo(function SideRow({
         </span>
       </div>
       {played ? (
-        <Numeric role="score" className={cn('shrink-0 text-[30px]', !winner && 'text-ink-muted')}>
+        <Numeric
+          role={big ? 'score' : 'giant'}
+          className={cn('shrink-0', !winner && 'text-ink-muted')}
+        >
           {score}
         </Numeric>
       ) : null}

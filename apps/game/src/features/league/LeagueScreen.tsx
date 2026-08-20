@@ -89,9 +89,9 @@ function LeagueView({ state }: { state: GameState }): ReactNode {
       title={
         <span className="flex items-baseline gap-2.5">
           <Numeric role="giant">{context?.position ?? '—'}</Numeric>
-          <span className="text-[15px] font-semibold text-ink-muted">
+          <Text role="bodyStrong" as="span" tone="muted">
             of {shape.table.length}
-          </span>
+          </Text>
         </span>
       }
       subtitle={positionMeaning(shape)}
@@ -136,9 +136,9 @@ function LeagueView({ state }: { state: GameState }): ReactNode {
                 role="title"
                 lines={2}
               />
-              <p className="mt-1 text-[13px] leading-relaxed text-ink-muted text-pretty">
+              <Text role="caption" as="p" className="mt-1 text-pretty">
                 {topRivalry.origin}
-              </p>
+              </Text>
               <ProgressBar
                 className="mt-3"
                 value={topRivalry.intensity}

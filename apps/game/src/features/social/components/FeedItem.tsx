@@ -3,6 +3,7 @@ import type { SocialPost as PostData } from '@cf/engine';
 import {
   CreatorAvatar, FOCUS_RING, GlassPill, IconHeart, IconInfo, IconRepost, IconVerified,
   NameText, SocialPost, Text, cn,
+  Numeric,
 } from '@/design';
 import { KIND_LABEL, KIND_RAIL, KIND_TONE, tierFor, type Tier } from '../data';
 
@@ -75,11 +76,15 @@ const Engagement = memo(function Engagement({ post }: { post: PostData }): React
     <div className="flex items-center gap-3 text-ink-dim">
       <span className="inline-flex items-center gap-1">
         <IconHeart size={13} />
-        <span className="num-broadcast text-[12px]">{post.likes.toLocaleString('en-GB')}</span>
+        <Numeric role="stat" tone="dim" className="text-[12px]">
+          {post.likes.toLocaleString('en-GB')}
+        </Numeric>
       </span>
       <span className="inline-flex items-center gap-1">
         <IconRepost size={13} />
-        <span className="num-broadcast text-[12px]">{post.reposts.toLocaleString('en-GB')}</span>
+        <Numeric role="stat" tone="dim" className="text-[12px]">
+          {post.reposts.toLocaleString('en-GB')}
+        </Numeric>
       </span>
     </div>
   );
@@ -163,11 +168,7 @@ const Lead = memo(function Lead({
       <Kicker post={post} timeLabel={timeLabel} />
       {/* The lead is the one story of the matchweek, so it gets display type
           and the room to breathe that goes with being the only one. */}
-      <Text
-        role="title"
-        as="p"
-        className="mt-2.5 whitespace-pre-line text-[22px] leading-[1.16] text-pretty"
-      >
+      <Text role="title" as="p" className="mt-2.5 whitespace-pre-line text-pretty">
         {post.text}
       </Text>
       <div className="mt-3.5 flex items-center gap-2.5">

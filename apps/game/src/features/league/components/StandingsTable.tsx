@@ -1,6 +1,7 @@
 import { Fragment, memo, type ReactNode } from 'react';
 import type { ClubId, StandingRow } from '@cf/engine';
-import { ClubBadge, FOCUS_RING, FormGuide, NameText, Text, cn, type MatchCardSide } from '@/design';
+import { ClubBadge, FOCUS_RING, FormGuide, NameText, Text, cn, type MatchCardSide   Numeric,
+} from '@/design';
 
 /**
  * The table, as a story rather than a spreadsheet.
@@ -74,9 +75,9 @@ export const StandingsRowView = memo(function StandingsRowView({
         aria-hidden="true"
         className={cn('h-8 w-1 shrink-0 rounded-pill', ours ? 'bg-volt' : ZONE_RAIL[row.zone])}
       />
-      <span className="tnum w-5 shrink-0 text-center text-[13px] font-semibold text-ink-muted">
+      <Numeric role="stat" tone="muted" className="w-5 shrink-0 text-center text-[13px]">
         {row.position}
-      </span>
+      </Numeric>
       <ClubBadge visual={side.visual} size={22} flat />
       <span className="min-w-0 flex-1">
         <NameText
@@ -98,13 +99,15 @@ export const StandingsRowView = memo(function StandingsRowView({
           <FormGuide results={row.form} slots={5} size="sm" />
         </span>
       )}
-      <span className="tnum w-6 shrink-0 text-right text-[13px] text-ink-dim">{row.played}</span>
+      <Numeric role="stat" tone="dim" className="w-6 shrink-0 text-right text-[13px]">
+        {row.played}
+      </Numeric>
       {!compact && (
-        <span className="tnum w-8 shrink-0 text-right text-[13px] text-ink-dim">
+        <Numeric role="stat" tone="dim" className="w-8 shrink-0 text-right text-[13px]">
           {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
-        </span>
+        </Numeric>
       )}
-      <span className="tnum w-8 shrink-0 text-right text-[15px] font-bold text-ink">{row.points}</span>
+      <Numeric role="stat" className="w-8 shrink-0 text-right">{row.points}</Numeric>
     </>
   );
 
