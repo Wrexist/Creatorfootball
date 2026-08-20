@@ -44,6 +44,24 @@ const creatorPresenceFor = (state: GameState, clubId: ClubId): number => {
   return clamp(Math.log10(Math.max(1, reach)) / 8, 0, 1);
 };
 
+/**
+ * What an AI club brings to a match. Deterministic from the save seed, the club
+ * and the season, so the same fixture always plays out the same way.
+ */
+function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
+  const club = state.clubs[clubId];
+  if (!club) return [];
+  const competition = state.competitions[state.currentCompetitionId];
+  const pool = competition?.enabledSpecialRules ?? [];
+  if (pool.length === 0) return [];
+
+  const rng = new Rng(`${state.seed}:aicards:${clubId}:${state.clock.season}`);
+  // A better-run club has more to deploy: one card as standard, two for the
+  // upper half of the league by reputation.
+  const count = club.reputation >= 55 ? 2 : 1;
+  return rng.sample(pool, Math.min(count, pool.length));
+}
+
 const teamFor = (state: GameState, clubId: ClubId, isPlayerControlled: boolean): MatchTeam => {
   const club = state.clubs[clubId];
   if (!club) throw new Error(`Unknown club in match setup: ${clubId}`);
@@ -55,9 +73,17 @@ const teamFor = (state: GameState, clubId: ClubId, isPlayerControlled: boolean):
     tactics: club.tactics,
     managerBonus: managerBonusFor(state, clubId),
     creatorPresence: creatorPresenceFor(state, clubId),
+    // Both sides hold cards.
+    //
+    // Only the player used to carry any, which was harmless while cards
+    // measured at zero effect. Now that each one moves the result in the
+    // direction its text claims, handing them to one side only is a standing
+    // advantage the player did not earn. AI holdings are derived from the club
+    // and the season rather than stored, so they cost no save state and a
+    // stronger club reliably brings more to the table.
     ruleCards: isPlayerControlled
       ? state.inventory.ruleCards.filter((c) => c.quantity > 0).map((c) => c.ruleId)
-      : [],
+      : aiRuleCards(state, clubId),
     isPlayerControlled,
   };
 };

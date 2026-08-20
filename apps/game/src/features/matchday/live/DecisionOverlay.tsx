@@ -34,6 +34,7 @@ export function DecisionOverlay(): ReactNode {
   const ringRef = useRef<SVGCircleElement>(null);
   const secondsRef = useRef<HTMLSpanElement>(null);
   const firedRef = useRef<string | null>(null);
+  const startedAtRef = useRef<number>(Date.now());
 
   const pick = useCallback(
     (optionId: string) => {
@@ -50,7 +51,12 @@ export function DecisionOverlay(): ReactNode {
   useEffect(() => {
     if (!decision || deadline === null) return;
     firedRef.current = null;
-    const total = Math.max(1, decision.timeoutSeconds * 1000);
+    startedAtRef.current = Date.now();
+    // Measure the ring against the window the store actually set, not against
+    // the prompt's declared timeout. A prompt that declares none still gets a
+    // generous deadline so an abandoned match can reach a result; the ring is
+    // hidden in that case, but the fraction must stay sane either way.
+    const total = Math.max(1, deadline - startedAtRef.current);
     let raf = 0;
 
     const step = (): void => {

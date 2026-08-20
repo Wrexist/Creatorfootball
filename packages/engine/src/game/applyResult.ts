@@ -241,6 +241,32 @@ export function applyMatchResult(
     }, { importance: 3, entities: [events.playerRef(result.motmPlayerId)] }));
   }
 
+  // --- rule cards are actually spent ------------------------------------
+  // The engine reports what was played; nothing consumed it, so a card could
+  // be deployed every week forever. A card the player keeps is not a decision.
+  const playerSide = result.homeClubId === next.playerClubId ? 'home' : 'away';
+  const spent = result.ruleCardsPlayed.filter((c) => c.side === playerSide);
+
+  if (spent.length > 0) {
+    const remaining = next.inventory.ruleCards
+      .map((card) => {
+        const uses = spent.filter((c) => c.ruleId === card.ruleId).length;
+        return uses > 0 ? { ...card, quantity: Math.max(0, card.quantity - uses) } : card;
+      })
+      .filter((card) => card.quantity > 0);
+
+    next = { ...next, inventory: { ...next.inventory, ruleCards: remaining } };
+
+    for (const card of spent) {
+      emitted.push(events.make('SPECIAL_RULE_TRIGGERED', {
+        matchId: result.matchId,
+        rule: card.ruleId,
+        clubId: next.playerClubId,
+        minute: card.minute,
+      }, { importance: 3, entities: [events.clubRef(next.playerClubId)] }));
+    }
+  }
+
   emitted.push(events.make('ATTENDANCE_RECORDED', {
     clubId: homeId,
     matchId: result.matchId,

@@ -62,7 +62,12 @@ function HeroOverlay({ open, onDismiss, autoDismiss = 0, children, className }: 
             exit="exit"
             onClick={onDismiss}
             className={cn(
-              'fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden bg-void/92 px-6 text-center',
+              // Opaque, not near-opaque. At 92% the match feed read straight
+              // through the goal takeover, so the one moment the product asks
+              // you to stop and look at competed with a list of events behind
+              // it. A hero moment either owns the screen or is not a hero
+              // moment.
+              'fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden bg-void px-6 text-center',
               className,
             )}
             style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}

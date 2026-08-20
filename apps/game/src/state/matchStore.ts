@@ -107,6 +107,7 @@ interface MatchState {
   setSpeed: (speed: MatchSpeed) => void;
   setPresentation: (mode: 'PITCH' | 'BROADCAST') => void;
   chooseOption: (optionId: string) => void;
+  resolveWithDefault: () => void;
   substitute: (out: PlayerId, in_: PlayerId) => boolean;
   playRuleCard: (ruleId: SpecialRuleId) => boolean;
   skipToEnd: () => void;
@@ -118,6 +119,12 @@ let simulator: SimulatorHandle | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 const MAX_FEED = 60;
+/**
+ * How long a prompt that declares no timeout is allowed to hold the match.
+ * Long enough that it reads as "the game is waiting for you", short enough
+ * that an abandoned match still reaches a result.
+ */
+const INDEFINITE_PROMPT_GRACE_SECONDS = 120;
 /** Events at or above this importance interrupt playback for a beat. */
 const HIGHLIGHT_IMPORTANCE = 4;
 
@@ -158,9 +165,15 @@ export const useMatchStore = create<MatchState>((set, get) => {
       set({
         playback: 'AWAITING_DECISION',
         decision: pending,
-        // A prompt with a timeout gets a wall-clock deadline so the UI can show
-        // a countdown; timeoutSeconds of 0 means the match waits indefinitely.
-        decisionDeadline: pending.timeoutSeconds > 0 ? Date.now() + pending.timeoutSeconds * 1000 : null,
+        // Every prompt gets a wall-clock deadline, including one that asks for
+        // none. A prompt with no timeout used to mean "wait forever", which is
+        // a hang dressed as a design choice: if the overlay ever failed to
+        // render, or the player put the phone down mid-match, the simulation
+        // sat on that tick with no way out. The engine always supplies a
+        // defaultOptionId, so the honest behaviour is to fall back to it after
+        // a generous grace period rather than to stop the game.
+        decisionDeadline:
+          Date.now() + (pending.timeoutSeconds > 0 ? pending.timeoutSeconds : INDEFINITE_PROMPT_GRACE_SECONDS) * 1000,
       });
       return;
     }
@@ -226,6 +239,19 @@ export const useMatchStore = create<MatchState>((set, get) => {
     },
 
     setPresentation: (presentation) => set({ presentation }),
+
+    /**
+     * Apply the engine's own default for the pending prompt. Used by the
+     * countdown when it expires, so a match can always reach a result.
+     */
+    resolveWithDefault: () => {
+      const sim = simulator;
+      const prompt = get().decision;
+      if (!sim || !prompt) return;
+      sim.resolveDecision(prompt.id, prompt.defaultOptionId);
+      set({ decision: null, decisionDeadline: null, playback: 'PLAYING' });
+      schedule();
+    },
 
     chooseOption: (optionId) => {
       const sim = simulator;
