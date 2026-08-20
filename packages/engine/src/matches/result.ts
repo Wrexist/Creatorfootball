@@ -1,7 +1,7 @@
 import type { ClubId, MatchId, PlayerId } from '../core/brand';
 import type { DecisionOutcome } from './decisions';
 import type { MatchEvent, Side } from './events';
-import type { ActiveSpecialRule } from './specialRules';
+import type { ActiveSpecialRule, SpecialRuleId } from './specialRules';
 
 export interface PlayerMatchStats {
   readonly playerId: PlayerId;
@@ -70,6 +70,12 @@ export interface MatchResult {
   /** The single moment the post-match screen leads with. */
   readonly keyMomentEventId: string | null;
   readonly injuries: readonly { playerId: PlayerId; weeksOut: number; severity: string }[];
+  /**
+   * Rule cards each side actually spent, in the order they were played. A card
+   * is a consumable: the club's inventory must be decremented by this list when
+   * the result is applied, or a card earned once is playable forever.
+   */
+  readonly ruleCardsPlayed: readonly { side: Side; ruleId: SpecialRuleId; minute: number }[];
   readonly durationMinutes: number;
 }
 

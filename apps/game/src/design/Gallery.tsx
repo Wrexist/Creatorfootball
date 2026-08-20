@@ -65,7 +65,7 @@ const SECTIONS = [
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: ReactNode }): ReactNode {
   return (
-    <section id={id} className="scroll-mt-24 border-t border-white/[0.07] pt-8">
+    <section id={id} className="scroll-mt-[140px] border-t border-white/[0.07] pt-8">
       <h2 className="font-display text-title font-bold tracking-[-0.03em] text-ink">{title}</h2>
       {note && <p className="mt-1 max-w-[62ch] text-caption leading-relaxed text-ink-muted">{note}</p>}
       <div className="mt-5 flex flex-col gap-6">{children}</div>
@@ -77,7 +77,7 @@ function Row({ label, children, className }: { label?: string; children: ReactNo
   return (
     <div>
       {label && (
-        <p className="mb-2 text-micro font-semibold uppercase tracking-[0.16em] text-ink-dim">{label}</p>
+        <p className="mb-2 text-label font-semibold text-ink-dim">{label}</p>
       )}
       <div className={cn('flex flex-wrap items-start gap-3', className)}>{children}</div>
     </div>
@@ -404,22 +404,23 @@ function GalleryBody(): ReactNode {
     <ReducedMotionOverrideContext.Provider value={reducedMotion}>
       <div className="h-full overflow-y-auto bg-base">
         <header className="sticky top-0 z-30 glass-3 border-b border-white/[0.07]">
-          <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-3 px-5 py-3">
-            <div className="mr-auto">
+          <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3">
+            <div className="mr-auto min-w-[180px]">
               <p className="text-micro font-bold uppercase tracking-[0.24em] text-volt">Creator Football</p>
               <h1 className="font-display text-title font-bold tracking-[-0.02em] text-ink">Design system</h1>
             </div>
-            <GlassSegmented
-              value={viewport}
-              onChange={setViewport}
-              block={false}
-              size="sm"
-              aria-label="Preview width"
-              options={[
-                { value: 'mobile', label: 'Mobile' },
-                { value: 'desktop', label: 'Desktop' },
-              ]}
-            />
+            <div className="w-[180px] shrink-0">
+              <GlassSegmented
+                value={viewport}
+                onChange={setViewport}
+                size="sm"
+                aria-label="Preview width"
+                options={[
+                  { value: 'mobile', label: 'Mobile' },
+                  { value: 'desktop', label: 'Desktop' },
+                ]}
+              />
+            </div>
             <GlassToggle checked={reducedMotion} onChange={setReducedMotion} aria-label="Reduced motion" size="sm" />
             <span className="text-label text-ink-muted">Reduced motion</span>
             <GlassToggle checked={reducedEffects} onChange={setReducedEffects} aria-label="Reduced effects" size="sm" />
@@ -620,7 +621,7 @@ function GalleryBody(): ReactNode {
                   trailing={club ? <ClubBadge visual={club.visual} size={56} /> : undefined}
                   footer={
                     <>
-                      <GlassPill tone="volt">Creator first</GlassPill>
+                      <GlassPill>Creator first</GlassPill>
                       <GlassPill>24,500 capacity</GlassPill>
                       <GlassPill>184K fans</GlassPill>
                     </>

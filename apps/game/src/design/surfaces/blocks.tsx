@@ -4,7 +4,8 @@ import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { FOCUS_RING } from '../glass/glassLevel';
-import { TYPE_CLASS } from '../typography/type';
+import { TYPE_CLASS, TYPE_SIZE } from '../typography/type';
+import { FitBox } from '../typography/FitText';
 import { IconChevronRight } from '../icons';
 
 /**
@@ -74,10 +75,15 @@ export const StatBlock = memo(function StatBlock({
     >
       <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-[3px] rounded-pill', RULE[tone])} />
       <span className={cn(TYPE_CLASS.label, 'text-ink-dim')}>{label}</span>
-      <span className="mt-1 flex items-baseline gap-1.5">
-        <span className={cn(size === 'lg' ? TYPE_CLASS.giant : TYPE_CLASS.title, 'num-broadcast')}>
+      <span className="mt-1 flex min-w-0 items-baseline gap-1.5">
+        <FitBox
+          as="span"
+          size={size === 'lg' ? TYPE_SIZE.giant : TYPE_SIZE.title}
+          min={TYPE_SIZE.section}
+          className={cn(size === 'lg' ? TYPE_CLASS.giant : TYPE_CLASS.title, 'num-broadcast min-w-0 flex-1')}
+        >
           {value}
-        </span>
+        </FitBox>
         {unit !== undefined && (
           <span className={cn(TYPE_CLASS.label, 'text-ink-dim')}>{unit}</span>
         )}
@@ -121,7 +127,11 @@ export const DataCell = memo(function DataCell({
       )}
     >
       <span className={cn(TYPE_CLASS.micro, 'truncate')}>{label}</span>
-      <span className={cn(TYPE_CLASS.stat, emphasis ? 'text-volt' : 'text-ink')}>{value}</span>
+      {/* Emphasis is weight and brightness, not the accent. The decisive column
+          in a table is still data, and data does not get to be volt. */}
+      <span className={cn(TYPE_CLASS.stat, emphasis ? 'text-ink font-extrabold' : 'text-ink-muted')}>
+        {value}
+      </span>
     </div>
   );
 });

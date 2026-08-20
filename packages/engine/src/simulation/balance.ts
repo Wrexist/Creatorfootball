@@ -171,6 +171,61 @@ export const WORLD_BALANCE = {
     agePenaltyPerYear: 0.05,
   },
   /** Retained tail sizes so a long save does not grow without bound. */
+  /**
+   * The dressing room.
+   *
+   * These are the read sites for `chemistry`, `teammateMorale` and
+   * `moraleResilience` — three trait modifier keys that the player profile
+   * screen labelled and that no line of code consumed. They are deliberately
+   * sized to be *measurable*: a squad full of Team Players should visibly
+   * outperform a squad full of Selfish ones over a season, not by a rounding
+   * error.
+   */
+  chemistry: {
+    /** Cohesion of a squad with no chemistry traits at all, 0-1. */
+    neutralCohesion: 0.5,
+    /** Cohesion moved per point of mean squad `chemistry` modifier. */
+    cohesionPerChemistryPoint: 1.6,
+    /** Morale a squad settles at with neutral form and neutral cohesion. */
+    restingMorale: 58,
+    /** Morale points per unit of league-points share above 0.4 (a mid-table pace). */
+    moralePerFormShare: 55,
+    /** Morale points per unit of cohesion above neutral. */
+    moralePerCohesion: 40,
+    /** Morale points contributed per unit of summed squad `teammateMorale`. */
+    moralePerTeammatePoint: 7,
+    /** Share of the gap to the resting point closed each cycle. */
+    moraleDriftRate: 0.22,
+    /** Form rating (-1..1) a squad drifts toward per unit of cohesion above neutral. */
+    formPerCohesion: 0.55,
+  },
+
+  /**
+   * Rivalries that are born rather than seeded. When the cascade wants to heat
+   * up a pairing with no history, this is the temperature it starts at — warm
+   * enough to matter, cold enough that a real derby still outranks it.
+   */
+  rivalries: {
+    bornIntensity: 35,
+  },
+  /** Reputation movement worth telling the press about, in points. */
+  reputationNews: {
+    minDelta: 0.5,
+  },
+  /** Cash below which the board starts briefing, and how often it is said. */
+  financeNews: {
+    lowBalance: 120_000,
+    repeatCooldownCycles: 8,
+  },
+  /** Impressions a creator post needs before it counts as a moment. */
+  creatorNews: {
+    momentReach: 900_000,
+  },
+  /** Bids and rejections announced per cycle, so the market has texture without noise. */
+  transferNews: {
+    maxBidEventsPerCycle: 2,
+  },
+
   retention: {
     stories: 90,
     posts: 180,

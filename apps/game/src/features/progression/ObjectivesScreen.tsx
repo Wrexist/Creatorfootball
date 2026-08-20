@@ -2,8 +2,7 @@ import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rewardSummary, type GameState, type Objective } from '@cf/engine';
 import {
-  Divider, EmptyState, GlassButton, GlassPanel, GlassPill, IconCheck, IconStar, IconTrophy,
-  KeyValueRow, ProgressBar, Screen, SectionHeader, StatCard, StatGrid, cn, useToast,
+  Divider, EmptyState, GlassButton, GlassPanel, GlassPill, HeroSurface, IconCheck, IconTrophy, ListRow, ProgressBar, Screen, SectionHeader, StatBlock, Text, useToast,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -70,12 +69,12 @@ const ObjectiveCard = memo(function ObjectiveCard({
               </GlassPill>
             )}
           </div>
-          <p className="mt-1.5 font-display text-[17px] font-bold leading-tight text-ink text-pretty">
+          <Text role="title" as="p" className="mt-1.5 text-[19px] text-pretty">
             {objective.title}
-          </p>
-          <p className="mt-1 text-[13px] leading-relaxed text-ink-muted text-pretty">
+          </Text>
+          <Text role="caption" as="p" className="mt-1 text-pretty">
             {objective.description}
-          </p>
+          </Text>
         </div>
         {claimed && (
           <span
@@ -91,19 +90,30 @@ const ObjectiveCard = memo(function ObjectiveCard({
         className="mt-3"
         value={pct}
         tone={claimable || claimed ? 'positive' : objective.status === 'FAILED' ? 'danger' : 'volt'}
-        label="Progress"
-        valueLabel={`${objective.progress} / ${objective.target}`}
+        label={
+          claimed ? 'Done and paid'
+            : claimable ? 'Done — waiting on you'
+              : objective.status === 'FAILED' ? 'Missed'
+                : `${objective.progress} of ${objective.target} so far`
+        }
+        valueLabel={`${pct}%`}
       />
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        {objective.rewards.map((reward, index) => (
-          <GlassPill key={`${reward.kind}-${index}`} size="xs">
-            {reward.label}
-          </GlassPill>
-        ))}
-        {objective.rewards.length === 0 && (
-          <span className="text-[12px] text-ink-dim">No material reward — just the record.</span>
-        )}
+      {/* What it pays, stated before the button that pays it. */}
+      <div className="mt-3">
+        <Text role="micro" as="p">It pays</Text>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {objective.rewards.map((reward, index) => (
+            <GlassPill key={`${reward.kind}-${index}`} size="sm" tone={claimable ? 'volt' : 'neutral'}>
+              {reward.label}
+            </GlassPill>
+          ))}
+          {objective.rewards.length === 0 && (
+            <Text role="caption" as="span" className="text-ink-dim">
+              Nothing material — this one is for the record books.
+            </Text>
+          )}
+        </div>
       </div>
 
       {claimable && (
@@ -118,10 +128,10 @@ const ObjectiveCard = memo(function ObjectiveCard({
         </GlassButton>
       )}
       {claimed && (
-        <p className="mt-3 text-[12px] text-ink-dim">
+        <Text role="caption" as="p" className="mt-3 text-ink-dim text-pretty">
           Paid out. Rewards are posted through the ledger with a one-time key, so this can never be
           claimed again.
-        </p>
+        </Text>
       )}
     </GlassPanel>
   );
@@ -168,18 +178,18 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
       aside={
         <>
           <GlassPanel title="Where they come from" padding="md">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {(Object.keys(SOURCE_LABEL) as Objective['source'][]).map((source) => (
-                <div key={source} className="flex items-start gap-2.5">
-                  <GlassPill tone={SOURCE_TONE[source]} size="xs">{SOURCE_LABEL[source]}</GlassPill>
-                </div>
+                <GlassPill key={source} tone={SOURCE_TONE[source]} size="xs">
+                  {SOURCE_LABEL[source]}
+                </GlassPill>
               ))}
             </div>
             <Divider className="my-3" />
-            <p className="text-[12px] leading-relaxed text-ink-dim text-pretty">
+            <Text role="caption" as="p" className="text-ink-dim text-pretty">
               Objectives are set against what your club can actually do right now. The board will
               not ask a struggling side for twelve wins in four matches.
-            </p>
+            </Text>
           </GlassPanel>
           <GlassButton variant="secondary" block onClick={() => navigate(ROUTES.rewards)}>
             See what you have earned
@@ -187,23 +197,53 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
         </>
       }
     >
-      <StatGrid columns={3}>
-        <StatCard label="Active" value={active.length} size="sm" />
-        <StatCard
-          label="Ready to claim"
-          value={claimable}
-          size="sm"
-          tone={claimable > 0 ? 'positive' : 'neutral'}
-          icon={<IconStar />}
-        />
-        <StatCard label="Completed" value={state.objectives.completed.length} size="sm" icon={<IconTrophy />} />
-      </StatGrid>
+      <HeroSurface
+        eyebrow="Objectives"
+        title={
+          claimable > 0
+            ? `${claimable} reward${claimable === 1 ? '' : 's'} waiting to be claimed`
+            : active.length > 0
+              ? `${active.length} thing${active.length === 1 ? '' : 's'} the club wants from you`
+              : 'Nobody is asking anything of you yet'
+        }
+        subtitle={
+          claimable > 0
+            ? 'Finished work that has not been paid out. Claiming posts the reward straight into your accounts.'
+            : active.length > 0
+              ? 'The board, the fans and your sponsors each want different things. Each one says plainly what it asks and what it pays.'
+              : 'Objectives are set as the season moves and as your situation changes. Play a matchweek and the board will find something to ask of you.'
+        }
+        texture="stadium"
+        padding="md"
+        {...(claimable > 0 ? { trailing: <GlassPill tone="volt" size="sm" filled>Ready</GlassPill> } : {})}
+      >
+        <div className="grid grid-cols-3 gap-3">
+          <StatBlock
+            label="In progress"
+            value={active.length}
+            tone="neutral"
+            caption="Being worked on"
+          />
+          <StatBlock
+            label="Ready"
+            value={claimable}
+            tone={claimable > 0 ? 'volt' : 'neutral'}
+            caption="Waiting on you"
+          />
+          <StatBlock
+            label="Settled"
+            value={state.objectives.completed.length}
+            tone="neutral"
+            caption="Done this career"
+          />
+        </div>
+      </HeroSurface>
 
       {seasonTargets.length > 0 && (
         <>
           <SectionHeader
             title="Season targets"
-            subtitle="What you are actually being judged on"
+            subtitle="What you are actually being judged on. Miss these and the board notices."
           />
           {seasonTargets.map((objective) => (
             <ObjectiveCard
@@ -217,13 +257,24 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
         </>
       )}
 
-      <SectionHeader title="In progress" subtitle="Claimable ones first" />
+      <SectionHeader
+        title="In progress"
+        subtitle="Anything finished and unpaid is at the top"
+      />
       {active.length === 0 ? (
-        <EmptyState
-          icon={<IconTrophy />}
-          title="Nothing on the board"
-          description="New objectives are set as the season moves and as your situation changes. Play a matchweek and the board will find something to ask of you."
-        />
+        <GlassPanel padding="md">
+          <EmptyState
+            size="sm"
+            icon={<IconTrophy />}
+            title="Nothing on the board"
+            description="Objectives arrive from the board, your sponsors and the supporters as the season moves. Play a matchweek and something will be asked of you."
+            action={
+              <GlassButton variant="secondary" size="sm" onClick={() => navigate(ROUTES.matchday)}>
+                Go to matchday
+              </GlassButton>
+            }
+          />
+        </GlassPanel>
       ) : (
         active.map((objective) => (
           <ObjectiveCard
@@ -238,28 +289,45 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
 
       {completed.length > 0 && (
         <GlassPanel title="Settled" padding="md">
-          {completed.map((objective) => (
-            <KeyValueRow
-              key={objective.id}
-              label={objective.title}
-              hint={rewardSummary(objective)}
-              value={
-                <GlassPill
-                  tone={objective.status === 'CLAIMED' ? 'positive' : objective.status === 'FAILED' ? 'danger' : 'neutral'}
-                  size="xs"
-                >
-                  {objective.status === 'CLAIMED' ? 'Claimed' : objective.status === 'FAILED' ? 'Failed' : 'Complete'}
-                </GlassPill>
-              }
-            />
-          ))}
+          <div className="flex flex-col">
+            {completed.map((objective, index) => (
+              <ListRow
+                key={objective.id}
+                density="compact"
+                divided={index < completed.length - 1}
+                title={objective.title}
+                subtitle={rewardSummary(objective) || 'No material reward'}
+                trailing={
+                  <GlassPill
+                    tone={objective.status === 'CLAIMED' ? 'positive' : objective.status === 'FAILED' ? 'danger' : 'neutral'}
+                    size="xs"
+                  >
+                    {objective.status === 'CLAIMED' ? 'Claimed' : objective.status === 'FAILED' ? 'Failed' : 'Complete'}
+                  </GlassPill>
+                }
+              />
+            ))}
+          </div>
         </GlassPanel>
       )}
 
-      <p className={cn('text-[12px] leading-relaxed text-ink-dim text-pretty')}>
-        Rewards move through the same ledger as everything else in your club, with a single-use key
-        per reward. That is what makes double-claiming impossible rather than merely discouraged.
-      </p>
+      <GlassPanel padding="md">
+        <Text role="section" as="p">Why you cannot be paid twice</Text>
+        <Text role="caption" as="p" className="mt-1 text-ink-dim text-pretty">
+          Rewards move through the same ledger as everything else in your club, with a single-use
+          key per reward. Double-claiming is impossible rather than merely discouraged — if a claim
+          is refused, this screen tells you exactly why.
+        </Text>
+        <GlassButton
+          className="mt-3"
+          variant="secondary"
+          size="sm"
+          block
+          onClick={() => navigate(ROUTES.rewards)}
+        >
+          See everything you have earned
+        </GlassButton>
+      </GlassPanel>
     </Screen>
   );
 }

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import type { GameState, StoreOfferDef } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
-  IconCheck, IconInfo, IconScout, IconStar, KeyValueRow, Screen, SectionHeader, cn, useToast,
+  HeroSurface, IconCheck, IconScout, IconStar, KeyValueRow, Screen, SectionHeader, cn,
+  useToast,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -195,20 +196,21 @@ function StoreView({ state }: { state: GameState }): ReactNode {
         </GlassPanel>
       }
     >
-      <GlassPanel padding="md">
-        <div className="flex items-start gap-3">
-          <span
-            aria-hidden="true"
-            className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-pill bg-volt/15 text-volt"
-          >
-            <IconInfo size={16} />
-          </span>
-          <p className="text-[13px] leading-relaxed text-ink-muted text-pretty">
-            This selection rotates every {ROTATION_LENGTH} matchweeks, and every offer comes back
-            around. There is nothing here you have to buy today.
-          </p>
-        </div>
-      </GlassPanel>
+      <HeroSurface
+        eyebrow="Store"
+        title="Nothing here changes a result"
+        subtitle={`Kits, badges and conveniences — itemised, priced once, and never randomised. The selection rotates every ${ROTATION_LENGTH} matchweeks and every offer comes back around, so there is nothing you have to buy today.`}
+        texture="haze"
+        padding="md"
+        footer={
+          <div className="flex flex-wrap gap-1.5">
+            <GlassPill size="xs" icon={<IconCheck size={11} />}>Exact contents listed</GlassPill>
+            <GlassPill size="xs" icon={<IconCheck size={11} />}>No countdowns</GlassPill>
+            <GlassPill size="xs" icon={<IconCheck size={11} />}>No loot boxes</GlassPill>
+            <GlassPill size="xs" icon={<IconCheck size={11} />}>No fake reference prices</GlassPill>
+          </div>
+        }
+      />
 
       <GlassSegmented
         options={CATEGORIES}

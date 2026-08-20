@@ -365,7 +365,9 @@ function PerformanceStage({ result, state, playerIsHome, home, away }: StageProp
             <PlayerPortrait seed={motm.portraitSeed} size={52} colors={kit} shape="squircle" />
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-volt">Man of the match</p>
-              <p className="truncate text-[18px] font-bold tracking-[-0.02em] text-ink">{motm.displayName}</p>
+              <p className="text-[18px] font-bold leading-tight tracking-[-0.02em] text-ink text-pretty">
+                {motm.displayName}
+              </p>
             </div>
             <RatingBadge value={result.playerStats[motm.id]?.rating ?? 0} scale="match" size="lg" />
           </div>
@@ -381,7 +383,7 @@ function PerformanceStage({ result, state, playerIsHome, home, away }: StageProp
               className="flex items-center gap-2.5 rounded-md border border-white/[0.06] bg-white/[0.03] px-3 py-2"
             >
               {player && <PlayerPortrait seed={player.portraitSeed} size={30} colors={kit} shape="circle" />}
-              <span className="min-w-0 flex-1 truncate text-[14px] text-ink">
+              <span className="min-w-0 flex-1 text-[14px] leading-snug text-ink text-pretty">
                 {player?.displayName ?? stat.playerId}
               </span>
               <span className="tnum shrink-0 text-[12px] text-ink-dim">
@@ -598,7 +600,7 @@ function StandingsStage({ state, before }: StageProps): ReactNode {
               >
                 <span className="tnum w-6 shrink-0 text-[13px] font-semibold text-ink-dim">{row.position}</span>
                 {club && <ClubBadge visual={club.visual} size={22} flat label={club.name} />}
-                <span className={cn('min-w-0 flex-1 truncate text-[14px]', ours && 'font-bold')}>
+                <span className={cn('min-w-0 flex-1 text-[14px] leading-snug text-pretty', ours && 'font-bold')}>
                   {club?.shortName ?? row.clubId}
                 </span>
                 <FormGuide results={row.form} size="sm" slots={5} className="hidden sm:flex" />
@@ -638,7 +640,9 @@ function NextStage({ state }: StageProps): ReactNode {
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-dim">
                 Next · week {next.week}
               </p>
-              <p className="truncate text-[16px] font-bold tracking-[-0.01em] text-ink">{opponent.name}</p>
+              <p className="text-[16px] font-bold leading-tight tracking-[-0.01em] text-ink text-pretty">
+                {opponent.name}
+              </p>
             </div>
             {next.isDerby && <GlassPill tone="danger" size="sm" filled>Derby</GlassPill>}
           </div>

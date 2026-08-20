@@ -121,7 +121,45 @@ for (const route of ROUTES) {
 }
 if (obstructed === 0) pass('no visible control is covered by other chrome on any primary route');
 
-// --- 4. nothing threw while navigating ---------------------------------
+// --- 4. nothing overflows the viewport --------------------------------
+// A horizontal scrollbar on a phone is always a bug, and it is invisible in a
+// screenshot taken at the width that causes it. The tab bar overflowed by 11px
+// at 375px on every screen and nothing caught it.
+const NARROW = { width: 375, height: 667 };
+await page.setViewportSize(NARROW);
+let overflowing = 0;
+
+for (const route of ROUTES) {
+  await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  const over = await page.evaluate(() => {
+    const w = document.documentElement.clientWidth;
+    if (document.documentElement.scrollWidth <= w + 1) return null;
+    // Name the widest offender so the failure is actionable.
+    let worst = null;
+    for (const el of document.querySelectorAll('body *')) {
+      const r = el.getBoundingClientRect();
+      const spill = Math.max(r.right - w, -r.left);
+      if (spill > 1 && (!worst || spill > worst.spill)) {
+        worst = {
+          spill: Math.round(spill),
+          tag: el.tagName,
+          cls: String(el.className).slice(0, 60),
+          text: (el.textContent ?? '').trim().slice(0, 40),
+        };
+      }
+    }
+    return { scrollWidth: document.documentElement.scrollWidth, clientWidth: w, worst };
+  });
+  if (over) {
+    overflowing += 1;
+    fail(`${route}: overflows ${NARROW.width}px by ${over.scrollWidth - over.clientWidth}px — widest offender ${over.worst?.tag} "${over.worst?.text}"`);
+  }
+}
+if (overflowing === 0) pass(`no route overflows a ${NARROW.width}px viewport`);
+await page.setViewportSize(VIEWPORT);
+
+// --- 5. nothing threw while navigating ---------------------------------
 const navErrors = pageErrors.filter((e) => !/favicon|404/i.test(e));
 if (navErrors.length > bootErrors.length) {
   fail(`${navErrors.length - bootErrors.length} runtime error(s) while navigating: ${navErrors.at(-1)?.slice(0, 180)}`);

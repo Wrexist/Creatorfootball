@@ -36,6 +36,14 @@ export const ROLE_LABEL: Readonly<Record<PitchRole, string>> = {
   ATT: 'Attack',
 };
 
+/** The same four bands where the pitch has room for three letters and no more. */
+export const ROLE_SHORT: Readonly<Record<PitchRole, string>> = {
+  GK: 'GK',
+  DEF: 'Def',
+  MID: 'Mid',
+  ATT: 'Att',
+};
+
 /** What the pitch renderer needs to draw one team, precomputed once. */
 export interface KitPalette extends KitColors {
   readonly clubId: string;

@@ -149,7 +149,7 @@ function RewardsView({ state }: { state: GameState }): ReactNode {
               return (
                 <div key={card.ruleId} className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-3">
                   <div className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">
+                    <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink text-pretty">
                       {rule.name}
                     </span>
                     <GlassPill tone="special" size="xs" filled>×{card.quantity}</GlassPill>

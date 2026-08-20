@@ -8,7 +8,8 @@
     "audit:sim": "tsx src/simAudit.ts",
     "audit:invariants": "tsx src/invariantAudit.ts",
     "audit:all": "tsx src/runAll.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"no unit tests; audits run via audit:all\""
   },
   "dependencies": {
     "@cf/engine": "workspace:*"

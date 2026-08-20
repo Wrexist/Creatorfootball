@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   POSITIONS,
   POSITION_LABELS,
@@ -418,8 +418,11 @@ const ResultCard = memo(function ResultCard({
 function SearchView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const toast = useToast();
+  const [searchParams] = useSearchParams();
 
-  const [query, setQuery] = useState('');
+  // A name typed into the market's own search box arrives as ?q= — the search
+  // screen is the same screen either way, just pre-seeded.
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [draft, setDraft] = useState<Draft>(DEFAULT_DRAFT);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [limit, setLimit] = useState(PAGE);

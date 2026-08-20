@@ -3,7 +3,8 @@ import { cn } from '../cn';
 import { glassClass, type GlassLevel } from '../glass/glassLevel';
 import { Counter, TrendIndicator } from './numbers';
 import { Sparkline, type BarTone } from './bars';
-import { TYPE_CLASS } from '../typography/type';
+import { TYPE_CLASS, TYPE_SIZE } from '../typography/type';
+import { FitBox } from '../typography/FitText';
 
 export interface StatCardProps {
   label: ReactNode;
@@ -28,9 +29,9 @@ export interface StatCardProps {
 }
 
 const VALUE_SIZE = {
-  sm: 'text-title',
-  md: 'text-hero',
-  lg: 'text-display',
+  sm: TYPE_SIZE.title,
+  md: TYPE_SIZE.hero,
+  lg: TYPE_SIZE.display,
 } as const;
 
 /**
@@ -76,12 +77,15 @@ export const StatCard = memo(function StatCard({
         <span className="min-w-0 text-pretty">{label}</span>
       </div>
 
-      <div className="flex items-end justify-between gap-2">
-        <span
-          className={cn(
-            'num-broadcast num-tight font-extrabold leading-none text-ink',
-            VALUE_SIZE[size],
-          )}
+      <div className="flex min-w-0 items-end justify-between gap-2">
+        {/* The figure fits the card. An uncompacted currency value - the
+            product shows plenty of them - is 250px wide at the hero step in a
+            170px card, and a stat you cannot read is not a stat. It steps down
+            through the scale rather than being cut off. */}
+        <FitBox
+          size={VALUE_SIZE[size]}
+          min={TYPE_SIZE.section}
+          className={cn('num-broadcast num-tight min-w-0 flex-1 font-extrabold leading-none text-ink')}
         >
           {typeof value === 'number' ? (
             <Counter
@@ -93,9 +97,11 @@ export const StatCard = memo(function StatCard({
           ) : (
             value
           )}
-        </span>
+        </FitBox>
         {history && history.length > 1 && (
-          <Sparkline values={history} tone={tone} width={64} height={22} fill />
+          <span className="shrink-0">
+            <Sparkline values={history} tone={tone} width={64} height={22} fill />
+          </span>
         )}
       </div>
 

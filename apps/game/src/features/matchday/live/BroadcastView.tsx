@@ -226,7 +226,8 @@ function TeamColumn({ club, align }: { club: Club; align: 'start' | 'end' }): Re
   return (
     <div className={cn('flex min-w-0 flex-1 flex-col gap-1.5', align === 'end' ? 'items-end' : 'items-start')}>
       <ClubBadge visual={club.visual} size={38} flat label={club.name} />
-      <span className="w-full truncate text-[13px] font-bold tracking-[-0.01em] text-ink"
+      <span
+        className="w-full text-[13px] font-bold leading-tight tracking-[-0.01em] text-ink text-pretty"
         style={{ textAlign: align === 'end' ? 'right' : 'left' }}
       >
         {club.shortName}

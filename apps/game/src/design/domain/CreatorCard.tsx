@@ -55,6 +55,12 @@ function SentimentDot({ value }: { value: number }): ReactNode {
   );
 }
 
+/** SUPER_FAN -> "Super fan". Roles are content, so they read as words. */
+function sentenceCase(value: string): string {
+  const words = value.replace(/_/g, ' ').toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 export const CreatorCard = memo(function CreatorCard({
   creator,
   variant = 'standard',
@@ -94,15 +100,19 @@ export const CreatorCard = memo(function CreatorCard({
       />
 
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2">
+        {/* Wrapping row, not a fixed one: when the tier pill and the trailing
+            action leave the name too little room, the pill drops to the next
+            line rather than squeezing the name down to an abbreviation. */}
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <NameText
             name={creator.displayName}
             short={creator.handle}
             role="bodyStrong"
             floor={0.8}
-            className="min-w-0 flex-1"
+            lines={2}
+            className="min-w-[8ch] flex-1"
           />
-          <GlassPill tone={TIER_TONE[creator.tier]} size="xs">
+          <GlassPill tone={TIER_TONE[creator.tier]} size="xs" className="shrink-0">
             {TIER_LABEL[creator.tier]}
           </GlassPill>
         </span>
@@ -127,7 +137,7 @@ export const CreatorCard = memo(function CreatorCard({
             <GlassPill size="xs" icon={<IconFlame />}>{TONE_LABEL[creator.style.tone]}</GlassPill>
             {creator.roles.slice(0, 3).map((role) => (
               <GlassPill key={role} size="xs">
-                {role.replace('_', ' ').toLowerCase()}
+                {sentenceCase(role)}
               </GlassPill>
             ))}
           </span>

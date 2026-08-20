@@ -306,7 +306,7 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
       {/* --- the hero ------------------------------------------------- */}
       {feed.lead.kind === 'RESULT' ? (
         <HeroSurface
-          eyebrow="Last result"
+          eyebrow={<span className="text-volt">Last result</span>}
           texture="stadium"
           bleed={feed.lead.outcome === 'W' ? club.visual.primary : undefined}
           padding="md"
@@ -348,21 +348,38 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
             <GlassButton variant="secondary" onClick={() => navigate(ROUTES.standings)}>The table</GlassButton>
           </div>
         </HeroSurface>
-      ) : feed.lead.kind === 'MATCH' && sides ? (
+      ) : feed.lead.kind === 'MATCH' ? (
         <HeroSurface
-          eyebrow="Next match"
+          eyebrow={<span className="text-volt">Next match</span>}
           texture="stadium"
           bleed={feed.lead.opponent.visual.primary}
           padding="md"
         >
-          <ScorePanel
-            size="lg"
-            home={sides.home}
-            away={sides.away}
-            context={`${competition} · ${feed.lead.home ? 'At home' : 'Away'} · ${feed.lead.fixture.stageLabel ?? `Week ${feed.lead.fixture.week}`}`}
-            status="Kick off"
-          />
-          <Text role="title" as="h2" className="mt-4 text-[20px] text-pretty">{feed.lead.stake}</Text>
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <Text role="micro" as="p">
+                {feed.lead.home ? 'At home to' : 'Away to'}
+              </Text>
+              {/* The opponent's name gets the full width of the hero. It is the
+                  one thing the player has to read, so it is never abbreviated
+                  here — the fixture bug below can wear the three letters. */}
+              <NameText
+                name={feed.lead.opponent.name}
+                short={feed.lead.opponent.shortName}
+                abbr={feed.lead.opponent.abbreviation}
+                role="hero"
+                lines={2}
+                as="h2"
+                className="mt-1"
+              />
+              <Text role="caption" className="mt-1.5">
+                {competition} · {feed.lead.fixture.stageLabel ?? `Week ${feed.lead.fixture.week}`}
+                {feed.lead.fixture.isDerby ? ' · Derby' : ''}
+              </Text>
+            </div>
+            <ClubBadge visual={feed.lead.opponent.visual} size={56} label={feed.lead.opponent.name} />
+          </div>
+          <Text role="bodyStrong" as="p" className="mt-4 text-pretty">{feed.lead.stake}</Text>
           <div className="mt-4">
             <GlassButton
               variant="primary"
@@ -379,6 +396,11 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
             <GlassButton size="sm" variant="ghost" onClick={() => navigate(ROUTES.tactics)}>Set the team up</GlassButton>
             <GlassButton size="sm" variant="ghost" onClick={() => navigate(ROUTES.squad)}>Check the squad</GlassButton>
           </div>
+          {sides && (
+            <div className="mt-4">
+              <ScorePanel home={sides.home} away={sides.away} status="Kick off" />
+            </div>
+          )}
         </HeroSurface>
       ) : feed.lead.kind === 'IDLE' ? (
         <HeroSurface eyebrow="Where you are" texture="haze" padding="md">

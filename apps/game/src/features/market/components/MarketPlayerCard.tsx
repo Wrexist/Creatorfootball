@@ -1,8 +1,8 @@
 import { memo, type ReactNode } from 'react';
 import type { Player, PlayerId, TransferListing } from '@cf/engine';
 import {
-  ClubBadge, FOCUS_RING, GlassPill, MoneyLabel, PlayerCard, PlayerPortrait, PositionChip,
-  cn, type PlayerCardClub,
+  ClubBadge, FOCUS_RING, GlassPill, MoneyLabel, NameText, PlayerCard, PlayerPortrait,
+  PositionChip, cn, type PlayerCardClub,
 } from '@/design';
 import { AttributeDossier, ConfidenceMeter, KnownRating, useKnowledge } from './scouting';
 
@@ -78,12 +78,8 @@ export const MarketPlayerCard = memo(function MarketPlayerCard({
       <div className="flex items-start gap-2.5">
         <PlayerPortrait seed={player.portraitSeed} size={44} shape="squircle" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] uppercase tracking-[0.16em] text-ink-dim">
-            {player.firstName}
-          </p>
-          <p className="truncate font-display text-[16px] font-bold leading-tight text-ink">
-            {player.lastName}
-          </p>
+          <NameText name={player.firstName} role="micro" className="text-ink-dim" />
+          <NameText name={player.lastName} role="section" lines={2} />
           <p className="mt-1 flex items-center gap-1.5">
             <PositionChip position={player.position} size="xs" />
             <span className="tnum text-[12px] text-ink-muted">{player.age}</span>
@@ -104,7 +100,7 @@ export const MarketPlayerCard = memo(function MarketPlayerCard({
         <div className="mt-2 flex items-center justify-between gap-2">
           <MoneyLabel amount={price} size="sm" />
           {availability && (
-            <span className="truncate text-[11px] text-ink-muted">{availability.label}</span>
+            <span className="text-[11px] text-ink-muted">{availability.label}</span>
           )}
         </div>
       </div>

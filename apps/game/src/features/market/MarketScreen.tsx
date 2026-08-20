@@ -1,31 +1,42 @@
-import { memo, useMemo, type ReactNode } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   negotiationSummary,
   type ClubId,
   type GameState,
   type Negotiation,
+  type Player,
   type PlayerId,
   type TransferRumour,
 } from '@cf/engine';
 import {
-  ClubBadge, Divider, EmptyState, GlassButton, GlassIcon, GlassPanel, GlassPill,
-  IconMarket, IconScout, IconSearch, IconStar, KeyValueRow, MoneyLabel, ProgressBar,
-  Screen, SectionHeader, StatCard, StatGrid, useToast,
+  CardRail, ClubBadge, Divider, EmptyState, GlassButton, GlassIcon, GlassInput, GlassPanel,
+  GlassPill, HeroSurface, IconFilter, IconMarket, IconScout, IconSearch, IconSort, IconStar,
+  ListRow, MoneyLabel, NameText, ProgressBar, Screen, SectionHeader, StatBlock, Text,
+  useToast,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup, type ClubLookup } from './clubs';
 import { openTalks, useHeadroom, useOurNegotiations, windowState } from './engine';
+import { useMarketRails, type Rail } from './rails';
+import { buildTargetStory } from './story';
+import { TargetCard } from './components/TargetCard';
 import { PlayerRow } from './components/PlayerRow';
 import { cyclesLeft, relativeCycle } from './format';
 
 /**
  * The market's front door.
  *
- * It answers four questions before the player has to ask any of them: is the
- * window open, what can I spend, what am I already in the middle of, and what
- * is the rest of the league doing behind my back.
+ * Top of the screen is the tooling — search, filter, sort — for the manager who
+ * already knows the name he is after. Everything below it is for the one who
+ * does not: six curated rails, each answering a question rather than offering a
+ * sort order, and each player in them carrying the *story* around the deal
+ * instead of only a price.
+ *
+ * Every figure on this screen — asking price, market value, wage demand, the
+ * agent's cut, who else is watching — is produced by an engine function in
+ * `story.ts`. Nothing here works out what a player is worth.
  */
 
 const STAGE_TONE = {
@@ -38,67 +49,39 @@ const STAGE_LABEL = {
   AGENT_TALKS: 'Agent talks', AGREED: 'Agreed', FAILED: 'Failed', HIJACKED: 'Hijacked',
 } as const;
 
-/* --- window ------------------------------------------------------------ */
-
-const WindowBanner = memo(function WindowBanner({ state }: { state: GameState }): ReactNode {
-  const window = windowState(state);
-  return (
-    <GlassPanel accent={window.open ? 'volt' : 'none'} padding="md">
-      <div className="flex items-start gap-3">
-        <span
-          className={window.open ? 'mt-1 size-2 shrink-0 rounded-pill bg-volt' : 'mt-1 size-2 shrink-0 rounded-pill bg-ink-faint'}
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-[18px] font-bold text-ink">
-            {window.open ? 'The window is open' : 'The window is shut'}
-          </p>
-          <p className="mt-1 text-[13px] leading-relaxed text-ink-muted text-pretty">
-            {window.open
-              ? `You are in ${window.phaseLabel}, matchweek ${window.week} of ${window.totalWeeks}. ` +
-                (window.closesWeek !== null
-                  ? `Business closes when the calendar moves on after matchweek ${window.closesWeek}.`
-                  : 'It stays open for the rest of the calendar.')
-              : `You are in ${window.phaseLabel}, matchweek ${window.week} of ${window.totalWeeks}. ` +
-                (window.opensWeek !== null
-                  ? `The next window is matchweek ${window.opensWeek} — it opens because the calendar reaches it, not because a timer runs down.`
-                  : 'No further window is scheduled this season.')}
-          </p>
-        </div>
-      </div>
-    </GlassPanel>
-  );
-});
-
 /* --- negotiations ------------------------------------------------------ */
 
 interface NegotiationRowProps {
   negotiation: Negotiation;
   playerName: string;
   cycle: number;
+  divided: boolean;
   onPress: (id: string) => void;
 }
 
 const NegotiationRow = memo(function NegotiationRow({
-  negotiation, playerName, cycle, onPress,
+  negotiation, playerName, cycle, divided, onPress,
 }: NegotiationRowProps): ReactNode {
   const rivals = negotiation.rivalBidders.length;
   return (
-    <KeyValueRow
-      label={playerName}
-      hint={`${negotiationSummary(negotiation)} ${rivals > 0 ? `· ${rivals} rival ${rivals === 1 ? 'bidder' : 'bidders'}` : ''}`}
-      value={
-        <span className="flex items-center gap-2">
-          <GlassPill tone={STAGE_TONE[negotiation.stage]} size="xs" filled>
-            {STAGE_LABEL[negotiation.stage]}
-          </GlassPill>
-          <span className="text-[11px] font-normal text-ink-dim">
-            {cyclesLeft(cycle, negotiation.deadlineCycle)}
-          </span>
-        </span>
+    <ListRow
+      divided={divided}
+      leading={
+        <GlassPill tone={STAGE_TONE[negotiation.stage]} size="xs" filled>
+          {STAGE_LABEL[negotiation.stage]}
+        </GlassPill>
       }
+      title={<NameText name={playerName} role="bodyStrong" lines={2} />}
+      subtitle={
+        `${negotiationSummary(negotiation)}${
+          rivals > 0 ? ` · ${rivals} rival ${rivals === 1 ? 'bidder' : 'bidders'}` : ''
+        }`
+      }
+      trailing={
+        <Text role="micro" as="span">{cyclesLeft(cycle, negotiation.deadlineCycle)}</Text>
+      }
+      chevron
       onPress={() => onPress(negotiation.id)}
-      emphasis
     />
   );
 });
@@ -116,10 +99,10 @@ const RumourRow = memo(function RumourRow({
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] leading-snug text-ink text-pretty">{rumour.text}</p>
-        <p className="mt-0.5 text-[11px] text-ink-dim">
+        <Text role="caption" as="p" className="text-ink text-pretty">{rumour.text}</Text>
+        <Text role="micro" as="p" className="mt-0.5">
           {credible ? 'Well sourced' : 'Unconfirmed'} · {clubName} · {relativeCycle(cycle, rumour.cycle)}
-        </p>
+        </Text>
       </div>
     </div>
   );
@@ -135,28 +118,72 @@ interface DoneDealProps {
   cycle: number;
   now: number;
   clubs: ClubLookup;
+  divided: boolean;
 }
 
 const DoneDeal = memo(function DoneDeal({
-  playerName, fee, fromClubId, toClubId, cycle, now, clubs,
+  playerName, fee, fromClubId, toClubId, cycle, now, clubs, divided,
 }: DoneDealProps): ReactNode {
   const from = clubs(fromClubId);
   const to = clubs(toClubId);
   return (
-    <div className="flex items-center gap-3 border-b border-white/[0.06] py-2.5 last:border-b-0">
-      <div className="flex shrink-0 items-center gap-1">
-        {from ? <ClubBadge visual={from.visual} size={20} flat label={from.name} /> : (
-          <span className="text-[11px] text-ink-dim">Free</span>
-        )}
-        <span className="text-ink-dim" aria-hidden="true">→</span>
-        {to && <ClubBadge visual={to.visual} size={20} flat label={to.name} />}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] font-semibold text-ink">{playerName}</p>
-        <p className="text-[11px] text-ink-dim">{relativeCycle(now, cycle)}</p>
-      </div>
-      <MoneyLabel amount={fee} size="sm" />
-    </div>
+    <ListRow
+      density="compact"
+      divided={divided}
+      leading={
+        <span className="flex items-center gap-1">
+          {from ? <ClubBadge visual={from.visual} size={20} flat label={from.name} /> : (
+            <Text role="micro" as="span">Free</Text>
+          )}
+          <span className="text-ink-dim" aria-hidden="true">→</span>
+          {to && <ClubBadge visual={to.visual} size={20} flat label={to.name} />}
+        </span>
+      }
+      title={<NameText name={playerName} role="bodyStrong" lines={2} />}
+      subtitle={relativeCycle(now, cycle)}
+      trailing={<MoneyLabel amount={fee} size="sm" />}
+    />
+  );
+});
+
+/* --- rails ------------------------------------------------------------- */
+
+interface RailSectionProps {
+  rail: Rail;
+  state: GameState;
+  clubs: ClubLookup;
+  onOpen: (playerId: PlayerId) => void;
+}
+
+const RailSection = memo(function RailSection({
+  rail, state, clubs, onOpen,
+}: RailSectionProps): ReactNode {
+  return (
+    <section className="flex flex-col gap-2">
+      <SectionHeader title={rail.title} subtitle={rail.blurb} />
+      {rail.players.length === 0 ? (
+        <GlassPanel padding="sm" nested level={1}>
+          <Text role="caption" as="p" className="text-ink-dim text-pretty">
+            {rail.emptyLine}
+          </Text>
+        </GlassPanel>
+      ) : (
+        <CardRail itemWidth={228} ariaLabel={`${rail.title} players`}>
+          {rail.players.map((player: Player) => (
+            <TargetCard
+              key={player.id}
+              player={player}
+              story={buildTargetStory(state, player, state.transfers.listings[player.id])}
+              {...(clubs(player.clubId) ? { club: clubs(player.clubId) } : {})}
+              {...(state.transfers.listings[player.id]
+                ? { listing: state.transfers.listings[player.id] }
+                : {})}
+              onPress={onOpen}
+            />
+          ))}
+        </CardRail>
+      )}
+    </section>
   );
 });
 
@@ -165,10 +192,13 @@ const DoneDeal = memo(function DoneDeal({
 function MarketView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const toast = useToast();
+  const [query, setQuery] = useState('');
 
   const clubs = useClubLookup(state);
   const headroom = useHeadroom(state);
   const negotiations = useOurNegotiations(state);
+  const rails = useMarketRails(state);
+  const window = windowState(state);
   const cycle = state.clock.cycle;
 
   const shortlist = useMemo(
@@ -180,17 +210,25 @@ function MarketView({ state }: { state: GameState }): ReactNode {
   );
 
   const rumours = useMemo(
-    () => state.transfers.rumours.slice().sort((a, b) => b.cycle - a.cycle).slice(0, 8),
+    () => state.transfers.rumours.slice().sort((a, b) => b.cycle - a.cycle).slice(0, 6),
     [state.transfers.rumours],
   );
 
   const completed = useMemo(
-    () => state.transfers.completed.slice(-8).reverse(),
+    () => state.transfers.completed.slice(-6).reverse(),
     [state.transfers.completed],
   );
 
   const goToNegotiation = (id: string): void => {
     navigate(buildPath(ROUTES.negotiation, { negotiationId: id }));
+  };
+
+  const openPlayer = (playerId: PlayerId): void => {
+    navigate(buildPath(ROUTES.player, { playerId }));
+  };
+
+  const runSearch = (): void => {
+    navigate(query.trim() ? `${ROUTES.playerSearch}?q=${encodeURIComponent(query.trim())}` : ROUTES.playerSearch);
   };
 
   const startTalks = (playerId: PlayerId): void => {
@@ -204,23 +242,20 @@ function MarketView({ state }: { state: GameState }): ReactNode {
 
   const budgets = (
     <GlassPanel title="What you can spend" padding="md">
-      <StatGrid columns={2}>
-        <StatCard
+      <div className="grid grid-cols-2 gap-3">
+        <StatBlock
           label="Transfer budget"
           value={<MoneyLabel amount={headroom.transferBudget} size="lg" />}
-          nested
-          level={1}
-          size="sm"
+          tone="volt"
+          caption="Cash for fees, once"
         />
-        <StatCard
-          label="Wage headroom"
+        <StatBlock
+          label="Wage room"
           value={<MoneyLabel amount={headroom.wageFree} size="lg" />}
-          nested
-          level={1}
-          size="sm"
-          footnote="per week"
+          tone={headroom.usage > 1 ? 'danger' : headroom.usage > 0.85 ? 'warning' : 'positive'}
+          caption="Spare, every week"
         />
-      </StatGrid>
+      </div>
       <ProgressBar
         className="mt-3"
         value={Math.min(100, Math.round(headroom.usage * 100))}
@@ -229,10 +264,10 @@ function MarketView({ state }: { state: GameState }): ReactNode {
         valueLabel={`${Math.round(headroom.usage * 100)}%`}
         marker={100}
       />
-      <p className="mt-2 text-[12px] leading-relaxed text-ink-dim text-pretty">
+      <Text role="caption" as="p" className="mt-2.5 text-ink-dim text-pretty">
         A signing costs you twice: the fee comes out of the budget once, the wage comes out of
         every week that follows.
-      </p>
+      </Text>
     </GlassPanel>
   );
 
@@ -262,22 +297,40 @@ function MarketView({ state }: { state: GameState }): ReactNode {
   return (
     <Screen
       title="Market"
-      subtitle={`${windowState(state).phaseLabel} · matchweek ${state.clock.week}`}
+      subtitle={
+        window.open
+          ? 'The window is open — you can do business'
+          : 'The window is shut — you can look, not buy'
+      }
       actions={
-        <>
-          <GlassIcon
-            label="Search players"
+        <GlassIcon
+          label="Scouting"
+          icon={<IconScout />}
+          variant="ghost"
+          onClick={() => navigate(ROUTES.scouting)}
+        />
+      }
+      headerAccessory={
+        <div className="flex items-center gap-2">
+          <GlassInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter') runSearch(); }}
+            placeholder="Search players by name"
+            label="Search players by name"
+            labelHidden
             icon={<IconSearch />}
+            size="sm"
+            nested
+            className="min-w-0 flex-1"
+          />
+          <GlassIcon
+            label="Filter and sort"
+            icon={<IconFilter />}
             variant="ghost"
             onClick={() => navigate(ROUTES.playerSearch)}
           />
-          <GlassIcon
-            label="Scouting"
-            icon={<IconScout />}
-            variant="ghost"
-            onClick={() => navigate(ROUTES.scouting)}
-          />
-        </>
+        </div>
       }
       aside={
         <>
@@ -286,16 +339,31 @@ function MarketView({ state }: { state: GameState }): ReactNode {
         </>
       }
     >
-      <WindowBanner state={state} />
-
-      <div className="grid grid-cols-2 gap-3">
-        <GlassButton variant="primary" icon={<IconSearch />} onClick={() => navigate(ROUTES.playerSearch)} block>
-          Search players
-        </GlassButton>
-        <GlassButton variant="secondary" icon={<IconScout />} onClick={() => navigate(ROUTES.scouting)} block>
-          Scouting
-        </GlassButton>
-      </div>
+      <HeroSurface
+        eyebrow={window.open ? 'Window open' : 'Window shut'}
+        title={window.open ? 'You can do business' : 'Nothing can be signed'}
+        subtitle={
+          window.open
+            ? window.closesWeek !== null
+              ? `You are in ${window.phaseLabel}, matchweek ${window.week} of ${window.totalWeeks}. Business closes when the calendar moves on after matchweek ${window.closesWeek}.`
+              : `You are in ${window.phaseLabel}. The window stays open for the rest of the calendar.`
+            : window.opensWeek !== null
+              ? `You are in ${window.phaseLabel}, matchweek ${window.week} of ${window.totalWeeks}. The next window opens at matchweek ${window.opensWeek} — because the calendar reaches it, not because a timer runs down.`
+              : `You are in ${window.phaseLabel}. No further window is scheduled this season.`
+        }
+        texture="stadium"
+        padding="md"
+        footer={
+          <div className="grid w-full grid-cols-2 gap-2">
+            <GlassButton variant="primary" icon={<IconSort />} onClick={() => navigate(ROUTES.playerSearch)} block>
+              Browse and filter
+            </GlassButton>
+            <GlassButton variant="secondary" icon={<IconScout />} onClick={() => navigate(ROUTES.scouting)} block>
+              Scouting
+            </GlassButton>
+          </div>
+        }
+      />
 
       <div className="md:hidden">{budgets}</div>
 
@@ -305,21 +373,17 @@ function MarketView({ state }: { state: GameState }): ReactNode {
             size="sm"
             icon={<IconMarket />}
             title="No talks open"
-            description="A transfer here is a conversation with a club, a player and an agent. Start one from a search result or your shortlist."
-            action={
-              <GlassButton variant="secondary" size="sm" onClick={() => navigate(ROUTES.playerSearch)}>
-                Find someone
-              </GlassButton>
-            }
+            description="A transfer here is a conversation with a club, a player and an agent. Start one from a rail below, from a search result, or from your shortlist."
           />
         ) : (
-          <div>
-            {negotiations.map((negotiation) => (
+          <div className="flex flex-col">
+            {negotiations.map((negotiation, index) => (
               <NegotiationRow
                 key={negotiation.id}
                 negotiation={negotiation}
                 playerName={state.players[negotiation.playerId]?.displayName ?? 'Unknown player'}
                 cycle={cycle}
+                divided={index < negotiations.length - 1}
                 onPress={goToNegotiation}
               />
             ))}
@@ -327,14 +391,17 @@ function MarketView({ state }: { state: GameState }): ReactNode {
         )}
       </GlassPanel>
 
+      {rails.map((rail) => (
+        <RailSection key={rail.id} rail={rail} state={state} clubs={clubs} onOpen={openPlayer} />
+      ))}
+
       <GlassPanel padding="md">
         <SectionHeader
           title="Shortlist"
-          subtitle={shortlist.length > 0 ? `${shortlist.length} watched` : undefined}
-          action={
-            shortlist.length > 0 ? (
-              <span className="text-[12px] text-ink-dim">{shortlist.length}</span>
-            ) : undefined
+          subtitle={
+            shortlist.length > 0
+              ? `${shortlist.length} watched — a scout looks at these first`
+              : 'Players you are keeping an eye on'
           }
           className="mb-2"
         />
@@ -381,7 +448,7 @@ function MarketView({ state }: { state: GameState }): ReactNode {
             description="Every completed transfer in the league lands here, yours and theirs alike."
           />
         ) : (
-          <div>
+          <div className="flex flex-col">
             {completed.map((deal, index) => (
               <DoneDeal
                 key={`${deal.playerId}-${deal.cycle}-${index}`}
@@ -392,15 +459,16 @@ function MarketView({ state }: { state: GameState }): ReactNode {
                 cycle={deal.cycle}
                 now={cycle}
                 clubs={clubs}
+                divided={index < completed.length - 1}
               />
             ))}
           </div>
         )}
         <Divider className="my-3" />
-        <p className="text-[12px] leading-relaxed text-ink-dim text-pretty">
+        <Text role="caption" as="p" className="text-ink-dim text-pretty">
           Rival clubs buy and sell whether or not you do. A player you watched all season can be
           gone by the time you decide.
-        </p>
+        </Text>
       </GlassPanel>
     </Screen>
   );

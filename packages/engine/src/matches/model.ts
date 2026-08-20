@@ -326,11 +326,15 @@ export function progressionChance(input: PossessionInput): number {
   const edge = gapTerm(atk - def, BALANCE.PROGRESSION_EDGE_MAX);
   // A press that has run itself into the ground stops dragging on anybody.
   const pressDrag = 0.09 * input.defenceVector.aggression * pressUpkeep(input.defenceFatigue);
+  // Attacking where they are not. Two teams occupying the same channels
+  // congest each other; opposite shapes find space in front of the block.
+  const mismatch = BALANCE.SHAPE_MISMATCH_WEIGHT
+    * (Math.abs(input.attackVector.widthBias - input.defenceVector.widthBias) - 0.4);
   // Players who keep the ball under pressure move it forward more often.
   const trait = BALANCE.TRAIT_PROGRESSION_WEIGHT
     * (input.attack.traits.passAccuracy + input.attack.traits.dribbleSuccess) * 0.5;
   return clamp(
-    (BALANCE.PROGRESSION_BASE + edge - pressDrag + input.momentumBoost * 0.5) * (1 + trait),
+    (BALANCE.PROGRESSION_BASE + edge - pressDrag + mismatch + input.momentumBoost * 0.5) * (1 + trait),
     0.22, 0.92,
   );
 }
@@ -463,6 +467,8 @@ export interface ChanceInput {
   readonly assistQuality: number;
   /** Effective keeper rating of the defending side. */
   readonly keeper: number;
+  /** The keeper's `saveChance` trait modifier. */
+  readonly keeperTrait?: number;
   /** Multiplier from special rules, momentum and crowd. Keep near 1. */
   readonly multiplier: number;
 }
@@ -495,7 +501,14 @@ export function buildChance(rng: Rng, input: ChanceInput): Chance {
   const advance = lerp(0.04, 0.2, quality) * rng.float(1 - 0.6 * spread, 1 + 0.4 * spread);
   const x = clamp(Math.max(input.zone, BALANCE.FINAL_THIRD_ZONE) + advance, 0.66, 0.97);
 
-  const widthSpread = lerp(0.1, 0.3, clamp01((input.widthBias + 1) / 2)) * (input.setPiece ? 0.7 : 1);
+  // A header off a delivery is finished in the middle of the box, wherever the
+  // ball came from: the width of the SHAPE does not widen the finish itself.
+  // Note what `widthBias` does NOT do here: it does not push the shot itself
+  // wider. A wide shape means the ball ARRIVES from wide, which is modelled as
+  // a higher cross rate in the simulator, not as every shot being taken from a
+  // worse angle. Coupling shape width to shot angle made WIDE a strictly
+  // dominated instruction — it paid an invisible xG tax on every single shot.
+  const widthSpread = BALANCE.SHOT_WIDTH_SPREAD * (input.setPiece || input.header ? 0.65 : 1);
   const offset = rng.normal(0, widthSpread * spread) * lerp(1.15, 0.75, quality);
   const y = clamp(0.5 + offset, 0.06, 0.94);
 
@@ -520,8 +533,11 @@ export function buildChance(rng: Rng, input: ChanceInput): Chance {
   xg *= 1 + BALANCE.XG_ASSIST_WEIGHT * (clamp01(input.assistQuality) - 0.35);
   xg *= Math.max(0.5, 1 + BALANCE.TRAIT_CREATIVITY_WEIGHT * (input.creatorFlair ?? 0));
 
-  // The keeper is part of chance quality, not only of the save roll.
+  // The keeper is part of chance quality, not only of the save roll. A keeper
+  // trait has to reach the scoreboard here: applying it only to the save/miss
+  // split would change what the highlight looks like and nothing else.
   xg *= 1 - BALANCE.XG_KEEPER_WEIGHT * ((input.keeper - 55) / 55);
+  xg *= Math.max(0.5, 1 - BALANCE.TRAIT_SAVE_WEIGHT * (input.keeperTrait ?? 0));
 
   if (input.counter) xg *= BALANCE.XG_COUNTER_BONUS;
   if (input.throughBall) xg *= BALANCE.XG_THROUGH_BALL_BONUS;

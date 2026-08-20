@@ -256,6 +256,7 @@ export class MatchSimulator {
   private readonly momentumTimeline: number[] = [];
   private readonly injuries: { playerId: PlayerId; weeksOut: number; severity: string }[] = [];
   private readonly promptSides = new Map<string, Side>();
+  private readonly cardsPlayed: { side: Side; ruleId: SpecialRuleId; minute: number }[] = [];
   private pending: DecisionPrompt | null = null;
   private autoResolve = false;
   private opponentChangedFor: Side | null = null;
@@ -430,6 +431,7 @@ export class MatchSimulator {
     });
     if (!active) return false;
     team.usedCards.add(ruleId);
+    this.cardsPlayed.push({ side, ruleId, minute: Math.floor(this.nominalMinute()) });
     this.announceRuleStart(active);
     return true;
   }
@@ -923,7 +925,13 @@ export class MatchSimulator {
   ): number {
     // A delivery into the box is attacked by whoever is best in the air, not by
     // whoever happens to be furthest forward.
+    // Armband: while the card is live everything runs through the captain. The
+    // rule engine exposed `captainFocus` for exactly this and nothing called
+    // it, so the card's whole first clause — "everything runs through your
+    // captain" — was doing nothing and only the goal multiplier survived.
+    const focus = this.rules.captainFocus(atk.side) ? atk.captain : null;
     const shooter = opts.shooter
+      ?? (focus && this.rng.chance(0.55) ? focus : null)
       ?? (opts.penalty
         ? (atk.onPitch.find((p) => p.player.id === atk.tactics.penaltyTakerId) ?? this.pick(atk, SHOOTER_WEIGHT))
         : opts.header
@@ -934,6 +942,11 @@ export class MatchSimulator {
     const assister = !opts.penalty && !opts.counter && this.rng.chance(0.72)
       ? this.pickOther(atk, CREATOR_WEIGHT, shooter)
       : null;
+
+    const keeper = def.onPitch.find((p) => p.slot.role === 'GK') ?? null;
+    const keeperTrait = keeper
+      ? traitModifier(keeper.player.traitIds, 'saveChance', keeper.ctx.conditions)
+      : 0;
 
     const pressure = defensivePressure(def.agg, vd, this.zone);
     const finishing = effectiveAttribute(shooter.player, 'finishing', shooter.ctx);
@@ -980,6 +993,7 @@ export class MatchSimulator {
       composure,
       assistQuality,
       keeper: def.agg.keeper,
+      keeperTrait,
       multiplier,
     });
 
@@ -999,11 +1013,6 @@ export class MatchSimulator {
     }
     this.emit('SHOT', { side: atk.side, player: shooter, xg: chance.xg, at: this.pointFor(atk.side, chance.x, chance.y), importance: chance.big ? 3 : 2 });
     this.momentumTracker.impulse('SHOT', atk.side);
-
-    const keeper = def.onPitch.find((p) => p.slot.role === 'GK') ?? null;
-    const keeperTrait = keeper
-      ? traitModifier(keeper.player.traitIds, 'saveChance', keeper.ctx.conditions)
-      : 0;
 
     const outcome = opts.penalty
       ? (this.rng.chance(chance.xg) ? 'GOAL' : this.rng.chance(0.6) ? 'SAVE' : 'MISS')
@@ -1840,6 +1849,12 @@ export class MatchSimulator {
       importance: this.setup.importance,
       keyMomentEventId: keyMoment ? keyMoment.id : null,
       injuries: this.injuries,
+      // The cards actually spent in this match. A rule card is a consumable and
+      // the engine is the only thing that knows whether one was legally played,
+      // so it reports them here for the save layer to deduct from the club's
+      // inventory. Without this the caller had nothing to key a decrement on
+      // and a card earned once could be played in every match forever.
+      ruleCardsPlayed: this.cardsPlayed.map((c) => ({ ...c })),
       durationMinutes: Math.round(this.tick / BALANCE.TICKS_PER_MINUTE),
     };
   }

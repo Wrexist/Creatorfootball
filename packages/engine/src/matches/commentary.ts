@@ -146,6 +146,11 @@ export const COMMENTARY_TEMPLATES: readonly CommentaryTemplate[] = [
   t('chance3', 'CHANCE_CREATED', 'NEUTRAL', "{player} slips it through for {club}."),
   t('chance4', 'CHANCE_CREATED', 'DRAMATIC', "Here's the opening — {player} has picked the lock!"),
   t('chance5', 'CHANCE_CREATED', 'WRY', "{player} again. He's the only one on this pitch playing forward."),
+  t('chance6', 'CHANCE_CREATED', 'HYPE', "In behind! {player} is away and there is nobody with him!", ['throughBall']),
+  t('chance7', 'CHANCE_CREATED', 'ANALYTICAL', "That is the ball over the top all night, and {player} has finally been given it.", ['throughBall']),
+  t('chance8', 'CHANCE_CREATED', 'DRAMATIC', "The line steps up, {player} steps through it, and it is one against one!", ['throughBall']),
+  t('chance9', 'CHANCE_CREATED', 'WRY', "You can play a high line. You just have to be quicker than {player}.", ['throughBall']),
+  t('chance10', 'CHANCE_CREATED', 'NEUTRAL', "Straight through the last line for {player}, who has the keeper to beat."),
 
   // ---------------------------------------------------------- ball battles ---
   t('tackle1', 'TACKLE', 'NEUTRAL', "{player} wins it back."),

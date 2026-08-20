@@ -270,7 +270,7 @@ export function MatchLiveScreen(): ReactNode {
     return (
       <div className="flex h-full flex-col gap-3 bg-base p-4">
         <Skeleton className="h-16 w-full" />
-        <Skeleton className="aspect-[16/10] w-full" />
+        <Skeleton className="aspect-[3/2] w-full" />
         <Skeleton className="min-h-0 flex-1 w-full" />
       </div>
     );
@@ -300,11 +300,10 @@ export function MatchLiveScreen(): ReactNode {
           roles={roles}
           camera={camera}
           onCamera={setCamera}
-          ourName={context.us.shortName}
           drama={drama.label}
           impactKey={celebrating?.id ?? null}
           impactStrength={celebrating && (celebrating.side ?? 'home') === playerSide ? 1 : 0.5}
-          className={wide ? 'h-full min-h-0' : 'aspect-[16/10] shrink-0'}
+          className={wide ? 'h-full min-h-0' : 'aspect-[3/2] shrink-0'}
         />
 
         <StoryPanel

@@ -70,10 +70,24 @@ describe('detectRecords', () => {
       ...state,
       players: { ...state.players, [player.id]: { ...player, form: { ...player.form, goals: 12 } } },
     };
-    const records = detectRecords(scoring);
+    const records = detectRecords(scoring, { seasonAggregates: true });
     const goals = records.find((r) => r.key === 'PLAYER_SEASON_GOALS');
     expect(goals?.value).toBe(12);
     expect(goals?.holderId).toBe(player.id);
+  });
+
+  // Season aggregates only grow, so comparing them to the record book every
+  // cycle broke the same record every week and made a quarter of the season's
+  // press one headline. They are edge-triggered at the end of the season now.
+  it('does not evaluate season aggregates mid-season', () => {
+    const { state } = buildTestWorld();
+    const player = state.players['p_0_10'];
+    if (!player) throw new Error('fixture player missing');
+    const scoring: GameState = {
+      ...state,
+      players: { ...state.players, [player.id]: { ...player, form: { ...player.form, goals: 12 } } },
+    };
+    expect(detectRecords(scoring).some((r) => r.key === 'PLAYER_SEASON_GOALS')).toBe(false);
   });
 
   it('does not re-announce a record that already stands higher', () => {
@@ -85,7 +99,9 @@ describe('detectRecords', () => {
       legacy: { ...state.legacy, records: { PLAYER_SEASON_GOALS: { value: 20, season: 1 } } },
       players: { ...state.players, [player.id]: { ...player, form: { ...player.form, goals: 12 } } },
     };
-    expect(detectRecords(scoring).some((r) => r.key === 'PLAYER_SEASON_GOALS')).toBe(false);
+    expect(
+      detectRecords(scoring, { seasonAggregates: true }).some((r) => r.key === 'PLAYER_SEASON_GOALS'),
+    ).toBe(false);
   });
 
   it('finds the biggest win and the record signing from the journal', () => {

@@ -27,7 +27,7 @@ const TEMPO: Record<TacticSetup['tempo'], Delta> = {
   PATIENT:  { possessionBias: +0.10, chanceQuality: +0.10, attackVolume: -0.10, counterWeight: -0.10, fatigueRate: -0.05, volatility: -0.06 },
   BALANCED: {},
   QUICK:    { attackVolume: +0.09, counterWeight: +0.08, possessionBias: -0.05, chanceQuality: -0.05, fatigueRate: +0.08 },
-  FRANTIC:  { attackVolume: +0.18, volatility: +0.22, chanceQuality: -0.14, possessionBias: -0.12, fatigueRate: +0.20, foulRate: +0.06 },
+  FRANTIC:  { attackVolume: +0.18, volatility: +0.24, chanceQuality: -0.08, possessionBias: -0.12, fatigueRate: +0.10, foulRate: +0.06 },
 };
 
 /**
@@ -37,34 +37,38 @@ const TEMPO: Record<TacticSetup['tempo'], Delta> = {
  * a low block is safe and cheap but surrenders the ball and the pitch.
  */
 const PRESS: Record<TacticSetup['press'], Delta> = {
-  LOW_BLOCK:  { defensiveSolidity: +0.17, spaceBehind: -0.15, pressRecovery: -0.26, possessionBias: -0.12, aggression: -0.26, fatigueRate: -0.12, counterWeight: +0.09, attackVolume: -0.08 },
-  MID_BLOCK:  { defensiveSolidity: +0.07, pressRecovery: -0.09, aggression: -0.11, fatigueRate: -0.05, possessionBias: -0.04 },
+  LOW_BLOCK:  { defensiveSolidity: +0.22, spaceBehind: -0.17, pressRecovery: -0.26, possessionBias: -0.12, aggression: -0.26, fatigueRate: -0.14, counterWeight: +0.18, attackVolume: -0.05, chanceQuality: +0.05 },
+  MID_BLOCK:  { defensiveSolidity: +0.10, spaceBehind: -0.07, pressRecovery: -0.09, aggression: -0.11, fatigueRate: -0.06, possessionBias: -0.04, counterWeight: +0.06 },
   BALANCED:   {},
-  HIGH_PRESS: { pressRecovery: +0.30, aggression: +0.26, attackVolume: +0.09, spaceBehind: +0.19, fatigueRate: +0.24, foulRate: +0.11, defensiveSolidity: -0.09 },
+  HIGH_PRESS: { pressRecovery: +0.24, aggression: +0.26, attackVolume: +0.09, spaceBehind: +0.21, fatigueRate: +0.26, foulRate: +0.11, defensiveSolidity: -0.09 },
 };
 
 /**
  * Defensive line height.
  * Trade-off: a high line compresses the pitch and helps the press win the ball
- * back, but every ball over the top is a one-on-one. A deep line is unpickable
- * in behind and hands the opponent forty yards of free build-up.
+ * back, but every ball over the top is a one-on-one — and since `spaceBehind`
+ * now converts into real chances in behind, that is a bill the high line
+ * actually pays. A deep line is unpickable in behind and hands the opponent
+ * forty yards of free build-up.
  */
 const LINE: Record<TacticSetup['line'], Delta> = {
-  DEEP:   { spaceBehind: -0.19, defensiveSolidity: +0.11, possessionBias: -0.09, pressRecovery: -0.10, counterWeight: +0.07, attackVolume: -0.06 },
+  DEEP:   { spaceBehind: -0.21, defensiveSolidity: +0.12, possessionBias: -0.09, pressRecovery: -0.10, counterWeight: +0.10, attackVolume: -0.06 },
   NORMAL: {},
-  HIGH:   { spaceBehind: +0.21, possessionBias: +0.10, pressRecovery: +0.13, defensiveSolidity: -0.07, attackVolume: +0.06, volatility: +0.05 },
+  HIGH:   { spaceBehind: +0.24, possessionBias: +0.10, pressRecovery: +0.10, defensiveSolidity: -0.07, attackVolume: +0.04, volatility: +0.05 },
 };
 
 /**
  * Width.
  * Trade-off: wide play manufactures more entries and crosses but from lower
  * value positions and with a stretched defensive block. Narrow owns the centre
- * and the best chance locations, and lets the opponent have the flanks.
+ * and the best chance locations, and lets the opponent have the flanks — which
+ * is a real cost, because a delivery into a compact block is the one chance a
+ * narrow shape cannot defend (see AERIAL_NARROW_EXPOSURE).
  */
 const WIDTH: Record<TacticSetup['width'], Delta> = {
-  NARROW:   { widthBias: -0.5, chanceQuality: +0.07, defensiveSolidity: +0.06, attackVolume: -0.06, spaceBehind: +0.05 },
+  NARROW:   { widthBias: -0.5, chanceQuality: +0.07, defensiveSolidity: +0.05, attackVolume: -0.10, spaceBehind: +0.06 },
   BALANCED: {},
-  WIDE:     { widthBias: +0.5, attackVolume: +0.08, chanceQuality: -0.07, defensiveSolidity: -0.06, fatigueRate: +0.07 },
+  WIDE:     { widthBias: +0.5, attackVolume: +0.14, chanceQuality: -0.06, defensiveSolidity: -0.03, fatigueRate: +0.02 },
 };
 
 /**
@@ -120,10 +124,10 @@ const MARKING: Record<TacticSetup['marking'], Delta> = {
  * attacking output with defensive solidity and buys variance with control.
  */
 const RISK: Record<TacticSetup['risk'], Delta> = {
-  CAUTIOUS: { defensiveSolidity: +0.13, attackVolume: -0.15, volatility: -0.13, chanceQuality: +0.04 },
+  CAUTIOUS: { defensiveSolidity: +0.13, attackVolume: -0.18, volatility: -0.15, chanceQuality: +0.04 },
   MEASURED: {},
-  BOLD:     { attackVolume: +0.13, defensiveSolidity: -0.10, volatility: +0.13 },
-  RECKLESS: { attackVolume: +0.25, defensiveSolidity: -0.23, volatility: +0.30, spaceBehind: +0.15, foulRate: +0.08 },
+  BOLD:     { attackVolume: +0.14, defensiveSolidity: -0.08, volatility: +0.17 },
+  RECKLESS: { attackVolume: +0.26, defensiveSolidity: -0.11, volatility: +0.36, spaceBehind: +0.06, foulRate: +0.08 },
 };
 
 /**

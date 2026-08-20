@@ -93,8 +93,9 @@ export function GlassSegmented<T extends string = string>({
                 Four options on a 393pt phone is a genuinely tight slot. */}
             {typeof option.label === 'string' ? (
               <FitText
-                size={size === 'sm' ? 12 : 14}
-                min={size === 'sm' ? 10 : 11}
+                role={size === 'sm' ? 'label' : 'body'}
+                lines={2}
+                lineHeight={1.1}
                 className="relative text-center"
               >
                 {option.label}

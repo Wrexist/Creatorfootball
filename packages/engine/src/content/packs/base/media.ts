@@ -333,7 +333,19 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ...story('MOTM_AWARDED', 2, 0.5, 5, ['Frontline Football'], [
     {
       headline: '{player} the difference again',
-      body: 'A third player-of-the-match award in five outings, and a growing sense that {club} are a considerably worse side on the days he does not play.',
+      body: 'Another player-of-the-match award, and a growing sense that {club} are a considerably worse side on the days he does not play.',
+    },
+    {
+      headline: 'Rated {rating}: the afternoon belonged to {player}',
+      body: 'There are performances that win a match and performances that decide how a team thinks about itself. This was closer to the second.',
+    },
+    {
+      headline: '{player} carries {club} again',
+      body: 'A one-man argument for a squad that keeps asking the same player to make it. That is a compliment and a warning in the same sentence.',
+    },
+    {
+      headline: 'Quietly, {player} has become the first name on the team sheet',
+      body: 'No fanfare, no viral clip, just the highest rating on the pitch for the third time in a month. {club} are building around him whether they meant to or not.',
     },
   ]),
 
@@ -342,12 +354,40 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
       headline: 'Full house at {club}',
       body: 'Every seat sold and a waiting list behind it. At a ground this size that is less a commercial achievement than a cultural one.',
     },
+    {
+      headline: '{attendance} in, and not a seat spare',
+      body: 'A capacity crowd of {attendance} against a ground that holds {capacity}. The club will tell you the atmosphere is worth a goal a game. On this evidence they are not wrong.',
+    },
+    {
+      headline: 'The demand for {club} tickets has outrun the ground',
+      body: 'Sold out again. Somewhere in a boardroom a spreadsheet about stand capacity is being reopened.',
+    },
+  ]),
+  ...story('ATTENDANCE_RECORDED', 2, -0.35, 4, ['Kickback Daily', 'The Away End'], [
+    {
+      headline: 'Empty seats tell the {club} story better than the table does',
+      body: '{attendance} through the turnstiles in a ground built for {capacity}. Supporters vote with their feet long before they vote with a banner.',
+    },
+    {
+      headline: 'Gaps in the stands at {club}',
+      body: 'The lower tier was patchy, the upper tier barely opened. Nobody inside the club will say it out loud, but the gate is a scoreboard too.',
+    },
   ]),
 
   ...story('REPUTATION_CHANGED', 3, 0.4, 6, ['The Chalkboard', 'Boot & Ball Weekly'], [
     {
       headline: '{club} are being taken seriously now',
       body: 'Two years ago their approach for a player of that calibre would not have been answered. It was answered this week, and that is what reputation actually buys.',
+    },
+    {
+      headline: 'The name {club} opens doors it did not open last season',
+      body: 'Reputation is the slowest currency in football and the hardest to fake. Theirs is up to {reputation}, and agents have noticed before the supporters did.',
+    },
+  ]),
+  ...story('REPUTATION_CHANGED', 3, -0.4, 6, ['Kickback Daily'], [
+    {
+      headline: 'Standing still is costing {club}',
+      body: 'A club is only ever as big as the last three years say it is. Theirs now read {reputation}, and the players they used to be able to sign are taking other calls.',
     },
   ]),
 
@@ -376,6 +416,14 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
     {
       headline: 'Preview: {club} v {opponent}',
       body: 'Two clubs in wildly different places arriving at the same fixture with the same amount to lose. The wildcard selections will be published an hour before kick-off and both will be scrutinised.',
+    },
+    {
+      headline: 'Week {week}: {opponent} away, and no hiding place',
+      body: 'The fixture list has been pointing at this one for a month. Team news follows; so, inevitably, does an argument about the shape.',
+    },
+    {
+      headline: 'What {club} need from the {opponent} game',
+      body: 'Not a performance — a result. There is a difference and everyone inside the building knows which one is being asked for.',
     },
   ]),
 
@@ -408,6 +456,10 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
     {
       headline: 'A new rivalry is born between {club} and {opponent}',
       body: 'Nobody asked for it, both sets of supporters have enthusiastically adopted it, and the fixture list has helpfully given us three meetings this season.',
+    },
+    {
+      headline: '{club} and {opponent} have found each other',
+      body: 'Rivalries are not declared, they accumulate. Enough bad afternoons in a row and two clubs who had no history at all discover they have one.',
     },
   ]),
 

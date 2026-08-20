@@ -16,6 +16,7 @@ import {
   ClubBadge, Divider, EmptyState, GlassButton, GlassPanel, GlassPill, KeyValueRow, MoneyLabel,
   PlayerCard, PlayerPortrait, PositionChip, ProgressBar, Screen, SectionHeader, SigningMoment,
   cn, useConfirm, useToast,
+  NameText,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -121,15 +122,18 @@ const StageRail = memo(function StageRail({
               )}
             />
             <span
+              /* Sentence case, not uppercase: the same four labels are ~30%
+                 wider shouted, and this strip is four columns on a 393px
+                 screen. Width is the reason the old version clipped. */
               className={cn(
-                'truncate text-[11px] font-semibold uppercase tracking-[0.1em]',
+                'text-[11px] font-semibold leading-tight text-pretty',
                 active ? 'text-volt' : done ? 'text-ink-muted' : 'text-ink-dim',
               )}
             >
               {STAGE_COPY[step].title}
             </span>
             {active && (
-              <span className="truncate text-[11px] text-ink-muted">{STAGE_COPY[step].who}</span>
+              <span className="text-[11px] text-ink-muted">{STAGE_COPY[step].who}</span>
             )}
           </li>
         );
@@ -165,8 +169,8 @@ const Counterparty = memo(function Counterparty({
       <div className="flex items-center gap-2">
         {badge}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-semibold text-ink">{name}</p>
-          <p className="truncate text-[11px] uppercase tracking-[0.12em] text-ink-dim">{role}</p>
+          <NameText name={name} role="bodyStrong" lines={2} />
+          <p className="text-[11px] uppercase tracking-[0.12em] text-ink-dim">{role}</p>
         </div>
         {active && <GlassPill tone="volt" size="xs" filled>In the room</GlassPill>}
       </div>
@@ -225,9 +229,12 @@ const RivalStrip = memo(function RivalStrip({
         return (
           <li key={bidder.clubId} className="flex items-center gap-3">
             {club && <ClubBadge visual={club.visual} size={22} flat label={club.name} />}
-            <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">
-              {club?.name ?? 'A rival club'}
-            </span>
+            <NameText
+              name={club?.name ?? 'A rival club'}
+              role="bodyStrong"
+              lines={2}
+              className="min-w-0 flex-1"
+            />
             <MoneyLabel amount={bidder.bid} size="sm" />
             <GlassPill tone={ahead ? 'danger' : 'neutral'} size="xs" filled={ahead}>
               {ahead ? 'ahead of you' : 'behind you'}
@@ -383,7 +390,7 @@ function NegotiationView({ state, negotiation, player, onSigned }: ViewProps): R
             <div className="flex items-center gap-3">
               <PlayerPortrait seed={player.portraitSeed} size={56} shape="squircle" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[16px] font-semibold text-ink">{player.displayName}</p>
+                <NameText name={player.displayName} role="section" lines={2} />
                 <p className="mt-1 flex items-center gap-2 text-[12px] text-ink-muted">
                   <PositionChip position={player.position} size="xs" />
                   <span className="tnum">{player.age}</span>

@@ -1,6 +1,9 @@
-import type { ReactNode } from 'react';
-import { motion } from 'motion/react';
-import { FOCUS_RING, cn, contrastRatio, haptics, useDesignMotion } from '@/design';
+import { useId, useState, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import {
+  FOCUS_RING, GlassButton, IconChevronDown, Text,
+  cn, contrastRatio, haptics, useDesignMotion,
+} from '@/design';
 
 /**
  * The small, repeated controls of the creation flow.
@@ -203,6 +206,13 @@ export interface SelectCardProps {
   label: string;
   accent?: string;
   children: ReactNode;
+  /**
+   * Rendered inside the card but *outside* the tappable region, so it may hold
+   * its own controls. A disclosure button nested inside a button is invalid
+   * markup and unreachable for a screen reader, which is why this slot exists
+   * rather than a `<button>` in `children`.
+   */
+  extra?: ReactNode;
   className?: string;
 }
 
@@ -212,38 +222,151 @@ export interface SelectCardProps {
  * alone.
  */
 export function SelectCard({
-  selected, onSelect, label, accent, children, className,
+  selected, onSelect, label, accent, children, extra, className,
 }: SelectCardProps): ReactNode {
   const m = useDesignMotion();
   return (
-    <motion.button
-      type="button"
-      aria-pressed={selected}
-      aria-label={label}
-      onClick={() => {
-        haptics.impact();
-        onSelect();
-      }}
-      whileTap={m.safe({ scale: 0.99 })}
-      transition={m.spring.press}
+    <div
       className={cn(
-        'relative w-full overflow-hidden rounded-[var(--radius-lg)] border p-4 text-left',
+        'relative overflow-hidden rounded-[var(--radius-lg)] border',
         'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         selected
           ? 'border-volt/60 bg-white/[0.07]'
-          : 'border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.055]',
-        FOCUS_RING,
+          : 'border-white/[0.08] bg-white/[0.03]',
         className,
       )}
     >
       {accent !== undefined && (
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-[3px]"
+          className="absolute inset-y-0 left-0 z-10 w-[3px]"
           style={{ background: accent, opacity: selected ? 1 : 0.5 }}
         />
       )}
-      {children}
-    </motion.button>
+      <motion.button
+        type="button"
+        aria-pressed={selected}
+        aria-label={label}
+        onClick={() => {
+          haptics.impact();
+          onSelect();
+        }}
+        whileTap={m.safe({ scale: 0.99 })}
+        transition={m.spring.press}
+        className={cn(
+          'relative block w-full rounded-[var(--radius-lg)] p-4 text-left',
+          'transition-colors duration-[var(--duration-fast)] ease-out-quint',
+          !selected && 'hover:bg-white/[0.025]',
+          FOCUS_RING,
+        )}
+      >
+        {children}
+      </motion.button>
+      {extra !== undefined && <div className="px-4 pb-1 pl-6">{extra}</div>}
+    </div>
+  );
+}
+
+/* --- the numbers, on request ------------------------------------------ */
+
+/**
+ * The onboarding rule this exists to keep: *the player makes a real decision
+ * before they read a number.*
+ *
+ * Every card in this flow already states its trade in words — "Wins the
+ * whiteboard. Loses the room." — and `+22 Tactical Knowledge / -14 Motivation`
+ * adds nothing that sentence has not already said while costing the screen its
+ * calm. The numbers are real and they are not hidden: they are one tap away,
+ * for the player who wants them, at the moment they want them.
+ */
+export function NumbersDisclosure({
+  children, label = 'See the numbers', hideLabel = 'Hide the numbers',
+}: {
+  children: ReactNode;
+  label?: string;
+  hideLabel?: string;
+}): ReactNode {
+  const m = useDesignMotion();
+  const panelId = useId();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="pb-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => {
+          haptics.selection();
+          setOpen((o) => !o);
+        }}
+        className={cn(
+          'inline-flex min-h-11 items-center gap-1.5 rounded-pill pr-2 text-left',
+          'text-[12px] font-semibold text-ink-dim hover:text-ink',
+          FOCUS_RING,
+        )}
+      >
+        <motion.span
+          aria-hidden="true"
+          animate={{ rotate: open ? 0 : -90 }}
+          transition={m.transition.fast}
+          className="flex"
+        >
+          <IconChevronDown size={14} />
+        </motion.span>
+        {open ? hideLabel : label}
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id={panelId}
+            initial={m.reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={m.reduced ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
+            exit={m.reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={m.transition.fast}
+            className="overflow-hidden"
+          >
+            <div className="pb-2">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* --- the road not taken ----------------------------------------------- */
+
+/**
+ * The secondary path, at the foot of the primary one.
+ *
+ * Both paths in this flow are good, and exactly one of them should be the
+ * default. A segmented control at the top of the screen says "these are equally
+ * likely to be what you want", which is not true: most people opening a
+ * football game for the first time want to *choose* a manager and a club, not
+ * to design one. So the curated list gets the screen, and the builder gets an
+ * honest, unhidden offer underneath it — stated as what it costs and what it
+ * gives, so nobody has to guess before tapping.
+ */
+export function SecondaryPath({
+  title, description, action, onAction,
+}: {
+  title: string;
+  description: string;
+  action: string;
+  onAction: () => void;
+}): ReactNode {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-dashed border-white/[0.14] p-4">
+      <Text role="section" as="h3">{title}</Text>
+      <Text role="caption" className="mt-1 text-pretty">{description}</Text>
+      <GlassButton
+        variant="secondary"
+        size="md"
+        block
+        className="mt-3"
+        onClick={onAction}
+      >
+        {action}
+      </GlassButton>
+    </div>
   );
 }

@@ -271,13 +271,20 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
           size without any branding. */}
       <span
         aria-hidden="true"
-        className="absolute left-0 top-0 flex flex-col items-center gap-1 bg-void/55 px-3 pb-3.5 pt-3 backdrop-blur-[2px] [clip-path:polygon(0_0,100%_0,100%_calc(100%-16px),0_100%)]"
+        // No backdrop-blur here. The plate sits inside a `glass-2` card, so a
+        // blur on it makes this the only two-deep blur stack in the kit; the
+        // audit measured a maximum depth of 1 on every screen and that is worth
+        // protecting. A slightly deeper scrim does the same job for free.
+        className="absolute left-0 top-0 flex flex-col items-center gap-1 bg-void/70 px-3 pb-3.5 pt-3 [clip-path:polygon(0_0,100%_0,100%_calc(100%-16px),0_100%)]"
       >
         <span
           className={cn(
-            'tnum font-display font-bold leading-none tracking-[-0.05em]',
+            'num-broadcast num-tight font-extrabold leading-none',
             featured ? 'text-display' : 'text-hero',
-            player.overall >= 88 ? 'text-volt' : 'text-ink',
+            // Neutral, whatever the number. An 89 overall is data, not state:
+            // painting the top band volt put an accent element on every squad
+            // screen, competing with the one genuinely actionable thing on it.
+            'text-ink',
           )}
         >
           {player.overall}

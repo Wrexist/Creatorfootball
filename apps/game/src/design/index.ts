@@ -34,7 +34,10 @@ export { BREAKPOINTS, useBreakpoint, useIsMobile, useIsWide, type Breakpoint } f
    The type scale and the anti-truncation primitives. `NameText` is the one
    screens reach for whenever a club, player or creator name lands in a slot
    whose width the name did not choose. */
-export { FitText, EntityName, type FitTextProps, type EntityNameProps } from './typography/FitText';
+export {
+  FitText, FitBox, EntityName,
+  type FitTextProps, type FitBoxProps, type EntityNameProps,
+} from './typography/FitText';
 export { TYPE_CLASS, TYPE_SIZE, NUMERIC_ROLES, type TypeRole } from './typography/type';
 export {
   Text, NameText, Numeric,

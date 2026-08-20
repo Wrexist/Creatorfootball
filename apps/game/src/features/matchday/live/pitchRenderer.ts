@@ -248,7 +248,7 @@ export class PitchRenderer {
     // A shirt has to stay legible on a 320px-wide phone in a landscape band and
     // not turn into a beach ball on a 1200px desktop stage. The short axis of a
     // landscape pitch is small, so the radius is driven mostly by it.
-    this.radius = Math.max(6.5, Math.min(15, Math.min(w * 0.5, h) * 0.055));
+    this.radius = Math.max(6, Math.min(13, Math.min(w * 0.5, h) * 0.05));
     this.turf = null;
     this.sprites.clear();
     this.dirty = true;
@@ -601,10 +601,17 @@ export class PitchRenderer {
     const role = this.roleFor(id);
 
     ctx.save();
-    ctx.globalAlpha = node.state === 'DOWN' ? 0.22 : 0.44;
+    // A dark contact shadow first, so the token is seated on the grass rather
+    // than floating above it, then the role colour on top of it.
+    ctx.globalAlpha = 0.42;
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.ellipse(x, y + r * 0.78, r * 1.12, r * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = node.state === 'DOWN' ? 0.35 : 0.9;
     ctx.fillStyle = style.plate[role];
     ctx.beginPath();
-    ctx.ellipse(x, y + r * 0.62, r * 1.18, r * 0.46, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + r * 0.72, r * 1.32, r * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -624,7 +631,7 @@ export class PitchRenderer {
 
     // Facing: where this player is actually travelling. Drawn behind the token
     // so it reads as a wake rather than a hat.
-    if (node.speed > 0.02 && node.state !== 'DOWN') {
+    if (node.speed > 0.008 && node.state !== 'DOWN') {
       const len = Math.hypot(node.hx, node.hy);
       if (len > 1e-5) {
         const base = this.base(node.x, node.y);
@@ -635,9 +642,9 @@ export class PitchRenderer {
         if (dl > 1e-5) {
           const ux = dx / dl;
           const uy = dy / dl;
-          const strength = clamp01(node.speed / 0.28);
+          const strength = clamp01(node.speed / 0.09);
           ctx.save();
-          ctx.globalAlpha = 0.16 + strength * 0.54;
+          ctx.globalAlpha = 0.24 + strength * 0.58;
           ctx.fillStyle = node.side === 'home' ? this.opts.home.primary : this.opts.away.primary;
           ctx.beginPath();
           const tip = r * (1.5 + strength * 0.9);

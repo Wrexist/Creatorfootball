@@ -686,7 +686,9 @@
   /* Names must never end in an ellipsis. This is the class that enforces it:
      wrapping and breaking are allowed, clipping is not. */
   .name-safe {
-    overflow-wrap: anywhere;
+    /* Breaking inside a word is a last resort that FitText opts into per
+       instance; the default here is simply that nothing is ever clipped. */
+    overflow-wrap: normal;
     word-break: normal;
     hyphens: none;
     text-overflow: clip;

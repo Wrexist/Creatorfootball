@@ -1,7 +1,8 @@
 import { memo, type ReactNode } from 'react';
 import type { Player, PlayerId, TransferListing } from '@cf/engine';
 import {
-  ClubBadge, FOCUS_RING, MoneyLabel, PlayerPortrait, PositionChip, cn, type PlayerCardClub,
+  ClubBadge, FOCUS_RING, MoneyLabel, NameText, PlayerPortrait, PositionChip, cn,
+  type PlayerCardClub,
 } from '@/design';
 import { KnownRating, useKnowledge } from './scouting';
 
@@ -49,7 +50,13 @@ export const PlayerRow = memo(function PlayerRow({
       <PlayerPortrait seed={player.portraitSeed} size={38} shape="squircle" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-[15px] font-semibold text-ink">{player.displayName}</span>
+          <NameText
+            name={player.displayName}
+            short={`${player.firstName.charAt(0)}. ${player.lastName}`}
+            abbr={player.lastName}
+            role="bodyStrong"
+            className="min-w-0 flex-1"
+          />
           {club && <ClubBadge visual={club.visual} size={14} flat />}
         </div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-muted">

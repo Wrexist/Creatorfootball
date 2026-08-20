@@ -27,9 +27,9 @@ export const MEDIA_BALANCE = {
    * candidate at all while the pool holds an alternative. Set to most of a
    * season so a given headline runs at most twice a year.
    */
-  hardRepeatCycles: 9,
+  hardRepeatCycles: 12,
   /** Attempts to re-pick when a rendered headline duplicates a recent one. */
-  rerollAttempts: 3,
+  rerollAttempts: 6,
 
   /** Manager mediaHandling 0-100 scaled by this damps negative coverage. */
   mediaHandlingDamping: 0.6,

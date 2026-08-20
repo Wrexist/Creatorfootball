@@ -166,8 +166,10 @@ const SubRow = memo(function SubRow({
       >
         <PlayerPortrait seed={player.portraitSeed} size={36} colors={kit} shape="squircle" />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-[15px] font-semibold text-ink">{player.displayName}</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-[15px] font-semibold leading-tight text-ink text-pretty">
+              {player.displayName}
+            </span>
             <PositionChip position={player.position} size="xs" />
           </div>
           <div className="mt-1 flex items-center gap-2">

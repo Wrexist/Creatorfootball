@@ -172,8 +172,8 @@ function RatingRow({
     >
       {player && <PlayerPortrait seed={player.portraitSeed} size={32} colors={kit} shape="squircle" />}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="truncate text-[14px] font-semibold text-ink">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          <span className="text-[14px] font-semibold leading-tight text-ink text-pretty">
             {player?.displayName ?? stat.playerId}
           </span>
           {player && <PositionChip position={player.position} size="xs" />}

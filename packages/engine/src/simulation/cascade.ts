@@ -319,7 +319,11 @@ const signingRule: RuleFor<'PLAYER_SIGNED'> = (e, ctx) => {
     return {
       nodes: [{ id: 'signing', kind: 'SOCIAL', label: `${player} joins ${clubName}`, sourceEventId: e.id }],
       media: [{ trigger: 'SIGNING', importance: 2, sentiment: 0.3, tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, tags: ['transfer'] }],
-      social: [{ trigger: 'SIGNING', importance: 2, sentiment: 0.35, tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, audiences: ['CLUB', 'FAN'], tags: ['transfer'] }],
+      social: [{
+        trigger: 'SIGNING', importance: 2, sentiment: 0.35, tokens, facts, entities,
+        clubId: p.clubId, playerId: p.playerId,
+        audiences: ['CLUB', 'FAN', 'MEDIA', 'CREATOR'], tags: ['transfer'],
+      }],
     };
   }
   return {
@@ -511,7 +515,7 @@ const injuryRule: RuleFor<'PLAYER_INJURED'> = (e, ctx) => {
     social: [{
       trigger: 'INJURY_BLOW', importance: (newsworthy ? 3 : 2) as EventImportance, sentiment: -0.5,
       tokens, facts, entities, clubId: p.clubId, playerId: p.playerId,
-      audiences: ['FAN', 'CLUB', 'CREATOR'], tags: ['injury'],
+      audiences: ['FAN', 'CLUB', 'CREATOR', 'MEDIA'], tags: ['injury'],
     }],
   };
 };
@@ -593,7 +597,7 @@ const goalRule: RuleFor<'GOAL_SCORED'> = (e, ctx) => {
       tokens: { player: scorer, club: clubName, minute: p.minute, score: `${p.homeScore}-${p.awayScore}` },
       facts: { minute: p.minute, late, special: p.special ?? 'none' },
       entities, clubId: p.clubId, playerId: p.scorerId,
-      audiences: ['FAN', 'CLUB', 'CREATOR'], tags: ['goal'],
+      audiences: ['FAN', 'CLUB', 'CREATOR', 'PLAYER', 'MEDIA'], tags: ['goal'],
     }],
   };
 };
@@ -637,13 +641,22 @@ const sackRule: RuleFor<'MANAGER_SACKED'> = (e, ctx) => {
 const sponsorRule: RuleFor<'SPONSOR_SIGNED'> = (e, ctx) => {
   const p = e.payload;
   const clubName = ctx.clubName(p.clubId);
+  const sponsorName = ctx.state.sponsors.active.find((d) => d.sponsorId === p.sponsorId)?.name ?? null;
   return {
     nodes: [{ id: 'sponsor', kind: 'SOCIAL', label: `${clubName} sign a sponsor`, sourceEventId: e.id }],
     social: [{
-      trigger: 'SPONSOR_SIGNED', importance: 2, sentiment: 0.4,
-      tokens: { club: clubName, value: formatMoney(p.value) }, facts: { value: p.value },
+      trigger: 'SPONSOR_SIGNED', importance: 3, sentiment: 0.4,
+      tokens: {
+        club: clubName, value: formatMoney(p.value), amount: formatMoney(p.value),
+        // Only the player's club has a named deal on the save. For an AI club
+        // the signing is real but the brand is not modelled, so the token is
+        // left absent and `{sponsor}` lines simply do not render — never a
+        // made-up name.
+        ...(sponsorName ? { sponsor: sponsorName } : {}),
+      },
+      facts: { value: p.value, named: sponsorName !== null },
       entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
-      audiences: ['SPONSOR', 'CLUB'], tags: ['commercial'],
+      audiences: ['SPONSOR', 'CLUB', 'FAN'], tags: ['commercial'],
     }],
   };
 };
@@ -743,7 +756,8 @@ const playerSoldRule: RuleFor<'PLAYER_SOLD'> = (e, ctx) => {
     social: [{
       trigger: 'PLAYER_SOLD', importance: (big ? 3 : 2) as EventImportance, sentiment: big ? -0.4 : 0,
       tokens, facts, entities, clubId: p.fromClubId, opponentClubId: p.toClubId, playerId: p.playerId,
-      audiences: big ? ['FAN', 'MEDIA', 'PLAYER', 'CLUB'] : ['CLUB', 'MEDIA'], tags: ['transfer'],
+      audiences: big ? ['FAN', 'MEDIA', 'PLAYER', 'CLUB'] : ['CLUB', 'MEDIA', 'FAN', 'PLAYER'],
+      tags: ['transfer'],
     }],
   };
 };

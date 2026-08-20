@@ -1,124 +1,103 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  POSITION_GROUPS, nextFixture, playerClub, positionGroup, squadOf, squadStrength,
-  trackEvent, type Player, type PositionGroup,
+  autoLineup, formationById, formationsFor, nextFixture, patchClub, playerClub,
+  squadOf, trackEvent, type Formation,
 } from '@cf/engine';
 import {
-  CardRail, GlassButton, GlassPanel, GlassPill, PlayerCard, ProgressBar, SectionHeader,
-  StatCard, StatGrid, useConfirm,
+  CardRail, GlassButton, GlassPanel, GlassPill, IconCheck, NameText, PlayerCard,
+  SectionHeader, Text, useConfirm,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { CreationScreen } from './CreationScreen';
+import { SelectCard } from './components';
 import { useCreationStore } from './creationStore';
+import { FIRST_SHAPE_IDS, SHAPE_CONSEQUENCE, squadShapeNote, squadStory } from './squadStory';
 
 /**
- * Minute 3-5: the squad.
+ * Minute 3-5: the squad, and the one tactical decision before kick-off.
  *
- * This is an introduction, not a management screen. It answers three questions
- * and then gets out of the way: who is good, who is the problem, and what
- * happens next. There is no lineup editor here, no training plan and no
- * transfer list — every one of those exists behind the tab bar the player is
- * about to meet, and putting them in the first five minutes is how a football
- * game loses somebody in a spreadsheet before they have kicked a ball.
+ * This is an introduction, not a management screen. The brief asks for exactly
+ * three players — the star, the prospect and the problem — and then one shape
+ * chosen in plain language, and that is now what is here. What used to be here
+ * as well: three stat tiles, a "your best three" rail that was really three
+ * copies of the same idea, and a four-row position breakdown carrying twelve
+ * more numbers. All of it was true and none of it was a decision, and it
+ * arrived before the player had watched a single minute of football.
  *
- * Everything on it is engine data. The grouping and ordering below are
- * presentation over `Player.overall` and `Player.position` — no rating, no
- * strength and no valuation is computed here.
+ * There is no lineup editor here, no training plan and no transfer list — every
+ * one of those exists behind the tab bar the player is about to meet, and
+ * putting them in the first five minutes is how a football game loses somebody
+ * in a spreadsheet before they have kicked a ball.
+ *
+ * Everything on it is engine data. The three faces come from `squadStory`,
+ * which reads `overall`, `potential`, `age` and `autoLineup` — no rating, no
+ * strength and no valuation is computed in this file.
  */
 
-const GROUP_LABEL: Record<PositionGroup, string> = {
-  GK: 'Goalkeepers',
-  DEF: 'Defence',
-  MID: 'Midfield',
-  ATT: 'Attack',
-};
-
-const GROUP_ORDER: readonly PositionGroup[] = ['GK', 'DEF', 'MID', 'ATT'];
-
-/** Cover the format actually needs: 1 keeper, then outfield depth per line. */
-const MINIMUM_COVER: Record<PositionGroup, number> = { GK: 2, DEF: 4, MID: 5, ATT: 3 };
-
-interface GroupSummary {
-  readonly group: PositionGroup;
-  readonly players: readonly Player[];
-  readonly best: number;
-  readonly average: number;
-  readonly short: number;
-}
-
-function summarise(squad: readonly Player[]): GroupSummary[] {
-  return GROUP_ORDER.map((group) => {
-    const players = squad
-      .filter((p) => positionGroup(p.position) === group)
-      .sort((a, b) => b.overall - a.overall);
-    const total = players.reduce((sum, p) => sum + p.overall, 0);
-    return {
-      group,
-      players,
-      best: players[0]?.overall ?? 0,
-      average: players.length > 0 ? Math.round(total / players.length) : 0,
-      short: Math.max(0, MINIMUM_COVER[group] - players.length),
-    };
-  });
-}
-
-/**
- * The single line the player should remember. A gap in cover beats a weak
- * average, because one injury there ends the week — and if neither is true we
- * say so instead of inventing a crisis.
- */
-function problemLine(groups: readonly GroupSummary[]): { headline: string; detail: string } {
-  const missing = [...groups].filter((g) => g.short > 0).sort((a, b) => b.short - a.short)[0];
-  if (missing) {
-    return {
-      headline: `You are short in ${GROUP_LABEL[missing.group].toLowerCase()}`,
-      detail:
-        `${missing.players.length} fit for ${POSITION_GROUPS[missing.group].length} shirts. ` +
-        'One injury there and you are improvising.',
-    };
-  }
-  const weakest = [...groups]
-    .filter((g) => g.players.length > 0)
-    .sort((a, b) => a.average - b.average)[0];
-  if (!weakest) return { headline: 'No squad yet', detail: '' };
-  return {
-    headline: `Your ${GROUP_LABEL[weakest.group].toLowerCase()} is the weak link`,
-    detail: `Averaging ${weakest.average}. It is the first thing rivals will aim at.`,
-  };
-}
+const ROLE_TONE = {
+  STAR: 'volt',
+  PROSPECT: 'positive',
+  PROBLEM: 'danger',
+} as const;
 
 export function SquadIntroScreen(): ReactNode {
   const navigate = useNavigate();
   const confirm = useConfirm();
   const gameState = useGameStore((s) => s.state);
+  const apply = useGameStore((s) => s.apply);
   const abandon = useGameStore((s) => s.abandon);
   const resetDraft = useCreationStore((s) => s.reset);
   const headingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    headingRef.current?.focus();
+    // `preventScroll` matters: without it the browser scrolls this marker into
+    // view and the screen's large title is already half collapsed before the
+    // player has touched anything. Focus still moves and is still announced.
+    headingRef.current?.focus({ preventScroll: true });
   }, []);
 
   const data = useMemo(() => {
     if (!gameState) return null;
     const club = playerClub(gameState);
-    const squad = squadOf(gameState, club.id).slice().sort((a, b) => b.overall - a.overall);
+    const squad = squadOf(gameState, club.id);
+    const formation = formationById(club.tactics.formationId);
+    const shapes = formationsFor(7).filter((f) => FIRST_SHAPE_IDS.includes(f.id));
     return {
       club,
       squad,
-      standouts: squad.slice(0, 3),
-      groups: summarise(squad),
-      strength: squadStrength(gameState, club.id),
+      formation,
+      shapes,
+      cards: squadStory(squad, formation),
+      note: squadShapeNote(squad),
       fixture: nextFixture(gameState, club.id),
     };
   }, [gameState]);
 
+  /**
+   * Picking a shape writes the formation *and* the team sheet that goes with
+   * it, through the same `autoLineup` the tactics screen uses. Nothing is
+   * decided here that the engine does not decide.
+   */
+  const chooseShape = useCallback((next: Formation) => {
+    apply((current) => {
+      const club = playerClub(current);
+      const suggestion = autoLineup(squadOf(current, club.id), next);
+      return patchClub(current, club.id, (c) => ({
+        tactics: {
+          ...c.tactics,
+          formationId: next.id,
+          lineup: suggestion.lineup,
+          bench: suggestion.bench,
+        },
+      }));
+    });
+  }, [apply]);
+
   if (!data) return null;
 
-  const { club, squad, standouts, groups, strength, fixture } = data;
-  const problem = problemLine(groups);
+  const { club, squad, formation, shapes, cards, note, fixture } = data;
   const opponentId = fixture
     ? fixture.homeClubId === club.id ? fixture.awayClubId : fixture.homeClubId
     : null;
@@ -156,7 +135,7 @@ export function SquadIntroScreen(): ReactNode {
     <CreationScreen
       step="squad"
       title="Your squad"
-      subtitle={`${squad.length} players. Three of them are worth knowing by name.`}
+      subtitle={`${squad.length} players. Three of them you will remember.`}
       footer={
         <div className="flex flex-col gap-2">
           <GlassButton variant="primary" size="lg" block onClick={kickOff}>
@@ -174,79 +153,90 @@ export function SquadIntroScreen(): ReactNode {
     >
       <div ref={headingRef} tabIndex={-1} aria-label="Step 3 of 3, squad" className="outline-none" />
 
-      <StatGrid columns={3}>
-        <StatCard label="Squad rating" value={strength} nested size="sm" />
-        <StatCard label="Players" value={squad.length} nested size="sm" />
-        <StatCard
-          label="Reputation"
-          value={club.reputation}
-          nested
-          size="sm"
-        />
-      </StatGrid>
-
       <div>
         <SectionHeader
-          title="Your best three"
-          subtitle="Build the side around them until somebody better arrives."
+          title="The three worth knowing"
+          subtitle="Your best, your future, and the one they will aim at."
         />
-        <CardRail itemWidth={188} bleed ariaLabel="Standout players">
-          {standouts.map((player) => (
-            <PlayerCard
-              key={player.id}
-              player={player}
-              variant="featured"
-              club={{ name: club.name, abbreviation: club.abbreviation, visual: club.visual }}
-            />
+        <CardRail itemWidth={196} bleed ariaLabel="The three players to know">
+          {cards.map((card) => (
+            <div key={card.player.id} className="flex flex-col gap-2">
+              <GlassPill tone={ROLE_TONE[card.role]} size="xs" filled>{card.label}</GlassPill>
+              <PlayerCard
+                player={card.player}
+                variant="featured"
+                club={{ name: club.name, abbreviation: club.abbreviation, visual: club.visual }}
+              />
+              <Text role="caption" className="text-pretty">{card.line}</Text>
+            </div>
           ))}
         </CardRail>
       </div>
 
-      <GlassPanel level={1} radius="lg" padding="md" nested accent="danger">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-danger">The problem</p>
-        <h3 className="mt-1.5 font-display text-[19px] font-bold tracking-[-0.03em] text-ink">
-          {problem.headline}
-        </h3>
-        <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted text-pretty">
-          {problem.detail}
-        </p>
-      </GlassPanel>
-
+      {/* The one tactical decision the beat sheet asks for, explained by the
+          one thing about this squad worth saying out loud. Teaching happens
+          here, at the moment it matters, in a sentence — not in a modal. */}
       <div>
-        <SectionHeader title="The shape of it" size="sm" />
-        <div className="mt-3 flex flex-col gap-3">
-          {groups.map((group) => (
-            <div key={group.group}>
-              <div className="mb-1 flex items-baseline justify-between gap-2">
-                <span className="text-[13px] font-semibold text-ink">{GROUP_LABEL[group.group]}</span>
-                <span className="tnum text-[12px] text-ink-dim">
-                  {group.players.length} players · best {group.best}
-                </span>
-              </div>
-              <ProgressBar
-                value={group.average}
-                size="sm"
-                tone={group.short > 0 ? 'danger' : 'volt'}
-                valueLabel={`avg ${group.average}`}
-              />
-            </div>
-          ))}
+        <SectionHeader
+          title="One decision before kick-off"
+          subtitle={`${note.headline}. ${note.detail}`}
+        />
+        <div className="mt-3 flex flex-col gap-2.5">
+          {shapes.map((shape) => {
+            const selected = formation.id === shape.id;
+            return (
+              <SelectCard
+                key={shape.id}
+                label={`${shape.name}. ${shape.blurb} ${SHAPE_CONSEQUENCE[shape.id] ?? ''}`}
+                selected={selected}
+                onSelect={() => chooseShape(shape)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <Text role="section" as="p" className="min-w-0 flex-1">{shape.name}</Text>
+                  {selected && (
+                    <span
+                      aria-hidden="true"
+                      className="flex size-6 shrink-0 items-center justify-center rounded-pill bg-volt text-volt-ink [&_svg]:size-3.5"
+                    >
+                      <IconCheck />
+                    </span>
+                  )}
+                </div>
+                <Text role="body" className="mt-1 text-pretty">{shape.blurb}</Text>
+                <Text role="caption" className="mt-1.5 text-ink-dim text-pretty">
+                  {SHAPE_CONSEQUENCE[shape.id]}
+                </Text>
+              </SelectCard>
+            );
+          })}
         </div>
+        <Text role="caption" className="mt-3 text-ink-dim text-pretty">
+          Three more shapes and the full team sheet are on Squad → Tactics whenever you want them.
+        </Text>
       </div>
 
       {opponent && fixture && (
         <GlassPanel level={1} radius="lg" padding="md" nested accent="volt">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-volt">Next</p>
-          <h3 className="mt-1.5 font-display text-[19px] font-bold tracking-[-0.03em] text-ink">
-            {fixture.homeClubId === club.id ? 'Home to' : 'Away to'} {opponent.name}
-          </h3>
-          <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted text-pretty">
-            You pick the side and the shape at the team talk. Nothing is locked in yet.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <GlassPill tone="neutral" size="xs">Week {fixture.week}</GlassPill>
-            {fixture.isDerby && <GlassPill tone="danger" size="xs">Derby</GlassPill>}
-          </div>
+          <Text role="eyebrow" as="p">
+            Next · {fixture.homeClubId === club.id ? 'Home' : 'Away'}
+          </Text>
+          <NameText
+            name={opponent.name}
+            short={opponent.shortName}
+            abbr={opponent.abbreviation}
+            role="title"
+            as="h3"
+            lines={2}
+            className="mt-1.5"
+          />
+          <Text role="body" tone="muted" className="mt-1.5 text-pretty">
+            You keep the shape you just picked. Everything else is decided at the team talk.
+          </Text>
+          {fixture.isDerby && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <GlassPill tone="danger" size="xs">Derby</GlassPill>
+            </div>
+          )}
         </GlassPanel>
       )}
     </CreationScreen>

@@ -58,6 +58,9 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['result', 'rivalry']),
   ...post('MATCH_WON', 'MEDIA', 0.2, 2, [
     '{club} take the points against {opponent}, {score}. Report and ratings shortly.',
+    'FULL TIME: {club} {score} {opponent}. Player ratings in the thread.',
+    'Three points for {club}, who beat {opponent} {score}.',
+    '{club} see off {opponent}. {score} the final score.',
   ], ['result']),
 
   /* -------------------------------------------------------- MATCH_LOST */
@@ -82,7 +85,13 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'Watched that live and I am still processing it. {club} have to be better.',
   ], ['result']),
   ...post('MATCH_LOST', 'MEDIA', -0.2, 2, [
-    'Defeat for {club}, who have now taken one point from a possible nine.',
+    // This line used to read "who have now taken one point from a possible
+    // nine" — a specific claim about a run the template has no way of knowing.
+    // A press account may only assert what the event carries.
+    'Defeat for {club}, beaten {score} by {opponent}. Report and ratings to follow.',
+    'FULL TIME: {club} {score} {opponent}. Questions for the home dressing room.',
+    '{opponent} take all three at the expense of {club}. Reaction shortly.',
+    'Another one gets away from {club}. {score} the final score against {opponent}.',
   ], ['result']),
 
   /* -------------------------------------------------------- MATCH_DRAWN */
@@ -432,14 +441,27 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['reputation']),
 
   /* ------------------------------------------------------- RECORD_BROKEN */
+  // Player records and club records are written separately on purpose. Filling
+  // a {player} slot with the club's own name produced "Cinderwick Town writes
+  // his name into the history of Cinderwick Town"; the club lines below take
+  // {subject} instead, which the hook fills with whichever it actually is.
   ...post('RECORD_BROKEN', 'CLUB', 0.7, 4, [
     'A club record. {player} writes his name into the history of {club}. 📖',
+    '{player}. {record}. One for the wall in the tunnel. 📖',
+  ], ['record']),
+  ...post('RECORD_BROKEN', 'CLUB', 0.7, 4, [
+    '{record}. A new mark for {club}, set today. 📖',
+    'Into the record books: {club}, {record}, {value}.',
   ], ['record']),
   ...post('RECORD_BROKEN', 'FAN', 0.7, 3, [
     'That record stood for thirty-one years. Thirty-one.',
+    'I was there for {record}. Framing the ticket.',
+    'Whatever else happens this season, {subject} did that.',
   ], ['record']),
   ...post('RECORD_BROKEN', 'MEDIA', 0.4, 3, [
     'A record that has stood for a generation falls to {player}.',
+    'RECORD | {subject} sets a new mark: {record} ({value}).',
+    '{club} rewrite their own history: {record} now stands at {value}.',
   ], ['record']),
 
   /* ------------------------------------------------------ CONTRACT_SIGNED */

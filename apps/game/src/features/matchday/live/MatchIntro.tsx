@@ -39,6 +39,7 @@ export interface MatchIntroProps {
 
 /** Beat boundaries in ms from the start. The last entry ends the sequence. */
 const BEATS = [1100, 2250, 3300, 4150, 4600] as const;
+const INTRO_MS = 4600;
 
 export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchIntroProps): ReactNode {
   const m = useDesignMotion();
@@ -87,6 +88,18 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
       aria-modal="true"
       aria-label="Match introduction"
     >
+      {/* A draining line, so the sequence visibly has an end and the player
+          knows waiting costs them four seconds rather than an unknown number. */}
+      {!m.reduced && (
+        <motion.span
+          aria-hidden="true"
+          initial={{ scaleX: 1 }}
+          animate={{ scaleX: 0 }}
+          transition={{ duration: INTRO_MS / 1000, ease: 'linear' }}
+          className="pointer-events-none absolute inset-x-0 top-0 z-20 h-0.5 origin-left bg-volt"
+        />
+      )}
+
       {/* The whole surface is the skip target. */}
       <button
         type="button"
@@ -100,8 +113,8 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            `radial-gradient(70% 45% at 12% 22%, ${homePalette.primary}30, transparent 68%),` +
-            `radial-gradient(70% 45% at 88% 78%, ${awayPalette.primary}30, transparent 68%)`,
+            `radial-gradient(75% 48% at 10% 20%, ${homePalette.primary}55, transparent 70%),` +
+            `radial-gradient(75% 48% at 90% 80%, ${awayPalette.primary}55, transparent 70%)`,
         }}
       />
 
@@ -117,19 +130,23 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
           <AnimatePresence mode="wait">
             {beat === 0 && (
               <Beat key="badges">
-                <div className="flex items-center justify-center gap-5">
+                <div className="flex items-start justify-center gap-4">
                   <motion.div
                     initial={{ x: -46, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex w-[38vw] max-w-[132px] flex-col items-center gap-2"
                   >
-                    <ClubBadge visual={home.visual} size={78} label={home.name} />
+                    <ClubBadge visual={home.visual} size={84} label={home.name} />
+                    <span className="text-balance text-[14px] font-bold leading-tight text-ink">
+                      {home.shortName}
+                    </span>
                   </motion.div>
                   <motion.span
                     initial={{ opacity: 0, scale: 0.7 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.22, duration: 0.4 }}
-                    className="font-display text-[19px] font-bold tracking-[0.2em] text-ink-dim"
+                    className="mt-[34px] font-display text-[19px] font-bold tracking-[0.2em] text-ink-dim"
                   >
                     V
                   </motion.span>
@@ -137,8 +154,12 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
                     initial={{ x: 46, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex w-[38vw] max-w-[132px] flex-col items-center gap-2"
                   >
-                    <ClubBadge visual={away.visual} size={78} label={away.name} />
+                    <ClubBadge visual={away.visual} size={84} label={away.name} />
+                    <span className="text-balance text-[14px] font-bold leading-tight text-ink">
+                      {away.shortName}
+                    </span>
                   </motion.div>
                 </div>
                 <motion.p

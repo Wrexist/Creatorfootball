@@ -1,6 +1,8 @@
-import type { ClubId, ContractId, EventId, SponsorId } from '../core/brand';
+import type { ClubId, ContractId, CreatorId, EventId, RivalryId, SponsorId, TransferId } from '../core/brand';
 import type { AnyDomainEvent, DomainEventPayloads, DomainEventType, EntityRef, EventImportance } from '../core/events';
-import type { GameState, NewsStory, SocialPost, TransferListing } from '../game/state';
+import type {
+  GameState, Negotiation, NewsStory, SocialPost, SponsorState, TransferListing,
+} from '../game/state';
 import type { Player } from '../players/player';
 import type { Club } from '../clubs/club';
 import type { Contract } from '../contracts/contract';
@@ -12,8 +14,10 @@ import type { AttributeKey } from '../players/attributes';
 import { points as leaguePoints } from '../clubs/club';
 import { clamp, decayToward } from '../core/math';
 import { decayRivalry, rivalryKey } from '../rivalries/rivalries';
+import { traitModifier } from '../players/traits';
 import { generateStories } from '../media/mediaEngine';
 import { generatePosts, socialReach } from '../social/socialEngine';
+import { SOCIAL_BALANCE } from '../social/balance';
 import { detectRecords, updateLegacy } from '../progression/legacy';
 import { applyObjectiveUpdates, updateObjectiveProgress, type ObjectiveUpdate } from '../progression/objectives';
 import { aiClubTurn, type AiActions } from './aiClub';
@@ -102,6 +106,151 @@ function developableAttribute(player: Player, rng: Rng): AttributeKey {
   return rng.weighted(pool, (k) => (weights[k] ?? 0.2) + 0.2);
 }
 
+
+/**
+ * The loudest creator post of a given cycle, if it cleared the bar that makes a
+ * clip a *moment* rather than a post. Read back off the retained feed so the
+ * event describes something the player can scroll to.
+ */
+function topCreatorPost(
+  state: GameState,
+  cycle: number,
+): { creatorId: CreatorId; clubId: ClubId; reach: number } | null {
+  let best: SocialPost | null = null;
+  for (const post of state.social.posts) {
+    if (post.cycle !== cycle) continue;
+    if (!post.tags.includes('creator-voice')) continue;
+    if (!best || post.likes > best.likes || (post.likes === best.likes && post.id < best.id)) best = post;
+  }
+  if (!best) return null;
+  const reach = best.likes * SOCIAL_BALANCE.impressionsPerLike
+    + best.reposts * SOCIAL_BALANCE.impressionsPerRepost;
+  if (reach < W.creatorNews.momentReach) return null;
+  const creator = Object.values(state.creators)
+    .filter((c) => `@${c.handle.replace(/^@/, '')}` === best?.authorHandle)
+    .sort((a, b) => (a.id < b.id ? -1 : 1))[0];
+  if (!creator) return null;
+  const clubId = creator.clubId ?? state.playerClubId;
+  return { creatorId: creator.id, clubId, reach };
+}
+
+/**
+ * Things that happen to a club rather than to a player, announced.
+ *
+ * Every one of these was already true in the state and simply never said out
+ * loud, which is why the templates written for them were unreachable. Nothing
+ * here invents a fact: the sponsor really did walk (the ledger has the penalty),
+ * the balance really is that low, the fixture really is next on the list.
+ */
+function emitWorldNews(args: {
+  state: GameState;
+  clubs: Record<string, Club>;
+  players: Record<string, Player>;
+  cycle: number;
+  emit: <T extends DomainEventType>(
+    type: T, payload: DomainEventPayloads[T], importance: EventImportance,
+    entities: readonly EntityRef[],
+  ) => void;
+  ledger: Ledger | null;
+  lastCycleTopCreatorPost: { creatorId: CreatorId; clubId: ClubId; reach: number } | null;
+}): void {
+  const { state, clubs, cycle, emit, ledger } = args;
+  const playerClub = clubs[state.playerClubId];
+
+  // A sponsor walking away is recorded as a termination penalty in the ledger.
+  // Reading it back is how this stays honest — no event without the money.
+  if (ledger) {
+    for (const tx of ledger.snapshot().transactions) {
+      if (tx.cycle !== cycle || tx.kind !== 'PENALTY') continue;
+      const sponsorId = tx.metadata?.['sponsorId'];
+      if (typeof sponsorId !== 'string') continue;
+      const clubId = tx.from.kind === 'club' ? tx.from.clubId : state.playerClubId;
+      emit('SPONSOR_LOST', {
+        clubId, sponsorId: sponsorId as SponsorId, reason: 'performance clause triggered',
+      }, 3, clubRefOf(clubs[clubId]));
+    }
+  }
+
+  // Running out of money, said once rather than every week until it is fixed.
+  if (ledger && playerClub) {
+    const cash = ledger.balanceOf(state.playerClubId).CASH;
+    const saidRecently = state.eventLog.some(
+      (e) => e.type === 'BALANCE_LOW' && e.cycle > cycle - W.financeNews.repeatCooldownCycles,
+    );
+    if (cash < W.financeNews.lowBalance && !saidRecently) {
+      emit('BALANCE_LOW', { clubId: state.playerClubId, balance: cash }, 3, clubRefOf(playerClub));
+    }
+  }
+
+  // Next week's fixture. The press previewing a match is not a simulation
+  // detail, it is the only forward-looking beat the world has.
+  const nextWeek = state.clock.week + 2;
+  const upcoming = Object.values(state.fixtures)
+    .filter((f) => f.week === nextWeek && f.status === 'SCHEDULED'
+      && (f.homeClubId === state.playerClubId || f.awayClubId === state.playerClubId))
+    .sort((a, b) => (a.id < b.id ? -1 : 1))[0];
+  if (upcoming) {
+    emit('MATCH_SCHEDULED', {
+      matchId: (upcoming.matchId ?? upcoming.id) as never,
+      homeClubId: upcoming.homeClubId, awayClubId: upcoming.awayClubId, week: upcoming.week,
+    }, 2, [...clubRefOf(clubs[upcoming.homeClubId]), ...clubRefOf(clubs[upcoming.awayClubId])]);
+  }
+
+  // A creator clip that actually travelled.
+  const moment = args.lastCycleTopCreatorPost;
+  if (moment) {
+    const creator = state.creators[moment.creatorId];
+    emit('CREATOR_MOMENT', {
+      creatorId: moment.creatorId, clubId: moment.clubId, kind: 'clip', reach: moment.reach,
+    }, 2, [
+      ...(creator ? [{ kind: 'creator' as const, id: creator.id, name: creator.displayName }] : []),
+      ...clubRefOf(clubs[moment.clubId]),
+    ]);
+  }
+}
+
+
+/**
+ * Squad chemistry, and what it is worth.
+ *
+ * `chemistry`, `teammateMorale` and `moraleResilience` were three trait
+ * modifier keys with **no consumer anywhere in the repo** while being labelled
+ * on the player profile screen — the product advertising an effect that did not
+ * exist. They belong here rather than in the match model: they are properties
+ * of a dressing room over weeks, not of a duel over ninety seconds.
+ *
+ * `squadCohesion` is a 0-1 read of how well a squad holds together: the sum of
+ * its `chemistry` traits against squad size, centred so an untraited squad
+ * sits at the neutral point and a squad of selfish mercenaries sits below it.
+ */
+export function squadCohesion(club: Club, players: Readonly<Record<string, Player>>): number {
+  if (club.squad.length === 0) return W.chemistry.neutralCohesion;
+  let total = 0;
+  let counted = 0;
+  for (const id of club.squad) {
+    const player = players[id];
+    if (!player) continue;
+    counted++;
+    total += traitModifier(player.traitIds, 'chemistry');
+  }
+  if (counted === 0) return W.chemistry.neutralCohesion;
+  return clamp(
+    W.chemistry.neutralCohesion + (total / counted) * W.chemistry.cohesionPerChemistryPoint,
+    0, 1,
+  );
+}
+
+/** The squad-wide morale pull the dressing room's leaders exert, in points. */
+export function squadMoraleSpread(club: Club, players: Readonly<Record<string, Player>>): number {
+  let total = 0;
+  for (const id of club.squad) {
+    const player = players[id];
+    if (!player) continue;
+    total += traitModifier(player.traitIds, 'teammateMorale');
+  }
+  return total * W.chemistry.moralePerTeammatePoint;
+}
+
 export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): WorldTickResult {
   const cycle = state.clock.cycle;
   const root = rng.fork(`world:${cycle}`);
@@ -134,6 +283,8 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
   const contracts: Record<string, Contract> = { ...state.contracts };
   const rivalries = { ...state.rivalries };
   const listings: Record<string, TransferListing> = { ...state.transfers.listings };
+  const negotiations: Record<string, Negotiation> = { ...state.transfers.negotiations };
+  let bidEvents = 0;
 
   const summary = {
     aiTurns: 0, transfersCompleted: 0, injuries: 0, recoveries: 0, developments: 0,
@@ -160,6 +311,16 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
       .filter((p): p is Player => !!p)
       .sort((a, b) => b.overall - a.overall);
     ranked.forEach((player, index) => involvedRank.set(player.id, index));
+  }
+
+  // Cohesion is read once per club, before anyone moves, so a squad's chemistry
+  // is a property of the squad the week started with. It pulls form as well as
+  // morale: a settled dressing room drifts toward playing well rather than
+  // toward nothing, and `form.rating` is read by the match model.
+  const cohesionByClub = new Map<string, number>();
+  for (const clubId of sortedIds(state.clubs)) {
+    const club = state.clubs[clubId];
+    if (club) cohesionByClub.set(clubId, squadCohesion(club, state.players));
   }
 
   let developmentEvents = 0;
@@ -208,10 +369,13 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     const fitnessDelta = next.injury ? -2 : played ? W.form.fitnessRecovery - W.form.fitnessDrain * 2 : W.form.fitnessRecovery;
     next = { ...next, fitness: clamp(next.fitness + fitnessDelta, 10, 100) };
 
-    // Form drifts toward neutral, with variance inversely proportional to consistency.
+    // Form drifts toward the level the dressing room supports, with variance
+    // inversely proportional to consistency.
     const volatility = W.form.driftScale * (1 - next.mental.consistency / 100);
+    const cohesion = next.clubId ? cohesionByClub.get(next.clubId) ?? W.chemistry.neutralCohesion : W.chemistry.neutralCohesion;
+    const formTarget = (cohesion - W.chemistry.neutralCohesion) * W.chemistry.formPerCohesion;
     const rating = clamp(
-      decayToward(next.form.rating, 0, W.form.idleDecay) + local.normal(0, volatility),
+      decayToward(next.form.rating, formTarget, W.form.idleDecay) + local.normal(0, volatility),
       -1, 1,
     );
     next = { ...next, form: { ...next.form, rating } };
@@ -432,7 +596,25 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
         const listing = listings[player.id];
         const fee = Math.min(target.maxFee, listing?.askingPrice ?? (player.clubId ? player.marketValue : 0));
         if (fee > 0) {
-          if (!ledger.canAfford(buyer.id, fee)) continue;
+          if (bidEvents < W.transferNews.maxBidEventsPerCycle && seller) {
+            bidEvents++;
+            emit('TRANSFER_BID_MADE', {
+              transferId: `tr_ai_${cycle}_${player.id}` as TransferId,
+              playerId: player.id, fromClubId: seller.id, toClubId: buyer.id, amount: fee,
+            }, 2, [...playerRefOf(player), ...clubRefOf(buyer)]);
+          }
+          if (!ledger.canAfford(buyer.id, fee)) {
+            // A bid the buyer cannot fund is a rejection with a reason, not a
+            // silent `continue` — it is one of the transfer stories the pack
+            // has lines for and the world never told.
+            if (bidEvents <= W.transferNews.maxBidEventsPerCycle && seller) {
+              emit('TRANSFER_BID_REJECTED', {
+                transferId: `tr_ai_${cycle}_${player.id}` as TransferId,
+                playerId: player.id, reason: 'the money is not there',
+              }, 2, [...playerRefOf(player), ...clubRefOf(seller)]);
+            }
+            continue;
+          }
           const paid = ledger.post({
             kind: 'TRANSFER_OUT', amount: fee,
             from: clubAccount(buyer.id), to: worldAccount('transfer_market'),
@@ -496,6 +678,25 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
           ...(seller ? { fromClubId: seller.id } : {}),
         }, fee > buyer.finance.wageBudgetPerCycle * 6 ? 4 : 2,
           [...playerRefOf(player), ...clubRefOf(buyer)]);
+        if (seller) {
+          emit('TRANSFER_COMPLETED', {
+            transferId: `tr_ai_${cycle}_${player.id}` as TransferId,
+            playerId: player.id, fromClubId: seller.id, toClubId: buyer.id, fee,
+          }, 2, [...playerRefOf(player), ...clubRefOf(seller), ...clubRefOf(buyer)]);
+        }
+        // If the human was in talks for this player, they have just been
+        // gazumped. The negotiation is closed for real, so the story the feed
+        // tells about it is describing something that actually happened.
+        for (const negId of Object.keys(negotiations).sort()) {
+          const neg = negotiations[negId];
+          if (!neg || neg.playerId !== player.id) continue;
+          if (neg.toClubId !== state.playerClubId) continue;
+          if (neg.stage === 'AGREED' || neg.stage === 'FAILED' || neg.stage === 'HIJACKED') continue;
+          negotiations[negId] = { ...neg, stage: 'HIJACKED' };
+          emit('TRANSFER_HIJACKED', {
+            playerId: player.id, byClubId: buyer.id, fromClubId: state.playerClubId,
+          }, 4, [...playerRefOf(player), ...clubRefOf(buyer), ...clubRefOf(clubs[state.playerClubId])]);
+        }
         break;
       }
     }
@@ -516,10 +717,110 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     }, 5, [...clubRefOf(clubs[record.clubId]), ...playerRefOf(record.holderId ? players[record.holderId] : undefined)]);
   }
 
+  // --- phase 3b: the world's own news --------------------------------------
+  emitWorldNews({
+    state, clubs, players, cycle, emit, ledger: ctx.ledger ?? null,
+    lastCycleTopCreatorPost: topCreatorPost(state, cycle - 1),
+  });
+
+  // --- phase 3c: objectives ------------------------------------------------
+  // Evaluated *before* the cascade rather than after it, so that finishing or
+  // missing an objective is news this cycle instead of a line in the log that
+  // no template can ever see. Objective progress reads match and squad events
+  // only, none of which the cascade derives, so nothing is lost by the move.
+  const objectiveState: GameState = {
+    ...preCascadeState,
+    eventLog: [...state.eventLog, ...inputEvents, ...worldEvents].slice(-W.retention.eventLog),
+  };
+  const objectiveUpdates = updateObjectiveProgress(objectiveState, [...inputEvents, ...worldEvents]);
+  const objectives = applyObjectiveUpdates(objectiveState, objectiveUpdates);
+  const liveObjectives = [...state.objectives.active, ...state.objectives.seasonTargets];
+  for (const update of objectiveUpdates) {
+    const objective = liveObjectives.find((o) => o.id === update.objectiveId);
+    if (!objective) continue;
+    if (update.justCompleted) {
+      emit('OBJECTIVE_COMPLETED', {
+        objectiveId: objective.id as never,
+        title: objective.title,
+        rewardSummary: objective.rewards.map((r) => r.label).join(', '),
+      }, objective.importance as EventImportance, clubRefOf(clubs[state.playerClubId]));
+    } else if (update.justFailed) {
+      emit('OBJECTIVE_FAILED', {
+        objectiveId: objective.id as never, title: objective.title,
+      }, objective.importance as EventImportance, clubRefOf(clubs[state.playerClubId]));
+    }
+  }
+
   // --- phase 4: cascade ----------------------------------------------------
   const batch = [...inputEvents, ...worldEvents];
-  const cascade = expandCascade(batch, preCascadeState, { cycle });
-  for (const delta of cascade.deltas) applyDelta(delta, players, clubs, rivalries, cycle);
+  const worldEventsBeforeCascade = worldEvents.length;
+  const baseCascade = expandCascade(batch, preCascadeState, { cycle });
+
+  // A rivalry the cascade wants to heat up but that does not exist yet is a
+  // rivalry being *born* — two clubs that keep colliding. Creating it here is
+  // what turns an unseeded pairing into a fixture with a history, and it is the
+  // only producer of RIVALRY_CREATED in the game.
+  for (const delta of baseCascade.deltas) {
+    if (delta.kind !== 'RIVALRY_INTENSITY') continue;
+    const key = rivalryKey(delta.clubA, delta.clubB);
+    if (rivalries[key]) continue;
+    rivalries[key] = {
+      id: key,
+      clubAId: delta.clubA,
+      clubBId: delta.clubB,
+      intensity: W.rivalries.bornIntensity,
+      origin: 'PROXIMITY',
+      meetings: 0,
+      aWins: 0,
+      bWins: 0,
+      draws: 0,
+      incidents: [],
+      lastMeetingCycle: cycle,
+    };
+    emit('RIVALRY_CREATED', {
+      rivalryId: key as RivalryId, clubA: delta.clubA, clubB: delta.clubB,
+    }, 3, [...clubRefOf(clubs[delta.clubA]), ...clubRefOf(clubs[delta.clubB])]);
+  }
+
+  const reputationBefore = new Map<string, number>();
+  for (const clubId of sortedIds(clubs)) reputationBefore.set(clubId, clubs[clubId]?.reputation ?? 0);
+
+  for (const delta of baseCascade.deltas) applyDelta(delta, players, clubs, rivalries, cycle);
+
+  // Reputation moving is a fact about the world, and until now it moved in
+  // silence — the specific thing the event contract says must never happen.
+  for (const clubId of sortedIds(clubs)) {
+    const before = reputationBefore.get(clubId) ?? 0;
+    const after = clubs[clubId]?.reputation ?? 0;
+    if (Math.abs(after - before) < W.reputationNews.minDelta) continue;
+    emit('REPUTATION_CHANGED', {
+      clubId: clubId as ClubId, from: before, to: after,
+      reason: after > before ? 'results on the pitch' : 'a season going the wrong way',
+    }, 2, clubRefOf(clubs[clubId]));
+  }
+
+  // The events raised while resolving the cascade — a rivalry born, a
+  // reputation moved — deserve the same treatment as the ones that caused
+  // them. Without this second pass they land in the journal and no template
+  // ever sees them, which is the exact failure this whole pass is fixing.
+  const lateEvents = worldEvents.slice(worldEventsBeforeCascade);
+  const lateCascade = lateEvents.length > 0
+    ? expandCascade(lateEvents, preCascadeState, { cycle, skipFollowUps: true })
+    : null;
+  if (lateCascade) {
+    for (const delta of lateCascade.deltas) applyDelta(delta, players, clubs, rivalries, cycle);
+  }
+  const cascade: CascadeResult = lateCascade
+    ? {
+      derivedEvents: [...baseCascade.derivedEvents, ...lateCascade.derivedEvents],
+      nodes: [...baseCascade.nodes, ...lateCascade.nodes],
+      deltas: [...baseCascade.deltas, ...lateCascade.deltas],
+      mediaHooks: [...baseCascade.mediaHooks, ...lateCascade.mediaHooks],
+      socialHooks: [...baseCascade.socialHooks, ...lateCascade.socialHooks],
+      chains: { ...baseCascade.chains, ...lateCascade.chains },
+    }
+    : baseCascade;
+  const fullBatch = [...batch, ...lateEvents];
 
   // --- phase 5: drift ------------------------------------------------------
   for (const clubId of sortedIds(clubs)) {
@@ -547,20 +848,55 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     if (rivalry) rivalries[key] = decayRivalry(rivalry, cycle);
   }
 
+  // --- phase 5b: the dressing room ----------------------------------------
+  //
+  // Morale drifts toward a resting point set by how the season is going and by
+  // how well the squad holds together, and the leaders in the room drag
+  // everyone with them. `moraleResilience` is what decides how far a player is
+  // dragged *down*: a resilient professional barely moves on a bad week, and
+  // Fragile (moraleResilience -0.35) falls off a cliff.
+  for (const clubId of sortedIds(clubs)) {
+    const club = clubs[clubId];
+    if (!club || club.squad.length === 0) continue;
+    const cohesion = squadCohesion(club, players);
+    const spread = squadMoraleSpread(club, players);
+    const record = club.seasonRecord;
+    const formShare = record.played > 0 ? leaguePoints(record) / (record.played * 3) : 0.4;
+    const resting = clamp(
+      W.chemistry.restingMorale
+      + (formShare - 0.4) * W.chemistry.moralePerFormShare
+      + (cohesion - W.chemistry.neutralCohesion) * W.chemistry.moralePerCohesion
+      + spread,
+      5, 95,
+    );
+    for (const id of club.squad) {
+      const player = players[id];
+      if (!player) continue;
+      const raw = (resting - player.mental.morale) * W.chemistry.moraleDriftRate;
+      // Resistance applies to the fall, not the rise. A resilient player is
+      // hard to knock down, not slow to cheer up.
+      const resilience = traitModifier(player.traitIds, 'moraleResilience');
+      const delta = raw < 0 ? raw / Math.max(0.25, 1 + resilience) : raw;
+      const morale = clamp(player.mental.morale + delta, 1, 99);
+      if (morale === player.mental.morale) continue;
+      players[id] = { ...player, mental: { ...player.mental, morale } };
+    }
+  }
+
   // --- phase 6: content ----------------------------------------------------
   const contentState: GameState = {
     ...state,
     players, clubs, contracts, rivalries,
-    eventLog: [...state.eventLog, ...batch, ...cascade.derivedEvents].slice(-W.retention.eventLog),
+    eventLog: [...state.eventLog, ...fullBatch, ...cascade.derivedEvents].slice(-W.retention.eventLog),
   };
   const emergent = ctx.skipContent ? [] : detectEmergentStories(contentState, cycle);
   const extraHooks = emergentHooks(emergent, cycle);
 
   const stories = ctx.skipContent ? [] : generateStories(
-    batch, contentState, root.fork('media'), ctx.registry ?? null, { cascade, extraHooks, cycle },
+    fullBatch, contentState, root.fork('media'), ctx.registry ?? null, { cascade, extraHooks, cycle },
   );
   const posts = ctx.skipContent ? [] : generatePosts(
-    batch, contentState, root.fork('social'), ctx.registry ?? null, { cascade, extraHooks, cycle },
+    fullBatch, contentState, root.fork('social'), ctx.registry ?? null, { cascade, extraHooks, cycle },
   );
   summary.storiesPublished = stories.length;
   summary.postsPublished = posts.length;
@@ -588,22 +924,8 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
   }
 
   // --- phase 7: progression ------------------------------------------------
-  const allEvents = [...batch, ...cascade.derivedEvents];
-  const objectiveUpdates = updateObjectiveProgress(contentState, allEvents);
-  const objectives = applyObjectiveUpdates(contentState, objectiveUpdates);
+  const allEvents = [...fullBatch, ...cascade.derivedEvents];
   const legacy = updateLegacy(contentState, allEvents);
-
-  for (const update of objectiveUpdates) {
-    if (!update.justCompleted) continue;
-    const objective = [...contentState.objectives.active, ...contentState.objectives.seasonTargets]
-      .find((o) => o.id === update.objectiveId);
-    if (!objective) continue;
-    emit('OBJECTIVE_COMPLETED', {
-      objectiveId: objective.id as never,
-      title: objective.title,
-      rewardSummary: objective.rewards.map((r) => r.label).join(', '),
-    }, objective.importance as EventImportance, clubRefOf(clubs[state.playerClubId]));
-  }
 
   const finalEvents = [...worldEvents, ...cascade.derivedEvents];
   const nextState: GameState = {
@@ -612,7 +934,7 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     clubs,
     contracts,
     rivalries,
-    transfers: { ...state.transfers, listings },
+    transfers: { ...state.transfers, listings, negotiations },
     media: { stories: [...state.media.stories, ...stories].slice(-W.retention.stories) },
     social: {
       posts: nextSocial.posts,

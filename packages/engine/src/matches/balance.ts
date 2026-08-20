@@ -78,6 +78,15 @@ export const BALANCE = {
    */
   RATING_GAP_SOFTNESS: 17,
   /**
+   * How much attacking where the opponent is not helps a team move the ball.
+   *
+   * Read as the absolute gap between the two sides' `widthBias`: a wide shape
+   * against a compact block, or a narrow one against a stretched defence, finds
+   * the pitch easier than two teams occupying the same space. This is the
+   * rock-paper-scissors term for the width axis. 0-0.08.
+   */
+  SHAPE_MISMATCH_WEIGHT: 0.035,
+  /**
    * Goal margin at which the side in front starts managing the game instead of
    * chasing more. Below this nothing changes. This is game management, not
    * rubber-banding: the trailing side gets NO compensating bonus, it is only
@@ -98,7 +107,7 @@ export const BALANCE = {
 
   // ---------------------------------------------------------------- shots ---
   /** Base per-tick shot probability in the final third at parity. 0.2-0.5. */
-  SHOT_BASE: 0.225,
+  SHOT_BASE: 0.205,
   /** How much `attackVolume` scales shot frequency. 0.3-1.2. */
   SHOT_VOLUME_WEIGHT: 0.85,
   /** How much a counter-attack window raises shot frequency. 0-0.5. */
@@ -135,7 +144,7 @@ export const BALANCE = {
    */
   /** Per-tick chance of a ball over the top at a neutral line, outside the
    *  final third. 0.002-0.02. */
-  THROUGH_BALL_BASE: 0.0075,
+  THROUGH_BALL_BASE: 0.0028,
   /** Multiplier inside a counter window — the moment the space is really
    *  there, right after a turnover. 1-8. */
   THROUGH_BALL_COUNTER_MULT: 4.0,
@@ -204,9 +213,12 @@ export const BALANCE = {
    */
   COHESION_WEIGHT: 0.13,
   /** Multiplier applied to xG for a headed chance from a cross. 0.5-1.0. */
-  XG_HEADER_FACTOR: 0.78,
+  XG_HEADER_FACTOR: 0.86,
   /** xG assigned to the format's one-on-one penalty run. 0.6-0.85. */
   XG_PENALTY: 0.72,
+  /** Spread of the shot's lateral position off the centre of the goal, before
+   *  chance quality narrows it. Higher = more shots from tight angles. 0.1-0.35. */
+  SHOT_WIDTH_SPREAD: 0.2,
   /** xG threshold above which a chance is a "big chance". 0.2-0.45. */
   BIG_CHANCE_XG: 0.3,
   /** Global conversion trim. The single knob for "the league scores too much". 0.6-1.4. */
@@ -308,7 +320,7 @@ export const BALANCE = {
    * closer to half at a full press. That gap is what a high press is supposed
    * to be paid for in. 0.0006-0.004.
    */
-  FATIGUE_PER_TICK: 0.0026,
+  FATIGUE_PER_TICK: 0.0019,
   /** How much stamina (vs. 55 baseline) reduces the drain. 0.2-1.0. */
   FATIGUE_STAMINA_WEIGHT: 0.6,
   /**
@@ -332,7 +344,7 @@ export const BALANCE = {
    * often than the instruction claims. Without this, `pressRecovery` was a
    * constant for ninety ticks of dead legs. 0-1.
    */
-  PRESS_FATIGUE_DECAY: 0.62,
+  PRESS_FATIGUE_DECAY: 0.7,
   /** Fatigue a substitute starts on relative to a starter. 0-0.15. */
   SUB_START_FATIGUE: 0.03,
   /** Fatigue above which the AI starts wanting to substitute. 0.3-0.8. */

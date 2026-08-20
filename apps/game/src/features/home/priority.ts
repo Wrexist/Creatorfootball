@@ -776,6 +776,54 @@ function rank(all: readonly PriorityCard[]): PriorityCard[] {
   return picked;
 }
 
+/**
+ * Day one has no history, no results, no injuries and no news, so the ranked
+ * feed is legitimately empty — and an empty "what matters now" is the worst
+ * possible first impression of a game a player has just started. These cards
+ * are never ranked against real events; they only backfill the section when
+ * there genuinely is nothing else, and they say what to do rather than what
+ * has happened.
+ */
+function orientation(state: GameState, club: Club): PriorityCard[] {
+  const squad = squadOf(state, club.id).length;
+  const flat = score(0.15, 0.2, 0.2, 0.15);
+  return [
+    {
+      id: 'start:tactics',
+      family: 'SQUAD',
+      tone: 'volt',
+      glyph: 'training',
+      headline: 'Decide how your team plays.',
+      meaning: 'Pick a shape and choose who starts. If you never look at this, the game picks for you and it picks safely.',
+      actionLabel: 'Set your tactics',
+      route: '/squad/tactics',
+      score: flat,
+    },
+    {
+      id: 'start:squad',
+      family: 'SQUAD',
+      tone: 'neutral',
+      glyph: 'star',
+      headline: `Get to know your ${squad} players.`,
+      meaning: 'Tap anyone in the squad to see what he is good at, how fit he is and how long his contract has left.',
+      actionLabel: 'Open the squad',
+      route: '/squad',
+      score: flat,
+    },
+    {
+      id: 'start:market',
+      family: 'MARKET',
+      tone: 'neutral',
+      glyph: 'market',
+      headline: 'See who you could sign.',
+      meaning: `You have ${club.finance.transferBudget > 0 ? 'money to spend' : 'no budget yet, so start by watching the market'}. Scouting a player turns his ranges into real numbers.`,
+      actionLabel: 'Open the market',
+      route: '/market',
+      score: flat,
+    },
+  ];
+}
+
 export function homeFeed(state: GameState): HomeFeed {
   const club = playerClub(state);
   const fixture = nextFixture(state);
@@ -816,5 +864,14 @@ export function homeFeed(state: GameState): HomeFeed {
         });
 
   const allCards = [...candidates(state, club)].sort((a, b) => b.score.total - a.score.total);
-  return { club, lead, upcoming, cards: rank(allCards), allCards };
+  const picked = rank(allCards);
+  if (picked.length < 3) {
+    const seen = new Set(picked.map((c) => c.id));
+    for (const card of orientation(state, club)) {
+      if (picked.length >= 3) break;
+      if (seen.has(card.id)) continue;
+      picked.push(card);
+    }
+  }
+  return { club, lead, upcoming, cards: picked, allCards };
 }

@@ -80,7 +80,7 @@ export interface CreationState {
 }
 
 const INITIAL = {
-  managerMode: 'CUSTOM' as ManagerMode,
+  managerMode: 'PREMADE' as ManagerMode,
   premadeManagerId: null,
   managerName: '',
   archetypeId: null,
@@ -89,7 +89,7 @@ const INITIAL = {
   socialPersonality: 'ACTIVE' as SocialPersonality,
   personaTouched: false,
 
-  clubMode: 'CUSTOM' as ClubMode,
+  clubMode: 'TAKEOVER' as ClubMode,
   takeoverClubId: null,
   clubName: '',
   shortName: '',
@@ -214,14 +214,14 @@ export function clubComplete(s: CreationState): boolean {
 
 /** The first thing still missing, phrased as the action that fixes it. */
 export function managerBlocker(s: CreationState): string | null {
-  if (s.managerMode === 'PREMADE') return s.premadeManagerId ? null : 'Pick a manager';
+  if (s.managerMode === 'PREMADE') return s.premadeManagerId ? null : 'Choose your manager';
   if (trimmed(s.managerName).length < 2) return 'Add your name';
   if (!s.archetypeId) return 'Choose an archetype';
   return null;
 }
 
 export function clubBlocker(s: CreationState): string | null {
-  if (s.clubMode === 'TAKEOVER') return s.takeoverClubId ? null : 'Pick a club';
+  if (s.clubMode === 'TAKEOVER') return s.takeoverClubId ? null : 'Choose your club';
   if (trimmed(s.clubName).length < 3) return 'Name your club';
   if (trimmed(s.city).length < 2) return 'Add a city';
   if (trimmed(s.shortName).length < 2) return 'Add a short name';

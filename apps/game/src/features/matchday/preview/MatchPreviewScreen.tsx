@@ -3,11 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { Club, FixtureId, Player } from '@cf/engine';
 import {
   ClubBadge, Divider, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill,
-  IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, MatchCard, PlayerPortrait,
+  IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
   PositionChip, ProgressBar, RatingBadge, Screen, SectionHeader, Skeleton, StatCard, StatGrid,
   cn, haptics,
 } from '@/design';
-import type { MatchCardSide } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
 import { useMatchdayContext, type KeyBattle, type MatchdayContext } from '../shared/context';
@@ -114,14 +113,15 @@ export function MatchPreviewScreen(): ReactNode {
         </div>
       }
     >
-      <MatchCard
-        home={sideFor(home, context.playerIsHome ? context.ourForm : context.theirForm)}
-        away={sideFor(away, context.playerIsHome ? context.theirForm : context.ourForm)}
-        variant="hero"
+      <FixtureBand
+        home={home}
+        away={away}
+        homeForm={context.playerIsHome ? context.ourForm : context.theirForm}
+        awayForm={context.playerIsHome ? context.theirForm : context.ourForm}
+        competition={context.competitionName}
+        week={fixture.week}
         status={fixture.stageLabel ?? 'Kick-off soon'}
-        importance={fixture.importance}
         isDerby={fixture.isDerby}
-        competitionLabel={context.competitionName}
       />
 
       {fixture.isDerby && <RivalryPanel context={context} />}
@@ -158,15 +158,69 @@ export function MatchPreviewScreen(): ReactNode {
 
 /* --- pieces ------------------------------------------------------------ */
 
-function sideFor(club: Club, form: readonly ('W' | 'D' | 'L')[]): MatchCardSide {
-  return {
-    clubId: club.id,
-    name: club.name,
-    shortName: club.shortName,
-    abbreviation: club.abbreviation,
-    visual: club.visual,
-    form,
-  };
+/**
+ * The fixture, stacked rather than side by side.
+ *
+ * A two-column fixture card on a 393pt phone gives each club about 120 points,
+ * and `MatchCard`'s answer to a name that does not fit is an ellipsis —
+ * "Marr…" against "Isac …". Clubs get named in full here or not at all, so the
+ * two sides are stacked: each one gets the entire width of the screen, the name
+ * wraps if it has to, and no club in any content pack can ever be cut short.
+ * The cost is one extra row of height on the least dense screen in the product.
+ */
+function FixtureBand({
+  home, away, homeForm, awayForm, competition, week, status, isDerby,
+}: {
+  home: Club;
+  away: Club;
+  homeForm: readonly ('W' | 'D' | 'L')[];
+  awayForm: readonly ('W' | 'D' | 'L')[];
+  competition: string;
+  week: number;
+  status: string;
+  isDerby: boolean;
+}): ReactNode {
+  return (
+    <GlassPanel nested level={2} padding="md" radius="lg">
+      <div className="flex items-center gap-2">
+        <p className="min-w-0 flex-1 text-[11px] font-bold uppercase tracking-[0.2em] text-ink-dim text-pretty">
+          {competition} · week {week}
+        </p>
+        {isDerby && <GlassPill tone="danger" size="xs" filled>Derby</GlassPill>}
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2.5">
+        <FixtureSide club={home} form={homeForm} />
+        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className="h-px flex-1 bg-white/[0.08]" />
+          <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-ink-faint">v</span>
+          <span aria-hidden="true" className="h-px flex-1 bg-white/[0.08]" />
+        </div>
+        <FixtureSide club={away} form={awayForm} />
+      </div>
+
+      <p className="mt-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-volt">
+        {status}
+      </p>
+    </GlassPanel>
+  );
+}
+
+function FixtureSide({
+  club, form,
+}: { club: Club; form: readonly ('W' | 'D' | 'L')[] }): ReactNode {
+  return (
+    <div className="flex items-center gap-3">
+      <ClubBadge visual={club.visual} size={38} flat label={club.name} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink text-pretty">
+          {club.name}
+        </p>
+        <p className="text-[12px] text-ink-dim">{club.abbreviation}</p>
+      </div>
+      <FormGuide results={form} size="sm" />
+    </div>
+  );
 }
 
 function StakesPanel({ context }: { context: MatchdayContext }): ReactNode {
@@ -195,7 +249,7 @@ function StakesPanel({ context }: { context: MatchdayContext }): ReactNode {
               nested
               level={1}
               size="sm"
-              label="To the side above"
+              label="Gap above"
               value={position.pointsToAbove ?? 0}
               suffix=" pts"
             />
@@ -203,7 +257,7 @@ function StakesPanel({ context }: { context: MatchdayContext }): ReactNode {
               nested
               level={1}
               size="sm"
-              label="Cushion below"
+              label="Gap below"
               value={position.pointsFromBelow ?? 0}
               suffix=" pts"
             />
@@ -250,8 +304,10 @@ function OpponentPanel({ context }: { context: MatchdayContext }): ReactNode {
       <div className="flex items-center gap-3">
         <ClubBadge visual={them.visual} size={48} flat label={them.name} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[18px] font-bold tracking-[-0.02em] text-ink">{them.name}</h3>
-          <p className="truncate text-[13px] text-ink-muted">
+          <h3 className="text-[18px] font-bold leading-tight tracking-[-0.02em] text-ink text-pretty">
+            {them.name}
+          </h3>
+          <p className="mt-0.5 text-[13px] leading-snug text-ink-muted text-pretty">
             {them.city} · {them.motto}
           </p>
         </div>
@@ -344,7 +400,9 @@ function BattleFace({
     >
       <PlayerPortrait seed={player.portraitSeed} size={34} colors={kit} shape="squircle" />
       <div className="min-w-0">
-        <p className="truncate text-[14px] font-semibold text-ink">{player.displayName}</p>
+        <p className="text-[14px] font-semibold leading-tight text-ink text-pretty">
+          {player.displayName}
+        </p>
         <p className="tnum text-[12px] text-ink-dim">
           {player.position} · {player.overall}
         </p>
@@ -441,7 +499,7 @@ function AvailabilityColumn({
         {availability.injured.map((player) => (
           <li key={player.id} className="flex items-center gap-2 text-[13px]">
             <span className="text-danger [&_svg]:size-4"><IconInjury /></span>
-            <span className="min-w-0 flex-1 truncate text-ink">{player.displayName}</span>
+            <span className="min-w-0 flex-1 leading-snug text-ink text-pretty">{player.displayName}</span>
             <PositionChip position={player.position} size="xs" />
             <span className="tnum shrink-0 text-[12px] text-ink-dim">
               {player.injury?.weeksRemaining ?? 0}w
@@ -451,7 +509,7 @@ function AvailabilityColumn({
         {availability.suspended.map((player) => (
           <li key={player.id} className="flex items-center gap-2 text-[13px]">
             <GlassPill tone="danger" size="xs" filled>SUS</GlassPill>
-            <span className="min-w-0 flex-1 truncate text-ink">{player.displayName}</span>
+            <span className="min-w-0 flex-1 leading-snug text-ink text-pretty">{player.displayName}</span>
             <span className="tnum shrink-0 text-[12px] text-ink-dim">
               {player.suspensionMatches} match
             </span>
@@ -467,7 +525,9 @@ function BenchRow({ player, kit }: { player: Player; kit: KitColors }): ReactNod
   return (
     <li className="flex items-center gap-2.5">
       <PlayerPortrait seed={player.portraitSeed} size={28} colors={kit} shape="circle" />
-      <span className="min-w-0 flex-1 truncate text-[14px] text-ink">{player.displayName}</span>
+      <span className="min-w-0 flex-1 text-[14px] leading-snug text-ink text-pretty">
+        {player.displayName}
+      </span>
       <PositionChip position={player.position} size="xs" />
       <RatingBadge value={player.overall} scale="overall" size="xs" />
     </li>
@@ -497,7 +557,7 @@ function PreviewAside({ context }: { context: MatchdayContext }): ReactNode {
               )}
             >
               <span className="tnum w-5 shrink-0 text-ink-dim">{row.position}</span>
-              <span className="min-w-0 flex-1 truncate font-medium">
+              <span className="min-w-0 flex-1 font-medium leading-snug text-pretty">
                 {clubNames[row.clubId] ?? row.clubId}
               </span>
               <span className="tnum shrink-0 font-semibold">{row.points}</span>

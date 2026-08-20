@@ -39,7 +39,7 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     latestPhase: 1,
     // Teams get *more* careful when a mistake costs two, so this window is
     // tighter and higher-quality rather than louder. The doubling is the effect.
-    modifiers: { defensiveSolidity: 0.12, chanceQuality: 0.12, attackVolume: -0.08, volatility: 0.25 },
+    modifiers: { defensiveSolidity: 0.1, chanceQuality: 0.16, attackVolume: -0.04, volatility: 0.3 },
     goalMultiplier: 2,
     rarity: 'COMMON',
     accent: '#F5A524',
@@ -53,8 +53,8 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.25,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.34, possessionBias: 0.12, spaceBehind: 0.22, defensiveSolidity: -0.16, fatigueRate: 0.15 },
-    opponentModifiers: { counterWeight: 0.2, defensiveSolidity: 0.06 },
+    modifiers: { attackVolume: 0.44, possessionBias: 0.16, chanceQuality: 0.08, spaceBehind: 0.16, defensiveSolidity: -0.1, fatigueRate: 0.15 },
+    opponentModifiers: { counterWeight: 0.24, defensiveSolidity: 0.04 },
     rarity: 'COMMON',
     accent: '#38BDF8',
   }),
@@ -67,8 +67,8 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.5,
     latestPhase: 1,
-    modifiers: { defensiveSolidity: 0.3, counterWeight: 0.3, possessionBias: -0.2, attackVolume: -0.14, aggression: -0.12 },
-    opponentModifiers: { possessionBias: 0.16, chanceQuality: -0.1 },
+    modifiers: { defensiveSolidity: 0.4, counterWeight: 0.42, spaceBehind: -0.18, possessionBias: -0.2, attackVolume: -0.08, chanceQuality: 0.1, aggression: -0.12 },
+    opponentModifiers: { possessionBias: 0.16, chanceQuality: -0.14 },
     rarity: 'COMMON',
     accent: '#94A3B8',
   }),
@@ -81,8 +81,8 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.3,
     latestPhase: 1,
-    modifiers: { defensiveSolidity: 0.36, spaceBehind: -0.2, attackVolume: -0.3, possessionBias: -0.14, aggression: -0.2 },
-    opponentModifiers: { chanceQuality: -0.14, possessionBias: 0.14 },
+    modifiers: { defensiveSolidity: 0.48, spaceBehind: -0.32, attackVolume: -0.24, possessionBias: -0.14, aggression: -0.2 },
+    opponentModifiers: { chanceQuality: -0.22, attackVolume: -0.12, possessionBias: 0.14 },
     rarity: 'COMMON',
     accent: '#64748B',
   }),
@@ -95,8 +95,8 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.55,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.5, defensiveSolidity: -0.38, spaceBehind: 0.34, fatigueRate: 0.3, volatility: 0.4, chanceQuality: -0.08 },
-    opponentModifiers: { counterWeight: 0.32, chanceQuality: 0.1 },
+    modifiers: { attackVolume: 0.62, defensiveSolidity: -0.3, spaceBehind: 0.24, fatigueRate: 0.3, volatility: 0.4, chanceQuality: -0.04 },
+    opponentModifiers: { counterWeight: 0.3, chanceQuality: 0.08 },
     rarity: 'RARE',
     accent: '#EF4444',
   }),
@@ -109,7 +109,7 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.2,
     latestPhase: 1,
-    modifiers: { pressRecovery: 0.2, aggression: 0.14, attackVolume: 0.16, fatigueRate: 0.16, volatility: 0.16 },
+    modifiers: { pressRecovery: 0.26, aggression: 0.14, attackVolume: 0.3, chanceQuality: 0.06, fatigueRate: 0.1, volatility: 0.16 },
     opponentModifiers: { counterWeight: 0.14, chanceQuality: 0.06 },
     rarity: 'RARE',
     accent: '#A855F7',
@@ -123,7 +123,7 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.3,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.28, defensiveSolidity: -0.26, chanceQuality: 0.14, fatigueRate: 0.24, spaceBehind: 0.18 },
+    modifiers: { attackVolume: 0.4, defensiveSolidity: -0.34, chanceQuality: 0.18, fatigueRate: 0.24, spaceBehind: 0.22 },
     rarity: 'COMMON',
     accent: '#22D3EE',
   }),
@@ -136,7 +136,7 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.3,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.24, chanceQuality: -0.22, possessionBias: -0.06 },
+    modifiers: { attackVolume: 0.36, chanceQuality: -0.3, possessionBias: -0.06, volatility: 0.2 },
     goalMultiplier: 2,
     rarity: 'COMMON',
     accent: '#FACC15',
@@ -150,8 +150,8 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.25,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.16, chanceQuality: 0.1, foulRate: 0.1, volatility: 0.14 },
-    opponentModifiers: { defensiveSolidity: 0.1, foulRate: 0.18 },
+    modifiers: { attackVolume: 0.24, chanceQuality: 0.16, foulRate: 0.1, volatility: 0.14 },
+    opponentModifiers: { defensiveSolidity: 0.08, foulRate: 0.18 },
     goalMultiplier: 2,
     rarity: 'EPIC',
     accent: '#F97316',
@@ -165,7 +165,7 @@ export const SPECIAL_RULE_DEFINITIONS: Readonly<Record<SpecialRuleId, SpecialRul
     durationMinutes: 3,
     earliestPhase: 0.3,
     latestPhase: 1,
-    modifiers: { attackVolume: 0.32, defensiveSolidity: -0.3, spaceBehind: 0.28, volatility: 0.34, chanceQuality: 0.06 },
+    modifiers: { attackVolume: 0.44, defensiveSolidity: -0.38, spaceBehind: 0.34, volatility: 0.34, chanceQuality: 0.1 },
     rarity: 'RARE',
     accent: '#F43F5E',
   }),
@@ -349,6 +349,9 @@ export class SpecialRuleEngine {
   history(): readonly ActiveSpecialRule[] { return [...this.past, ...this.live.map((l) => l.active)]; }
 }
 
+/** The rule a swing window runs under when the fixture enables none of its own. */
+export const DEFAULT_WINDOW_RULE: SpecialRuleId = 'SUDDEN_SPARK';
+
 /** Goals struck from beyond this normalised distance qualify for the distance bonus. */
 export const LONG_RANGE_DISTANCE = 0.22;
 
@@ -365,7 +368,14 @@ export function scheduleSwingWindows(rng: Rng, opts: RuleEngineOptions): SwingWi
     (id) => id in SPECIAL_RULE_DEFINITIONS && SPECIAL_RULE_DEFINITIONS[id].beneficiary === 'BOTH',
   );
   if (opts.halves < 1) return [];
-  if (pool.length === 0) pool.push('SUDDEN_SPARK');
+  // The swing window is a property of the COMPETITION FORMAT, not of the rule
+  // set: every half of this format ends with one, announced in advance. The
+  // fixture's enabled list only chooses which rule colours it, so an empty list
+  // means "use the format default", not "no windows". That was previously an
+  // undocumented one-line fallback, which meant every measurement anyone made
+  // of "rules off" was in fact a measurement of SUDDEN_SPARK. A competition
+  // that genuinely wants no windows sets `halves` to 0 for its rule engine.
+  if (pool.length === 0) pool.push(DEFAULT_WINDOW_RULE);
 
   const stream = rng.fork('swing-windows');
   const halfLength = opts.matchMinutes / opts.halves;
