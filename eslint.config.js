@@ -29,7 +29,7 @@ const ENGINE_FORBIDDEN_IMPORTS = [
 export default tseslint.config(
   {
     ignores: [
-      '**/dist/**', '**/node_modules/**', '**/coverage/**',
+      '**/dist/**', '**/dist-*/**', '**/node_modules/**', '**/coverage/**',
       '**/ios/**', '**/android/**', 'eslint.config.js',
       // Throwaway audit probes; see .gitignore.
       'tools/sim/src/zz*.ts', 'tools/sim/src/__*.ts', 'tools/sim/src/_audit/**',

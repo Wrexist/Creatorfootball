@@ -30,14 +30,6 @@ export const EventFeed = memo(function EventFeed({
     [feed, limit],
   );
 
-  if (events.length === 0) {
-    return (
-      <p className={cn('px-1 py-8 text-center text-[13px] text-ink-dim text-pretty', className)}>
-        Nothing has happened yet. Every shot, card and change will appear here as it does.
-      </p>
-    );
-  }
-
   return (
     <ol className={cn('flex flex-col', className)}>
       <AnimatePresence initial={false}>
@@ -53,6 +45,34 @@ export const EventFeed = memo(function EventFeed({
           </motion.li>
         ))}
       </AnimatePresence>
+
+      {/*
+        The first half-minute of a match is quiet, and a first-time player is
+        looking at a canvas full of unexplained marks with nothing to read. So
+        the empty feed is not empty: it says what the pitch is telling them.
+        It disappears on its own the moment the football starts talking.
+      */}
+      {events.length < 3 && (
+        <li className="mt-1 rounded-md border border-white/[0.07] bg-white/[0.03] p-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-dim">
+            {events.length === 0 ? 'Nothing has happened yet' : 'Reading the pitch'}
+          </h3>
+          <ul className="mt-1.5 flex flex-col gap-1 text-[13px] leading-snug text-ink-muted">
+            <li>
+              <span className="font-semibold text-volt">The lime ring</span> is whoever has the
+              ball. Amber and red arcs around it mean he is being closed down.
+            </li>
+            <li>
+              <span className="font-semibold text-ink">The colour under each shirt</span> is that
+              player&apos;s job: defence, midfield or attack.
+            </li>
+            <li>
+              <span className="font-semibold text-ink">Big moments slow down</span> on their own,
+              whatever speed you pick, and you will be asked for a decision when one arrives.
+            </li>
+          </ul>
+        </li>
+      )}
     </ol>
   );
 });

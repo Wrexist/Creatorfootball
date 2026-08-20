@@ -303,7 +303,8 @@ export function MatchLiveScreen(): ReactNode {
           drama={drama.label}
           impactKey={celebrating?.id ?? null}
           impactStrength={celebrating && (celebrating.side ?? 'home') === playerSide ? 1 : 0.5}
-          className={wide ? 'h-full min-h-0' : 'aspect-[3/2] shrink-0'}
+          fill={wide}
+          className={wide ? 'h-full min-h-0' : 'shrink-0'}
         />
 
         <StoryPanel

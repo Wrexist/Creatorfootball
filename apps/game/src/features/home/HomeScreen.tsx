@@ -82,6 +82,16 @@ const TONE_BLOCK: Record<Tone, 'volt' | 'danger' | 'warning' | 'positive' | 'neu
   volt: 'volt', danger: 'danger', warning: 'warning', positive: 'positive', neutral: 'neutral',
 };
 
+/** The kicker has to match the news. "Needs you this week" over good news reads
+ *  as a bug the first time a player sees it. */
+const TONE_KICKER: Record<Tone, string> = {
+  danger: 'Deal with this',
+  warning: 'Keep an eye on this',
+  volt: 'Worth doing now',
+  positive: 'Good news',
+  neutral: 'Worth knowing',
+};
+
 function Glyphs({ glyph, tone, size = 18 }: { glyph: Glyph; tone: Tone; size?: number }): ReactNode {
   const Icon = GLYPHS[glyph];
   return (
@@ -113,7 +123,7 @@ const LeadCard = memo(function LeadCard({
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0"><Glyphs glyph={card.glyph} tone={card.tone} size={20} /></span>
         <div className="min-w-0 flex-1">
-          <Text role="label" className={TONE_TEXT[card.tone]}>Needs you this week</Text>
+          <Text role="label" className={TONE_TEXT[card.tone]}>{TONE_KICKER[card.tone]}</Text>
           <Text role="title" as="h3" className="mt-1 text-[20px] text-pretty">{card.headline}</Text>
           <Text role="caption" className="mt-1.5 text-pretty">{card.meaning}</Text>
         </div>
@@ -392,15 +402,14 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
               Take charge
             </GlassButton>
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <GlassButton size="sm" variant="ghost" onClick={() => navigate(ROUTES.tactics)}>Set the team up</GlassButton>
-            <GlassButton size="sm" variant="ghost" onClick={() => navigate(ROUTES.squad)}>Check the squad</GlassButton>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <GlassButton size="sm" variant="secondary" block onClick={() => navigate(ROUTES.tactics)}>
+              Set the team up
+            </GlassButton>
+            <GlassButton size="sm" variant="secondary" block onClick={() => navigate(ROUTES.squad)}>
+              Check the squad
+            </GlassButton>
           </div>
-          {sides && (
-            <div className="mt-4">
-              <ScorePanel home={sides.home} away={sides.away} status="Kick off" />
-            </div>
-          )}
         </HeroSurface>
       ) : feed.lead.kind === 'IDLE' ? (
         <HeroSurface eyebrow="Where you are" texture="haze" padding="md">
@@ -579,14 +588,14 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
       )}
 
       <Divider />
-      <div className="flex flex-wrap gap-2 pb-2">
-        <GlassButton variant="ghost" size="sm" icon={<IconSocial size={16} />} onClick={() => navigate(ROUTES.social)}>
-          The feed
+      <div className="grid grid-cols-3 gap-2 pb-2">
+        <GlassButton variant="ghost" size="sm" block icon={<IconSocial size={16} />} onClick={() => navigate(ROUTES.social)}>
+          Feed
         </GlassButton>
-        <GlassButton variant="ghost" size="sm" icon={<IconLeague size={16} />} onClick={() => navigate(ROUTES.standings)}>
-          The table
+        <GlassButton variant="ghost" size="sm" block icon={<IconLeague size={16} />} onClick={() => navigate(ROUTES.standings)}>
+          Table
         </GlassButton>
-        <GlassButton variant="ghost" size="sm" icon={<IconTrophy size={16} />} onClick={() => navigate(ROUTES.objectives)}>
+        <GlassButton variant="ghost" size="sm" block icon={<IconTrophy size={16} />} onClick={() => navigate(ROUTES.objectives)}>
           Objectives
         </GlassButton>
       </div>

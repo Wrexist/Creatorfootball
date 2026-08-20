@@ -172,13 +172,57 @@ export function openNegotiation(ctx: NegotiationContext, rng: Rng): Negotiation 
   return neg;
 }
 
-function hijackChance(neg: Negotiation, ctx: NegotiationContext): number {
-  const rounds = Math.max(0, ctx.cycle - neg.startedCycle);
-  const raw =
-    N.HIJACK_BASE_CHANCE +
-    neg.rivalBidders.length * N.HIJACK_PER_SUITOR +
-    rounds * N.HIJACK_PER_ROUND;
-  return Math.min(N.HIJACK_CHANCE_CAP, raw);
+/**
+ * How much of this deal is at risk of being taken off you, over its whole life.
+ *
+ * The old version was `base + suitors + rounds`, capped per round, with no term
+ * for the offer at all — so paying fifty per cent over the asking price bought
+ * exactly nothing and 47% of well-funded negotiations ended in a coin flip the
+ * player could not influence. Four things move it now:
+ *
+ *  - **The size of the offer**, hardest of all. Risk scales as
+ *    `(fee / asking) ^ HIJACK_OFFER_EXPONENT` with a negative exponent, so
+ *    going decisively over the top genuinely closes the door.
+ *  - **How many rivals are actually in the room.**
+ *  - **The manager's charisma** — the attribute the design says closes deals.
+ *  - **Whether the player wants the move.** Someone who has already decided
+ *    where he is going is very hard to turn.
+ *
+ * The number returned is the *total* risk across the negotiation, not a
+ * per-round chance. `hijackChanceThisRound` converts it.
+ */
+function hijackRisk(
+  neg: Negotiation,
+  ctx: NegotiationContext,
+  terms: NegotiationTerms,
+  willingness: number,
+): number {
+  const asking = Math.max(1, neg.theirDemand.fee);
+  const strength = clamp(terms.fee / asking, N.HIJACK_OFFER_FLOOR, N.HIJACK_OFFER_CEILING);
+  const offerGuard = strength ** N.HIJACK_OFFER_EXPONENT;
+  const charismaGuard = 1 - clamp01(ctx.managerCharisma / 100) * N.HIJACK_CHARISMA_RELIEF;
+  const wantGuard = 1 - clamp01(willingness) * N.HIJACK_PLAYER_WILL_RELIEF;
+  const exposure =
+    N.HIJACK_BASE_RISK + Math.min(3, neg.rivalBidders.length) * N.HIJACK_RISK_PER_SUITOR;
+  return clamp01(exposure * offerGuard * charismaGuard * wantGuard);
+}
+
+/**
+ * Per-round chance, derived from the total risk so that the cap means what its
+ * name says. Cumulative risk follows `total * (1 - e^(-pace * rounds))`; this
+ * returns the conditional probability of losing the player *this* round given
+ * that you still have him, which is the increment of that curve. Dithering
+ * therefore costs you real ground each round and still never takes the whole
+ * negotiation past `total`.
+ */
+function hijackChanceThisRound(total: number, rounds: number): number {
+  if (total <= 0) return 0;
+  const cum = (r: number): number => total * (1 - Math.exp(-N.HIJACK_PACE * r));
+  const before = cum(rounds);
+  const after = cum(rounds + 1);
+  const survived = 1 - before;
+  if (survived <= 1e-9) return 0;
+  return clamp01((after - before) / survived);
 }
 
 function fail(
@@ -233,8 +277,13 @@ export function submitOffer(
       'You left it too long. Everyone has moved on.');
   }
 
-  // A rival can go over the top of you at any point once you have shown your hand.
-  if (neg.rivalBidders.length > 0 && stream.chance(hijackChance(neg, ctx))) {
+  // A rival can go over the top of you at any point once you have shown your
+  // hand — but a decisive offer, a persuasive manager and a player who has
+  // already made his mind up all make that much harder.
+  const rounds = Math.max(0, ctx.cycle - neg.startedCycle);
+  const interest = evaluateTermsOffer(ctx.player, terms, talks, neg.playerPatience).willingness.score;
+  const risk = hijackRisk(neg, ctx, terms, interest);
+  if (neg.rivalBidders.length > 0 && stream.chance(hijackChanceThisRound(risk, rounds))) {
     const rival = stream.pick(neg.rivalBidders);
     const rivalName = ctx.rivals.find((r) => r.clubId === rival.clubId)?.name ?? 'A rival club';
     const bid = Math.round(Math.max(rival.bid, terms.fee * (1 + N.HIJACK_BID_PREMIUM)));

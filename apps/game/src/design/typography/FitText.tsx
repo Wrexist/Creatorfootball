@@ -319,6 +319,13 @@ export function FitBox({
   const innerRef = useRef<HTMLSpanElement | null>(null);
   const [fontSize, setFontSize] = useState(ceiling);
 
+  // Deliberately no dependency array: the box re-measures whenever its children
+  // change, and those children are arbitrary nodes with no stable identity to
+  // depend on. It cannot loop - the measurement resets to `ceiling` before
+  // reading, so the result is a pure function of the container width and the
+  // content, never of the current state, and the setter bails out when the
+  // answer is unchanged.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const host = hostRef.current;
     const inner = innerRef.current;

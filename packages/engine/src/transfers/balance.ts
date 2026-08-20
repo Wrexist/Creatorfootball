@@ -184,11 +184,40 @@ export const NEGOTIATION_BALANCE = {
   /** How much a greedy agent inflates his cut when rivals are circling. */
   AGENT_RIVAL_GREED: 0.5,
 
-  /** Per-round chance a rival hijacks, scaled by suitors and by how long you dither. */
-  HIJACK_BASE_CHANCE: 0.04,
-  HIJACK_PER_SUITOR: 0.05,
-  HIJACK_PER_ROUND: 0.02,
-  HIJACK_CHANCE_CAP: 0.4,
+  /**
+   * Hijack risk, expressed as the total probability of losing the player to a
+   * rival across a whole negotiation rather than per round.
+   *
+   * The old model had no term for the offer, so overpaying bought nothing and
+   * roughly half of all negotiations — the modal outcome of the entire transfer
+   * system — were decided by a roll the player could not influence. Target
+   * shape: 15-25% of a well-run, well-funded negotiation lost to a rival,
+   * falling sharply as the offer strengthens and rising with dithering and with
+   * the number of clubs in the room.
+   */
+  /** Risk with no rivals at all — the agent shopping you around on his own. */
+  HIJACK_BASE_RISK: 0.1,
+  /** Added risk per rival club actually in the room (capped at three). */
+  HIJACK_RISK_PER_SUITOR: 0.09,
+  /**
+   * Risk scales as (fee / asking price) ^ this. Negative and steep: 150% of the
+   * asking price cuts risk to ~40% of par, 200% to ~20%. This is the term whose
+   * absence made the whole mechanic a dice roll.
+   */
+  HIJACK_OFFER_EXPONENT: -2.2,
+  /** Clamp on the offer ratio so a derisory or absurd bid cannot break the curve. */
+  HIJACK_OFFER_FLOOR: 0.4,
+  HIJACK_OFFER_CEILING: 2.5,
+  /** Share of hijack risk a maximally charismatic manager talks away. */
+  HIJACK_CHARISMA_RELIEF: 0.35,
+  /** Share of hijack risk removed by a player who already wants the move. */
+  HIJACK_PLAYER_WILL_RELIEF: 0.3,
+  /**
+   * How fast the cumulative risk curve approaches its total. Higher means the
+   * damage lands early; at 0.55 roughly two thirds of the total risk is spent
+   * by the third round of talks, so dithering is expensive but not instant.
+   */
+  HIJACK_PACE: 0.55,
   /** A hijacker bids this much above your standing offer. */
   HIJACK_BID_PREMIUM: 0.12,
 
