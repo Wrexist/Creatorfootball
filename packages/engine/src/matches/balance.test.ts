@@ -241,8 +241,13 @@ describe('favourite versus underdog', () => {
     expect(r.win).toBeLessThan(0.9);
   }, LONG);
 
+  // The sample is deliberately large. At n=400 the standard error on the
+  // win-minus-loss gap is about 4.4 points, so a 9-point threshold sat inside
+  // two sigma of the null and the assertion passed or failed on sampling luck
+  // rather than on engine behaviour. At n=1200 the same threshold is a real
+  // statement. (Measured directly at n=3000: gap 1.4 points, z = 0.8.)
   it('is even when the squads are even', async () => {
-    const r = await winRate('edge0', 0, 400);
+    const r = await winRate('edge0', 0, 1200);
     expect(Math.abs(r.win - r.loss)).toBeLessThan(0.09);
   }, LONG);
 });
@@ -251,7 +256,10 @@ describe('favourite versus underdog', () => {
 
 describe('side symmetry', () => {
   it('gives neither end of the pitch an advantage when the squads are identical', async () => {
-    const N = 600;
+    // Same reasoning as the even-squads case above: 600 matches put the
+    // six-point threshold under two standard errors, which made a correct
+    // assertion flaky. 2000 makes it a three-and-a-half sigma statement.
+    const N = 2000;
     let home = 0;
     let away = 0;
     for (let i = 0; i < N; i++) {

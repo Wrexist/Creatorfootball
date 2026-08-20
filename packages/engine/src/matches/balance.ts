@@ -106,7 +106,7 @@ export const BALANCE = {
    * are still chasing a seventh at the same rate. This is the term that keeps
    * the absurd end of the distribution out of a real fixture list. 4-8.
    */
-  GAME_STATE_ROUT_GOALS: 5,
+  GAME_STATE_ROUT_GOALS: 4,
   /** Share of turnovers recorded as a tackle rather than an interception. 0.3-0.7. */
   TACKLE_SHARE: 0.45,
   /** Ticks of elevated counter threat after winning the ball high. 2-10. */
