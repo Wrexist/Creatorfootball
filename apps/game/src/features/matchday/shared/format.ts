@@ -154,3 +154,36 @@ export const percent = (value: number): string => `${Math.round(value * 100)}%`;
 export const one = (value: number): string => value.toFixed(1);
 
 export const two = (value: number): string => value.toFixed(2);
+
+/* --- presentation vocabulary ------------------------------------------ */
+
+/**
+ * Camera names, written for someone who has never played a football game.
+ * "Wide" and "Follow" say what you will see; the hint says why you would pick
+ * it, and is read out by assistive tech in place of a mystery icon.
+ */
+export const CAMERA_LABEL = {
+  WIDE: 'Wide',
+  FOLLOW: 'Follow',
+} as const satisfies Record<string, string>;
+
+export const CAMERA_HINT = {
+  WIDE: 'The whole pitch, so you can read the shape.',
+  FOLLOW: 'Close on the ball, so you can read the moment.',
+} as const satisfies Record<string, string>;
+
+/** Speed names. Short enough to sit in a rail without being cut in half. */
+export const SPEED_LABEL = {
+  SLOW: 'Slow',
+  NORMAL: 'Normal',
+  FAST: 'Fast',
+  INSTANT: 'Skip',
+} as const satisfies Record<string, string>;
+
+/** The full sentence behind the short speed name, for the sheet and for a11y. */
+export const SPEED_HINT = {
+  SLOW: 'Half pace. Every phase is readable.',
+  NORMAL: 'The default. A match takes a few minutes.',
+  FAST: 'Double pace. Good once you trust your side.',
+  INSTANT: 'As fast as the phone can run it.',
+} as const satisfies Record<string, string>;

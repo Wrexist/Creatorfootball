@@ -7,11 +7,23 @@
  */
 export const MEDIA_BALANCE = {
   /** Stories published per cycle before importance filtering. */
-  maxStoriesPerCycle: 6,
+  maxStoriesPerCycle: 8,
+  /**
+   * Stories per *trigger* per cycle. Twelve clubs play every week, so without
+   * this one trigger — a heavy defeat, a broken record — publishes a dozen
+   * near-identical stories and the rest of the authored library never runs.
+   */
+  maxStoriesPerTrigger: 2,
   /** Stories at or above this importance are never trimmed. */
   alwaysPublishImportance: 4,
   /** Cycles a template id stays "recently used" for anti-repetition. */
   antiRepeatCycles: 3,
+  /**
+   * Hard anti-repetition window, in cycles. A template used inside it is not a
+   * candidate at all while the pool holds an alternative. Set to most of a
+   * season so a given headline runs at most twice a year.
+   */
+  hardRepeatCycles: 9,
   /** Attempts to re-pick when a rendered headline duplicates a recent one. */
   rerollAttempts: 3,
 

@@ -33,6 +33,12 @@ export interface TabBarProps {
   badges?: Partial<Record<TabId, number>>;
   /** Hidden during a live match; the match owns the whole screen. */
   hidden?: boolean;
+  /**
+   * `floating` (default) is an inset glass island; `anchored` is the
+   * edge-to-edge bar. Both occupy exactly `--nav-height`, so screen padding is
+   * identical either way and a screen can switch without relayout.
+   */
+  appearance?: 'floating' | 'anchored';
   className?: string;
 }
 
@@ -43,67 +49,104 @@ export interface TabBarProps {
  * at this size a pill behind a 22px glyph turns the whole bar into a row of
  * buttons, and the bar should read as chrome, not as seven controls.
  */
-export function TabBar({ value, onChange, badges, hidden = false, className }: TabBarProps): ReactNode {
+export function TabBar({
+  value, onChange, badges, hidden = false, appearance = 'floating', className,
+}: TabBarProps): ReactNode {
   const m = useDesignMotion();
   const layoutId = useId();
+  const floating = appearance === 'floating';
 
   return (
     <nav
       aria-label="Primary"
       className={cn(
-        'chrome-surface fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.07]',
+        'fixed inset-x-0 bottom-0 z-40',
         'transition-transform duration-[var(--duration-fast)] ease-out-quint',
-        hidden && 'translate-y-full',
+        hidden && 'translate-y-[calc(100%+var(--safe-bottom))]',
         className,
       )}
       style={{ paddingBottom: 'var(--safe-bottom)' }}
     >
-      <ul className="mx-auto flex w-full max-w-lg items-stretch" style={{ height: 'var(--nav-height)' }}>
-        {TAB_DESTINATIONS.map((tab) => {
-          const active = tab.id === value;
-          const badge = badges?.[tab.id] ?? 0;
-          const Icon = tab.icon;
-          return (
-            <li key={tab.id} className="flex flex-1">
-              <button
-                type="button"
-                aria-current={active ? 'page' : undefined}
-                onClick={() => {
-                  if (active) return;
-                  haptics.selection();
-                  onChange(tab.id);
-                }}
-                className={cn(
-                  'relative flex min-h-11 w-full flex-col items-center justify-center gap-1 pt-1.5',
-                  'transition-colors duration-[var(--duration-fast)] ease-out-quint',
-                  active ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
-                  FOCUS_RING,
-                )}
-              >
-                <span className="relative">
-                  <Icon size={23} strokeWidth={active ? 1.9 : 1.5} />
-                  {badge > 0 && (
-                    <span
-                      className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-pill bg-volt px-1 text-[9px] font-bold leading-none text-volt-ink"
-                      aria-label={`${badge} new`}
-                    >
-                      {badge > 9 ? '9+' : badge}
-                    </span>
+      <div
+        className={cn(
+          'mx-auto flex w-full max-w-lg items-stretch',
+          // Both appearances occupy the same box. The island simply insets
+          // itself inside it, so `--nav-height` still describes the space a
+          // screen has to leave clear.
+          floating
+            ? 'chrome-float mx-3 mb-1 rounded-[22px]'
+            : 'chrome-surface border-t border-white/[0.07]',
+        )}
+        style={{ height: floating ? 'calc(var(--nav-height) - 6px)' : 'var(--nav-height)' }}
+      >
+        <ul className="flex w-full items-stretch px-1">
+          {TAB_DESTINATIONS.map((tab) => {
+            const active = tab.id === value;
+            const badge = badges?.[tab.id] ?? 0;
+            const Icon = tab.icon;
+            return (
+              <li key={tab.id} className="flex min-w-0 flex-1">
+                <button
+                  type="button"
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => {
+                    if (active) return;
+                    haptics.selection();
+                    onChange(tab.id);
+                  }}
+                  className={cn(
+                    'relative flex min-h-11 w-full flex-col items-center justify-center gap-[3px] rounded-[16px]',
+                    'transition-colors duration-[var(--duration-fast)] ease-out-quint',
+                    active ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
+                    FOCUS_RING,
                   )}
-                </span>
-                <span className="text-[10px] font-semibold tracking-[0.01em]">{tab.label}</span>
-                {active && (
-                  <motion.span
-                    layoutId={`tabbar-${layoutId}`}
-                    className="absolute top-0 h-0.5 w-6 rounded-pill bg-volt"
-                    transition={m.spring.snappy}
-                  />
-                )}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                >
+                  {/* The glow belongs to the active destination and nothing
+                      else. A bar where every item glows is a neon sign; a bar
+                      where one item glows is navigation. */}
+                  {active && (
+                    <motion.span
+                      layoutId={`tabbar-glow-${layoutId}`}
+                      aria-hidden="true"
+                      className="nav-glow pointer-events-none absolute inset-x-0.5 inset-y-0 rounded-[16px]"
+                      transition={m.spring.snappy}
+                    />
+                  )}
+                  <span className="relative">
+                    {/* Active icons carry visible extra weight, not just extra
+                        colour: at 23px a 0.4px stroke difference is the
+                        difference between "selected" and "slightly lighter". */}
+                    <Icon size={23} strokeWidth={active ? 2.2 : 1.5} />
+                    {badge > 0 && (
+                      <span
+                        className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-pill bg-volt px-1 text-[9px] font-bold leading-none text-volt-ink"
+                        aria-label={`${badge} new`}
+                      >
+                        {badge > 9 ? '9+' : badge}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      'relative text-[10px] leading-none tracking-[0.005em]',
+                      active ? 'font-bold' : 'font-semibold',
+                    )}
+                  >
+                    {tab.label}
+                  </span>
+                  {active && (
+                    <motion.span
+                      layoutId={`tabbar-${layoutId}`}
+                      className="absolute bottom-1 h-[3px] w-5 rounded-pill bg-volt"
+                      transition={m.spring.snappy}
+                    />
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </nav>
   );
 }
@@ -174,7 +217,7 @@ export function SideNav({ value, onChange, badges, header, footer, className }: 
                   />
                 )}
                 <span className="relative">
-                  <Icon size={22} strokeWidth={active ? 1.9 : 1.5} />
+                  <Icon size={22} strokeWidth={active ? 2.2 : 1.5} />
                   {badge > 0 && (
                     <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-pill bg-volt px-1 text-[9px] font-bold leading-none text-volt-ink">
                       {badge > 9 ? '9+' : badge}

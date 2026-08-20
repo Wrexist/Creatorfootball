@@ -1,6 +1,8 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../cn';
 import { glassClass, RADIUS_CLASS, type GlassLevel, type RadiusToken } from './glassLevel';
+import { bleedStyle, TEXTURE_CLASS, type SurfaceTexture } from '../surfaces/material';
+import { TYPE_CLASS } from '../typography/type';
 
 export interface GlassPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   level?: GlassLevel;
@@ -12,6 +14,11 @@ export interface GlassPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
   title?: ReactNode;
   action?: ReactNode;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  /** Opt-in football material. See `GlassCard.texture`. */
+  texture?: SurfaceTexture;
+  /** Club primary, bled into the material as ambient colour. */
+  bleed?: string;
+  bleedStrength?: number;
 }
 
 const PADDING: Record<NonNullable<GlassPanelProps['padding']>, string> = {
@@ -44,7 +51,11 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(function G
     title,
     action,
     padding = 'md',
+    texture = 'none',
+    bleed,
+    bleedStrength,
     className,
+    style,
     children,
     ...rest
   },
@@ -56,10 +67,12 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(function G
       ref={ref}
       className={cn(
         'relative overflow-hidden',
+        (texture !== 'none' || bleed) && 'isolate',
         glassClass(level, !nested),
         RADIUS_CLASS[radius],
         PADDING[padding],
         sheen && 'glass-sheen',
+        bleed && 'glass-bleed',
         accent !== 'none' &&
           cn(
             'before:absolute before:inset-x-0 before:top-0 before:z-1 before:h-px before:content-[""]',
@@ -67,14 +80,16 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(function G
           ),
         className,
       )}
+      style={{ ...bleedStyle(bleed, bleedStrength), ...style }}
       {...rest}
     >
+      {texture !== 'none' && (
+        <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0 -z-1', TEXTURE_CLASS[texture])} />
+      )}
       {hasHeader && (
-        <header className="mb-3 flex items-center justify-between gap-3">
+        <header className="relative z-1 mb-3 flex items-center justify-between gap-3">
           {title !== undefined && (
-            <h3 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-              {title}
-            </h3>
+            <h3 className={cn(TYPE_CLASS.section, 'min-w-0 text-ink')}>{title}</h3>
           )}
           {action}
         </header>

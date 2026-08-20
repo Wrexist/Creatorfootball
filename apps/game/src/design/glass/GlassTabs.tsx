@@ -101,7 +101,7 @@ export function GlassTabs<T extends string = string>({
               onChange(item.id);
             }}
             className={cn(
-              'relative inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap px-3.5',
+              'relative inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap px-3.5',
               'text-[14px] font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
               appearance === 'enclosed' && 'rounded-pill',
               scrollable ? 'shrink-0' : 'flex-1',

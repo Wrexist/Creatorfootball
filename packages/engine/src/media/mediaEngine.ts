@@ -9,7 +9,7 @@ import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort } from '../simulation/ports';
 import {
   blendTemplates, matchesConditions, pickTemplate, renderTemplate, seedFrom, sentimentBand,
-  templatesForTrigger,
+  templatesForTrigger, type TemplateRecency,
 } from '../simulation/templating';
 import { MEDIA_BALANCE as M, OUTLETS, outletByName, type Outlet } from './balance';
 import { FALLBACK_MEDIA_TEMPLATES } from './fallbackTemplates';
@@ -92,20 +92,32 @@ function chooseOutlet(template: MediaTemplate | null, hook: ContentHook, rng: Rn
   });
 }
 
-/** Template ids used in the last few cycles, so we do not repeat ourselves. */
-function recentTemplateIds(state: GameState, cycle: number): Set<string> {
-  const out = new Set<string>();
+/**
+ * What the press has already printed.
+ *
+ * `blocked` is the hard window — a template inside it is not a candidate while
+ * any alternative exists — and `seen` is everything in the retained archive,
+ * which biases selection toward stories that have never run. A soft weight
+ * penalty alone let the same headline carry a quarter of a season.
+ */
+function templateRecency(state: GameState, cycle: number): { recency: TemplateRecency; blocked: Set<string>; seen: Set<string> } {
+  const blocked = new Set<string>();
+  const seen = new Set<string>();
   for (const story of state.media.stories) {
-    if (story.cycle < cycle - M.antiRepeatCycles) continue;
-    for (const tag of story.tags) if (tag.startsWith('tpl:')) out.add(tag.slice(4));
+    for (const tag of story.tags) {
+      if (!tag.startsWith('tpl:')) continue;
+      const id = tag.slice(4);
+      seen.add(id);
+      if (story.cycle >= cycle - M.hardRepeatCycles) blocked.add(id);
+    }
   }
-  return out;
+  return { recency: { blocked, seen }, blocked, seen };
 }
 
 function recentHeadlines(state: GameState, cycle: number): Set<string> {
   const out = new Set<string>();
   for (const story of state.media.stories) {
-    if (story.cycle >= cycle - M.antiRepeatCycles) out.add(story.headline);
+    if (story.cycle >= cycle - M.hardRepeatCycles) out.add(story.headline);
   }
   return out;
 }
@@ -160,10 +172,24 @@ export function generateStories(
   candidates.sort((a, b) => b.rank - a.rank || (a.hook.sourceEventId < b.hook.sourceEventId ? -1 : 1));
 
   const limit = opts.maxStories ?? M.maxStoriesPerCycle;
-  const chosen = candidates.filter((c, i) => i < limit || c.importance >= M.alwaysPublishImportance);
+  // Per-trigger cap. `alwaysPublishImportance` is an escape hatch for the story
+  // that must not be trimmed, but with twelve clubs playing every week it let a
+  // single trigger publish eleven near-identical stories a cycle and crowd out
+  // every other kind the pack can write. One trigger, a couple of stories.
+  const perTrigger = new Map<string, number>();
+  const chosen: Candidate[] = [];
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    if (!candidate) continue;
+    const used = perTrigger.get(candidate.hook.trigger) ?? 0;
+    if (used >= M.maxStoriesPerTrigger) continue;
+    if (chosen.length >= limit && candidate.importance < M.alwaysPublishImportance) continue;
+    perTrigger.set(candidate.hook.trigger, used + 1);
+    chosen.push(candidate);
+  }
 
   // 2. Render. A template we cannot fill is skipped rather than published half-baked.
-  const usedTemplates = recentTemplateIds(state, cycle);
+  const { recency, blocked: usedTemplates, seen: seenTemplates } = templateRecency(state, cycle);
   const usedHeadlines = recentHeadlines(state, cycle);
   const stories: NewsStory[] = [];
 
@@ -178,7 +204,7 @@ export function generateStories(
     let template: MediaTemplate | null = null;
     let headline: string | null = null;
     for (let attempt = 0; attempt < M.rerollAttempts; attempt++) {
-      const pick = pickTemplate(local, pool, usedTemplates);
+      const pick = pickTemplate(local, pool, recency);
       if (!pick) break;
       const rendered = renderTemplate(pick.headline, hook.tokens);
       template = pick;
@@ -194,6 +220,7 @@ export function generateStories(
     const sentiment = clamp(applyManagerDamping(rawSentiment, hook, state), -1, 1);
 
     usedTemplates.add(template.id);
+    seenTemplates.add(template.id);
     usedHeadlines.add(headline);
 
     stories.push({

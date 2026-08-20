@@ -10,6 +10,7 @@ import { expandCascade } from '../simulation/cascade';
 import type { ContentHook, ContentRegistryPort, SocialPostKind } from '../simulation/ports';
 import {
   blendTemplates, matchesConditions, pickTemplate, renderTemplate, seedFrom, templatesForTrigger,
+  type TemplateRecency,
 } from '../simulation/templating';
 import { rivalriesOf, rivalOpponent } from '../rivalries/rivalries';
 import { OUTLETS } from '../media/balance';
@@ -272,16 +273,29 @@ export function generatePosts(
     if (list) list.push(template); else byKey.set(key, [template]);
   }
 
-  const recent = new Set<string>();
+  // Anti-repetition ledger, read straight off the retained feed so it survives
+  // a save/load round trip and stays deterministic. `blocked` is the hard
+  // window; `seen` biases selection toward lines nobody has read yet.
+  const blocked = new Set<string>();
+  const seenTemplates = new Set<string>();
+  const blockedText = new Set<string>();
   for (const post of state.social.posts) {
-    if (post.cycle >= cycle - S.antiRepeatCycles) {
-      for (const tag of post.tags) if (tag.startsWith('tpl:')) recent.add(tag.slice(4));
+    for (const tag of post.tags) {
+      if (!tag.startsWith('tpl:')) continue;
+      const id = tag.slice(4);
+      seenTemplates.add(id);
+      if (post.cycle >= cycle - S.hardRepeatCycles) blocked.add(id);
     }
+    if (post.cycle >= cycle - S.hardRepeatCycles) blockedText.add(post.text);
   }
+  const recent: TemplateRecency = { blocked, seen: seenTemplates };
 
   // Deduplicate hooks and take the highest-stakes ones; a busy matchday should
-  // not bury the one thing that mattered.
+  // not bury the one thing that mattered. The per-trigger cap is what stops a
+  // week of heavy defeats spending the entire budget on one trigger and hiding
+  // every other kind of story the pack can tell.
   const seen = new Set<string>();
+  const perTrigger = new Map<string, number>();
   const hooks = allHooks
     .filter((h) => {
       const key = `${h.sourceEventId}:${h.trigger}`;
@@ -290,11 +304,18 @@ export function generatePosts(
       return true;
     })
     .sort((a, b) => b.importance - a.importance || (a.sourceEventId < b.sourceEventId ? -1 : 1))
+    .filter((h) => {
+      const used = perTrigger.get(h.trigger) ?? 0;
+      if (used >= S.maxHooksPerTrigger) return false;
+      perTrigger.set(h.trigger, used + 1);
+      return true;
+    })
     .slice(0, S.maxHooksPerCycle);
 
   const posts: SocialPost[] = [];
-  // A feed that repeats itself reads as generated. One line, once per cycle.
-  const usedText = new Set<string>();
+  // A feed that repeats itself reads as generated. One line, once per cycle —
+  // and not again for `hardRepeatCycles` cycles either.
+  const usedText = new Set<string>(blockedText);
   for (const hook of hooks) {
     const hookRng = rng.fork(`social:${hook.sourceEventId}:${hook.trigger}`);
     const authors = authorsFor(hook, state, hookRng);
@@ -317,7 +338,8 @@ export function generatePosts(
         text = template ? renderTemplate(template.text, hook.tokens) : null;
       }
       if (!template || !text || usedText.has(text)) { index++; continue; }
-      recent.add(template.id);
+      blocked.add(template.id);
+      seenTemplates.add(template.id);
       usedText.add(text);
 
       const sentiment = clamp((stanceFor(author, hook, state) + template.sentiment) / 2, -1, 1);
@@ -350,7 +372,10 @@ export function generatePosts(
     }
   }
 
-  const withDebates = [...posts, ...generateDebates(posts, hooks, byKey, recent, state, rng, cycle)];
+  const withDebates = [
+    ...posts,
+    ...generateDebates(posts, hooks, byKey, recent, blocked, state, rng, cycle),
+  ];
   return withDebates
     .sort((a, b) => b.weight - a.weight || (a.id < b.id ? -1 : 1))
     .slice(0, opts.maxPosts ?? S.maxPostsPerCycle);
@@ -365,7 +390,8 @@ function generateDebates(
   posts: readonly SocialPost[],
   hooks: readonly ContentHook[],
   byKey: ReadonlyMap<string, SocialTemplate[]>,
-  recent: Set<string>,
+  recent: TemplateRecency,
+  blocked: Set<string>,
   state: GameState,
   rng: Rng,
   cycle: number,
@@ -400,7 +426,7 @@ function generateDebates(
     if (!template) continue;
     const text = renderTemplate(template.text, hook.tokens);
     if (!text) continue;
-    recent.add(template.id);
+    blocked.add(template.id);
 
     const sentiment = clamp((challenger.sentiment + template.sentiment) / 2, -1, 1);
     const reach = Math.round((challenger.likes + target.likes) * S.quoteReachShare * 6);

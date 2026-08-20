@@ -2,6 +2,7 @@ import {
   useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode,
 } from 'react';
 import { cn } from '../cn';
+import { snapToScale, TYPE_FLOOR, TYPE_SIZE, type TypeRole } from './type';
 
 /**
  * Text that fits its container instead of being cut off.
@@ -37,10 +38,19 @@ export interface FitTextProps {
   children: string;
   /** Starting (and maximum) font size in px. */
   size?: number;
-  /** Smallest size this text may shrink to before other strategies apply. */
+  /**
+   * Smallest size this text may shrink to before other strategies apply.
+   * Clamped to the scale's 11px floor - nothing in the product renders text
+   * smaller than that, including text that got there by being fitted.
+   */
   min?: number;
-  /** Rounding step for the fitted size. Keeps the scale from going fractional. */
-  step?: number;
+  /**
+   * Land the fitted size on a rung of the type scale rather than anywhere
+   * between two. On by default: the scale is closed, and a size the machine
+   * chose is no more allowed off it than a size a developer chose. Turn it off
+   * only for a genuinely continuous case, such as a wordmark.
+   */
+  snap?: boolean;
   /**
    * Progressively shorter stand-ins, longest first, e.g.
    * `['Saltpine Harriers United', 'Saltpine', 'SPH']`. `children` is always
@@ -73,8 +83,8 @@ const SEP = '\u001F';
 export function FitText({
   children,
   size = 15,
-  min = 11,
-  step = 0.5,
+  min = TYPE_FLOOR,
+  snap = true,
   alternates,
   lines = 1,
   lineHeight = 1.15,
@@ -83,6 +93,13 @@ export function FitText({
   className,
   style,
 }: FitTextProps): ReactNode {
+  // The floor can be raised by a caller but never lowered past the scale's own.
+  const floor = Math.max(TYPE_FLOOR, min);
+  const quantise = useCallback(
+    (value: number): number => (snap ? snapToScale(value) : Math.floor(value * 2) / 2),
+    [snap],
+  );
+
   const hostRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<HTMLSpanElement | null>(null);
   const lastWidth = useRef(-1);
@@ -126,13 +143,13 @@ export function FitText({
       // Largest size at which this candidate fits on one line. The half pixel
       // of slack absorbs sub-pixel rounding in the layout above us.
       const exact = ((available - 0.5) / naturalAtReference) * REFERENCE;
-      const stepped = Math.floor(exact / step) * step;
-      if (stepped >= size) {
+      const fittedSize = quantise(exact);
+      if (fittedSize >= size) {
         result = { text: candidate, size, wrap: false };
         break;
       }
-      if (stepped >= min) {
-        result = { text: candidate, size: stepped, wrap: false };
+      if (fittedSize >= floor) {
+        result = { text: candidate, size: fittedSize, wrap: false };
         break;
       }
     }
@@ -147,9 +164,9 @@ export function FitText({
         const naturalAtReference = node.scrollWidth;
         if (naturalAtReference <= 0) continue;
         const exact = ((available * lines * RAG_LOSS) / naturalAtReference) * REFERENCE;
-        const stepped = Math.min(size, Math.floor(exact / step) * step);
-        if (stepped >= min) {
-          result = { text: candidate, size: stepped, wrap: true };
+        const fittedSize = Math.min(size, quantise(exact));
+        if (fittedSize >= floor) {
+          result = { text: candidate, size: fittedSize, wrap: true };
           break;
         }
       }
@@ -159,14 +176,14 @@ export function FitText({
     node.style.fontSize = previousFontSize;
     node.textContent = previousText;
 
-    const next = result ?? { text: floorText, size: min, wrap: lines > 1 };
+    const next = result ?? { text: floorText, size: floor, wrap: lines > 1 };
 
     setFitted((current) =>
       current.text === next.text && current.size === next.size && current.wrap === next.wrap
         ? current
         : next,
     );
-  }, [candidateKey, size, min, step, lines]);
+  }, [candidateKey, size, floor, quantise, lines]);
 
   useLayoutEffect(() => {
     lastWidth.current = -1;

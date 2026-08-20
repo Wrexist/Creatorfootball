@@ -118,7 +118,7 @@ const MONEY_SIZE = {
   sm: 'text-[13px]',
   md: 'text-[15px]',
   lg: 'text-[20px]',
-  xl: 'text-[30px] font-display tracking-[-0.03em]',
+  xl: 'text-[30px] num-broadcast font-extrabold tracking-[-0.04em]',
 } as const;
 
 export const MoneyLabel = memo(function MoneyLabel({
@@ -202,11 +202,16 @@ export interface ScoreDisplayProps {
   className?: string;
 }
 
+/**
+ * Broadcast sizing. The tracking tightens as the figures grow: at 68px the
+ * default side bearings on tabular numerals leave the pair reading as two
+ * separate numbers instead of one scoreline.
+ */
 const SCORE_SIZE = {
-  sm: 'text-[17px]',
-  md: 'text-[26px]',
-  lg: 'text-[40px]',
-  hero: 'text-[68px]',
+  sm: 'text-[17px] tracking-[-0.03em]',
+  md: 'text-[26px] tracking-[-0.045em]',
+  lg: 'text-[40px] tracking-[-0.055em]',
+  hero: 'text-[68px] tracking-[-0.065em]',
 } as const;
 
 export const ScoreDisplay = memo(function ScoreDisplay({
@@ -227,7 +232,7 @@ export const ScoreDisplay = memo(function ScoreDisplay({
     >
       <div
         className={cn(
-          'tnum flex items-baseline gap-2 font-display font-bold tracking-[-0.04em] text-ink',
+          'num-broadcast flex items-baseline gap-2 font-extrabold leading-none text-ink',
           SCORE_SIZE[size],
         )}
         aria-hidden="true"
@@ -244,7 +249,7 @@ export const ScoreDisplay = memo(function ScoreDisplay({
               <span className="relative inline-flex size-1.5 rounded-pill bg-danger" />
             </span>
           )}
-          <span className="tnum text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+          <span className={cn('num-live text-[12px]', live ? 'text-danger' : 'text-ink-muted')}>
             {status}
           </span>
         </div>

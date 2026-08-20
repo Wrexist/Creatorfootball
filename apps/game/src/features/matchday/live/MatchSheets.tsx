@@ -4,12 +4,12 @@ import type {
   SpecialRuleId, TacticSetup, Tempo, Width, CounterStyle,
 } from '@cf/engine';
 import {
-  GlassButton, GlassPill, GlassSegmented, GlassSheet, PlayerPortrait, PositionChip, ProgressBar,
-  RatingBadge, SheetCloseRow, cn, haptics,
+  GlassButton, GlassPill, GlassSegmented, GlassSheet, IconCheck, IconFastForward, PlayerPortrait,
+  PositionChip, ProgressBar, RatingBadge, SheetCloseRow, cn, haptics,
 } from '@/design';
-import { useMatchStore } from '@/state/matchStore';
+import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import type { KitColors } from '../shared/kit';
-import { SPECIAL_RULE_TONE } from '../shared/format';
+import { SPECIAL_RULE_TONE, SPEED_HINT, SPEED_LABEL } from '../shared/format';
 
 /**
  * The three things a manager can actually do while the ball is rolling:
@@ -393,6 +393,104 @@ export function RuleCardSheet({ open, onClose, cards, onPlay }: RuleCardSheetPro
           <li className="py-4 text-center text-[13px] text-ink-dim">You are not holding any rule cards.</li>
         )}
       </ul>
+    </GlassSheet>
+  );
+}
+
+/* --- speed ------------------------------------------------------------- */
+
+export interface SpeedSheetProps {
+  open: boolean;
+  onClose: () => void;
+  speed: MatchSpeed;
+  onChange: (speed: MatchSpeed) => void;
+  onSkipToEnd: () => void;
+  canSkip: boolean;
+}
+
+const SPEEDS: readonly MatchSpeed[] = ['SLOW', 'NORMAL', 'FAST', 'INSTANT'];
+
+/**
+ * Speed, as four sentences rather than four cramped segments.
+ *
+ * A segmented control had to fit "Instant" into roughly forty points beside a
+ * play button, and it did not: the word overflowed its own pill. The deeper
+ * problem was that "Fast" and "Instant" mean nothing until you have used them,
+ * so the control was illegible for exactly the player who most needed it. Given
+ * a full sheet, each option can say what it does — and the one destructive
+ * option, jumping to the final whistle, can sit apart from the four that only
+ * change the pace and warn that it ends the match.
+ */
+export function SpeedSheet({
+  open, onClose, speed, onChange, onSkipToEnd, canSkip,
+}: SpeedSheetProps): ReactNode {
+  return (
+    <GlassSheet
+      open={open}
+      onClose={onClose}
+      size="auto"
+      title="Match speed"
+      subtitle="Big moments always slow down by themselves, whatever you pick."
+      footer={<SheetCloseRow onClose={onClose} label="Done" />}
+    >
+      <ul className="flex flex-col gap-2">
+        {SPEEDS.map((option) => {
+          const selected = option === speed;
+          return (
+            <li key={option}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                onClick={() => {
+                  haptics.selection();
+                  onChange(option);
+                  onClose();
+                }}
+                className={cn(
+                  'flex min-h-14 w-full items-center gap-3 rounded-lg border p-3 text-left',
+                  'transition-colors duration-[var(--duration-fast)]',
+                  'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
+                  selected
+                    ? 'border-volt/50 bg-volt/12'
+                    : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08]',
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'flex size-6 shrink-0 items-center justify-center rounded-pill border',
+                    selected ? 'border-volt bg-volt text-volt-ink' : 'border-white/25 text-transparent',
+                  )}
+                >
+                  <IconCheck size={14} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[16px] font-bold text-ink">{SPEED_LABEL[option]}</span>
+                  <span className="mt-0.5 block text-[13px] leading-snug text-ink-muted text-pretty">
+                    {SPEED_HINT[option]}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="mt-4 border-t border-white/[0.07] pt-4">
+        <GlassButton
+          variant="ghost"
+          size="md"
+          block
+          icon={<IconFastForward />}
+          disabled={!canSkip}
+          onClick={() => { onSkipToEnd(); onClose(); }}
+        >
+          Jump to the final whistle
+        </GlassButton>
+        <p className="mt-1.5 text-center text-[12px] text-ink-dim text-pretty">
+          The rest of the match is played out at once. You will not be asked anything else.
+        </p>
+      </div>
     </GlassSheet>
   );
 }

@@ -80,7 +80,7 @@ export const HeroSurface = forwardRef<HTMLElement, HeroSurfaceProps>(function He
       {/* Texture rides on its own layer: the root already spends ::before on the
           specular sheen and ::after on the club bleed. */}
       {texture !== 'none' && (
-        <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0', TEXTURE_CLASS[texture])} />
+        <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0 -z-1', TEXTURE_CLASS[texture])} />
       )}
 
       <div className="relative z-1">

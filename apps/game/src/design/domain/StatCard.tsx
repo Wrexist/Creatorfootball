@@ -3,6 +3,7 @@ import { cn } from '../cn';
 import { glassClass, type GlassLevel } from '../glass/glassLevel';
 import { Counter, TrendIndicator } from './numbers';
 import { Sparkline, type BarTone } from './bars';
+import { TYPE_CLASS } from '../typography/type';
 
 export interface StatCardProps {
   label: ReactNode;
@@ -67,15 +68,18 @@ export const StatCard = memo(function StatCard({
         className,
       )}
     >
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-        {icon}
-        <span className="truncate">{label}</span>
+      {/* Sentence case and allowed to wrap to two lines. "Transfer budget
+          remaining" in caps at 11/0.14em needs 214px; the same words in
+          sentence case need 148px, which is why this used to clip. */}
+      <div className={cn(TYPE_CLASS.label, 'flex items-start gap-1.5 text-ink-muted')}>
+        {icon !== undefined && <span className="mt-px shrink-0">{icon}</span>}
+        <span className="min-w-0 text-pretty">{label}</span>
       </div>
 
       <div className="flex items-end justify-between gap-2">
         <span
           className={cn(
-            'font-display font-bold leading-none tracking-[-0.035em] text-ink',
+            'num-broadcast num-tight font-extrabold leading-none text-ink',
             VALUE_SIZE[size],
           )}
         >
@@ -105,7 +109,9 @@ export const StatCard = memo(function StatCard({
             />
           )}
           {footnote !== undefined && (
-            <span className="truncate text-[11px] text-ink-dim">{footnote}</span>
+            <span className={cn(TYPE_CLASS.caption, 'min-w-0 text-[11px] text-ink-dim text-pretty')}>
+              {footnote}
+            </span>
           )}
         </div>
       )}

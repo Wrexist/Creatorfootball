@@ -11,6 +11,8 @@ import { GlassPill } from '../glass/GlassPill';
 import { CreatorAvatar } from './PlayerPortrait';
 import { formatCount } from './numbers';
 import { IconHeart, IconReply, IconRepost, IconShare, IconVerified } from '../icons';
+import { NameText } from '../typography/Text';
+import { TYPE_CLASS } from '../typography/type';
 
 /* --- generated story art ---------------------------------------------- */
 
@@ -92,12 +94,13 @@ export const NewsCard = memo(function NewsCard({
   const sentimentTone = story.sentiment > 0.25 ? 'positive' : story.sentiment < -0.25 ? 'danger' : 'neutral';
 
   const meta = (
-    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
-      <span className="truncate">{story.outlet}</span>
+    <div className={cn(TYPE_CLASS.label, 'flex items-center gap-2 text-[11px] text-ink-dim')}>
+      {/* An outlet is a name. Sentence case, fitted, never clipped. */}
+      <NameText name={story.outlet} role="label" floor={0.82} className="min-w-0 shrink text-[11px]" />
       {timeLabel !== undefined && (
         <>
           <span aria-hidden="true">·</span>
-          <span className="tnum shrink-0 normal-case tracking-normal">{timeLabel}</span>
+          <span className="tnum shrink-0 tracking-normal">{timeLabel}</span>
         </>
       )}
       {!story.read && <span className="ml-auto size-1.5 shrink-0 rounded-pill bg-volt" aria-label="Unread" />}
@@ -263,9 +266,15 @@ export const SocialPost = memo(function SocialPost({
         <CreatorAvatar seed={post.avatarSeed} size={40} verified={false} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="truncate text-[14px] font-semibold text-ink">{post.authorName}</span>
+            <NameText
+              name={post.authorName}
+              short={post.authorHandle}
+              role="bodyStrong"
+              floor={0.82}
+              className="min-w-0 shrink text-[14px]"
+            />
             {post.verified && <IconVerified size={14} className="shrink-0 text-info" label="Verified" />}
-            <span className="truncate text-[13px] text-ink-dim">{post.authorHandle}</span>
+            <NameText name={post.authorHandle} role="caption" floor={0.85} className="min-w-0 shrink text-[13px] text-ink-dim" />
             {timeLabel !== undefined && (
               <>
                 <span className="text-ink-dim" aria-hidden="true">·</span>

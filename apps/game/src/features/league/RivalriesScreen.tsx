@@ -7,6 +7,7 @@ import {
 import {
   ClubBadge, Divider, EmptyState, GlassPanel, GlassPill, IconFlame, KeyValueRow, MatchCard,
   ProgressBar, Screen, SectionHeader, Timeline, cn, type MatchCardSide, type TimelineItem,
+  NameText,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -66,9 +67,13 @@ const RivalryCard = memo(function RivalryCard({
       <header className="flex items-center gap-3">
         <ClubBadge visual={theirSide.visual} size={44} label={theirSide.name} />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-[20px] font-bold leading-tight text-ink">
-            {theirSide.name}
-          </p>
+          <NameText
+            name={theirSide.name}
+            short={theirSide.shortName}
+            abbr={theirSide.abbreviation}
+            role="title"
+            lines={2}
+          />
           <p className="mt-0.5 text-[13px] leading-snug text-ink-muted text-pretty">
             {rivalry.origin}
           </p>

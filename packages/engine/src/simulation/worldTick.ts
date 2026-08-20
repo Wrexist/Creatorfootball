@@ -503,7 +503,13 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
 
   // --- phase 3: records ----------------------------------------------------
   const preCascadeState: GameState = { ...state, players, clubs, contracts, rivalries };
-  for (const record of detectRecords(preCascadeState)) {
+  // Season aggregates are only news once the season they summarise is over.
+  // Evaluating "most points in a season" every week against a running total
+  // re-broke the same record twenty-two times and made a quarter of the press
+  // one headline; see progression/legacy.ts for the full argument.
+  const totalWeeks = state.seasons[state.currentSeasonId]?.totalWeeks ?? 22;
+  const finalWeekOfSeason = state.clock.week + 1 >= totalWeeks;
+  for (const record of detectRecords(preCascadeState, { seasonAggregates: finalWeekOfSeason })) {
     emit('RECORD_BROKEN', {
       clubId: record.clubId, record: record.label, value: record.value,
       ...(record.holderId ? { holderId: record.holderId } : {}),

@@ -11,8 +11,18 @@ import type { HookFacts, TokenMap } from './ports';
  * large one never repeats itself two cycles running.
  */
 
-/** How much a recently used template's weight is multiplied by. */
+/**
+ * How much a recently used template's weight is multiplied by, in the fallback
+ * case where *every* candidate is recent and something still has to be said.
+ */
 export const REPEAT_PENALTY = 0.04;
+
+/**
+ * Weight multiplier for a template that has not been seen at all inside the
+ * retained history. A large pool is worth nothing if selection keeps landing on
+ * the same eight lines, so an unused line outbids a cold one six to one.
+ */
+export const UNUSED_PREFERENCE = 6;
 
 const TOKEN_RE = /\{([a-zA-Z0-9_]+)\}/g;
 
@@ -74,18 +84,47 @@ export function matchesConditions(
 export interface Weighted { readonly id: string; readonly weight: number }
 
 /**
- * Weighted pick that avoids recently used ids. Returns null for an empty pool
- * so callers fall back rather than throw.
+ * What the feed has already said, and how recently.
+ *
+ * `blocked` is a hard rule and `seen` is a soft one. Splitting them is the
+ * whole fix for a feed that reads as generated: a soft weight penalty on its
+ * own still lets a five-line pool repeat a line three times in a fortnight,
+ * because a 0.04 multiplier on the only candidate is still the only candidate.
+ */
+export interface TemplateRecency {
+  /** Used inside the hard window. Never selectable while any alternative exists. */
+  readonly blocked: ReadonlySet<string>;
+  /** Used anywhere in retained history. De-weighted against never-used lines. */
+  readonly seen: ReadonlySet<string>;
+}
+
+export const emptyRecency = (): TemplateRecency => ({ blocked: new Set(), seen: new Set() });
+
+/**
+ * Weighted pick that will not repeat itself.
+ *
+ * Three tiers, in order: never-used lines, then cold lines, then — only when
+ * the pool holds nothing else — a recently used line at a heavy penalty, so a
+ * one-template pool still says something rather than going silent.
+ * Returns null for an empty pool so callers fall back rather than throw.
  */
 export function pickTemplate<T extends Weighted>(
   rng: Rng,
   candidates: readonly T[],
-  recentIds: ReadonlySet<string>,
+  recent: TemplateRecency | ReadonlySet<string>,
 ): T | null {
   if (candidates.length === 0) return null;
-  return rng.weighted(candidates, (t) => {
+  const recency: TemplateRecency = recent instanceof Set
+    ? { blocked: recent, seen: recent }
+    : recent as TemplateRecency;
+
+  const allowed = candidates.filter((t) => !recency.blocked.has(t.id));
+  const pool = allowed.length > 0 ? allowed : candidates;
+  const exhausted = allowed.length === 0;
+  return rng.weighted(pool, (t) => {
     const base = t.weight > 0 ? t.weight : 1;
-    return recentIds.has(t.id) ? base * REPEAT_PENALTY : base;
+    if (exhausted) return base * REPEAT_PENALTY;
+    return recency.seen.has(t.id) ? base : base * UNUSED_PREFERENCE;
   });
 }
 

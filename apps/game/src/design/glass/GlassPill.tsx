@@ -11,6 +11,22 @@ export interface GlassPillProps extends HTMLAttributes<HTMLSpanElement> {
   icon?: ReactNode;
   /** Filled pills read as status; outlined pills read as metadata. */
   filled?: boolean;
+  /**
+   * Uppercase the label.
+   *
+   * Off by default, and that is the change: every pill used to be uppercased,
+   * which made each one about 30% wider than the words needed. In a wrapping
+   * row of tactical instructions that was the difference between "To the side"
+   * and "TO THE SIDE A...". Turn it on for short fixed codes - "FT", "LIVE",
+   * "NEW" - where the shouting is the point and the width is trivial.
+   */
+  caps?: boolean;
+  /**
+   * Let a long label wrap instead of forcing one line. Pills stay on one line
+   * by default; a pill carrying real content (a tactic, a role, a trait) can
+   * take a second line rather than push its row out of the layout.
+   */
+  wrap?: boolean;
   children?: ReactNode;
 }
 
@@ -52,9 +68,9 @@ const TONE: Record<PillTone, { soft: string; solid: string }> = {
 };
 
 const SIZE: Record<PillSize, string> = {
-  xs: 'h-5 px-1.5 text-[10px] gap-1 [&_svg]:size-3',
-  sm: 'h-6 px-2 text-[11px] gap-1 [&_svg]:size-3.5',
-  md: 'h-7 px-2.5 text-xs gap-1.5 [&_svg]:size-4',
+  xs: 'min-h-5 px-1.5 text-[10px] gap-1 [&_svg]:size-3',
+  sm: 'min-h-6 px-2 text-[11px] gap-1 [&_svg]:size-3.5',
+  md: 'min-h-7 px-2.5 text-xs gap-1.5 [&_svg]:size-4',
 };
 
 export function GlassPill({
@@ -62,6 +78,8 @@ export function GlassPill({
   size = 'sm',
   icon,
   filled = false,
+  caps = false,
+  wrap = false,
   className,
   children,
   ...rest
@@ -69,7 +87,9 @@ export function GlassPill({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-pill border font-semibold uppercase tracking-[0.06em] whitespace-nowrap',
+        'inline-flex max-w-full items-center rounded-pill border font-semibold',
+        caps ? 'uppercase tracking-[0.08em]' : 'tracking-[0.005em]',
+        wrap ? 'py-0.5 leading-tight text-pretty' : 'whitespace-nowrap',
         SIZE[size],
         filled ? TONE[tone].solid : TONE[tone].soft,
         className,

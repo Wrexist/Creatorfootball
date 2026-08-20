@@ -59,7 +59,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(function
         <label
           htmlFor={inputId}
           className={cn(
-            'mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-muted',
+            'mb-1.5 block text-[13px] font-semibold tracking-[0.005em] text-ink-muted',
             labelHidden && 'sr-only',
           )}
         >

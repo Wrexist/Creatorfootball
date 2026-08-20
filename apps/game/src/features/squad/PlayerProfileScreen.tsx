@@ -9,28 +9,32 @@ import {
   type TraitDefinition,
 } from '@cf/engine';
 import {
-  Accordion, AttributeBar, ClubBadge, Divider, EmptyState, GlassButton, GlassPanel, GlassPill,
-  GlassSheet, KeyValueRow, PlayerPortrait, PositionChip, ProgressBar, RatingBadge, Screen,
-  SectionHeader, Sparkline, StatCard, StatGrid, TraitChip, cn, formatMoney, rgba,
+  Accordion, AttributeBar, ClubBadge, DataCell, DataGrid, Divider, EmptyState, GlassButton,
+  GlassPanel, GlassPill, GlassSheet, ListRow, NameText, PlayerPortrait, PositionChip, ProgressBar,
+  RatingBadge, Screen, Sparkline, StatBlock, Text, Timeline, TraitChip, cn, formatMoney, rgba,
   IconBall, IconCard, IconInjury, IconScout, IconSocial, IconStar, IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
+import { playerArc } from './arc';
 
 /**
- * Player profile.
+ * Player profile — a signature screen.
  *
- * The single most important rule on this screen: **it never lies about what you
- * know.** Attributes are drawn through the engine's `knowledgeRange`, so an
- * unscouted player shows a band and a scouted one shows a number, and the band
- * visibly narrows as scouting confidence rises. A precise-looking 74 on a
- * player nobody has watched would be a fabrication, and it would quietly make
- * scouting — an entire game system — pointless.
+ * Two rules define it.
  *
- * Everything below the header is progressively disclosed. A profile that opens
- * with seven expanded sections is a spreadsheet; this one opens with the two
- * things a manager checks first and lets the rest be asked for.
+ * **It never lies about what you know.** Attributes are drawn through the
+ * engine's `knowledgeRange`, so an unscouted player shows a band and a scouted
+ * one shows a number, and the band visibly narrows as confidence rises. A
+ * precise-looking 74 on a player nobody has watched would be a fabrication, and
+ * it would quietly make scouting — an entire game system — pointless.
+ *
+ * **It tells you who he is, not only what he scores.** The arc sits high on the
+ * page, above the attribute tables, because "signed for £40k, first goal in
+ * week six, now rated 66 and worth 34% more" is the thing that makes a player
+ * matter to you. Numbers alone make a spreadsheet; a spreadsheet is not
+ * something you feel bad about selling.
  */
 
 const MODIFIER_LABELS: Record<string, string> = {
@@ -71,7 +75,7 @@ const AttributeGroup = memo(function AttributeGroup({
 }): ReactNode {
   return (
     <div className="mb-4 last:mb-0">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">{title}</p>
+      <Text role="label" className="mb-2 text-ink-dim">{title}</Text>
       <div className="flex flex-col gap-2">
         {keys.map((key) => (
           <AttributeBar
@@ -109,7 +113,7 @@ export function PlayerProfileScreen(): ReactNode {
         <EmptyState
           icon={<IconWarning />}
           title="No such player"
-          description="That player is not in this save any more — they may have been sold, released or retired."
+          description="That player is not in this save any more — he may have been sold, released or retired."
           action={<GlassButton variant="secondary" onClick={() => navigate(ROUTES.squad)}>Back to the squad</GlassButton>}
         />
       </Screen>
@@ -151,10 +155,10 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
       creator,
       slot,
       keyAttrs: new Set(keyAttributes(player.attributes, player.position, 3)),
-      manager: state.managers[state.playerManagerId],
       captain: ownClub?.tactics.captainId === player.id,
       penalties: ownClub?.tactics.penaltyTakerId === player.id,
       setPieces: ownClub?.tactics.setPieceTakerId === player.id,
+      arc: playerArc(state, player),
     };
   }, [state, player]);
 
@@ -167,11 +171,14 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
 
   const wash = data.club ? data.club.visual.primary : '#1c2026';
   const ratings = player.form.recentRatings;
+  const potential = data.potentialLow === data.potentialHigh
+    ? `${data.potentialLow}`
+    : `${data.potentialLow}–${data.potentialHigh}`;
 
   return (
     <Screen
       title={player.displayName}
-      subtitle={`${POSITION_LABELS[player.position]} · ${player.age} · ${data.club?.name ?? 'Free agent'}`}
+      subtitle={`${POSITION_LABELS[player.position]} · ${player.age} years old · ${data.club?.name ?? 'No club'}`}
       onBack={() => navigate(-1)}
       hero={
         <div className="relative overflow-hidden">
@@ -179,7 +186,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
             aria-hidden="true"
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(168deg, ${rgba(wash, 0.55)} 0%, ${rgba(wash, 0.12)} 52%, transparent 88%)`,
+              background: `linear-gradient(168deg, ${rgba(wash, 0.6)} 0%, ${rgba(wash, 0.14)} 52%, transparent 88%)`,
             }}
           />
           <div className="relative mx-auto flex w-full max-w-[1180px] items-end gap-4 px-4 pb-4 pt-5 sm:px-6">
@@ -192,30 +199,31 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
               label={player.displayName}
             />
             <div className="min-w-0 flex-1 pb-1">
-              <div className="flex flex-wrap items-center gap-1.5">
+              <NameText
+                name={player.displayName}
+                short={`${player.firstName.charAt(0)}. ${player.lastName}`}
+                role="title"
+                lines={2}
+                as="h2"
+              />
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <PositionChip position={player.position} size="md" />
                 {player.secondaryPositions.map((position) => (
                   <PositionChip key={position} position={position} size="xs" />
                 ))}
-                {player.shirtNumber !== null && (
-                  <GlassPill size="xs">#{player.shirtNumber}</GlassPill>
-                )}
+                {player.shirtNumber !== null && <GlassPill size="xs">No. {player.shirtNumber}</GlassPill>}
               </div>
-              <div className="mt-2 flex items-center gap-2.5">
+              <div className="mt-2.5 flex items-center gap-2.5">
                 <RatingBadge
                   value={data.exact ? player.overall : data.estimated}
                   size="lg"
                   label={data.exact ? `Overall ${player.overall}` : `Estimated overall, around ${data.estimated}`}
                 />
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
-                    {data.exact ? 'Overall' : 'Estimated'}
-                  </p>
-                  <p className="tnum text-[12px] text-ink-muted">
-                    Potential {data.potentialLow === data.potentialHigh
-                      ? data.potentialLow
-                      : `${data.potentialLow}–${data.potentialHigh}`}
-                  </p>
+                  <Text role="micro" as="p">{data.exact ? 'Overall' : 'Best estimate'}</Text>
+                  <Text role="caption" as="p" className="mt-0.5">
+                    Could reach {potential}
+                  </Text>
                 </div>
               </div>
             </div>
@@ -226,14 +234,14 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
       aside={
         <>
           <GlassPanel title="At a glance" padding="md">
-            <KeyValueRow label="Market value" value={formatMoney(player.marketValue)} />
-            <KeyValueRow label="Reputation" value={Math.round(player.reputation)} />
-            <KeyValueRow label="Nationality" value={player.nationality} />
-            <KeyValueRow label="Height" value={`${Math.round(player.height)}cm`} />
-            <KeyValueRow label="Foot" value={player.footedness} divided={false} />
+            <ListRow title="Worth about" trailing={<Text role="stat">{formatMoney(player.marketValue)}</Text>} />
+            <ListRow title="Reputation" trailing={<Text role="stat">{Math.round(player.reputation)}</Text>} />
+            <ListRow title="From" trailing={<Text role="stat">{player.nationality}</Text>} />
+            <ListRow title="Height" trailing={<Text role="stat">{Math.round(player.height)}cm</Text>} />
+            <ListRow divided={false} title="Stronger foot" trailing={<Text role="stat">{player.footedness}</Text>} />
           </GlassPanel>
           {data.traits.length > 0 && (
-            <GlassPanel title="Traits" padding="md">
+            <GlassPanel title="What makes him different" padding="md">
               <div className="flex flex-wrap gap-1.5">
                 {data.traits.map((definition) => (
                   <TraitChip key={definition.id} trait={definition} onPress={() => setTrait(definition)} />
@@ -249,10 +257,10 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
         <GlassPanel padding="sm" accent="danger">
           <div className="flex items-center gap-2.5">
             <IconInjury size={18} className="shrink-0 text-danger" />
-            <p className="text-[13px] text-ink text-pretty">
+            <Text role="caption" as="p" className="text-ink text-pretty">
               <strong className="font-semibold">{player.injury.description}.</strong>{' '}
-              {player.injury.weeksRemaining} cycles remaining.
-            </p>
+              He cannot play for about {player.injury.weeksRemaining} more weeks.
+            </Text>
           </div>
         </GlassPanel>
       )}
@@ -260,7 +268,9 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
         <GlassPanel padding="sm" accent="danger">
           <div className="flex items-center gap-2.5">
             <IconCard size={18} className="shrink-0 text-warning" />
-            <p className="text-[13px] text-ink">Suspended for {player.suspensionMatches} match{player.suspensionMatches === 1 ? '' : 'es'}.</p>
+            <Text role="caption" as="p" className="text-ink">
+              Suspended for {player.suspensionMatches} {player.suspensionMatches === 1 ? 'match' : 'matches'}.
+            </Text>
           </div>
         </GlassPanel>
       )}
@@ -271,16 +281,16 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
           <div className="flex items-start gap-3">
             <IconScout size={20} className="mt-0.5 shrink-0 text-volt" />
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-ink">Scouting incomplete</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-ink-muted text-pretty">
-                Attributes below are shown as the range your scouts can actually justify, not as invented precision. Send a
-                scout and the bands narrow — that is what good scouting buys you.
-              </p>
+              <Text role="bodyStrong" as="p">Nobody has watched him properly yet</Text>
+              <Text role="caption" as="p" className="mt-1 text-pretty">
+                His attributes below are shown as the range your scouts can honestly justify, not as invented
+                precision. Send a scout and the bands narrow — that is exactly what scouting buys you.
+              </Text>
               <div className="mt-3">
                 <ProgressBar
                   value={data.confidence * 100}
                   tone="volt"
-                  label="Report confidence"
+                  label="How much you know"
                   valueLabel={`${Math.round(data.confidence * 100)}%`}
                 />
               </div>
@@ -294,46 +304,92 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
         </GlassPanel>
       )}
 
-      <StatGrid columns={2}>
-        <StatCard label="Fitness" value={Math.round(player.fitness)} suffix="%" tone={player.fitness >= 70 ? 'positive' : 'warning'} footnote="Match-to-match freshness" />
-        <StatCard
-          label="Form"
-          value={Number((player.form.rating * 10).toFixed(1))}
-          decimals={1}
-          tone={player.form.rating >= 0 ? 'positive' : 'danger'}
-          {...(ratings.length > 1 ? { history: ratings } : {})}
-          footnote={ratings.length ? `Last ${ratings.length} appearances` : 'No appearances yet'}
+      {/* --- where he is right now ------------------------------------ */}
+      <div className="grid grid-cols-2 gap-2">
+        <StatBlock
+          tone={player.fitness >= 75 ? 'positive' : player.fitness >= 45 ? 'warning' : 'danger'}
+          label="Fitness"
+          value={Math.round(player.fitness)}
+          unit="%"
+          caption={player.fitness >= 80 ? 'Fresh enough to start' : player.fitness >= 55 ? 'Tiring — rotate him soon' : 'He needs a rest'}
         />
-      </StatGrid>
+        <StatBlock
+          tone={player.form.rating >= 0.2 ? 'positive' : player.form.rating <= -0.2 ? 'danger' : 'neutral'}
+          label="Form"
+          value={ratings.length ? (ratings[ratings.length - 1] ?? 0).toFixed(1) : '—'}
+          caption={ratings.length
+            ? `Last rating from ${ratings.length} recent ${ratings.length === 1 ? 'game' : 'games'}`
+            : 'He has not played yet'}
+          trailing={ratings.length > 1
+            ? <Sparkline values={ratings} width={56} height={20} tone="volt" fill label="Recent ratings" />
+            : undefined}
+        />
+        <StatBlock
+          tone={player.mental.morale >= 65 ? 'positive' : player.mental.morale >= 40 ? 'warning' : 'danger'}
+          label="Happiness"
+          value={Math.round(player.mental.morale)}
+          unit="/ 100"
+          caption={player.mental.morale >= 65 ? 'Content at the club' : player.mental.morale >= 40 ? 'Unsettled' : 'Wants things to change'}
+        />
+        <StatBlock
+          tone={data.arc.valueChange !== null && data.arc.valueChange > 0 ? 'positive' : 'neutral'}
+          label="Worth about"
+          value={formatMoney(player.marketValue)}
+          caption={data.arc.valueChange !== null
+            ? `${data.arc.valueChange >= 0 ? 'Up' : 'Down'} ${Math.abs(data.arc.valueChange)}% on the ${formatMoney(data.arc.feePaid ?? 0)} you paid`
+            : 'What another club would expect to pay'}
+        />
+      </div>
 
-      {/* --- sections -------------------------------------------------- */}
-      <SectionHeader title="Profile" subtitle="Open what you need" />
+      {/* --- the arc -------------------------------------------------- */}
+      <div className="pt-1">
+        <Text role="section" as="h2">His story so far</Text>
+        <Text role="caption" className="mt-0.5 text-ink-dim">
+          Everything that has actually happened to him, in order
+        </Text>
+      </div>
       <GlassPanel padding="md">
-        <Accordion title="Performance" subtitle="This season" defaultOpen>
-          <StatGrid columns={4} gap="sm">
-            <StatCard nested level={1} size="sm" label="Apps" value={player.form.appearances} />
-            <StatCard nested level={1} size="sm" label="Goals" value={player.form.goals} />
-            <StatCard nested level={1} size="sm" label="Assists" value={player.form.assists} />
-            <StatCard nested level={1} size="sm" label="Minutes" value={player.form.minutes} />
-          </StatGrid>
-          <div className="mt-3">
-            <KeyValueRow label="Clean sheets" value={player.form.cleanSheets} />
-            <KeyValueRow label="Yellow cards" value={player.form.yellowCards} />
-            <KeyValueRow label="Red cards" value={player.form.redCards} divided={false} />
-          </div>
-          {ratings.length > 1 && (
-            <div className="mt-3 flex items-center gap-3">
-              <Sparkline values={ratings} width={160} height={36} tone="volt" fill label="Recent match ratings" />
-              <span className="tnum text-[12px] text-ink-muted">
-                Last rating {(ratings[ratings.length - 1] ?? 0).toFixed(1)}
-              </span>
-            </div>
-          )}
-        </Accordion>
+        <Timeline
+          animate={false}
+          items={data.arc.entries.map((entry) => ({
+            id: entry.id,
+            title: entry.title,
+            ...(entry.detail ? { description: entry.detail } : {}),
+            time: entry.when,
+            tone: entry.tone,
+          }))}
+        />
+      </GlassPanel>
 
+      {/* --- this season ---------------------------------------------- */}
+      <div className="pt-1">
+        <Text role="section" as="h2">This season</Text>
+      </div>
+      <GlassPanel padding="md">
+        <DataGrid columns={4}>
+          <DataCell label="Games" value={player.form.appearances} />
+          <DataCell label="Goals" value={player.form.goals} emphasis={player.form.goals > 0} />
+          <DataCell label="Assists" value={player.form.assists} />
+          <DataCell label="Minutes" value={player.form.minutes} />
+        </DataGrid>
+        <div className="mt-3">
+          <DataGrid columns={3}>
+            <DataCell label="Clean sheets" value={player.form.cleanSheets} />
+            <DataCell label="Yellows" value={player.form.yellowCards} />
+            <DataCell label="Reds" value={player.form.redCards} />
+          </DataGrid>
+        </div>
+      </GlassPanel>
+
+      {/* --- the detail ------------------------------------------------ */}
+      <div className="pt-1">
+        <Text role="section" as="h2">The detail</Text>
+        <Text role="caption" className="mt-0.5 text-ink-dim">Open what you need</Text>
+      </div>
+      <GlassPanel padding="md">
         <Accordion
           title="Attributes"
-          subtitle={data.exact ? 'Fully scouted' : `Ranges — ${Math.round(data.confidence * 100)}% confidence`}
+          subtitle={data.exact ? 'Fully scouted' : `Ranges — you know ${Math.round(data.confidence * 100)}% of him`}
           defaultOpen
         >
           {Object.entries(ATTRIBUTE_CATEGORIES).map(([title, keys]) => (
@@ -347,7 +403,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
           ))}
         </Accordion>
 
-        <Accordion title="Mental" subtitle="What he does when it gets hard">
+        <Accordion title="Mentality" subtitle="What he does when it gets hard">
           <div className="flex flex-col gap-2">
             {MENTAL_KEYS.map((key: MentalKey) => (
               <AttributeBar
@@ -358,13 +414,16 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
               />
             ))}
           </div>
-          <p className="mt-3 text-[12px] leading-relaxed text-ink-dim text-pretty">
-            Confidence and morale move week to week; everything else is close to a constant for this player's career.
-          </p>
+          <Text role="caption" as="p" className="mt-3 text-ink-dim text-pretty">
+            Confidence and morale move week to week. Everything else is close to a constant for his whole career.
+          </Text>
         </Accordion>
 
-        <Accordion title="Personality" subtitle={`${data.traits.length} trait${data.traits.length === 1 ? '' : 's'}`}>
-          <p className="text-[13px] leading-relaxed text-ink text-pretty">{personalityRead(player)}</p>
+        <Accordion
+          title="Personality and traits"
+          subtitle={`${data.traits.length} ${data.traits.length === 1 ? 'trait' : 'traits'}`}
+        >
+          <Text role="body" as="p" className="text-pretty">{personalityRead(player)}</Text>
           {data.traits.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {data.traits.map((definition) => (
@@ -376,92 +435,110 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
 
         <Accordion
           title="Contract"
-          subtitle={data.contract ? `${data.contract.weeksRemaining} cycles · ${formatMoney(data.contract.wage)}/cycle` : 'No contract'}
+          subtitle={data.contract
+            ? `${data.contract.weeksRemaining} weeks left · ${formatMoney(data.contract.wage)} a week`
+            : 'No contract'}
         >
           {data.contract ? (
             <>
-              <KeyValueRow label="Wage" value={`${formatMoney(data.contract.wage)}/cycle`} emphasis />
-              <KeyValueRow label="Remaining" value={`${data.contract.weeksRemaining} of ${data.contract.totalWeeks} cycles`} />
-              <KeyValueRow label="Squad role" value={SQUAD_ROLE_LABELS[data.contract.role]} hint="What you promised him" />
-              <KeyValueRow label="Release clause" value={data.contract.releaseClause ? formatMoney(data.contract.releaseClause) : 'None'} />
-              <KeyValueRow label="Loyalty bonus" value={formatMoney(data.contract.loyaltyBonus)} />
-              <KeyValueRow label="Signing bonus" value={formatMoney(data.contract.signingBonus)} divided={false} />
+              <ListRow title="Wage" subtitle="Paid every cycle" trailing={<Text role="stat">{formatMoney(data.contract.wage)}</Text>} />
+              <ListRow
+                title="Time left"
+                subtitle={`Of a ${data.contract.totalWeeks}-week deal`}
+                trailing={<Text role="stat">{data.contract.weeksRemaining}w</Text>}
+              />
+              <ListRow
+                title="Squad role"
+                subtitle="What you promised him when he signed"
+                trailing={<Text role="stat">{SQUAD_ROLE_LABELS[data.contract.role]}</Text>}
+              />
+              <ListRow
+                title="Release clause"
+                subtitle="What another club can pay to take him"
+                trailing={<Text role="stat">{data.contract.releaseClause ? formatMoney(data.contract.releaseClause) : 'None'}</Text>}
+              />
+              <ListRow
+                divided={false}
+                title="Loyalty bonus"
+                subtitle="Paid if he sees the deal out"
+                trailing={<Text role="stat">{formatMoney(data.contract.loyaltyBonus)}</Text>}
+              />
               <div className="mt-3">
                 <ProgressBar
-                  label="Minutes against the promise"
+                  label="Minutes against what you promised"
                   value={Math.max(0, 50 + rolePromiseDelta(data.contract) * 50)}
                   tone={rolePromiseDelta(data.contract) >= 0 ? 'positive' : 'warning'}
                   marker={50}
-                  valueLabel={rolePromiseDelta(data.contract) >= 0 ? 'Kept' : 'Broken'}
+                  valueLabel={rolePromiseDelta(data.contract) >= 0 ? 'Promise kept' : 'Promise broken'}
                 />
-                <p className="mt-1.5 text-[12px] text-ink-muted text-pretty">
+                <Text role="caption" as="p" className="mt-1.5 text-pretty">
                   {rolePromiseDelta(data.contract) >= 0
                     ? 'He is getting the minutes his role promised.'
-                    : 'He is playing less than his role promised, and it is costing morale every cycle.'}
-                </p>
+                    : 'He is playing less than his role promised, and it costs him morale every week.'}
+                </Text>
               </div>
               {data.contract.weeksRemaining <= 6 && (
                 <div className="mt-3 rounded-md bg-warning/10 p-3">
-                  <p className="text-[13px] font-semibold text-warning">This deal is running down.</p>
-                  <p className="mt-1 text-[12px] text-ink-muted text-pretty">
+                  <Text role="bodyStrong" as="p" className="text-warning">This deal is nearly up.</Text>
+                  <Text role="caption" as="p" className="mt-1 text-pretty">
                     Renew it or he leaves for nothing. Rival clubs can already talk to him.
-                  </p>
+                  </Text>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-[13px] text-ink-muted">No contract on file — this player is not signed to a club.</p>
+            <Text role="caption" as="p">No contract on file — he is not signed to a club.</Text>
           )}
         </Accordion>
 
         <Accordion title="Relationships" subtitle="Club, duties and reach">
-          <KeyValueRow label="Club" value={data.club?.name ?? 'Free agent'} />
+          <ListRow title="Club" trailing={<Text role="stat">{data.club?.shortName ?? 'Free agent'}</Text>} />
           {data.slot && (
-            <KeyValueRow
-              label="Starting slot"
-              value={data.slot.position}
-              hint={familiarity(player.position, data.slot.position) < 1
-                ? `Out of position — ${Math.round(familiarity(player.position, data.slot.position) * 100)}% familiarity`
-                : 'Natural position'}
+            <ListRow
+              title="Where he starts"
+              subtitle={familiarity(player.position, data.slot.position) < 1
+                ? `Out of position — only ${Math.round(familiarity(player.position, data.slot.position) * 100)}% comfortable there`
+                : 'His natural position'}
+              trailing={<Text role="stat">{data.slot.position}</Text>}
             />
           )}
-          {data.captain && <KeyValueRow label="Captain" value="Yes" hint="Leads the dressing room on matchday" />}
-          {data.penalties && <KeyValueRow label="Penalties" value="Yes" />}
-          {data.setPieces && <KeyValueRow label="Set pieces" value="Yes" />}
+          {data.captain && <ListRow title="Captain" subtitle="Leads the dressing room on matchday" trailing={<Text role="stat">Yes</Text>} />}
+          {data.penalties && <ListRow title="Takes penalties" trailing={<Text role="stat">Yes</Text>} />}
+          {data.setPieces && <ListRow title="Takes set pieces" trailing={<Text role="stat">Yes</Text>} />}
           {data.creator ? (
-            <KeyValueRow
-              label="Creator"
-              value={`@${data.creator.handle}`}
-              hint={`${Math.round(data.creator.followers / 1000)}k followers · ${data.creator.tier.toLowerCase()}`}
-              icon={<IconSocial size={16} />}
+            <ListRow
+              divided={false}
+              leading={<IconSocial size={16} className="text-ink-dim" />}
+              title={`@${data.creator.handle}`}
+              subtitle={`${Math.round(data.creator.followers / 1000)}k followers · ${data.creator.tier.toLowerCase()} tier`}
+              trailing={<Text role="stat">Creator</Text>}
+              chevron
               onPress={() => navigate(buildPath(ROUTES.creator, { creatorId: data.creator?.id ?? '' }))}
             />
           ) : (
-            <KeyValueRow label="Creator" value="Not a creator" hint="No audience of his own" divided={false} />
+            <ListRow divided={false} title="Audience" subtitle="He is not a creator — no following of his own" trailing={<Text role="stat">None</Text>} />
           )}
         </Accordion>
 
-        <Accordion title="History" subtitle={`${player.history.length} previous season${player.history.length === 1 ? '' : 's'}`}>
+        <Accordion
+          title="Season by season"
+          subtitle={`${player.history.length} completed ${player.history.length === 1 ? 'season' : 'seasons'}`}
+        >
           {player.history.length === 0 ? (
-            <p className="text-[13px] text-ink-muted text-pretty">
+            <Text role="caption" as="p" className="text-pretty">
               No completed seasons yet. His record starts filling in at the end of this campaign.
-            </p>
+            </Text>
           ) : (
             <div className="flex flex-col">
               {[...player.history].sort((a, b) => b.season - a.season).map((season) => (
-                <div key={season.season} className="flex items-center gap-3 border-b border-white/[0.06] py-2.5 last:border-b-0">
-                  <span className="tnum w-10 shrink-0 font-display text-[16px] font-bold text-ink">S{season.season}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] text-ink">
-                      {season.appearances} apps · {season.goals}g {season.assists}a
-                    </span>
-                    <span className="block text-[11px] text-ink-dim">
-                      {season.clubId ? clubById(state, season.clubId)?.shortName ?? 'Unknown club' : 'No club'} ·{' '}
-                      {season.motm} player of the match
-                    </span>
-                  </span>
-                  <RatingBadge value={season.averageRating} scale="match" size="sm" />
-                </div>
+                <ListRow
+                  key={season.season}
+                  divided
+                  leading={<Text role="stat" className="w-9 text-ink">S{season.season}</Text>}
+                  title={`${season.appearances} games · ${season.goals} goals · ${season.assists} assists`}
+                  subtitle={`${season.clubId ? clubById(state, season.clubId)?.shortName ?? 'Another club' : 'No club'} · ${season.motm} player of the match`}
+                  trailing={<RatingBadge value={season.averageRating} scale="match" size="sm" />}
+                />
               ))}
             </div>
           )}
@@ -474,7 +551,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
           Put him in the team
         </GlassButton>
         <GlassButton variant="ghost" size="sm" icon={<IconStar size={16} />} onClick={() => navigate(ROUTES.training)}>
-          Set his training focus
+          Set his training
         </GlassButton>
       </div>
 
@@ -486,30 +563,34 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
       >
         {trait && (
           <div className="flex flex-col gap-3">
-            <p className="text-[14px] leading-relaxed text-ink text-pretty">{trait.blurb}</p>
+            <Text role="body" as="p" className="text-pretty">{trait.blurb}</Text>
             <GlassPanel nested level={1} padding="sm">
               {Object.entries(trait.modifiers).map(([key, value], index, all) => (
-                <KeyValueRow
+                <ListRow
                   key={key}
-                  label={MODIFIER_LABELS[key] ?? key}
-                  value={
-                    <span className={cn(
-                      (key === 'injuryRisk' || key === 'cardRisk' || key === 'staminaDrain' || key === 'wageDemand')
-                        ? (value > 0 ? 'text-danger' : 'text-positive')
-                        : (value > 0 ? 'text-positive' : 'text-danger'),
-                    )}>
-                      {value > 0 ? '+' : ''}{Math.round(value * 100)}%
-                    </span>
-                  }
                   divided={index !== all.length - 1}
+                  density="compact"
+                  title={MODIFIER_LABELS[key] ?? key}
+                  trailing={
+                    <Text
+                      role="stat"
+                      className={cn(
+                        (key === 'injuryRisk' || key === 'cardRisk' || key === 'staminaDrain' || key === 'wageDemand')
+                          ? (value > 0 ? 'text-danger' : 'text-positive')
+                          : (value > 0 ? 'text-positive' : 'text-danger'),
+                      )}
+                    >
+                      {value > 0 ? '+' : ''}{Math.round(value * 100)}%
+                    </Text>
+                  }
                 />
               ))}
             </GlassPanel>
             {trait.conditions && trait.conditions.length > 0 && (
-              <p className="text-[12px] text-ink-muted text-pretty">
-                Only applies {trait.conditions.map((c) => c.replace(/_/g, ' ').toLowerCase()).join(' or ')} — the rest of
-                the time it does nothing at all.
-              </p>
+              <Text role="caption" as="p" className="text-pretty">
+                Only applies {trait.conditions.map((c) => c.replace(/_/g, ' ').toLowerCase()).join(' or ')} — the rest
+                of the time it does nothing at all.
+              </Text>
             )}
           </div>
         )}

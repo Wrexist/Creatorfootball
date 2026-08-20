@@ -84,6 +84,31 @@ export const CASCADE_BALANCE = {
     mediaImportance: 5,
     fanSentiment: 3,
   },
+  /** Selling a player: what counts as losing someone who mattered. */
+  playerSold: {
+    /** Fee as a multiple of the seller's cycle wage budget that reads as a big sale. */
+    feeToWageBudgetRatio: 5,
+    fanSentiment: -4,
+    squadMorale: -2,
+  },
+  motm: {
+    playerMorale: 5,
+  },
+  recovery: {
+    playerMorale: 6,
+  },
+  attendance: {
+    /** Fill rate at or above which the ground counts as full. */
+    fullThreshold: 0.97,
+    /** Fill rate at or below which the empty seats are the story. */
+    emptyThreshold: 0.55,
+  },
+  youthPromotion: {
+    fanExcitement: 3,
+  },
+  sponsorLost: {
+    fanSentiment: -3,
+  },
 } as const;
 
 export const WORLD_BALANCE = {

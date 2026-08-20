@@ -34,6 +34,8 @@ export interface PitchViewProps {
    * shake; nothing smaller than a goal is allowed to set it.
    */
   impactKey?: string | null;
+  /** 0-1, how hard the one shake hits. */
+  impactStrength?: number;
   className?: string;
 }
 
@@ -41,7 +43,7 @@ const PROFILE = typeof window !== 'undefined' && window.location.search.includes
 
 export const PitchView = memo(function PitchView({
   homePalette, awayPalette, playerSide, numbers, keepers, roles, orientation, camera,
-  drama = false, impactKey = null, className,
+  drama = false, impactKey = null, impactStrength = 1, className,
 }: PitchViewProps): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -145,7 +147,9 @@ export const PitchView = memo(function PitchView({
   }, [drama]);
 
   useEffect(() => {
-    if (impactKey) rendererRef.current?.impact(1);
+    if (impactKey) rendererRef.current?.impact(impactKey, impactStrength);
+    // The strength travels with the key; a prop change alone must not re-shake.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [impactKey]);
 
   return (

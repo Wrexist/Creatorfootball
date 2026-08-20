@@ -119,6 +119,13 @@ const clubEntity = (ctx: CascadeCtx, id: string | undefined): EntityRef[] =>
 const playerEntity = (ctx: CascadeCtx, id: string | undefined): EntityRef[] =>
   (id ? [{ kind: 'player' as const, id, name: ctx.playerName(id) }] : []);
 
+/** Reach and attendance figures, short enough to sit inside a headline. */
+const compactCount = (n: number): string => (
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M`
+    : n >= 1_000 ? `${Math.round(n / 1_000)}K`
+      : String(Math.round(n))
+);
+
 /** Fill in the boilerplate every hook shares so rules stay readable. */
 function completeHook(
   partial: Partial<ContentHook>,
@@ -512,9 +519,20 @@ const injuryRule: RuleFor<'PLAYER_INJURED'> = (e, ctx) => {
 const recordRule: RuleFor<'RECORD_BROKEN'> = (e, ctx) => {
   const p = e.payload;
   const clubName = ctx.clubName(p.clubId);
-  const holder = p.holderId ? ctx.playerName(p.holderId) : clubName;
-  const tokens: TokenMap = { club: clubName, player: holder, record: p.record, value: p.value };
-  const facts: HookFacts = { record: p.record, value: p.value };
+  // A club record has no person in it. Filling `{player}` with the club name
+  // produced "Cinderwick Town writes his name into the history of Cinderwick
+  // Town"; leaving the token absent instead makes player-shaped templates
+  // unrenderable for a club record, which is the correct outcome — `subject`
+  // lets the pack pick a club-shaped line deliberately.
+  const holder = p.holderId ? ctx.playerName(p.holderId) : null;
+  const tokens: TokenMap = {
+    club: clubName, record: p.record, value: p.value,
+    ...(holder ? { player: holder } : {}),
+    subject: holder ?? clubName,
+  };
+  const facts: HookFacts = {
+    record: p.record, value: p.value, subjectKind: holder ? 'PLAYER' : 'CLUB',
+  };
   const entities = [...clubEntity(ctx, p.clubId), ...playerEntity(ctx, p.holderId)];
   return {
     nodes: [{ id: 'record', kind: 'MEDIA', label: `${p.record} record broken`, sourceEventId: e.id }],
@@ -656,6 +674,565 @@ const creatorJoinRule: RuleFor<'CREATOR_JOINED'> = (e, ctx) => {
   };
 };
 
+
+// --- the rest of the world's news ------------------------------------------
+
+/**
+ * Below this line are the rules for the *ordinary* week: a draw, a squad
+ * player sold, a contract signed, a facility finished, a prospect promoted.
+ *
+ * They exist because an audit found that 85% of the authored library never
+ * reached a player. The cause was not the writing and not the selector — it
+ * was that two thirds of the events the world actually emits had no cascade
+ * rule at all, so they produced no hook, so no template could ever be chosen
+ * for them however good it was. Each rule here is small on purpose: low
+ * importance, a narrow audience, no world deltas unless the moment earns one.
+ * The point is coverage, not volume.
+ */
+
+const matchDrawnRule: RuleFor<'MATCH_DRAWN'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubId);
+  const opponent = ctx.clubName(p.opponentId);
+  const heat = ctx.derbyHeat(p.clubId, p.opponentId);
+  const isDerbyMoment = heat >= C.derby.intensityThreshold;
+  const tokens: TokenMap = { club, opponent, score: `${p.score}-${p.score}` };
+  const facts: HookFacts = { derby: isDerbyMoment, score: p.score, intensity: Math.round(heat) };
+  const entities = [...clubEntity(ctx, p.clubId), ...clubEntity(ctx, p.opponentId)];
+  return {
+    nodes: [{ id: 'draw', kind: 'MEDIA', label: `${club} draw with ${opponent}`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'MATCH_DRAWN', importance: (isDerbyMoment ? 3 : 2) as EventImportance, sentiment: 0,
+      tokens, facts, entities, clubId: p.clubId, opponentClubId: p.opponentId, tags: ['match'],
+    }],
+    social: [{
+      trigger: 'MATCH_DRAWN', importance: (isDerbyMoment ? 3 : 2) as EventImportance, sentiment: 0,
+      tokens, facts, entities, clubId: p.clubId, opponentClubId: p.opponentId,
+      audiences: ['FAN', 'MEDIA', 'CREATOR'], tags: ['match'],
+    }],
+  };
+};
+
+const playerSoldRule: RuleFor<'PLAYER_SOLD'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const from = ctx.clubName(p.fromClubId);
+  const to = ctx.clubName(p.toClubId);
+  const seller = ctx.state.clubs[p.fromClubId];
+  // A club losing a player it rated is a story; clearing a fringe contract is not.
+  const wageBudget = Math.max(1, seller?.finance.wageBudgetPerCycle ?? 1);
+  const big = p.fee >= wageBudget * C.playerSold.feeToWageBudgetRatio;
+  const tokens: TokenMap = { player, club: from, opponent: to, buyer: to, fee: formatMoney(p.fee) };
+  const facts: HookFacts = { fee: p.fee, big };
+  const entities = [
+    ...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.fromClubId), ...clubEntity(ctx, p.toClubId),
+  ];
+  return {
+    nodes: [{ id: 'sale', kind: 'SOCIAL', label: `${from} sell ${player}`, sourceEventId: e.id }],
+    deltas: big
+      ? [
+        { kind: 'FAN_SENTIMENT', clubId: p.fromClubId, delta: C.playerSold.fanSentiment, reason: `${player} sold` },
+        { kind: 'SQUAD_MORALE', clubId: p.fromClubId, delta: C.playerSold.squadMorale, reason: 'Key player sold' },
+      ]
+      : [],
+    media: [{
+      trigger: 'PLAYER_SOLD', importance: (big ? 3 : 2) as EventImportance, sentiment: big ? -0.3 : 0.05,
+      tokens, facts, entities, clubId: p.fromClubId, opponentClubId: p.toClubId, playerId: p.playerId,
+      tags: ['transfer'],
+    }],
+    social: [{
+      trigger: 'PLAYER_SOLD', importance: (big ? 3 : 2) as EventImportance, sentiment: big ? -0.4 : 0,
+      tokens, facts, entities, clubId: p.fromClubId, opponentClubId: p.toClubId, playerId: p.playerId,
+      audiences: big ? ['FAN', 'MEDIA', 'PLAYER', 'CLUB'] : ['CLUB', 'MEDIA'], tags: ['transfer'],
+    }],
+  };
+};
+
+const motmRule: RuleFor<'MOTM_AWARDED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const tokens: TokenMap = { player, club, rating: p.rating.toFixed(1) };
+  const facts: HookFacts = { rating: p.rating };
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'motm', kind: 'SOCIAL', label: `${player} man of the match`, sourceEventId: e.id }],
+    deltas: [{ kind: 'PLAYER_MORALE', playerId: p.playerId, delta: C.motm.playerMorale, reason: 'Man of the match' }],
+    media: [{
+      trigger: 'MOTM_AWARDED', importance: 2, sentiment: 0.5,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, tags: ['match', 'rating'],
+    }],
+    social: [{
+      trigger: 'MOTM_AWARDED', importance: 2, sentiment: 0.6,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['FAN', 'CLUB', 'CREATOR'], tags: ['match', 'rating'],
+    }],
+  };
+};
+
+const contractSignedRule: RuleFor<'CONTRACT_SIGNED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const tokens: TokenMap = { player, club, years: p.years, wage: formatMoney(p.wage) };
+  const facts: HookFacts = { years: p.years, wage: p.wage };
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'contract', kind: 'SOCIAL', label: `${player} signs on`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'CONTRACT_SIGNED', importance: 2, sentiment: 0.4,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, tags: ['contract'],
+    }],
+    social: [{
+      trigger: 'CONTRACT_SIGNED', importance: 2, sentiment: 0.5,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['CLUB', 'FAN'], tags: ['contract'],
+    }],
+  };
+};
+
+const contractExpiringRule: RuleFor<'CONTRACT_EXPIRING'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const tokens: TokenMap = { player, club, weeks: p.weeksLeft };
+  const facts: HookFacts = { weeksLeft: p.weeksLeft };
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'expiring', kind: 'SOCIAL', label: `${player} running down his deal`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'CONTRACT_EXPIRING', importance: 2, sentiment: -0.3,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, tags: ['contract'],
+    }],
+    social: [{
+      trigger: 'CONTRACT_EXPIRING', importance: 2, sentiment: -0.35,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['LEAK', 'FAN'], tags: ['contract'],
+    }],
+  };
+};
+
+const facilityRule: RuleFor<'FACILITY_UPGRADED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubId);
+  const facility = String(p.facilityId).replace(/_/g, ' ');
+  const tokens: TokenMap = { club, facility, level: p.level };
+  const facts: HookFacts = { level: p.level, facility };
+  return {
+    nodes: [{ id: 'facility', kind: 'SOCIAL', label: `${club} upgrade the ${facility}`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'FACILITY_UPGRADED', importance: 2, sentiment: 0.35,
+      tokens, facts, entities: clubEntity(ctx, p.clubId), clubId: p.clubId, tags: ['facility'],
+    }],
+    social: [{
+      trigger: 'FACILITY_UPGRADED', importance: 2, sentiment: 0.4,
+      tokens, facts, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      audiences: ['CLUB', 'FAN'], tags: ['facility'],
+    }],
+  };
+};
+
+const recoveredRule: RuleFor<'PLAYER_RECOVERED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const tokens: TokenMap = { player, club };
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'recovered', kind: 'MORALE', label: `${player} back in training`, sourceEventId: e.id }],
+    deltas: [{ kind: 'PLAYER_MORALE', playerId: p.playerId, delta: C.recovery.playerMorale, reason: 'Back in training' }],
+    media: [{
+      trigger: 'PLAYER_RECOVERED', importance: 2, sentiment: 0.4,
+      tokens, facts: {}, entities, clubId: p.clubId, playerId: p.playerId, tags: ['injury'],
+    }],
+    social: [{
+      trigger: 'PLAYER_RECOVERED', importance: 2, sentiment: 0.45,
+      tokens, facts: {}, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['CLUB', 'FAN'], tags: ['injury'],
+    }],
+  };
+};
+
+const releasedRule: RuleFor<'PLAYER_RELEASED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'released', kind: 'SOCIAL', label: `${club} release ${player}`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'PLAYER_RELEASED', importance: 2, sentiment: -0.25,
+      tokens: { player, club }, facts: {}, entities, clubId: p.clubId, playerId: p.playerId, tags: ['squad'],
+    }],
+    social: [{
+      trigger: 'PLAYER_RELEASED', importance: 2, sentiment: -0.3,
+      tokens: { player, club }, facts: {}, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['FAN', 'PLAYER'], tags: ['squad'],
+    }],
+  };
+};
+
+const developedRule: RuleFor<'PLAYER_DEVELOPED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const tokens: TokenMap = {
+    player, club, attribute: p.attribute.replace(/([A-Z])/g, ' $1').toLowerCase().trim(), value: p.to,
+  };
+  const facts: HookFacts = { attribute: p.attribute, from: p.from, to: p.to, gain: p.to - p.from };
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'developed', kind: 'SOCIAL', label: `${player} improving`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'PLAYER_DEVELOPED', importance: 1, sentiment: 0.35,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, tags: ['development'],
+    }],
+    social: [{
+      trigger: 'PLAYER_DEVELOPED', importance: 1, sentiment: 0.4,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['CREATOR', 'FAN'], tags: ['development'],
+    }],
+  };
+};
+
+const attendanceRule: RuleFor<'ATTENDANCE_RECORDED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubId);
+  const fillRate = p.capacity > 0 ? p.attendance / p.capacity : 0;
+  // Only a full house or a visibly empty ground is worth a line.
+  if (fillRate > C.attendance.emptyThreshold && fillRate < C.attendance.fullThreshold) return null;
+  const full = fillRate >= C.attendance.fullThreshold;
+  const tokens: TokenMap = { club, attendance: p.attendance, capacity: p.capacity };
+  const facts: HookFacts = { attendance: p.attendance, capacity: p.capacity, sellOut: full };
+  return {
+    nodes: [{ id: 'gate', kind: 'SOCIAL', label: full ? `${club} sell out` : `${club} play to empty seats`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'ATTENDANCE_RECORDED', importance: 2, sentiment: full ? 0.4 : -0.4,
+      tokens, facts, entities: clubEntity(ctx, p.clubId), clubId: p.clubId, tags: ['fans'],
+    }],
+    social: [{
+      trigger: 'ATTENDANCE_RECORDED', importance: 2, sentiment: full ? 0.45 : -0.45,
+      tokens, facts, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      audiences: ['CLUB', 'FAN'], tags: ['fans'],
+    }],
+  };
+};
+
+const seasonStartRule: RuleFor<'SEASON_STARTED'> = (e, ctx) => {
+  const club = ctx.clubName(ctx.playerClubId);
+  const tokens: TokenMap = { club, season: e.payload.season };
+  const facts: HookFacts = { season: e.payload.season };
+  return {
+    nodes: [{ id: 'kickoff', kind: 'MEDIA', label: `Season ${e.payload.season} begins`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'SEASON_STARTED', importance: 3, sentiment: 0.4,
+      tokens, facts, entities: clubEntity(ctx, ctx.playerClubId), clubId: ctx.playerClubId, tags: ['season'],
+    }],
+    social: [{
+      trigger: 'SEASON_STARTED', importance: 3, sentiment: 0.45,
+      tokens, facts, entities: clubEntity(ctx, ctx.playerClubId), clubId: ctx.playerClubId,
+      audiences: ['CLUB', 'FAN', 'CREATOR'], tags: ['season'],
+    }],
+  };
+};
+
+const seasonEndRule: RuleFor<'SEASON_COMPLETED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(ctx.playerClubId);
+  const champion = ctx.clubName(p.championClubId);
+  const won = p.championClubId === ctx.playerClubId;
+  const tokens: TokenMap = { club, champion, position: p.playerPosition, season: p.season };
+  const facts: HookFacts = { position: p.playerPosition, season: p.season, champion: won };
+  return {
+    nodes: [{ id: 'seasonend', kind: 'MEDIA', label: `Season ${p.season} ends`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'SEASON_COMPLETED', importance: 4, sentiment: won ? 0.9 : p.playerPosition <= 6 ? 0.2 : -0.4,
+      tokens, facts, entities: clubEntity(ctx, ctx.playerClubId), clubId: ctx.playerClubId, tags: ['season'],
+    }],
+    social: [{
+      trigger: 'SEASON_COMPLETED', importance: 4, sentiment: won ? 0.9 : p.playerPosition <= 6 ? 0.2 : -0.45,
+      tokens, facts, entities: clubEntity(ctx, ctx.playerClubId), clubId: ctx.playerClubId,
+      audiences: ['FAN', 'MEDIA', 'CREATOR'], tags: ['season'],
+    }],
+  };
+};
+
+const youthPromotionRule: RuleFor<'YOUTH_PROSPECT_PROMOTED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const prospect = ctx.state.players[p.playerId];
+  const tokens: TokenMap = { player, club, age: prospect?.age ?? 17 };
+  const facts: HookFacts = { age: prospect?.age ?? 17, potential: prospect?.potential ?? 0 };
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'promoted', kind: 'SOCIAL', label: `${player} promoted to the first team`, sourceEventId: e.id }],
+    deltas: [{ kind: 'FAN_EXCITEMENT', clubId: p.clubId, delta: C.youthPromotion.fanExcitement, reason: 'Academy promotion' }],
+    media: [{
+      trigger: 'YOUTH_PROSPECT_PROMOTED', importance: 2, sentiment: 0.5,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId, tags: ['youth'],
+    }],
+    social: [{
+      trigger: 'YOUTH_PROSPECT_PROMOTED', importance: 2, sentiment: 0.55,
+      tokens, facts, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['CLUB', 'FAN'], tags: ['youth'],
+    }],
+  };
+};
+
+const objectiveDoneRule: RuleFor<'OBJECTIVE_COMPLETED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(ctx.playerClubId);
+  const tokens: TokenMap = { club, objective: p.title, reward: p.rewardSummary };
+  const facts: HookFacts = { objective: p.title };
+  return {
+    nodes: [{ id: 'objective', kind: 'SOCIAL', label: `${p.title} completed`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'OBJECTIVE_COMPLETED', importance: 2, sentiment: 0.5,
+      tokens, facts, entities: clubEntity(ctx, ctx.playerClubId), clubId: ctx.playerClubId, tags: ['objective'],
+    }],
+    social: [{
+      trigger: 'OBJECTIVE_COMPLETED', importance: 2, sentiment: 0.55,
+      tokens, facts, entities: clubEntity(ctx, ctx.playerClubId), clubId: ctx.playerClubId,
+      audiences: ['CLUB', 'FAN'], tags: ['objective'],
+    }],
+  };
+};
+
+const objectiveFailedRule: RuleFor<'OBJECTIVE_FAILED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(ctx.playerClubId);
+  const tokens: TokenMap = { club, objective: p.title };
+  return {
+    nodes: [{ id: 'objective', kind: 'SOCIAL', label: `${p.title} missed`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'OBJECTIVE_FAILED', importance: 3, sentiment: -0.5,
+      tokens, facts: { objective: p.title }, entities: clubEntity(ctx, ctx.playerClubId),
+      clubId: ctx.playerClubId, tags: ['objective'],
+    }],
+    social: [{
+      trigger: 'OBJECTIVE_FAILED', importance: 3, sentiment: -0.55,
+      tokens, facts: { objective: p.title }, entities: clubEntity(ctx, ctx.playerClubId),
+      clubId: ctx.playerClubId, audiences: ['FAN', 'MEDIA'], tags: ['objective'],
+    }],
+  };
+};
+
+const reputationRule: RuleFor<'REPUTATION_CHANGED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubId);
+  const rising = p.to > p.from;
+  const tokens: TokenMap = { club, reputation: Math.round(p.to), reason: p.reason };
+  const facts: HookFacts = { from: Math.round(p.from), to: Math.round(p.to), rising };
+  return {
+    nodes: [{ id: 'reputation', kind: 'REPUTATION', label: `${club} reputation ${rising ? 'up' : 'down'}`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'REPUTATION_CHANGED', importance: 2, sentiment: rising ? 0.4 : -0.4,
+      tokens, facts, entities: clubEntity(ctx, p.clubId), clubId: p.clubId, tags: ['reputation'],
+    }],
+    social: [{
+      trigger: 'REPUTATION_CHANGED', importance: 2, sentiment: rising ? 0.4 : -0.4,
+      tokens, facts, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      audiences: ['MEDIA', 'CREATOR'], tags: ['reputation'],
+    }],
+  };
+};
+
+const sponsorLostRule: RuleFor<'SPONSOR_LOST'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubId);
+  const sponsor = ctx.state.sponsors.active.find((d) => d.sponsorId === p.sponsorId)?.name
+    ?? 'the shirt sponsor';
+  const tokens: TokenMap = { club, sponsor, reason: p.reason };
+  return {
+    nodes: [{ id: 'sponsorlost', kind: 'SOCIAL', label: `${sponsor} walk away from ${club}`, sourceEventId: e.id }],
+    deltas: [{ kind: 'FAN_SENTIMENT', clubId: p.clubId, delta: C.sponsorLost.fanSentiment, reason: 'Sponsor walked' }],
+    media: [{
+      trigger: 'SPONSOR_LOST', importance: 3, sentiment: -0.5,
+      tokens, facts: { reason: p.reason }, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      tags: ['commercial'],
+    }],
+    social: [{
+      trigger: 'SPONSOR_LOST', importance: 3, sentiment: -0.5,
+      tokens, facts: { reason: p.reason }, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      audiences: ['FAN', 'MEDIA'], tags: ['commercial'],
+    }],
+  };
+};
+
+const balanceLowRule: RuleFor<'BALANCE_LOW'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubId);
+  const tokens: TokenMap = { club, balance: formatMoney(p.balance) };
+  return {
+    nodes: [{ id: 'balance', kind: 'PRESSURE', label: `${club} are running out of money`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'BALANCE_LOW', importance: 3, sentiment: -0.6,
+      tokens, facts: { balance: p.balance }, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      tags: ['finance'],
+    }],
+    social: [{
+      trigger: 'BALANCE_LOW', importance: 3, sentiment: -0.6,
+      tokens, facts: { balance: p.balance }, entities: clubEntity(ctx, p.clubId), clubId: p.clubId,
+      audiences: ['LEAK', 'FAN'], tags: ['finance'],
+    }],
+  };
+};
+
+const rivalryCreatedRule: RuleFor<'RIVALRY_CREATED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.clubA);
+  const opponent = ctx.clubName(p.clubB);
+  const entities = [...clubEntity(ctx, p.clubA), ...clubEntity(ctx, p.clubB)];
+  return {
+    nodes: [{ id: 'rivalryborn', kind: 'RIVALRY', label: `${club} v ${opponent} is a fixture now`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'RIVALRY_CREATED', importance: 3, sentiment: -0.2,
+      tokens: { club, opponent }, facts: {}, entities, clubId: p.clubA, opponentClubId: p.clubB,
+      tags: ['rivalry'],
+    }],
+    social: [{
+      trigger: 'RIVALRY_CREATED', importance: 3, sentiment: -0.2,
+      tokens: { club, opponent }, facts: {}, entities, clubId: p.clubA, opponentClubId: p.clubB,
+      audiences: ['MEDIA', 'FAN', 'RIVAL'], tags: ['rivalry'],
+    }],
+  };
+};
+
+const transferCompletedRule: RuleFor<'TRANSFER_COMPLETED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.toClubId);
+  const from = ctx.clubName(p.fromClubId);
+  const entities = [
+    ...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.toClubId), ...clubEntity(ctx, p.fromClubId),
+  ];
+  return {
+    nodes: [{ id: 'done', kind: 'MEDIA', label: `${player} deal done`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'TRANSFER_COMPLETED', importance: 2, sentiment: 0.25,
+      tokens: { player, club, opponent: from, fee: formatMoney(p.fee) },
+      facts: { fee: p.fee }, entities, clubId: p.toClubId, opponentClubId: p.fromClubId,
+      playerId: p.playerId, tags: ['transfer'],
+    }],
+    social: [{
+      trigger: 'TRANSFER_COMPLETED', importance: 2, sentiment: 0.25,
+      tokens: { player, club, opponent: from, fee: formatMoney(p.fee) },
+      facts: { fee: p.fee }, entities, clubId: p.toClubId, opponentClubId: p.fromClubId,
+      playerId: p.playerId, audiences: ['MEDIA', 'LEAK'], tags: ['transfer'],
+    }],
+  };
+};
+
+const bidMadeRule: RuleFor<'TRANSFER_BID_MADE'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.toClubId);
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.toClubId)];
+  return {
+    nodes: [{ id: 'bid', kind: 'SOCIAL', label: `${club} bid for ${player}`, sourceEventId: e.id }],
+    social: [{
+      trigger: 'TRANSFER_BID_MADE', importance: 2, sentiment: 0.1,
+      tokens: { player, club, amount: formatMoney(p.amount), fee: formatMoney(p.amount) },
+      facts: { amount: p.amount }, entities, clubId: p.toClubId, opponentClubId: p.fromClubId,
+      playerId: p.playerId, audiences: ['LEAK', 'FAN'], tags: ['transfer', 'rumour'],
+    }],
+  };
+};
+
+const bidRejectedRule: RuleFor<'TRANSFER_BID_REJECTED'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const owner = ctx.state.players[p.playerId]?.clubId;
+  const club = ctx.clubName(owner ?? undefined);
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, owner ?? undefined)];
+  return {
+    nodes: [{ id: 'rejected', kind: 'SOCIAL', label: `Bid for ${player} rejected`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'TRANSFER_BID_REJECTED', importance: 2, sentiment: -0.1,
+      tokens: { player, club, reason: p.reason }, facts: { reason: p.reason },
+      entities, ...(owner ? { clubId: owner } : {}), playerId: p.playerId, tags: ['transfer'],
+    }],
+    social: [{
+      trigger: 'TRANSFER_BID_REJECTED', importance: 2, sentiment: -0.15,
+      tokens: { player, club, reason: p.reason }, facts: { reason: p.reason },
+      entities, ...(owner ? { clubId: owner } : {}), playerId: p.playerId,
+      audiences: ['LEAK', 'FAN'], tags: ['transfer'],
+    }],
+  };
+};
+
+const scoutReportRule: RuleFor<'SCOUT_REPORT_READY'> = (e, ctx) => {
+  const p = e.payload;
+  const player = ctx.playerName(p.playerId);
+  const club = ctx.clubName(p.clubId);
+  const entities = [...playerEntity(ctx, p.playerId), ...clubEntity(ctx, p.clubId)];
+  return {
+    nodes: [{ id: 'scout', kind: 'SOCIAL', label: `${club} file a report on ${player}`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'SCOUT_REPORT_READY', importance: 2, sentiment: 0.1,
+      tokens: { player, club, confidence: Math.round(p.confidence * 100) },
+      facts: { confidence: p.confidence }, entities, clubId: p.clubId, playerId: p.playerId,
+      tags: ['scouting'],
+    }],
+    social: [{
+      trigger: 'SCOUT_REPORT_READY', importance: 2, sentiment: 0.1,
+      tokens: { player, club, confidence: Math.round(p.confidence * 100) },
+      facts: { confidence: p.confidence }, entities, clubId: p.clubId, playerId: p.playerId,
+      audiences: ['LEAK'], tags: ['scouting'],
+    }],
+  };
+};
+
+const creatorMomentRule: RuleFor<'CREATOR_MOMENT'> = (e, ctx) => {
+  const p = e.payload;
+  const creator = ctx.state.creators[p.creatorId];
+  if (!creator) return null;
+  const club = ctx.clubName(p.clubId);
+  const entities: EntityRef[] = [
+    { kind: 'creator', id: creator.id, name: creator.displayName },
+    ...clubEntity(ctx, p.clubId),
+  ];
+  const tokens: TokenMap = {
+    creator: creator.displayName, club, reach: compactCount(p.reach), kind: p.kind,
+  };
+  return {
+    nodes: [{ id: 'moment', kind: 'SOCIAL', label: `${creator.displayName} goes viral`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'CREATOR_MOMENT', importance: 2, sentiment: 0.45,
+      tokens, facts: { reach: p.reach, tier: creator.tier }, entities, clubId: p.clubId, tags: ['creator'],
+    }],
+    social: [{
+      trigger: 'CREATOR_MOMENT', importance: 2, sentiment: 0.5,
+      tokens, facts: { reach: p.reach, tier: creator.tier }, entities, clubId: p.clubId,
+      audiences: ['CREATOR', 'FAN'], tags: ['creator'],
+    }],
+  };
+};
+
+const fixtureRule: RuleFor<'MATCH_SCHEDULED'> = (e, ctx) => {
+  const p = e.payload;
+  const club = ctx.clubName(p.homeClubId);
+  const opponent = ctx.clubName(p.awayClubId);
+  const heat = ctx.derbyHeat(p.homeClubId, p.awayClubId);
+  const isDerbyMoment = heat >= C.derby.intensityThreshold;
+  const entities = [...clubEntity(ctx, p.homeClubId), ...clubEntity(ctx, p.awayClubId)];
+  const tokens: TokenMap = { club, opponent, week: p.week };
+  const facts: HookFacts = { derby: isDerbyMoment, week: p.week, intensity: Math.round(heat) };
+  return {
+    nodes: [{ id: 'preview', kind: 'MEDIA', label: `${club} v ${opponent} coming up`, sourceEventId: e.id }],
+    media: [{
+      trigger: 'MATCH_SCHEDULED', importance: (isDerbyMoment ? 3 : 2) as EventImportance, sentiment: 0,
+      tokens, facts, entities, clubId: p.homeClubId, opponentClubId: p.awayClubId, tags: ['preview'],
+    }],
+    social: [{
+      trigger: 'MATCH_SCHEDULED', importance: (isDerbyMoment ? 3 : 2) as EventImportance, sentiment: 0,
+      tokens, facts, entities, clubId: p.homeClubId, opponentClubId: p.awayClubId,
+      audiences: ['MEDIA', 'FAN'], tags: ['preview'],
+    }],
+  };
+};
+
 const RULES: { [K in DomainEventType]?: RuleFor<K> } = {
   RED_CARD: redCardRule,
   PLAYER_MORALE_CHANGED: moraleRule,
@@ -673,6 +1250,31 @@ const RULES: { [K in DomainEventType]?: RuleFor<K> } = {
   MANAGER_SACKED: sackRule,
   SPONSOR_SIGNED: sponsorRule,
   CREATOR_JOINED: creatorJoinRule,
+  MATCH_DRAWN: matchDrawnRule,
+  PLAYER_SOLD: playerSoldRule,
+  MOTM_AWARDED: motmRule,
+  CONTRACT_SIGNED: contractSignedRule,
+  CONTRACT_EXPIRING: contractExpiringRule,
+  FACILITY_UPGRADED: facilityRule,
+  PLAYER_RECOVERED: recoveredRule,
+  PLAYER_RELEASED: releasedRule,
+  PLAYER_DEVELOPED: developedRule,
+  ATTENDANCE_RECORDED: attendanceRule,
+  SEASON_STARTED: seasonStartRule,
+  SEASON_COMPLETED: seasonEndRule,
+  YOUTH_PROSPECT_PROMOTED: youthPromotionRule,
+  OBJECTIVE_COMPLETED: objectiveDoneRule,
+  OBJECTIVE_FAILED: objectiveFailedRule,
+  REPUTATION_CHANGED: reputationRule,
+  SPONSOR_LOST: sponsorLostRule,
+  BALANCE_LOW: balanceLowRule,
+  RIVALRY_CREATED: rivalryCreatedRule,
+  TRANSFER_COMPLETED: transferCompletedRule,
+  TRANSFER_BID_MADE: bidMadeRule,
+  TRANSFER_BID_REJECTED: bidRejectedRule,
+  SCOUT_REPORT_READY: scoutReportRule,
+  CREATOR_MOMENT: creatorMomentRule,
+  MATCH_SCHEDULED: fixtureRule,
 };
 
 // --- follow-ups ------------------------------------------------------------
@@ -738,8 +1340,12 @@ const FOLLOW_UPS: { [K in DomainEventType]?: FollowUpRule } = {
     const p = e.payload as DomainEventPayloads['RECORD_BROKEN'];
     return {
       trigger: 'RECORD_REACTION', importance: 3, sentiment: 0.6,
-      tokens: { club: ctx.clubName(p.clubId), record: p.record, value: p.value, player: p.holderId ? ctx.playerName(p.holderId) : ctx.clubName(p.clubId) },
-      facts: { followUp: true, record: p.record },
+      tokens: {
+        club: ctx.clubName(p.clubId), record: p.record, value: p.value,
+        ...(p.holderId ? { player: ctx.playerName(p.holderId) } : {}),
+        subject: p.holderId ? ctx.playerName(p.holderId) : ctx.clubName(p.clubId),
+      },
+      facts: { followUp: true, record: p.record, subjectKind: p.holderId ? 'PLAYER' : 'CLUB' },
       entities: [...clubEntity(ctx, p.clubId), ...playerEntity(ctx, p.holderId)],
       clubId: p.clubId,
       audiences: ['MEDIA', 'FAN', 'CREATOR'], tags: ['record', 'follow-up'],

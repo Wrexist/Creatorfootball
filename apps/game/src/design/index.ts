@@ -30,6 +30,33 @@ export { useMediaQuery, useReducedTransparency, useCoarsePointer, useCanHover } 
 export { useSvgId } from './useSvgId';
 export { BREAKPOINTS, useBreakpoint, useIsMobile, useIsWide, type Breakpoint } from './useBreakpoint';
 
+/* --- typography -------------------------------------------------------
+   The type scale and the anti-truncation primitives. `NameText` is the one
+   screens reach for whenever a club, player or creator name lands in a slot
+   whose width the name did not choose. */
+export { FitText, EntityName, type FitTextProps, type EntityNameProps } from './typography/FitText';
+export { TYPE_CLASS, TYPE_SIZE, NUMERIC_ROLES, type TypeRole } from './typography/type';
+export {
+  Text, NameText, Numeric,
+  type TextProps, type NameTextProps, type NumericProps,
+} from './typography/Text';
+
+/* --- surfaces ---------------------------------------------------------
+   Shapes that are deliberately not the default card. */
+export {
+  TEXTURE_CLASS, bleedStyle, type SurfaceTexture,
+} from './surfaces/material';
+export { HeroSurface, type HeroSurfaceProps } from './surfaces/HeroSurface';
+export { MediaCard, type MediaCardProps } from './surfaces/MediaCard';
+export {
+  StatBlock, DataCell, DataGrid, ListRow,
+  type StatBlockProps, type StatBlockTone, type DataCellProps, type DataGridProps,
+  type ListRowProps,
+} from './surfaces/blocks';
+export {
+  ScorePanel, type ScorePanelProps, type ScorePanelSide,
+} from './surfaces/ScorePanel';
+
 /* --- icons ------------------------------------------------------------ */
 export * from './icons';
 

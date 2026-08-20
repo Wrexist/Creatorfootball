@@ -121,9 +121,12 @@ export const AttributeBar = memo(function AttributeBar({
 
   return (
     <div className={cn('flex items-center gap-3', className)}>
+      {/* Attribute names are content ("Off the ball", "Aerial ability") and
+          were clipping in a fixed 92px slot. The slot now flexes between 76 and
+          108px and the label wraps to a second line rather than being cut. */}
       <span
         className={cn(
-          'w-[92px] shrink-0 truncate text-[12px]',
+          'w-[92px] min-w-[76px] max-w-[108px] shrink-0 text-[12px] leading-tight text-pretty',
           emphasis ? 'font-semibold text-ink' : 'text-ink-muted',
         )}
       >

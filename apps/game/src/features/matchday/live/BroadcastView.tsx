@@ -34,11 +34,18 @@ export interface BroadcastViewProps {
   awayPalette: KitPalette;
   playerSide: Side;
   tactics: TacticSetup;
+  /**
+   * Rendered inside the live screen's lower panel rather than as the whole
+   * stage. The scoreline band and the trailing feed are dropped: the header
+   * already carries the score and the sibling tab already carries the feed, and
+   * repeating either would cost the numbers the room they need.
+   */
+  embedded?: boolean;
   className?: string;
 }
 
 export function BroadcastView({
-  home, away, homePalette, awayPalette, playerSide, tactics, className,
+  home, away, homePalette, awayPalette, playerSide, tactics, embedded = false, className,
 }: BroadcastViewProps): ReactNode {
   const m = useDesignMotion();
   const stats = useLiveStats();
@@ -52,8 +59,9 @@ export function BroadcastView({
   const subs = useMemo(() => feed.filter((e) => e.type === 'SUBSTITUTION').slice(0, 4), [feed]);
 
   return (
-    <div className={cn('scroll-y flex flex-col gap-3 pb-2', className)}>
+    <div className={cn(embedded ? 'flex flex-col gap-2.5 py-2' : 'scroll-y flex flex-col gap-3 pb-2', className)}>
       {/* --- scoreline band ------------------------------------------- */}
+      {!embedded && (
       <div className="relative overflow-hidden rounded-lg border border-white/[0.07]">
         <span
           aria-hidden="true"
@@ -75,6 +83,7 @@ export function BroadcastView({
           <TeamColumn club={away} align="end" />
         </div>
       </div>
+      )}
 
       {/* --- the commentary hero -------------------------------------- */}
       <GlassPanel nested level={2} padding="md" accent="volt" radius="lg">
@@ -204,9 +213,11 @@ export function BroadcastView({
       </GlassPanel>
 
       {/* --- feed ------------------------------------------------------ */}
-      <GlassPanel nested level={2} padding="sm" title="Match feed">
-        <EventFeed perspective={playerSide} limit={24} />
-      </GlassPanel>
+      {!embedded && (
+        <GlassPanel nested level={2} padding="sm" title="Match feed">
+          <EventFeed perspective={playerSide} limit={24} />
+        </GlassPanel>
+      )}
     </div>
   );
 }

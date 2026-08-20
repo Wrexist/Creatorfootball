@@ -10,6 +10,8 @@ import { GlassPill } from '../glass/GlassPill';
 import { ClubBadge } from './ClubBadge';
 import { FormGuide, type FormResult } from './chips';
 import { ScoreDisplay } from './numbers';
+import { NameText } from '../typography/Text';
+import { TYPE_CLASS } from '../typography/type';
 import { IconFlame } from '../icons';
 
 /**
@@ -57,8 +59,18 @@ function Side({ side, align }: { side: MatchCardSide; align: 'left' | 'right' })
       )}
     >
       <ClubBadge visual={side.visual} size={34} />
-      <div className="min-w-0">
-        <p className="truncate text-[14px] font-semibold text-ink">{side.shortName}</p>
+      <div className="min-w-0 flex-1">
+        {/* Short name first, then the abbreviation, then two lines - in that
+            order, and never an ellipsis. A fixture list is the densest place a
+            club name appears, so it is where truncation used to start. */}
+        <NameText
+          name={side.shortName}
+          abbr={side.abbreviation}
+          role="bodyStrong"
+          floor={0.8}
+          lines={2}
+          className={cn('min-w-0', align === 'right' && 'text-right')}
+        />
         {side.form && side.form.length > 0 && (
           <div className={cn('mt-1 flex', align === 'right' && 'justify-end')}>
             <FormGuide results={side.form.slice(-3)} />
@@ -118,7 +130,9 @@ export const MatchCard = memo(function MatchCard({
       <div className="relative">
         {(competitionLabel !== undefined || bigGame) && (
           <div className="mb-3 flex items-center justify-between gap-2">
-            <span className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-dim">
+            {/* Sentence case: uppercasing this made it ~30% wider for no extra
+                meaning, and it was the first thing to clip on a narrow phone. */}
+            <span className={cn(TYPE_CLASS.label, 'min-w-0 flex-1 text-ink-dim text-pretty')}>
               {competitionLabel}
             </span>
             {isDerby ? (
@@ -144,7 +158,7 @@ export const MatchCard = memo(function MatchCard({
               />
             ) : (
               <div className="flex flex-col items-center">
-                <span className="text-[13px] font-semibold uppercase tracking-[0.16em] text-ink-dim">vs</span>
+                <span className={cn(TYPE_CLASS.label, 'text-[13px] tracking-[0.06em] text-ink-dim')}>vs</span>
                 {status !== undefined && (
                   <span className="tnum mt-1 text-[12px] font-semibold text-ink-muted">{status}</span>
                 )}

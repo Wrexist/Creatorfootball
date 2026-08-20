@@ -4,21 +4,22 @@ import type {
   FixtureId, MatchEvent, MatchSimulator, Player, PlayerId, SpecialRuleDefinition, SpecialRuleId,
   TacticSetup,
 } from '@cf/engine';
-import {
-  ErrorState, GlassPanel, GlassSheet, GoalBurst, SheetCloseRow, Skeleton, cn, useIsWide,
-} from '@/design';
+import { ErrorState, Skeleton, cn, useIsWide } from '@/design';
 import { useGameStore } from '@/state/gameStore';
-import { useMatchStore } from '@/state/matchStore';
+import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import { useMatchdayContext } from '../shared/context';
 import { Announcer } from '../shared/Announcer';
-import { kitColors, paletteFor } from '../shared/kit';
+import { kitColors, paletteFor, roleOfPosition, type PitchRole } from '../shared/kit';
 import { isGoalEvent, minuteLabel, stateOfPlay } from '../shared/format';
-import { MatchControlBar, MatchHeader } from './MatchChrome';
-import { PitchView } from './PitchView';
-import { BroadcastView } from './BroadcastView';
-import { EventFeed, EventTicker } from './EventFeed';
+import { MatchControlRail, MatchHeader } from './MatchChrome';
+import { PitchStage } from './PitchStage';
+import { StoryPanel } from './StoryPanel';
 import { DecisionOverlay } from './DecisionOverlay';
-import { RuleCardSheet, SubstitutionSheet, TacticsSheet } from './MatchSheets';
+import { MatchIntro } from './MatchIntro';
+import { GoalMoment } from './GoalMoment';
+import { useDrama } from './useDrama';
+import { RuleCardSheet, SpeedSheet, SubstitutionSheet, TacticsSheet } from './MatchSheets';
+import type { PitchCamera } from './pitchRenderer';
 
 /**
  * The live match.
@@ -29,10 +30,20 @@ import { RuleCardSheet, SubstitutionSheet, TacticsSheet } from './MatchSheets';
  * scrolling body with a large-title handoff. This route is the one the router
  * already declares immersive (`IMMERSIVE_PREFIXES` in `app/routes.ts`) and it
  * owns the whole viewport — the pitch must never scroll out of view, and the
- * body must never scroll at all on a phone. So it is a three-band flex column
- * of its own: header, stage, control bar. It still uses the design system for
- * every surface, keeps to the same one-blurring-header budget, and hands the
- * second and last blur to whichever overlay is open.
+ * body must never scroll at all on a phone. So it is a four-band flex column of
+ * its own: header, pitch, story, control rail. It still uses the design system
+ * for every surface, keeps to the same one-blurring-header budget, and hands
+ * the second and last blur to whichever overlay is open.
+ *
+ * ## How the height is spent
+ *
+ * The pitch is pinned to a landscape aspect ratio rather than stretched to fill
+ * whatever is left. A football pitch is roughly 16:10 and drawing it at any
+ * other shape distorts every distance on it — which is the whole information
+ * content of a tactical view. So the pitch takes exactly the height its width
+ * earns it, and *everything else* goes to the story panel, which grows to fill
+ * the remainder. There is no unallocated space on this screen at any phone
+ * size; the previous layout left roughly four hundred points of it.
  *
  * ## Ownership of the simulation
  *
@@ -41,6 +52,12 @@ import { RuleCardSheet, SubstitutionSheet, TacticsSheet } from './MatchSheets';
  * simulator (the store's own helpers hardcode the home side, which is wrong for
  * an away fixture); the decision resolution goes through the store, because
  * only the store knows how to restart the clock afterwards.
+ *
+ * Nothing on this screen decides a football outcome. The intro reads the
+ * matchday context, the goal moment reads the goal event, the dramatic
+ * slow-down reads the event stream and changes only the wall-clock interval
+ * between ticks, and the camera is a paint-time transform. The simulator would
+ * produce the identical `MatchResult` with every one of them removed.
  */
 
 export function MatchLiveScreen(): ReactNode {
@@ -55,16 +72,19 @@ export function MatchLiveScreen(): ReactNode {
   const [failed, setFailed] = useState(false);
 
   const playback = useMatchStore((s) => s.playback);
-  const presentation = useMatchStore((s) => s.presentation);
   const result = useMatchStore((s) => s.result);
   const highlight = useMatchStore((s) => s.highlight);
 
+  const [intro, setIntro] = useState(true);
+  const [camera, setCamera] = useState<PitchCamera>('WIDE');
+  const [speed, setSpeedState] = useState<MatchSpeed>(() => useMatchStore.getState().speed);
+  const [celebrating, setCelebrating] = useState<MatchEvent | null>(null);
   const [subsUsed, setSubsUsed] = useState(0);
   const [tactics, setTactics] = useState<TacticSetup | null>(null);
   const [cards, setCards] = useState<
     readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[]
   >([]);
-  const [sheet, setSheet] = useState<'SUBS' | 'TACTICS' | 'CARDS' | 'FEED' | null>(null);
+  const [sheet, setSheet] = useState<'SUBS' | 'TACTICS' | 'CARDS' | 'SPEED' | null>(null);
 
   /* --- simulator lifecycle -------------------------------------------- */
 
@@ -76,9 +96,9 @@ export function MatchLiveScreen(): ReactNode {
     simRef.current = sim;
     useMatchStore.getState().attach(sim);
     setReady(true);
-    // Kick off immediately: the player already pressed PLAY on the preview and
-    // a second confirmation here would be a door in front of a door.
-    useMatchStore.getState().play();
+    // Deliberately not `play()` here: the walk-out sequence starts the match
+    // when it hands the screen over, and a match already running behind a
+    // full-screen intro would spend its opening minute unwatched.
 
     return () => {
       // Deliberately not `reset()`: the result screen reads the finished
@@ -101,36 +121,53 @@ export function MatchLiveScreen(): ReactNode {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
 
-  /* --- completion ------------------------------------------------------ */
+  /* --- the walk-out ---------------------------------------------------- */
 
-  const goal = highlight && isGoalEvent(highlight) ? highlight : null;
+  const startMatch = useCallback(() => {
+    setIntro(false);
+    useMatchStore.getState().play();
+  }, []);
+
+  /* --- goals ------------------------------------------------------------ */
+
+  /**
+   * A goal is lifted out of the store immediately and held here for the length
+   * of the celebration. Holding it locally rather than leaving it in
+   * `highlight` means the store is free to flag the next big moment while this
+   * one is still being celebrated, and the sequence can outlive the event that
+   * started it.
+   */
+  useEffect(() => {
+    if (!highlight) return;
+    const store = useMatchStore.getState();
+    store.clearHighlight();
+    // Only goals earn the hero moment. Everything else the store flagged as
+    // important is already carried by the feed, the header and the drama beat.
+    if (!isGoalEvent(highlight)) return;
+    store.pause();
+    setCelebrating(highlight);
+  }, [highlight]);
+
+  const resumeAfterGoal = useCallback(() => {
+    if (useMatchStore.getState().playback !== 'COMPLETE') useMatchStore.getState().play();
+  }, []);
+
+  const goalFinished = useCallback(() => setCelebrating(null), []);
+
+  /* --- the dramatic beat ------------------------------------------------ */
+
+  const drama = useDrama(speed, ready && !intro && celebrating === null);
+
+  /* --- completion ------------------------------------------------------- */
 
   useEffect(() => {
     // A last-minute winner must be allowed to finish celebrating before the
     // post-match sequence takes the screen, so the handoff waits for the burst.
-    if (playback !== 'COMPLETE' || !result || goal) return;
+    if (playback !== 'COMPLETE' || !result || celebrating) return;
     // A short beat on the final whistle: cutting instantly reads as a page load.
     const timer = setTimeout(() => navigate(`/matchday/result/${result.matchId}`), 900);
     return () => clearTimeout(timer);
-  }, [playback, result, navigate, goal]);
-
-  /* --- goal interruption ---------------------------------------------- */
-
-  useEffect(() => {
-    if (!highlight) return;
-    // Only goals earn the hero moment. Everything else the store flagged as
-    // important is already carried by the feed and the header.
-    if (!isGoalEvent(highlight)) {
-      useMatchStore.getState().clearHighlight();
-      return;
-    }
-    useMatchStore.getState().pause();
-  }, [highlight]);
-
-  const dismissGoal = useCallback(() => {
-    useMatchStore.getState().clearHighlight();
-    if (useMatchStore.getState().playback !== 'COMPLETE') useMatchStore.getState().play();
-  }, []);
+  }, [playback, result, navigate, celebrating]);
 
   /* --- derived, stable ------------------------------------------------- */
 
@@ -149,14 +186,16 @@ export function MatchLiveScreen(): ReactNode {
     return map;
   }, [setup]);
 
-  const { numbers, keepers } = useMemo(() => {
+  const { numbers, keepers, roles } = useMemo(() => {
     const n: Record<string, number> = {};
     const k: Record<string, boolean> = {};
+    const r: Record<string, PitchRole> = {};
     for (const p of [...(setup?.home.players ?? []), ...(setup?.away.players ?? [])]) {
       if (p.shirtNumber !== null) n[p.id] = p.shirtNumber;
       if (p.position === 'GK') k[p.id] = true;
+      r[p.id] = roleOfPosition(p.position);
     }
-    return { numbers: n, keepers: k };
+    return { numbers: n, keepers: k, roles: r };
   }, [setup]);
 
   const homePalette = useMemo(() => (context ? paletteFor(context.home) : null), [context]);
@@ -197,6 +236,12 @@ export function MatchLiveScreen(): ReactNode {
     return ok;
   }, [playerSide]);
 
+  /** The manager's own choice. The drama beat borrows the pace and returns it. */
+  const chooseSpeed = useCallback((next: MatchSpeed) => {
+    setSpeedState(next);
+    useMatchStore.getState().setSpeed(next);
+  }, []);
+
   const exit = useCallback(() => {
     useMatchStore.getState().reset();
     navigate('/matchday');
@@ -204,7 +249,7 @@ export function MatchLiveScreen(): ReactNode {
 
   /* --- announcements ---------------------------------------------------- */
 
-  const { urgent, polite } = useAnnouncements(playerSide === 'home');
+  const { urgent, polite } = useAnnouncements(playerSide === 'home', celebrating, names);
 
   /* --- render ----------------------------------------------------------- */
 
@@ -225,34 +270,11 @@ export function MatchLiveScreen(): ReactNode {
     return (
       <div className="flex h-full flex-col gap-3 bg-base p-4">
         <Skeleton className="h-16 w-full" />
+        <Skeleton className="aspect-[16/10] w-full" />
         <Skeleton className="min-h-0 flex-1 w-full" />
-        <Skeleton className="h-20 w-full" />
       </div>
     );
   }
-
-  const stage =
-    presentation === 'PITCH' ? (
-      <PitchView
-        homePalette={homePalette}
-        awayPalette={awayPalette}
-        playerSide={playerSide}
-        numbers={numbers}
-        keepers={keepers}
-        orientation={wide ? 'horizontal' : 'vertical'}
-        className="h-full w-full"
-      />
-    ) : (
-      <BroadcastView
-        home={context.home}
-        away={context.away}
-        homePalette={homePalette}
-        awayPalette={awayPalette}
-        playerSide={playerSide}
-        tactics={tactics}
-        className="h-full"
-      />
-    );
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-base">
@@ -265,32 +287,42 @@ export function MatchLiveScreen(): ReactNode {
 
       <main
         className={cn(
-          'relative min-h-0 flex-1 px-3 pt-3 sm:px-5',
-          // Side-by-side pitch and feed on a wide screen. Broadcast mode already
-          // carries its own feed, so it takes the full column instead.
-          wide && 'mx-auto w-full max-w-[1180px] gap-4',
-          wide && presentation === 'PITCH' && 'grid grid-cols-[minmax(0,1fr)_340px]',
+          'relative flex min-h-0 flex-1 flex-col gap-2 px-2 pb-2 pt-2 sm:px-5',
+          wide && 'mx-auto w-full max-w-[1180px] grid grid-cols-[minmax(0,1fr)_360px] gap-4',
         )}
       >
-        <div className="flex min-h-0 flex-col gap-2">
-          <div className="min-h-0 flex-1">{stage}</div>
-          {!wide && presentation === 'PITCH' && (
-            <EventTicker onPress={() => setSheet('FEED')} />
-          )}
-        </div>
+        <PitchStage
+          homePalette={homePalette}
+          awayPalette={awayPalette}
+          playerSide={playerSide}
+          numbers={numbers}
+          keepers={keepers}
+          roles={roles}
+          camera={camera}
+          onCamera={setCamera}
+          ourName={context.us.shortName}
+          drama={drama.label}
+          impactKey={celebrating?.id ?? null}
+          impactStrength={celebrating && (celebrating.side ?? 'home') === playerSide ? 1 : 0.5}
+          className={wide ? 'h-full min-h-0' : 'aspect-[16/10] shrink-0'}
+        />
 
-        {wide && presentation === 'PITCH' && (
-          <GlassPanel nested level={2} padding="sm" className="flex min-h-0 flex-col" title="Match feed">
-            <div className="scroll-y min-h-0 flex-1">
-              <EventFeed perspective={playerSide} />
-            </div>
-          </GlassPanel>
-        )}
+        <StoryPanel
+          home={context.home}
+          away={context.away}
+          homePalette={homePalette}
+          awayPalette={awayPalette}
+          playerSide={playerSide}
+          tactics={tactics}
+          className="min-h-0 flex-1"
+        />
       </main>
 
-      <MatchControlBar
+      <MatchControlRail
+        speed={speed}
         subsRemaining={subsRemaining}
         ruleCardCount={cards.reduce((total, c) => total + c.quantity, 0)}
+        onOpenSpeed={() => setSheet('SPEED')}
         onOpenSubs={() => setSheet('SUBS')}
         onOpenTactics={() => setSheet('TACTICS')}
         onOpenCards={() => setSheet('CARDS')}
@@ -322,42 +354,41 @@ export function MatchLiveScreen(): ReactNode {
         onPlay={playCard}
       />
 
-      <GlassSheet
-        open={sheet === 'FEED'}
+      <SpeedSheet
+        open={sheet === 'SPEED'}
         onClose={() => setSheet(null)}
-        size="tall"
-        title="Match feed"
-        footer={<SheetCloseRow onClose={() => setSheet(null)} label="Back to the match" />}
-      >
-        <EventFeed perspective={playerSide} />
-      </GlassSheet>
-
-      <GoalBurst
-        open={goal !== null}
-        onDismiss={dismissGoal}
-        scorer={goal?.playerId ? names.get(goal.playerId) ?? 'Unknown' : 'Unknown'}
-        assist={goal?.secondaryPlayerId ? names.get(goal.secondaryPlayerId) : undefined}
-        minute={goal?.minute ?? 0}
-        homeScore={goal?.homeScore ?? 0}
-        awayScore={goal?.awayScore ?? 0}
-        accent={goal?.side === 'away' ? awayPalette.primary : homePalette.primary}
-        flavour={goal ? goalFlavour(goal) : undefined}
+        speed={speed}
+        onChange={chooseSpeed}
+        onSkipToEnd={() => useMatchStore.getState().skipToEnd()}
+        canSkip={playback !== 'COMPLETE'}
       />
+
+      <GoalMoment
+        goal={celebrating}
+        names={names}
+        homePalette={homePalette}
+        awayPalette={awayPalette}
+        homeName={context.home.shortName}
+        awayName={context.away.shortName}
+        playerSide={playerSide}
+        attendance={setup?.attendance ?? 0}
+        isDerby={context.fixture.isDerby}
+        onComplete={resumeAfterGoal}
+        onFinished={goalFinished}
+      />
+
+      {intro && (
+        <MatchIntro
+          context={context}
+          homePalette={homePalette}
+          awayPalette={awayPalette}
+          onDone={startMatch}
+        />
+      )}
 
       <Announcer urgent={urgent} polite={polite} />
     </div>
   );
-}
-
-/** The one-word badge over a goal. Read off the event, never guessed. */
-function goalFlavour(goal: MatchEvent): string | undefined {
-  if (goal.type === 'PENALTY_SCORED') return 'PENALTY';
-  const multiplier = goal.detail?.multiplier;
-  if (typeof multiplier === 'number' && multiplier > 1) return `${multiplier}× GOAL`;
-  const distance = goal.detail?.distance;
-  if (typeof distance === 'number' && distance > 0.24) return 'SCREAMER';
-  if (typeof goal.xg === 'number' && goal.xg < 0.08) return 'OUT OF NOTHING';
-  return undefined;
 }
 
 /**
@@ -365,9 +396,15 @@ function goalFlavour(goal: MatchEvent): string | undefined {
  *
  * Goals, cards, decisions and the final whistle interrupt; everything else
  * queues. Without this the most important thirty minutes in the product are
- * completely silent to a VoiceOver user.
+ * completely silent to a VoiceOver user. A goal is announced from its own
+ * event, with scorer and new score, rather than being left to the generic
+ * importance rule — it is the one line a listener must not miss.
  */
-function useAnnouncements(playerIsHome: boolean): { urgent: string | null; polite: string | null } {
+function useAnnouncements(
+  playerIsHome: boolean,
+  celebrating: MatchEvent | null,
+  names: ReadonlyMap<string, string>,
+): { urgent: string | null; polite: string | null } {
   const feed = useMatchStore((s) => s.feed);
   const decision = useMatchStore((s) => s.decision);
   const playback = useMatchStore((s) => s.playback);
@@ -375,6 +412,17 @@ function useAnnouncements(playerIsHome: boolean): { urgent: string | null; polit
   const awayScore = useMatchStore((s) => s.awayScore);
 
   return useMemo(() => {
+    if (celebrating) {
+      const scorer = celebrating.playerId ? names.get(celebrating.playerId) ?? 'Unknown' : 'Unknown';
+      const ours = (celebrating.side ?? 'home') === (playerIsHome ? 'home' : 'away');
+      return {
+        urgent:
+          `${ours ? 'Goal for you' : 'Goal against you'}, ${minuteLabel(celebrating.minute)}. ` +
+          `${scorer}. ${celebrating.homeScore}-${celebrating.awayScore}. ` +
+          `${stateOfPlay(celebrating.homeScore, celebrating.awayScore, playerIsHome)}.`,
+        polite: null,
+      };
+    }
     if (decision) {
       return {
         urgent: `Decision at ${minuteLabel(decision.minute)}. ${decision.situation} ${decision.options.length} options.`,
@@ -393,5 +441,5 @@ function useAnnouncements(playerIsHome: boolean): { urgent: string | null; polit
       };
     }
     return { urgent: null, polite: `${minuteLabel(latest.minute)} ${latest.text}` };
-  }, [feed, decision, playback, homeScore, awayScore, playerIsHome]);
+  }, [feed, decision, playback, homeScore, awayScore, playerIsHome, celebrating, names]);
 }

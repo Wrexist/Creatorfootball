@@ -379,12 +379,12 @@
 
   --glass-3-sheen: rgb(255 255 255 / 0.24);
   --glass-3-shade: rgb(0 0 0 / 0.4);
-  --glass-3-pool: rgb(255 255 255 / 0.085);
+  --glass-3-pool: rgb(255 255 255 / 0.045);
   --glass-3-cast: 0 4px 10px -4px rgb(0 0 0 / 0.6), 0 22px 56px -22px rgb(0 0 0 / 0.88);
 
   --glass-4-sheen: rgb(255 255 255 / 0.34);
   --glass-4-shade: rgb(0 0 0 / 0.5);
-  --glass-4-pool: rgb(255 255 255 / 0.12);
+  --glass-4-pool: rgb(255 255 255 / 0.062);
   --glass-4-cast: 0 6px 14px -6px rgb(0 0 0 / 0.65), 0 34px 88px -30px rgb(0 0 0 / 0.95);
 
   /* Environmental bleed. `saturate` alone pulls colour through the panel from
@@ -401,20 +401,56 @@
   --stadium-light: rgb(226 240 255 / 0.09);
   --matchday-haze: rgb(150 190 255 / 0.05);
 
-  /* --- type scale -------------------------------------------------------
-     Eleven roles. Sizes are px because the product is a fixed-scale mobile
-     app, not a document. */
-  --text-display: 40px;
-  --text-hero: 32px;
-  --text-title: 24px;
-  --text-section: 15px;
-  --text-body: 15px;
-  --text-caption: 13px;
-  --text-micro: 11px;
-  --text-stat: 17px;
-  --text-giant: 44px;
-  --text-score: 40px;
-  --text-commentary: 14px;
+  /* --- the type scale ---------------------------------------------------
+
+     NINE steps. Closed: if a size is not on this list it does not exist, and
+     no component or screen may write `text-[Npx]`.
+
+     The audit found 25 distinct pixel sizes in use, with 12px - the second
+     most common size in the whole product, 159 uses - not defined anywhere in
+     the system. Both 12 and 13 were in heavy use for the same role. That is a
+     scale with a duplicate rung, and it is why nothing lined up between
+     screens. The resolution: 12 becomes the official small-label step, 13 the
+     secondary-prose step, and every other invented size collapses onto its
+     nearest rung.
+
+         44   giant / score   the number a screen is built around
+         40   display         once per screen at most
+         32   hero            the large screen title
+         24   title           a card or sheet heading
+         17   section, stat   group heading; a figure in a row
+         15   body            prose. Never smaller. (was 14 on every Screen)
+         13   caption         secondary prose
+         12   label           small UI label. The 159-use rung, made legal.
+         11   micro           the floor. Column heads and legends.
+
+     **rem, not px.** Every size in the product was an absolute pixel value, so
+     a low-vision player who doubled their OS text size got layout growth and no
+     text growth. These scale. The four display steps cap with `clamp()` so a
+     scoreline grows but does not swallow the screen; body and below are
+     uncapped, because prose is exactly what the setting exists for.
+
+     The floor is 11px (0.6875rem) and it is enforced: `FitText` will not shrink
+     below it, and nothing in the kit sets a smaller size. */
+
+  --text-giant: clamp(2.25rem, 2.75rem, 60px);
+  --text-display: clamp(2rem, 2.5rem, 54px);
+  --text-hero: clamp(1.625rem, 2rem, 44px);
+  --text-title: clamp(1.25rem, 1.5rem, 34px);
+  --text-section: 1.0625rem;
+  --text-body: 0.9375rem;
+  --text-caption: 0.8125rem;
+  --text-label: 0.75rem;
+  --text-micro: 0.6875rem;
+
+  /* Aliases, so a numeric role names its own step rather than borrowing one. */
+  --text-score: var(--text-display);
+  --text-stat: var(--text-section);
+  --text-live: var(--text-caption);
+  --text-commentary: var(--text-body);
+
+  /* The floor, in px, for anything that computes a size at runtime. */
+  --text-floor: 11px;
 }
 
 @layer utilities {
@@ -523,7 +559,9 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    z-index: 0;
+    /* Behind the content, in front of the surface background. Every element
+       that opts in also sets `isolate`, so this can never escape upward. */
+    z-index: -1;
     background:
       radial-gradient(
         120% 90% at 8% 0%,
@@ -623,6 +661,23 @@
     hanging-punctuation: first;
   }
 
+  /*
+    The scale as named utilities.
+
+    These exist so `features/**` can be migrated off `text-[Npx]` with a
+    find-and-replace, and so a lint rule has something to point at. React code
+    should prefer `<Text role="...">`, which sets weight and tracking too.
+  */
+  .t-giant   { font-size: var(--text-giant); }
+  .t-display { font-size: var(--text-display); }
+  .t-hero    { font-size: var(--text-hero); }
+  .t-title   { font-size: var(--text-title); }
+  .t-section { font-size: var(--text-section); }
+  .t-body    { font-size: var(--text-body); }
+  .t-caption { font-size: var(--text-caption); }
+  .t-label   { font-size: var(--text-label); }
+  .t-micro   { font-size: var(--text-micro); }
+
   /* Names must never end in an ellipsis. This is the class that enforces it:
      wrapping and breaking are allowed, clipping is not. */
   .name-safe {
@@ -678,6 +733,18 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+  /*
+    `.chrome-surface` shipped without an entry in either fallback block, so the
+    tab bar and every sticky footer stayed blurred and translucent under
+    reduced transparency. Both blocks enumerate their classes by name, which is
+    how the list fell out of sync; `design/tokens.test.ts` now asserts that
+    every class in the glass utility layer appears in both.
+  */
+  .chrome-surface {
+    background: var(--color-base);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
   .glass-sheen::before,
   .glass-bleed::after,
   .tex-pitch::after,
@@ -689,6 +756,7 @@
 [data-reduced-effects='true'] .glass-2,
 [data-reduced-effects='true'] .glass-3,
 [data-reduced-effects='true'] .glass-4,
+[data-reduced-effects='true'] .chrome-surface,
 [data-reduced-effects='true'] .chrome-float {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -697,6 +765,7 @@
 [data-reduced-effects='true'] .glass-2 { background: var(--color-surface-2); }
 [data-reduced-effects='true'] .glass-3 { background: var(--color-surface-3); }
 [data-reduced-effects='true'] .glass-4 { background: var(--color-surface-4); }
+[data-reduced-effects='true'] .chrome-surface { background: var(--color-base); }
 [data-reduced-effects='true'] .chrome-float { background: var(--color-surface-2); }
 [data-reduced-effects='true'] .tex-pitch::after,
 [data-reduced-effects='true'] .tex-stadium::after,

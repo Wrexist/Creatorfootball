@@ -1,0 +1,139 @@
+/**
+ * Browser smoke test.
+ *
+ * This exists because the project once shipped a production bundle that built
+ * cleanly, passed 531 unit tests, and then died on load with a
+ * temporal-dead-zone error — the tests run the source in Node and never touch
+ * the bundle, so nothing noticed. It also guards the second defect found the
+ * same day: a screen's primary action rendering underneath the fixed tab bar,
+ * which made PLAY unclickable on the match preview.
+ *
+ * Both are classes of bug that only exist in the built artefact in a real
+ * browser, which is exactly what this runs against.
+ *
+ * Usage: node e2e/smoke.mjs [baseUrl]
+ */
+import { chromium } from 'playwright';
+
+const BASE = process.argv[2] ?? 'http://127.0.0.1:4173';
+const CHROME = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const VIEWPORT = { width: 393, height: 852 };
+
+const failures = [];
+const fail = (msg) => { failures.push(msg); console.log(`  FAIL  ${msg}`); };
+const pass = (msg) => console.log(`  PASS  ${msg}`);
+
+const browser = await chromium.launch({ executablePath: CHROME });
+const ctx = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+const page = await ctx.newPage();
+
+const pageErrors = [];
+page.on('pageerror', (e) => pageErrors.push(String(e)));
+page.on('console', (m) => { if (m.type() === 'error') pageErrors.push(m.text()); });
+
+console.log(`\nBrowser smoke test against ${BASE}\n`);
+
+// --- 1. the built app boots at all ------------------------------------
+await page.goto(BASE, { waitUntil: 'networkidle' });
+await page.waitForTimeout(2500);
+
+const bootErrors = pageErrors.filter((e) => !/favicon|404/i.test(e));
+if (bootErrors.length > 0) {
+  fail(`the app logged ${bootErrors.length} error(s) on boot: ${bootErrors[0].slice(0, 180)}`);
+} else {
+  pass('the built app boots with no runtime errors');
+}
+
+const bodyText = await page.evaluate(() => document.body.innerText);
+if (/could not finish loading|something went wrong/i.test(bodyText)) {
+  fail('the app rendered its own failure screen on boot');
+} else if (bodyText.trim().length < 10) {
+  fail('the app rendered nothing');
+} else {
+  pass('the app rendered content');
+}
+
+// --- 2. walk into a real game ------------------------------------------
+const footerState = () => page.evaluate(() => {
+  const b = [...document.querySelectorAll('button')].pop();
+  return { txt: b?.innerText.trim().replace(/\n/g, ' ') ?? '', disabled: Boolean(b?.disabled) };
+});
+
+const start = page.getByRole('button', { name: /start your career|continue/i }).first();
+if (await start.count()) { await start.click(); await page.waitForTimeout(1400); }
+
+for (let step = 0; step < 14; step++) {
+  const s = await footerState();
+  if (!s.disabled) {
+    await page.locator('button').last().click();
+    await page.waitForTimeout(1400);
+    if (page.url().includes('/home') || page.url().includes('/matchday')) break;
+    continue;
+  }
+  if (/name your club/i.test(s.txt)) {
+    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke United', { delay: 8 }); }
+  } else if (/city/i.test(s.txt)) {
+    const i = await page.$$('input'); const t = i[1] ?? i[0]; if (t) { await t.click(); await t.type('Smoketon', { delay: 8 }); }
+  } else if (/name/i.test(s.txt)) {
+    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke Tester', { delay: 8 }); }
+  } else if (/archetype|manager/i.test(s.txt)) {
+    const c = page.getByRole('button', { name: /tactician|motivator|showman/i }).first();
+    if (await c.count()) await c.click();
+  } else if (/club|philosoph|culture/i.test(s.txt)) {
+    const c = page.locator('button').nth(4);
+    if (await c.count()) await c.click();
+  } else break;
+  await page.waitForTimeout(600);
+}
+
+// --- 3. every primary action is actually clickable ---------------------
+// The tab bar is fixed above the page. A sticky footer left in normal flow
+// ends up underneath it, and the screen's most important control stops
+// responding while still looking perfectly fine in a screenshot.
+const ROUTES = ['/home', '/matchday', '/squad', '/league', '/market', '/social', '/club'];
+let obstructed = 0;
+
+for (const route of ROUTES) {
+  await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+
+  const blocked = await page.evaluate(() => {
+    const out = [];
+    for (const el of document.querySelectorAll('button, a[href]')) {
+      const r = el.getBoundingClientRect();
+      if (r.width < 24 || r.height < 24) continue;
+      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      if (y < 0 || y > window.innerHeight) continue;
+      const hit = document.elementFromPoint(x, y);
+      if (hit && !el.contains(hit) && !hit.contains(el)) {
+        out.push((el.innerText || el.getAttribute('aria-label') || 'control').trim().slice(0, 40).replace(/\n/g, ' '));
+      }
+    }
+    return out;
+  });
+
+  if (blocked.length > 0) {
+    obstructed += blocked.length;
+    fail(`${route}: ${blocked.length} control(s) covered by other chrome, e.g. "${blocked[0]}"`);
+  }
+}
+if (obstructed === 0) pass('no visible control is covered by other chrome on any primary route');
+
+// --- 4. nothing threw while navigating ---------------------------------
+const navErrors = pageErrors.filter((e) => !/favicon|404/i.test(e));
+if (navErrors.length > bootErrors.length) {
+  fail(`${navErrors.length - bootErrors.length} runtime error(s) while navigating: ${navErrors.at(-1)?.slice(0, 180)}`);
+} else {
+  pass('navigating every primary route threw nothing');
+}
+
+await browser.close();
+
+console.log(
+  failures.length === 0
+    ? '\n[OK] smoke test passed\n'
+    : `\n[X] smoke test failed with ${failures.length} problem(s)\n`,
+);
+if (failures.length > 0) process.exit(1);

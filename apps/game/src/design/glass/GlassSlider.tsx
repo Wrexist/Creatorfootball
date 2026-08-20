@@ -68,7 +68,7 @@ export function GlassSlider({
     <div className={cn('w-full', className)}>
       {label !== undefined && (
         <div className={cn('mb-2 flex items-baseline justify-between', labelHidden && 'sr-only')}>
-          <label htmlFor={id} className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
+          <label htmlFor={id} className="text-[13px] font-semibold tracking-[0.005em] text-ink-muted">
             {label}
           </label>
           <span className="tnum text-[14px] font-semibold text-ink">

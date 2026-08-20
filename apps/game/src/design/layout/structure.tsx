@@ -5,6 +5,7 @@ import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { FOCUS_RING } from '../glass/glassLevel';
 import { IconChevronDown, IconChevronRight } from '../icons';
+import { TYPE_CLASS } from '../typography/type';
 
 /* --- SectionHeader ---------------------------------------------------- */
 
@@ -20,9 +21,14 @@ export interface SectionHeaderProps {
 }
 
 /**
- * Section headings use uppercase micro-type rather than a large heading,
- * because a screen made of six 20px headings has no hierarchy left for the one
- * thing that matters on it. The content below carries the weight.
+ * Section headings are small and set in the display face, in **sentence case**.
+ *
+ * They used to be uppercase micro-type. The reasoning was sound - a screen made
+ * of six 20px headings has no hierarchy left for the one thing that matters -
+ * but uppercase was the wrong lever: it bought separation by making the label
+ * quieter *and* about 30% wider, which is why long section titles were the
+ * first thing on a screen to clip. Small, bold, display-face and sentence case
+ * separates just as well, reads faster, and fits.
  */
 export function SectionHeader({
   title,
@@ -37,14 +43,15 @@ export function SectionHeader({
       <span className="min-w-0">
         <span
           className={cn(
-            'block font-semibold uppercase tracking-[0.14em] text-ink-muted',
-            size === 'sm' ? 'text-[11px]' : 'text-[12px]',
+            TYPE_CLASS.section,
+            'block text-pretty',
+            size === 'sm' ? 'text-[13px]' : 'text-[15px]',
           )}
         >
           {title}
         </span>
         {subtitle !== undefined && (
-          <span className="mt-0.5 block text-[13px] normal-case tracking-normal text-ink-dim text-pretty">
+          <span className={cn(TYPE_CLASS.caption, 'mt-0.5 block text-ink-dim text-pretty')}>
             {subtitle}
           </span>
         )}
@@ -95,7 +102,7 @@ export function Divider({ label, orientation = 'horizontal', className }: Divide
   return (
     <div className={cn('flex items-center gap-3', className)} role="separator">
       <span className="h-px flex-1 bg-white/[0.08]" />
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-dim">{label}</span>
+      <span className={cn(TYPE_CLASS.micro, 'shrink-0')}>{label}</span>
       <span className="h-px flex-1 bg-white/[0.08]" />
     </div>
   );
@@ -134,14 +141,14 @@ export function KeyValueRow({
     <>
       {icon !== undefined && <span className="shrink-0 text-ink-dim">{icon}</span>}
       <span className="min-w-0 flex-1">
-        <span className={cn('block text-[14px]', emphasis ? 'font-semibold text-ink' : 'text-ink-muted')}>
+        <span className={cn('block text-[14px] text-pretty', emphasis ? 'font-semibold text-ink' : 'text-ink-muted')}>
           {label}
         </span>
         {hint !== undefined && (
           <span className="mt-0.5 block text-[12px] text-ink-dim text-pretty">{hint}</span>
         )}
       </span>
-      <span className={cn('tnum shrink-0 text-right text-[14px] font-semibold text-ink')}>{value}</span>
+      <span className={cn(TYPE_CLASS.stat, 'shrink-0 text-right text-[14px]')}>{value}</span>
       {onPress && <IconChevronRight size={16} className="shrink-0 text-ink-dim" />}
     </>
   );

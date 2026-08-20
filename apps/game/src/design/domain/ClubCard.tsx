@@ -12,6 +12,8 @@ import { ClubBadge } from './ClubBadge';
 import { FormGuide } from './chips';
 import { formatCount } from './numbers';
 import { IconFans, IconStadium } from '../icons';
+import { NameText } from '../typography/Text';
+import { TYPE_CLASS } from '../typography/type';
 
 export type ClubCardVariant = 'compact' | 'standard' | 'featured' | 'standings';
 
@@ -87,13 +89,22 @@ export const ClubCard = memo(function ClubCard({
             className={cn('absolute inset-y-1 left-0 w-0.5 rounded-pill', ZONE_TONE[standing.zone])}
           />
         )}
-        <span className="tnum w-5 shrink-0 text-center text-[13px] font-semibold text-ink-muted">
+        <span className={cn(TYPE_CLASS.stat, 'w-5 shrink-0 text-center text-[13px] text-ink-muted')}>
           {standing?.position ?? '–'}
         </span>
         <ClubBadge visual={club.visual} size={26} flat />
-        <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">
-          {club.shortName}
-          {isOwn && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-wider text-volt">You</span>}
+        {/* The league table is the tightest slot in the product: badge, name,
+            form, three columns of figures. The name gets the short form, then
+            the abbreviation - it is never cut. */}
+        <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
+          <NameText
+            name={club.shortName}
+            abbr={club.abbreviation}
+            role="bodyStrong"
+            floor={0.78}
+            className="min-w-0 text-[14px]"
+          />
+          {isOwn && <span className={cn(TYPE_CLASS.micro, 'shrink-0 text-volt')}>You</span>}
         </span>
         {standing && (
           <>
@@ -121,7 +132,13 @@ export const ClubCard = memo(function ClubCard({
         )}
       >
         <ClubBadge visual={club.visual} size={24} flat />
-        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-ink">{club.shortName}</span>
+        <NameText
+          name={club.shortName}
+          abbr={club.abbreviation}
+          role="bodyStrong"
+          floor={0.8}
+          className="min-w-0 flex-1 text-[14px] font-medium"
+        />
         {trailing}
       </Element>
     );
@@ -145,15 +162,18 @@ export const ClubCard = memo(function ClubCard({
       <span className="relative flex items-center gap-3.5">
         <ClubBadge visual={club.visual} size={featured ? 64 : 44} label={featured ? club.name : undefined} />
         <span className="min-w-0 flex-1">
-          <span
-            className={cn(
-              'block truncate font-display font-bold tracking-[-0.02em] text-ink',
-              featured ? 'text-[22px]' : 'text-[16px]',
-            )}
-          >
-            {club.name}
-          </span>
-          <span className="mt-0.5 block truncate text-[12px] text-ink-muted">
+          {/* Full name, fitted. Two lines are available on the featured card,
+              one on the standard one; below the floor it steps down to the
+              short name rather than clipping. */}
+          <NameText
+            name={club.name}
+            short={club.shortName}
+            role={featured ? 'title' : 'section'}
+            floor={0.72}
+            lines={featured ? 2 : 1}
+            className={featured ? 'text-[22px]' : 'text-[16px]'}
+          />
+          <span className={cn(TYPE_CLASS.caption, 'mt-0.5 block text-[12px]')}>
             {club.city} · est. {club.founded}
           </span>
           {featured && (

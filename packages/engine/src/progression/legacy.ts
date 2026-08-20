@@ -23,35 +23,59 @@ export interface RecordCandidate {
   readonly clubId: ClubId;
 }
 
+export interface RecordDetectionOptions {
+  /**
+   * Whether to evaluate records built from *cumulative season aggregates*
+   * (points so far, goals so far, top scorer's tally).
+   *
+   * These are monotonically increasing, so a level-triggered comparison against
+   * the record book sets a new record every single week of a club's first
+   * season — which is exactly how a quarter of a season's press became the same
+   * headline. They are edge-triggered instead: evaluated once, when the season
+   * they summarise is actually finished. Per-event records (biggest win, record
+   * signing) are already edge-shaped and stay live.
+   */
+  readonly seasonAggregates?: boolean;
+}
+
 /** Records the player's club could be setting right now. */
-export function detectRecords(state: GameState): RecordCandidate[] {
+export function detectRecords(
+  state: GameState,
+  opts: RecordDetectionOptions = {},
+): RecordCandidate[] {
   const clubId = state.playerClubId;
   const club = state.clubs[clubId];
   if (!club) return [];
   const out: RecordCandidate[] = [];
   const existing = state.legacy.records;
 
-  let topScorer: { id: PlayerId; name: string; goals: number } | null = null;
-  for (const id of club.squad) {
-    const player = state.players[id];
-    if (!player) continue;
-    if (!topScorer || player.form.goals > topScorer.goals) {
-      topScorer = { id: player.id, name: player.displayName, goals: player.form.goals };
+  if (opts.seasonAggregates) {
+    let topScorer: { id: PlayerId; name: string; goals: number } | null = null;
+    for (const id of club.squad) {
+      const player = state.players[id];
+      if (!player) continue;
+      if (!topScorer || player.form.goals > topScorer.goals) {
+        topScorer = { id: player.id, name: player.displayName, goals: player.form.goals };
+      }
     }
-  }
-  if (topScorer && topScorer.goals > 0 && topScorer.goals > (existing['PLAYER_SEASON_GOALS']?.value ?? 0)) {
-    out.push({
-      key: 'PLAYER_SEASON_GOALS', label: 'Most goals in a season',
-      value: topScorer.goals, holderId: topScorer.id, holderName: topScorer.name, clubId,
-    });
-  }
+    if (topScorer && topScorer.goals > 0 && topScorer.goals > (existing['PLAYER_SEASON_GOALS']?.value ?? 0)) {
+      out.push({
+        key: 'PLAYER_SEASON_GOALS', label: 'Most goals in a season',
+        value: topScorer.goals, holderId: topScorer.id, holderName: topScorer.name, clubId,
+      });
+    }
 
-  const seasonPoints = leaguePoints(club.seasonRecord);
-  if (seasonPoints > (existing['CLUB_SEASON_POINTS']?.value ?? 0)) {
-    out.push({ key: 'CLUB_SEASON_POINTS', label: 'Most points in a season', value: seasonPoints, clubId });
-  }
-  if (club.seasonRecord.goalsFor > (existing['CLUB_SEASON_GOALS']?.value ?? 0)) {
-    out.push({ key: 'CLUB_SEASON_GOALS', label: 'Most goals in a season', value: club.seasonRecord.goalsFor, clubId });
+    const seasonPoints = leaguePoints(club.seasonRecord);
+    if (seasonPoints > (existing['CLUB_SEASON_POINTS']?.value ?? 0)) {
+      out.push({
+        key: 'CLUB_SEASON_POINTS', label: 'Most points in a season', value: seasonPoints, clubId,
+      });
+    }
+    if (club.seasonRecord.goalsFor > (existing['CLUB_SEASON_GOALS']?.value ?? 0)) {
+      out.push({
+        key: 'CLUB_SEASON_GOALS', label: 'Most goals in a season', value: club.seasonRecord.goalsFor, clubId,
+      });
+    }
   }
 
   let biggestWin = existing['BIGGEST_WIN']?.value ?? 0;
@@ -68,7 +92,9 @@ export function detectRecords(state: GameState): RecordCandidate[] {
     }
   }
   if (biggestWin > (existing['BIGGEST_WIN']?.value ?? 0)) {
-    out.push({ key: 'BIGGEST_WIN', label: 'Biggest winning margin', value: biggestWin, clubId });
+    out.push({
+      key: 'BIGGEST_WIN', label: 'Biggest winning margin', value: biggestWin, clubId,
+    });
   }
   if (biggestFee > (existing['RECORD_SIGNING']?.value ?? 0)) {
     out.push({

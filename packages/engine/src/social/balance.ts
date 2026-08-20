@@ -10,8 +10,20 @@ export const SOCIAL_BALANCE = {
   /** Posts generated per cycle before weighting trims the tail. */
   maxPostsPerCycle: 18,
   /** Hooks considered per cycle, highest importance first. */
-  maxHooksPerCycle: 14,
+  maxHooksPerCycle: 18,
+  /**
+   * Hooks per *trigger* per cycle. A matchweek produces the same trigger six
+   * times over (six defeats, six wins); without a cap they spend the entire
+   * hook budget and the feed only ever speaks about results.
+   */
+  maxHooksPerTrigger: 3,
   antiRepeatCycles: 2,
+  /**
+   * Hard anti-repetition window, in cycles. Inside it a template — and the text
+   * it rendered — is not a candidate while any alternative exists. This is the
+   * rule that stops a five-line pool reading like one line.
+   */
+  hardRepeatCycles: 7,
 
   /** Authors per hook, by importance (index 0 unused). */
   fanCountByImportance: [0, 1, 1, 2, 3, 4] as const,

@@ -12,6 +12,8 @@ import { ClubBadge } from './ClubBadge';
 import { PositionChip, RatingBadge, TraitChip } from './chips';
 import { MoneyLabel } from './numbers';
 import { IconCard, IconFlame, IconInjury, IconTrendDown, IconTrendUp } from '../icons';
+import { NameText } from '../typography/Text';
+import { TYPE_CLASS } from '../typography/type';
 
 /**
  * The collectible player card.
@@ -83,6 +85,17 @@ function useCardData(player: Player, club?: PlayerCardClub) {
   }, [player, club]);
 }
 
+/**
+ * "M. Okafor-Bergstrom" is already the short form; the shorter one is the
+ * initial plus the first hyphenated part. Used as the second candidate by the
+ * name fitter before it starts shrinking type.
+ */
+function shortPlayerName(player: Player): string {
+  const surname = player.lastName.split(/[\s-]/)[0] ?? player.lastName;
+  const initial = player.firstName.charAt(0);
+  return initial ? `${initial}. ${surname}` : surname;
+}
+
 function StatusFlag({ player }: { player: Player }): ReactNode {
   if (player.injury) {
     return (
@@ -134,7 +147,13 @@ function CompactCard({ player, club, onPress, trailing, dimmed, selected, classN
       <PlayerPortrait seed={player.portraitSeed} size={40} shape="squircle" {...(colors ? { colors } : {})} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[15px] font-semibold text-ink">{player.displayName}</span>
+          <NameText
+            name={player.displayName}
+            short={shortPlayerName(player)}
+            role="bodyStrong"
+            floor={0.8}
+            className="min-w-0 flex-1"
+          />
           <StatusFlag player={player} />
         </span>
         <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-muted">
@@ -181,7 +200,13 @@ function MatchdayCard({ player, club, onPress, trailing, dimmed, className }: Pl
       </span>
       <PlayerPortrait seed={player.portraitSeed} size={36} shape="circle" {...(colors ? { colors } : {})} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-semibold text-ink">{player.displayName}</span>
+        <NameText
+          name={player.displayName}
+          short={shortPlayerName(player)}
+          role="bodyStrong"
+          floor={0.8}
+          className="text-[14px]"
+        />
         <span className="mt-1 flex items-center gap-2">
           <PositionChip position={player.position} size="xs" />
           <span className="h-1 w-14 overflow-hidden rounded-pill bg-white/10" title={`Fitness ${Math.round(player.fitness)}%`}>
@@ -275,12 +300,22 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
       <span className="absolute inset-x-0 bottom-0 flex flex-col bg-gradient-to-t from-void via-void/85 to-transparent pt-8">
         <span className="flex items-end gap-2 px-3">
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[11px] uppercase tracking-[0.16em] text-ink-dim">
-              {player.firstName}
-            </span>
-            <span className="block truncate font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
-              {player.lastName}
-            </span>
+            {/* First name in sentence case (it was uppercase, and uppercase is
+                what pushed "Aleksander" over the edge of a 148px rail card),
+                surname fitted with a two-line budget on featured cards. */}
+            <NameText
+              name={player.firstName}
+              role="caption"
+              floor={0.82}
+              className="text-[11px] tracking-[0.01em] text-ink-dim"
+            />
+            <NameText
+              name={player.lastName}
+              role="section"
+              floor={0.7}
+              lines={featured ? 2 : 1}
+              className="text-[17px] leading-tight"
+            />
           </span>
           {club && <ClubBadge visual={club.visual} size={featured ? 28 : 22} flat />}
         </span>
@@ -306,7 +341,9 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
           <span className="flex items-center justify-between gap-2 border-t border-white/[0.08] px-3 py-2">
             <MoneyLabel amount={price ?? player.marketValue} size="sm" />
             {statusLabel !== undefined && (
-              <span className="truncate text-[11px] text-ink-muted">{statusLabel}</span>
+              <span className={cn(TYPE_CLASS.caption, 'min-w-0 text-right text-[11px] leading-tight text-pretty')}>
+                {statusLabel}
+              </span>
             )}
           </span>
         )}

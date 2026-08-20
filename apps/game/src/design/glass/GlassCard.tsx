@@ -5,6 +5,7 @@ import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { FOCUS_RING, glassClass, RADIUS_CLASS, type GlassLevel, type RadiusToken } from './glassLevel';
+import { bleedStyle, TEXTURE_CLASS, type SurfaceTexture } from '../surfaces/material';
 
 export interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'onClick' | 'ref'> {
   level?: GlassLevel;
@@ -21,6 +22,16 @@ export interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'onClick' |
   onPress?: () => void;
   pressable?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  /**
+   * Opt-in football material: mown stripes, floodlight falloff or matchday
+   * haze. Never a default - one textured surface per screen is atmosphere,
+   * five is a theme. Removed entirely under reduced transparency.
+   */
+  texture?: SurfaceTexture;
+  /** Club primary. Bleeds into the material as ambient colour. */
+  bleed?: string;
+  /** 0-42. How much of the club colour reaches the surface. */
+  bleedStrength?: number;
   children?: ReactNode;
 }
 
@@ -44,7 +55,11 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(function Gla
     onPress,
     pressable,
     padding = 'md',
+    texture = 'none',
+    bleed,
+    bleedStrength,
     className,
+    style,
     children,
     ...rest
   },
@@ -58,13 +73,16 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(function Gla
       ref={ref}
       className={cn(
         'relative overflow-hidden',
+        (texture !== 'none' || bleed) && 'isolate',
         glassClass(level, !nested),
         RADIUS_CLASS[radius],
         PADDING[padding],
         sheen && 'glass-sheen',
+        bleed && 'glass-bleed',
         isPressable && cn('cursor-pointer select-none', FOCUS_RING),
         className,
       )}
+      style={{ ...bleedStyle(bleed, bleedStrength), ...style }}
       {...(isPressable
         ? {
             role: 'button',
@@ -86,6 +104,11 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(function Gla
         : {})}
       {...rest}
     >
+      {/* Texture sits on its own layer: the root spends ::before on the sheen
+          and ::after on the club bleed. */}
+      {texture !== 'none' && (
+        <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0 -z-1', TEXTURE_CLASS[texture])} />
+      )}
       {children}
     </motion.div>
   );

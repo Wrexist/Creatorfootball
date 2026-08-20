@@ -8,6 +8,7 @@ import {
   ClubBadge, EmptyState, GlassPanel, GlassPill, IconBall, IconTrophy, KeyValueRow,
   MatchCard, PlayerPortrait, ProgressBar, Screen, SectionHeader, StatCard, StatGrid,
   cn, type MatchCardSide,
+  NameText,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -39,7 +40,7 @@ const ScorerRow = memo(function ScorerRow({
       </span>
       <PlayerPortrait seed={player.portraitSeed} size={32} shape="circle" />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-semibold text-ink">{player.displayName}</span>
+        <NameText name={player.displayName} role="bodyStrong" lines={2} />
         <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-dim">
           {side && <ClubBadge visual={side.visual} size={13} flat />}
           {side?.shortName ?? 'Free agent'}
@@ -248,7 +249,7 @@ function PictureRow({
       <span aria-hidden="true" className={cn('h-6 w-0.5 shrink-0 rounded-pill', bar)} />
       <div className="min-w-0 flex-1">
         <p className="text-[11px] uppercase tracking-[0.14em] text-ink-dim">{label}</p>
-        <p className="truncate text-[14px] font-semibold text-ink">{clubName}</p>
+        <NameText name={clubName} role="bodyStrong" lines={2} />
       </div>
       <span className="tnum text-[14px] font-bold text-ink">{value}</span>
     </div>

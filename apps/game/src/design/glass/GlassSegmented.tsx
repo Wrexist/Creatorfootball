@@ -4,6 +4,7 @@ import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { FOCUS_RING, type GlassLevel, glassClass } from './glassLevel';
+import { FitText } from '../typography/FitText';
 
 export interface SegmentedOption<T extends string = string> {
   readonly value: T;
@@ -72,7 +73,7 @@ export function GlassSegmented<T extends string = string>({
               onChange(option.value);
             }}
             className={cn(
-              'relative inline-flex flex-1 items-center justify-center gap-1.5 rounded-pill',
+              'relative inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill',
               'font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
               size === 'sm' ? 'min-h-9 px-3 text-[12px]' : 'min-h-11 px-4 text-[14px]',
               selected ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
@@ -88,7 +89,19 @@ export function GlassSegmented<T extends string = string>({
               />
             )}
             {option.icon}
-            <span className="relative whitespace-nowrap">{option.label}</span>
+            {/* A segment label that does not fit shrinks; it does not clip.
+                Four options on a 393pt phone is a genuinely tight slot. */}
+            {typeof option.label === 'string' ? (
+              <FitText
+                size={size === 'sm' ? 12 : 14}
+                min={size === 'sm' ? 10 : 11}
+                className="relative text-center"
+              >
+                {option.label}
+              </FitText>
+            ) : (
+              <span className="relative whitespace-nowrap">{option.label}</span>
+            )}
           </button>
         );
       })}

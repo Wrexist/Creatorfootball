@@ -3,11 +3,14 @@ import {
   PHASE_LABELS,
   currentCompetition,
   currentSeason,
+  fixturesFor,
   leaguePosition,
+  recentForm,
   standings,
   type ClubId,
   type Fixture,
   type GameState,
+  type NewsStory,
   type Player,
   type SeasonPhase,
   type StandingRow,
@@ -190,4 +193,96 @@ export function positionAsk(shape: SeasonShape): string {
   if (gap === null) return `You are ${context.position}th.`;
   if (gap === 0) return `You are ${context.position}th on points — only goal difference separates you from the place above.`;
   return `You are ${context.position}th, ${gap} point${gap === 1 ? '' : 's'} off the place above, with ${shape.pointsAvailable} still to play for.`;
+}
+
+/* --- the shape of the week ---------------------------------------------- */
+
+/**
+ * What the next fixture is called in the language of the season.
+ *
+ * The phase lives on the fixture the engine drew, so "Derby Week" is a fact
+ * about the calendar rather than a label a screen decided to print.
+ */
+export const phaseLabelOf = (fixture: Fixture): string => PHASE_LABELS[fixture.phase];
+
+export interface DerbyAhead {
+  readonly fixture: Fixture;
+  readonly opponentId: ClubId;
+  readonly weeksAway: number;
+  readonly phaseLabel: string;
+}
+
+/** Derbies still to come, nearest first. Ours only — a derby is personal. */
+export function useDerbiesAhead(state: GameState, limit = 3): DerbyAhead[] {
+  return useMemo(() => {
+    const ours = state.playerClubId;
+    return fixturesFor(state, ours)
+      .filter((f) => f.status === 'SCHEDULED' && f.isDerby)
+      .slice(0, limit)
+      .map((fixture) => ({
+        fixture,
+        opponentId: fixture.homeClubId === ours ? fixture.awayClubId : fixture.homeClubId,
+        weeksAway: Math.max(0, fixture.week - state.clock.week),
+        phaseLabel: PHASE_LABELS[fixture.phase],
+      }));
+  }, [state, limit]);
+}
+
+/** Our last five results, newest last — the same read the home screen uses. */
+export function useOurForm(state: GameState): ('W' | 'D' | 'L')[] {
+  return useMemo(() => recentForm(state, state.playerClubId, 5), [state]);
+}
+
+/** Results from the matchweek just gone, across the whole league. */
+export function useLastRound(state: GameState): Fixture[] {
+  return useMemo(() => {
+    const played = Object.values(state.fixtures).filter(
+      (f) => f.seasonId === state.currentSeasonId && f.status === 'COMPLETED',
+    );
+    if (played.length === 0) return [];
+    const latest = played.reduce((week, f) => Math.max(week, f.week), 0);
+    return played.filter((f) => f.week === latest).sort((a, b) => (a.id < b.id ? -1 : 1));
+  }, [state.fixtures, state.currentSeasonId]);
+}
+
+/** League news: the press, newest and most important first. */
+export function useLeagueNews(state: GameState, limit = 3): NewsStory[] {
+  return useMemo(
+    () =>
+      state.media.stories
+        .slice()
+        .sort((a, b) => b.cycle - a.cycle || b.importance - a.importance)
+        .slice(0, limit),
+    [state.media.stories, limit],
+  );
+}
+
+/* --- plain language ------------------------------------------------------ */
+
+/** What a zone is actually worth, in one clause a first-time player understands. */
+export const ZONE_MEANING: Record<StandingRow['zone'], string> = {
+  CHAMPION: 'top of the league — first place takes the title',
+  PLAYOFF: 'inside the playoff places — finish here and you play for promotion',
+  MID: 'mid-table — safe, but not playing for anything yet',
+  RELEGATION: 'in the relegation places — finish here and you go down',
+};
+
+/**
+ * The one-line answer to "how am I doing?", written for someone who has never
+ * seen a league table before. Every figure in it comes from the engine.
+ */
+export function positionMeaning(shape: SeasonShape): string {
+  const context = shape.context;
+  if (!context) return 'Your club is not in this competition.';
+  if (shape.played === 0) {
+    return `Nothing has been played yet, so the table is only a list of the ${shape.table.length} clubs you are up against.`;
+  }
+  return `You are ${ZONE_MEANING[context.zone]}.`;
+}
+
+/** How much of the season is behind you, as a sentence rather than a bar. */
+export function seasonProgress(shape: SeasonShape): string {
+  if (shape.played === 0) return `${shape.totalMatches} matches to play`;
+  if (shape.remaining === 0) return 'Every match played';
+  return `${shape.played} played, ${shape.remaining} to go`;
 }

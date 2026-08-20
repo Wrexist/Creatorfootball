@@ -9,6 +9,8 @@ import { GlassPill } from '../glass/GlassPill';
 import { CreatorAvatar } from './PlayerPortrait';
 import { formatCount } from './numbers';
 import { IconFans, IconFlame } from '../icons';
+import { NameText } from '../typography/Text';
+import { TYPE_CLASS } from '../typography/type';
 
 /**
  * Creators are the product's second currency and need to read as *people*
@@ -93,14 +95,20 @@ export const CreatorCard = memo(function CreatorCard({
 
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="truncate text-[15px] font-semibold text-ink">{creator.displayName}</span>
+          <NameText
+            name={creator.displayName}
+            short={creator.handle}
+            role="bodyStrong"
+            floor={0.8}
+            className="min-w-0 flex-1"
+          />
           <GlassPill tone={TIER_TONE[creator.tier]} size="xs">
             {TIER_LABEL[creator.tier]}
           </GlassPill>
         </span>
 
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-ink-muted">
-          <span className="truncate">{creator.handle}</span>
+        <span className={cn(TYPE_CLASS.label, 'mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-normal')}>
+          <NameText name={creator.handle} role="caption" floor={0.85} className="min-w-0 shrink" />
           <span className="inline-flex items-center gap-1">
             <IconFans size={13} />
             <span className="tnum">{formatCount(creator.followers)}</span>
@@ -109,7 +117,7 @@ export const CreatorCard = memo(function CreatorCard({
         </span>
 
         {!compact && (
-          <span className="mt-2 block text-[13px] leading-snug text-ink-muted text-pretty">
+          <span className={cn(TYPE_CLASS.commentary, 'mt-2 block text-[13px] text-pretty')}>
             {creator.bio}
           </span>
         )}

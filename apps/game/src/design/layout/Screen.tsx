@@ -7,6 +7,8 @@ import { useDesignMotion } from '../motion';
 import { useBreakpoint } from '../useBreakpoint';
 import { GlassIcon } from '../glass/GlassIcon';
 import { IconChevronLeft } from '../icons';
+import { FitText } from '../typography/FitText';
+import { TYPE_CLASS } from '../typography/type';
 
 /**
  * The screen scaffold. Every route in the product is one of these.
@@ -113,13 +115,21 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           </div>
 
           <motion.h1
-            className="min-w-0 flex-1 truncate text-center font-display text-[17px] font-bold tracking-[-0.02em] text-ink"
+            className="flex min-w-0 flex-1 justify-center text-center"
             // On wide layouts there is no large title to hand off from, so the
             // compact title is simply always present.
             style={wide ? undefined : { opacity: compactTitleOpacity }}
             aria-hidden={wide ? undefined : true}
           >
-            {title}
+            {/* A screen title is a name. It shrinks to fit the gap between the
+                back button and the header actions; it does not get cut. */}
+            {typeof title === 'string' ? (
+              <FitText size={17} min={13} className="text-center font-display font-bold tracking-[-0.02em] text-ink">
+                {title}
+              </FitText>
+            ) : (
+              <span className="font-display text-[17px] font-bold tracking-[-0.02em] text-ink">{title}</span>
+            )}
           </motion.h1>
 
           <div className="flex min-w-11 items-center justify-end gap-1">{actions}</div>
@@ -149,9 +159,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           <div className="min-w-0">
             {!wide && (
               <motion.div style={{ opacity: largeTitleOpacity }} className="pb-3 pt-2">
-                <h2 className="font-display text-[32px] font-bold leading-tight tracking-[-0.035em] text-ink">
-                  {title}
-                </h2>
+                <h2 className={cn(TYPE_CLASS.hero, 'text-balance')}>{title}</h2>
                 {subtitle !== undefined && (
                   <p className="mt-1 text-[14px] text-ink-muted text-pretty">{subtitle}</p>
                 )}

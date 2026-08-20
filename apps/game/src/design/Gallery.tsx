@@ -17,6 +17,10 @@ import {
   SigningMoment, useToast, type TabId,
 } from './index';
 import {
+  DataCell, DataGrid, FitText, HeroSurface, ListRow, MediaCard, NameText, Numeric,
+  ScorePanel, StatBlock, Text, type TypeRole,
+} from './index';
+import {
   GALLERY_CLUBS, GALLERY_CREATORS, GALLERY_EVENTS, GALLERY_IDENTITIES, GALLERY_PLAYERS,
   GALLERY_POSTS, GALLERY_STANDINGS, GALLERY_STORIES,
 } from './Gallery.fixtures';
@@ -41,6 +45,9 @@ import { IconBell, IconChevronRight, IconPlus, IconSearch, IconStar, IconTrophy 
 
 const SECTIONS = [
   ['foundations', 'Foundations'],
+  ['typography', 'Typography'],
+  ['fitting', 'Name fitting'],
+  ['surfaces', 'Surfaces'],
   ['icons', 'Icons'],
   ['buttons', 'Buttons & controls'],
   ['inputs', 'Inputs'],
@@ -76,6 +83,39 @@ function Row({ label, children, className }: { label?: string; children: ReactNo
     </div>
   );
 }
+
+const LEVEL_NOTE: Record<1 | 2 | 3 | 4, string> = {
+  1: 'A quiet surface. Cards inside a scroll view.',
+  2: 'The default material. Panels and groups.',
+  3: 'Floating chrome. Headers, toasts, the tab bar.',
+  4: 'A hero object. One at a time, over a backdrop.',
+};
+
+/** Deliberately awful names. If these render intact, nothing else will clip. */
+const STRESS_NAMES: readonly { name: string; short: string; abbr: string }[] = [
+  { name: 'Saltpine Harriers Athletic', short: 'Saltpine', abbr: 'SPH' },
+  { name: 'Ironvale Lions', short: 'Ironvale', abbr: 'IVL' },
+  { name: 'Kingsway Royals Association Football Club', short: 'Kingsway', abbr: 'KWR' },
+  { name: 'Ash', short: 'Ash', abbr: 'ASH' },
+];
+
+const TYPE_ROLES: readonly { role: TypeRole; sample: string; note: string }[] = [
+  { role: 'display', sample: '4 - 2', note: 'Once per screen at most. Takeovers.' },
+  { role: 'hero', sample: 'Transfer window', note: 'The large screen title.' },
+  { role: 'title', sample: 'Ashvale Phoenix', note: 'A card or sheet heading.' },
+  { role: 'section', sample: 'Next fixture', note: 'Heading above a group. Sentence case.' },
+  { role: 'body', sample: 'The board expects a top-four finish this season.', note: 'Default reading size.' },
+  { role: 'bodyStrong', sample: 'K. Vantor', note: 'A name in a row, a value in a cell.' },
+  { role: 'caption', sample: 'Ashvale · est. 1902', note: 'Secondary line.' },
+  { role: 'label', sample: 'Transfer budget remaining', note: 'The workhorse small label. Replaced most uppercase.' },
+  { role: 'micro', sample: 'Pld  GD  Pts', note: 'Column heads and legends only.' },
+  { role: 'eyebrow', sample: 'Matchday 15', note: 'Volt kicker. Uppercase earns it here.' },
+  { role: 'stat', sample: '1,284', note: 'A figure inside a row or cell.' },
+  { role: 'giant', sample: '£8.4M', note: 'The number a stat block is built around.' },
+  { role: 'score', sample: '2 : 1', note: 'A scoreline.' },
+  { role: 'live', sample: "78'", note: 'A live clock or minute marker.' },
+  { role: 'commentary', sample: 'Vantor turns his man on the edge of the box and the crowd is already up.', note: 'Match commentary and quoted speech.' },
+];
 
 function Swatch({ name, className }: { name: string; className: string }): ReactNode {
   return (
@@ -424,29 +464,46 @@ function GalleryBody(): ReactNode {
               <Swatch name="info" className="bg-info" />
               <Swatch name="special" className="bg-special" />
             </Row>
-            <Row label="Glass levels (over a lit backdrop, so the blur is visible)">
-              <div className="relative w-full overflow-hidden rounded-xl p-6" style={{ background: 'radial-gradient(60% 90% at 20% 10%, #2b3a12, #08090b 70%), radial-gradient(50% 70% at 90% 80%, #23204a, transparent)' }}>
+            <Row label="Glass levels — over a lit backdrop, so the material is visible">
+              <div
+                className="relative w-full overflow-hidden rounded-xl p-6"
+                style={{ background: 'radial-gradient(60% 90% at 18% 8%, #3f5518, #08090b 68%), radial-gradient(52% 74% at 92% 84%, #2e2a63, transparent), radial-gradient(40% 40% at 62% 52%, #6a2233, transparent)' }}
+              >
                 <div className="flex flex-wrap gap-3">
                   {([1, 2, 3, 4] as const).map((level) => (
-                    <GlassCard key={level} level={level} className="w-[152px]">
-                      <p className="text-[13px] font-semibold text-ink">Level {level}</p>
-                      <p className="mt-1 text-[12px] text-ink-muted">blur-glass-{level}</p>
+                    <GlassCard key={level} level={level} className="w-[164px]">
+                      <Text role="section">Level {level}</Text>
+                      <Text role="caption" className="mt-1">
+                        {LEVEL_NOTE[level]}
+                      </Text>
+                      <p className="mt-2 font-mono text-[10px] text-ink-dim">
+                        blur {[12, 20, 32, 48][level - 1]}px
+                      </p>
                     </GlassCard>
                   ))}
                 </div>
               </div>
             </Row>
-            <Row label="Type scale">
-              <div className="flex w-full flex-col gap-1.5">
-                <p className="font-display text-[32px] font-bold tracking-[-0.035em] text-ink">Large title · 32/700</p>
-                <p className="font-display text-[24px] font-bold tracking-[-0.03em] text-ink">Title · 24/700</p>
-                <p className="text-[17px] font-semibold text-ink">Headline · 17/600</p>
-                <p className="text-[15px] text-ink">Body · 15/400</p>
-                <p className="text-[13px] text-ink-muted">Secondary · 13/400 muted</p>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-dim">Micro label · 11/600 tracked</p>
-                <p className="tnum font-mono text-[13px] text-ink">Tabular figures 0123456789</p>
+            <Row label="Football material — opt-in, one surface at a time">
+              <div
+                className="grid w-full gap-3 rounded-xl p-5 sm:grid-cols-3"
+                style={{ background: 'radial-gradient(70% 90% at 30% 0%, #14301f, #08090b 70%)' }}
+              >
+                <GlassCard level={2} texture="pitch" className="h-[120px]">
+                  <Text role="section">Pitch</Text>
+                  <Text role="caption" className="mt-1">Mown stripes, masked off the headline.</Text>
+                </GlassCard>
+                <GlassCard level={2} texture="stadium" className="h-[120px]">
+                  <Text role="section">Stadium</Text>
+                  <Text role="caption" className="mt-1">Floodlight pools and falloff.</Text>
+                </GlassCard>
+                <GlassCard level={2} texture="haze" bleed="#d5442f" className="h-[120px]">
+                  <Text role="section">Haze + club bleed</Text>
+                  <Text role="caption" className="mt-1">Ambient colour from the club primary.</Text>
+                </GlassCard>
               </div>
             </Row>
+
             <Row label="Radii">
               {/* Looked up from RADIUS_CLASS rather than interpolated: Tailwind
                   only emits classes it can see as complete literals. */}
@@ -456,6 +513,213 @@ function GalleryBody(): ReactNode {
                   <p className="mt-1.5 font-mono text-[10px] text-ink-dim">{r}</p>
                 </div>
               ))}
+            </Row>
+          </Section>
+
+          {/* --- typography --- */}
+          <Section
+            id="typography"
+            title="Typography"
+            note="Fifteen roles with distinct jobs, replacing the four the product had. Uppercase now survives in exactly two of them - micro and eyebrow - because uppercasing a string makes it roughly 30% wider for no extra meaning, and that width was the source of most of the clipped labels in the build. Numerals are broadcast graphics: tabular, lining, tightly tracked, heavy."
+          >
+            <div className="flex w-full flex-col divide-y divide-white/[0.06]">
+              {TYPE_ROLES.map(({ role, sample, note }) => (
+                <div key={role} className="grid grid-cols-[92px_minmax(0,1fr)] items-baseline gap-4 py-3">
+                  <code className="font-mono text-[10px] text-volt">{role}</code>
+                  <div className="min-w-0">
+                    <Text role={role} as="p">{sample}</Text>
+                    <p className="mt-1.5 text-[11px] text-ink-dim">{note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Row label="Broadcast numerals — tabular, so a column aligns">
+              <GlassPanel title="League table" className="w-full max-w-sm">
+                {[['Ashvale', 11, 34], ['Northgate', 9, 31], ['Port Meridian', 4, 8]].map(([n, gd, pts]) => (
+                  <div key={String(n)} className="flex items-center gap-3 py-1.5">
+                    <span className="min-w-0 flex-1 text-[14px] text-ink">{n}</span>
+                    <Numeric role="stat" tone="muted" className="w-10 text-right">+{String(gd)}</Numeric>
+                    <Numeric role="stat" className="w-10 text-right">{String(pts)}</Numeric>
+                  </div>
+                ))}
+              </GlassPanel>
+            </Row>
+          </Section>
+
+          {/* --- name fitting --- */}
+          <Section
+            id="fitting"
+            title="Name fitting"
+            note="No club, player or creator name in this product ends in an ellipsis. FitText measures the slot, steps the type down through the scale to a floor, then falls back to the short name, then the abbreviation, then wraps. Body copy may still clamp - that is different, and it is fine."
+          >
+            <Row label="The same four names in four slot widths">
+              <div className="flex w-full flex-wrap gap-4">
+                {[76, 108, 150, 220].map((width) => (
+                  <div key={width} className="flex flex-col gap-2">
+                    <p className="font-mono text-[10px] text-ink-dim">{width}px</p>
+                    <div
+                      className="flex flex-col gap-2 rounded-md border border-dashed border-white/15 p-2"
+                      style={{ width }}
+                    >
+                      {STRESS_NAMES.map((n) => (
+                        <NameText
+                          key={n.name}
+                          name={n.name}
+                          short={n.short}
+                          abbr={n.abbr}
+                          role="bodyStrong"
+                          lines={2}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Row>
+            <Row label="Before / after — the same row, old strategy vs new">
+              <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2">
+                <GlassPanel title="Truncated (never ship this)" level={1}>
+                  {STRESS_NAMES.map((n) => (
+                    <p key={n.name} className="truncate py-1.5 text-[15px] font-semibold text-danger">
+                      {n.name}
+                    </p>
+                  ))}
+                </GlassPanel>
+                <GlassPanel title="Fitted" level={1}>
+                  {STRESS_NAMES.map((n) => (
+                    <div key={n.name} className="py-1.5">
+                      <NameText name={n.name} short={n.short} abbr={n.abbr} role="bodyStrong" lines={2} />
+                    </div>
+                  ))}
+                </GlassPanel>
+              </div>
+            </Row>
+            <Row label="FitText on free text — shrinks to the floor, then wraps">
+              <div className="w-[190px] rounded-md border border-dashed border-white/15 p-3">
+                <FitText size={22} min={13} lines={2} className="font-display font-bold tracking-[-0.03em] text-ink">
+                  Kingsway Royals Association Football Club
+                </FitText>
+              </div>
+            </Row>
+          </Section>
+
+          {/* --- surfaces --- */}
+          <Section
+            id="surfaces"
+            title="Surfaces"
+            note="The product leaned almost entirely on one rounded rectangle. These do not: a hero place, a media card with an asymmetric radius, a stat block built on a rule instead of a border, ruled data cells, borderless list rows, and a chamfered broadcast score panel."
+          >
+            <Row label="HeroSurface — level 4, club bleed, stadium light">
+              <div className="w-full max-w-lg">
+                <HeroSurface
+                  eyebrow="Matchday 15"
+                  title="Ashvale Phoenix"
+                  subtitle="Top of the table, unbeaten in seven, and the derby is on Saturday."
+                  bleed={GALLERY_CLUBS[0]?.visual.primary ?? '#d5442f'}
+                  texture="stadium"
+                  trailing={club ? <ClubBadge visual={club.visual} size={56} /> : undefined}
+                  footer={
+                    <>
+                      <GlassPill tone="volt">Creator first</GlassPill>
+                      <GlassPill>24,500 capacity</GlassPill>
+                      <GlassPill>184K fans</GlassPill>
+                    </>
+                  }
+                >
+                  <DataGrid columns={4}>
+                    <DataCell label="Pld" value="14" />
+                    <DataCell label="W" value="10" />
+                    <DataCell label="GD" value="+18" />
+                    <DataCell label="Pts" value="34" emphasis />
+                  </DataGrid>
+                </HeroSurface>
+              </div>
+            </Row>
+
+            <Row label="ScorePanel — a bar, not a card">
+              <div className="flex w-full max-w-lg flex-col gap-3">
+                <ScorePanel
+                  context="Premier Division · Week 15"
+                  live
+                  status="78'"
+                  home={{ name: 'Ashvale Phoenix', shortName: 'Ashvale', abbreviation: 'ASH', color: '#d5442f', score: 2, emblem: GALLERY_CLUBS[0] ? <ClubBadge visual={GALLERY_CLUBS[0].visual} size={26} flat /> : undefined }}
+                  away={{ name: 'Saltpine Harriers Athletic', shortName: 'Saltpine', abbreviation: 'SPH', color: '#1f2a44', score: 1, emblem: GALLERY_CLUBS[1] ? <ClubBadge visual={GALLERY_CLUBS[1].visual} size={26} flat /> : undefined }}
+                />
+                <ScorePanel
+                  size="lg"
+                  context="Cup final · Neutral venue"
+                  status="FT"
+                  home={{ name: 'Kingsway Royals Association Football Club', shortName: 'Kingsway', abbreviation: 'KWR', color: '#4b2a86', score: 0 }}
+                  away={{ name: 'Emberfield', shortName: 'Emberfield', abbreviation: 'EMB', color: '#c2410c', score: 3 }}
+                />
+              </div>
+            </Row>
+
+            <Row label="StatBlock — a rule, not a border">
+              <div className="grid w-full max-w-lg grid-cols-2 gap-3">
+                <StatBlock label="Points" value="34" unit="/ 42" tone="volt" />
+                <StatBlock label="Goal difference" value="+18" tone="positive" />
+                <StatBlock label="Wage bill" value="£1.2M" caption="88% of the cap" tone="warning" />
+                <StatBlock label="Injuries" value="3" tone="danger" />
+                <StatBlock label="Transfer budget" value="£8.4M" size="lg" tone="volt" caption="After the Vantor deal" className="col-span-2" />
+              </div>
+            </Row>
+
+            <Row label="DataGrid / DataCell — ruled, not boxed">
+              <div className="w-full max-w-lg">
+                <DataGrid columns={6}>
+                  <DataCell label="Pld" value="14" />
+                  <DataCell label="W" value="10" />
+                  <DataCell label="D" value="4" />
+                  <DataCell label="L" value="0" />
+                  <DataCell label="GD" value="+18" />
+                  <DataCell label="Pts" value="34" emphasis />
+                </DataGrid>
+              </div>
+            </Row>
+
+            <Row label="ListRow — a list, not twenty cards">
+              <GlassPanel padding="sm" className="w-full max-w-lg">
+                {GALLERY_PLAYERS.slice(0, 4).map((p, i) => (
+                  <ListRow
+                    key={p.id}
+                    leading={<PlayerPortrait seed={p.portraitSeed} size={38} shape="squircle" />}
+                    title={<NameText name={p.displayName} role="bodyStrong" />}
+                    subtitle={`${p.position} · ${p.age}`}
+                    trailing={<RatingBadge value={p.overall} size="sm" />}
+                    selected={i === 1}
+                    onPress={() => undefined}
+                    divided={i < 3}
+                  />
+                ))}
+              </GlassPanel>
+            </Row>
+
+            <Row label="MediaCard — the media dissolves into the text">
+              <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2">
+                {GALLERY_CLUBS.slice(0, 2).map((c) => (
+                  <MediaCard
+                    key={c.id}
+                    media={<ClubBadge visual={c.visual} size={96} />}
+                    aspect="wide"
+                    bleed={c.visual.primary}
+                    texture="pitch"
+                    eyebrow="Rivalry"
+                    title={<NameText name={c.name} short={c.shortName} role="title" lines={2} className="text-[20px]" />}
+                    subtitle={`${c.city} · est. ${c.founded}`}
+                    badge={<GlassPill tone="volt" caps size="xs">Live</GlassPill>}
+                    onPress={() => undefined}
+                  />
+                ))}
+              </div>
+            </Row>
+
+            <Row label="Pills — sentence case by default, caps opt-in">
+              <GlassPill>Creator first</GlassPill>
+              <GlassPill tone="volt">Attack down the left flank</GlassPill>
+              <GlassPill tone="info" wrap className="max-w-[130px]">Instruct the wingers to stay wide and hold width</GlassPill>
+              <GlassPill tone="danger" caps size="xs">Live</GlassPill>
+              <GlassPill tone="positive" caps size="xs">FT</GlassPill>
             </Row>
           </Section>
 

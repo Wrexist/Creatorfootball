@@ -1,4 +1,5 @@
 import type { PitchFrame, PlayPhase, Side } from '@cf/engine';
+import { SeedStream } from '@/design';
 import type { PitchRole } from '../shared/kit';
 
 /**
@@ -215,11 +216,20 @@ export class PitchRenderer {
     this.dirty = true;
   }
 
-  /** A goal landing. Never called for anything smaller. */
-  impact(strength = 1): void {
+  /**
+   * A goal landing. Never called for anything smaller.
+   *
+   * The shake's phase is derived from the event's own id through the design
+   * system's `SeedStream`, not from `Math.random()`: two people watching the
+   * same match, and the same player watching it back, must see the same
+   * picture. `SeedStream` is a pure hash for procedural visuals and is
+   * deliberately not the engine's RNG, so drawing from it cannot perturb a
+   * single thing the simulation does.
+   */
+  impact(key: string, strength = 1): void {
     if (this.opts.reducedMotion) return;
     this.impactEnergy = Math.max(this.impactEnergy, strength);
-    this.impactSeed = Math.random() * Math.PI * 2;
+    this.impactSeed = new SeedStream(key).channel('impact-phase') * Math.PI * 2;
     this.dirty = true;
   }
 

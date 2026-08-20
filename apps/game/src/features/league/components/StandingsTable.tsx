@@ -1,7 +1,6 @@
 import { Fragment, memo, type ReactNode } from 'react';
 import type { ClubId, StandingRow } from '@cf/engine';
-import { ClubBadge, FOCUS_RING, FormGuide, cn, type MatchCardSide } from '@/design';
-import { FitText } from './FitText';
+import { ClubBadge, FOCUS_RING, FormGuide, NameText, Text, cn, type MatchCardSide } from '@/design';
 
 /**
  * The table, as a story rather than a spreadsheet.
@@ -45,9 +44,9 @@ function ZoneRule({ zone }: { zone: StandingRow['zone'] }): ReactNode {
   if (!entry) return null;
   return (
     <li aria-hidden="true" className="flex items-center gap-2 px-1.5 pb-1 pt-2">
-      <span className={cn('text-[10px] font-semibold uppercase tracking-[0.16em]', entry.className)}>
+      <Text role="micro" as="span" className={entry.className}>
         {entry.label}
-      </span>
+      </Text>
       <span
         className={cn(
           'h-px flex-1',
@@ -80,19 +79,18 @@ export const StandingsRowView = memo(function StandingsRowView({
       </span>
       <ClubBadge visual={side.visual} size={22} flat />
       <span className="min-w-0 flex-1">
-        <FitText
-          max={14}
-          min={10}
+        <NameText
+          name={side.name}
+          short={side.shortName}
+          abbr={side.abbreviation}
+          role="bodyStrong"
           lines={compact ? 1 : 2}
-          leading={1.2}
-          className={ours ? 'font-bold text-ink' : 'font-medium text-ink-muted'}
-        >
-          {side.name}
-        </FitText>
+          className={ours ? 'text-ink' : 'font-medium text-ink-muted'}
+        />
         {ours && (
-          <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[0.18em] text-volt">
+          <Text role="micro" as="span" className="mt-0.5 block tracking-[0.18em] text-volt">
             You
-          </span>
+          </Text>
         )}
       </span>
       {!compact && (
@@ -149,7 +147,7 @@ export const StandingsTable = memo(function StandingsTable({
 }: StandingsTableProps): ReactNode {
   return (
     <div className={className}>
-      <div className="flex items-center gap-2 px-1.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+      <div className="flex items-center gap-2 px-1.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-dim">
         <span aria-hidden="true" className="w-1 shrink-0" />
         <span className="w-5 shrink-0 text-center">#</span>
         <span className="w-[22px] shrink-0" aria-hidden="true" />

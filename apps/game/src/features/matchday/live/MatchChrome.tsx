@@ -1,20 +1,30 @@
 import { memo, type ReactNode } from 'react';
+import { motion } from 'motion/react';
 import type { Club } from '@cf/engine';
 import {
-  ClubBadge, GlassButton, GlassIcon, GlassPill, GlassSegmented, IconCard, IconFastForward,
-  IconPause, IconPlay, IconSwap, IconTactics, IconX, MomentumBar, ScoreDisplay, cn,
+  ClubBadge, GlassIcon, GlassPill, IconCard, IconClock, IconPause, IconPlay, IconSwap,
+  IconTactics, IconX, MomentumBar, cn, haptics, useDesignMotion,
 } from '@/design';
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
-import { minuteLabel, momentumPhrase } from '../shared/format';
+import { SPEED_LABEL, minuteLabel, momentumPhrase } from '../shared/format';
 
 /**
- * The chrome that both presentation modes share.
+ * The chrome around the pitch.
  *
  * The header is the screen's one blurring surface — the glass budget for this
  * route is header plus whichever overlay is open (a decision, a sheet), and
- * nothing else in the live match blurs. The control bar is therefore a solid
+ * nothing else in the live match blurs. The control rail is therefore a solid
  * tint, which is also the right call for a strip that sits under a thumb for
  * thirty minutes.
+ *
+ * ## No name is ever cut in half
+ *
+ * A 393pt header has to carry two identities, a scoreline, a clock and a way
+ * out. Three-letter abbreviations are the club's own, designed for exactly this
+ * space, and they cannot truncate; the *full* short names are never dropped,
+ * they move one line down into the momentum sentence, which has room to set
+ * them and needs them anyway to say something a beginner can act on. An
+ * ellipsis is never an acceptable answer to a club's name.
  */
 
 export interface MatchHeaderProps {
@@ -27,203 +37,212 @@ export interface MatchHeaderProps {
 export const MatchHeader = memo(function MatchHeader({
   home, away, totalMinutes, onExit,
 }: MatchHeaderProps): ReactNode {
+  const m = useDesignMotion();
   const homeScore = useMatchStore((s) => s.homeScore);
   const awayScore = useMatchStore((s) => s.awayScore);
   const minute = useMatchStore((s) => s.minute);
   const momentum = useMatchStore((s) => s.momentum);
   const playback = useMatchStore((s) => s.playback);
-  const presentation = useMatchStore((s) => s.presentation);
-  const setPresentation = useMatchStore((s) => s.setPresentation);
 
   const live = playback === 'PLAYING' || playback === 'AWAITING_DECISION';
-  const status =
-    playback === 'COMPLETE' ? 'FT'
-      : playback === 'PAUSED' ? 'PAUSED'
-        : minuteLabel(minute);
+  const clock =
+    playback === 'COMPLETE' ? 'Full time'
+      : playback === 'PAUSED' ? 'Paused'
+        : `${minuteLabel(Math.min(minute, totalMinutes))} of ${totalMinutes}`;
 
   return (
     <header className="glass-3 relative z-30 shrink-0 pt-[var(--safe-top)]">
-      <div className="mx-auto w-full max-w-[1180px] px-3 pb-2 pt-1.5 sm:px-5">
-        <div className="flex items-center gap-2">
+      <div className="mx-auto w-full max-w-[1180px] px-2 pb-2 pt-1 sm:px-5">
+        <div className="flex items-center gap-1">
           <GlassIcon label="Leave match" icon={<IconX />} variant="ghost" size="md" onClick={onExit} />
 
-          <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
-            <ClubBadge visual={home.visual} size={26} flat label={home.name} />
-            <span className="hidden truncate text-[13px] font-semibold text-ink-muted sm:inline">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+            <ClubBadge visual={home.visual} size={24} flat label={home.name} />
+            <span className="text-[13px] font-bold tracking-[0.04em] text-ink-muted">
               {home.abbreviation}
             </span>
-            <ScoreDisplay
-              home={homeScore}
-              away={awayScore}
-              size="md"
-              status={status}
-              live={live}
-              homeLabel={home.shortName}
-              awayLabel={away.shortName}
-            />
-            <span className="hidden truncate text-[13px] font-semibold text-ink-muted sm:inline">
+            <motion.span
+              key={`${homeScore}-${awayScore}`}
+              initial={m.reduced ? { opacity: 0.6 } : { scale: 1.24 }}
+              animate={m.reduced ? { opacity: 1 } : { scale: 1 }}
+              transition={m.spring.bouncy}
+              className="tnum px-1 font-display text-[26px] font-bold leading-none tracking-[-0.04em] text-ink"
+            >
+              {homeScore}<span className="px-1 text-ink-faint">–</span>{awayScore}
+            </motion.span>
+            <span className="text-[13px] font-bold tracking-[0.04em] text-ink-muted">
               {away.abbreviation}
             </span>
-            <ClubBadge visual={away.visual} size={26} flat label={away.name} />
+            <ClubBadge visual={away.visual} size={24} flat label={away.name} />
           </div>
 
-          <div className="min-w-11 text-right">
-            <span className="tnum text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-dim">
-              {Math.min(minute, totalMinutes)}/{totalMinutes}
+          <div className="flex min-w-[52px] items-center justify-end gap-1">
+            {/* Volt is the product's colour for "this is live and moving", and
+                the live match is the one screen that should be wearing it. */}
+            {live && (
+              <span
+                aria-hidden="true"
+                className={cn('block size-1.5 rounded-pill bg-volt', !m.reduced && 'animate-pulse')}
+              />
+            )}
+            <span className={cn('tnum text-[12px] font-bold', live ? 'text-volt' : 'text-ink')}>
+              {playback === 'COMPLETE' ? 'FT' : minuteLabel(Math.min(minute, totalMinutes))}
             </span>
           </div>
         </div>
 
-        <div className="mt-2">
+        <div className="mt-1.5">
           <MomentumBar
             value={momentum}
             homeColor={home.visual.primary}
             awayColor={away.visual.primary}
-            homeLabel={home.abbreviation}
-            awayLabel={away.abbreviation}
+            homeLabel={home.shortName}
+            awayLabel={away.shortName}
             size="sm"
           />
-          <p className="sr-only">{momentumPhrase(momentum, home.shortName, away.shortName)}</p>
-        </div>
-
-        <div className="mt-2">
-          <GlassSegmented
-            size="sm"
-            level={1}
-            nested
-            aria-label="Presentation mode"
-            value={presentation}
-            onChange={setPresentation}
-            options={PRESENTATION_OPTIONS}
-          />
+          {/* The one line that tells a new player what is going on. It is not
+              sr-only, because "who is on top right now" is the single question
+              the pitch is hardest to answer at a glance. */}
+          <p className="mt-1 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-ink-muted">
+            <span className="text-pretty text-center">
+              {momentumPhrase(momentum, home.shortName, away.shortName)}
+            </span>
+            <span aria-hidden="true" className="text-ink-faint">·</span>
+            <span className="tnum shrink-0 text-ink-dim">{clock}</span>
+          </p>
         </div>
       </div>
     </header>
   );
 });
 
-const PRESENTATION_OPTIONS = [
-  { value: 'PITCH' as const, label: 'Pitch' },
-  { value: 'BROADCAST' as const, label: 'Broadcast' },
-];
+/* --- the control rail -------------------------------------------------- */
 
-const SPEED_OPTIONS: readonly { value: MatchSpeed; label: string }[] = [
-  { value: 'SLOW', label: 'Slow' },
-  { value: 'NORMAL', label: 'Normal' },
-  { value: 'FAST', label: 'Fast' },
-  { value: 'INSTANT', label: 'Instant' },
-];
-
-export interface MatchControlBarProps {
+export interface MatchControlRailProps {
+  speed: MatchSpeed;
   subsRemaining: number;
   ruleCardCount: number;
+  onOpenSpeed: () => void;
   onOpenSubs: () => void;
   onOpenTactics: () => void;
   onOpenCards: () => void;
-  onOpenFeed?: () => void;
-  feedBadge?: number;
 }
 
-export const MatchControlBar = memo(function MatchControlBar({
-  subsRemaining, ruleCardCount, onOpenSubs, onOpenTactics, onOpenCards, onOpenFeed, feedBadge,
-}: MatchControlBarProps): ReactNode {
+/**
+ * Five controls, one row, nothing hidden.
+ *
+ * The previous bar laid out a play button, a four-option speed segment, a
+ * fast-forward icon and three chips across two rows, and still cut "Instant" in
+ * half. This is the same set of powers in half the height: the transport
+ * control keeps its own weight because it is pressed most, speed collapses to
+ * its current value (the four choices and what each one means live one tap
+ * away, where there is room to explain them), and the three managerial actions
+ * each keep a full 44pt target and a word that fits.
+ */
+export const MatchControlRail = memo(function MatchControlRail({
+  speed, subsRemaining, ruleCardCount, onOpenSpeed, onOpenSubs, onOpenTactics, onOpenCards,
+}: MatchControlRailProps): ReactNode {
   const playback = useMatchStore((s) => s.playback);
-  const speed = useMatchStore((s) => s.speed);
   const play = useMatchStore((s) => s.play);
   const pause = useMatchStore((s) => s.pause);
-  const setSpeed = useMatchStore((s) => s.setSpeed);
-  const skipToEnd = useMatchStore((s) => s.skipToEnd);
 
   const playing = playback === 'PLAYING';
-  const locked = playback === 'COMPLETE' || playback === 'AWAITING_DECISION';
+  const finished = playback === 'COMPLETE';
+  const locked = finished || playback === 'AWAITING_DECISION';
 
   return (
-    <div
+    <nav
+      aria-label="Match controls"
       className="relative z-30 shrink-0 border-t border-white/[0.07] bg-surface-2/95"
       style={{ paddingBottom: 'var(--safe-bottom)' }}
     >
-      <div className="mx-auto w-full max-w-[1180px] px-3 py-2.5 sm:px-5">
-        <div className="flex items-center gap-2">
-          <GlassButton
-            variant={playing ? 'secondary' : 'primary'}
-            size="md"
-            disabled={locked}
-            onClick={playing ? pause : play}
-            icon={playing ? <IconPause /> : <IconPlay />}
-            className="min-w-[112px]"
-          >
-            {playing ? 'Pause' : playback === 'COMPLETE' ? 'Done' : 'Play'}
-          </GlassButton>
-
-          <div className="min-w-0 flex-1">
-            <GlassSegmented
-              size="sm"
-              level={1}
-              nested
-              aria-label="Match speed"
-              value={speed}
-              onChange={setSpeed}
-              options={SPEED_OPTIONS}
-            />
-          </div>
-
-          <GlassIcon
-            label="Simulate the rest"
-            icon={<IconFastForward />}
-            variant="ghost"
-            size="md"
-            onClick={skipToEnd}
-          />
-        </div>
-
-        <div className="mt-2 flex items-center gap-2">
-          <ActionChip
-            label={`Subs · ${subsRemaining}`}
-            icon={<IconSwap />}
-            onPress={onOpenSubs}
-            disabled={subsRemaining <= 0 || playback === 'COMPLETE'}
-          />
-          <ActionChip label="Tactics" icon={<IconTactics />} onPress={onOpenTactics} disabled={playback === 'COMPLETE'} />
-          <ActionChip
-            label={`Cards · ${ruleCardCount}`}
-            icon={<IconCard />}
-            onPress={onOpenCards}
-            disabled={ruleCardCount <= 0 || playback === 'COMPLETE'}
-          />
-          {onOpenFeed && (
-            <ActionChip
-              label="Feed"
-              icon={<span className="tnum text-[11px]">{feedBadge ?? 0}</span>}
-              onPress={onOpenFeed}
-            />
-          )}
-        </div>
+      <div className="mx-auto flex w-full max-w-[1180px] items-stretch gap-1.5 px-2 py-2 sm:px-5">
+        <RailButton
+          label={playing ? 'Pause' : finished ? 'Done' : 'Play'}
+          icon={playing ? <IconPause /> : <IconPlay />}
+          onPress={playing ? pause : play}
+          disabled={locked}
+          primary
+          grow={1.5}
+        />
+        <RailButton
+          label={SPEED_LABEL[speed]}
+          hint="Match speed"
+          icon={<IconClock />}
+          onPress={onOpenSpeed}
+          disabled={finished}
+        />
+        <RailButton
+          label="Subs"
+          badge={subsRemaining}
+          hint={`${subsRemaining} substitutions left`}
+          icon={<IconSwap />}
+          onPress={onOpenSubs}
+          disabled={subsRemaining <= 0 || finished}
+        />
+        <RailButton
+          label="Tactics"
+          icon={<IconTactics />}
+          onPress={onOpenTactics}
+          disabled={finished}
+        />
+        <RailButton
+          label="Cards"
+          badge={ruleCardCount}
+          hint={`${ruleCardCount} rule cards in hand`}
+          icon={<IconCard />}
+          onPress={onOpenCards}
+          disabled={ruleCardCount <= 0 || finished}
+        />
       </div>
-    </div>
+    </nav>
   );
 });
 
-function ActionChip({
-  label, icon, onPress, disabled,
+function RailButton({
+  label, hint, badge, icon, onPress, disabled, primary, grow = 1,
 }: {
-  label: string; icon: ReactNode; onPress: () => void; disabled?: boolean;
+  label: string;
+  hint?: string;
+  badge?: number;
+  icon: ReactNode;
+  onPress: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+  grow?: number;
 }): ReactNode {
   return (
     <button
       type="button"
-      onClick={onPress}
+      onClick={() => { haptics.selection(); onPress(); }}
       disabled={disabled}
+      aria-label={hint ? `${label}. ${hint}` : label}
+      style={{ flexGrow: grow }}
       className={cn(
-        'inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md',
-        'bg-white/[0.06] px-2 text-[12px] font-semibold text-ink',
-        'transition-colors duration-[var(--duration-fast)] hover:bg-white/12',
+        'relative flex min-h-11 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1.5',
+        'transition-colors duration-[var(--duration-fast)]',
         'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
-        disabled && 'pointer-events-none opacity-40',
-        '[&_svg]:size-4',
+        primary
+          ? 'bg-volt text-volt-ink hover:bg-volt-bright'
+          : 'bg-white/[0.06] text-ink hover:bg-white/12',
+        disabled && 'pointer-events-none opacity-35',
+        '[&_svg]:size-[18px]',
       )}
     >
       {icon}
-      <span className="truncate">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.06em] leading-none">
+        {label}
+      </span>
+      {badge !== undefined && badge > 0 && (
+        <span
+          className={cn(
+            'tnum absolute right-1 top-1 min-w-4 rounded-pill px-1 text-[9px] font-bold leading-4',
+            primary ? 'bg-volt-ink text-volt' : 'bg-white/16 text-ink',
+          )}
+        >
+          {badge}
+        </span>
+      )}
     </button>
   );
 }

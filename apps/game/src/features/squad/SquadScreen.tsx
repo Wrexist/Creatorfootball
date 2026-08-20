@@ -1,33 +1,40 @@
 import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  contractFor, expiringContracts, patchClub, playerClub, squadOf, squadWageBill, wageBudgetUsage,
-  POSITIONS, POSITION_GROUPS, SQUAD_ROLE_LABELS, positionGroup,
-  type Contract, type GameState, type Player, type PositionGroup,
+  contractFor, expiringContracts, patchClub, playerClub, squadOf, squadWageBill, starPlayer,
+  wageBudgetUsage, POSITIONS, SQUAD_ROLE_LABELS, TRAIT_BY_ID, positionGroup,
+  type Contract, type GameState, type Player, type PositionGroup, type SquadRole,
+  type TraitDefinition,
 } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassIcon, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
-  GlassToggle, KeyValueRow, PlayerCard, PlayerFormPip, ProgressBar, RatingBadge, Screen,
-  SectionHeader, StatCard, StatGrid, cn, formatMoney,
-  IconArrowDown, IconArrowUp, IconCheck, IconInjury, IconSort, IconSwap, IconWarning,
-  type PlayerCardClub,
+  GlassToggle, HeroSurface, ListRow, NameText, PlayerPortrait, PositionChip,
+  RatingBadge, Screen, StatBlock, Text, TraitChip, cn, formatMoney,
+  IconArrowDown, IconArrowUp, IconCheck, IconFlame, IconInjury, IconCard, IconSort, IconSwap,
+  IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
+import { PlayerSheet } from './PlayerSheet';
 
 /**
  * Squad.
  *
- * A roster screen lives or dies on scanning speed, so every row carries the
- * five things a manager actually looks for — who, where, how good, how fresh,
- * how long left — and nothing else. Everything deeper is one tap away on the
- * player profile.
+ * The brief for this screen was that it had stopped being a football squad and
+ * become a database: forty identical rows, each carrying a name, a number and
+ * two more numbers, none of which told you who the player *was*.
  *
- * Ordering is tap-to-select rather than drag-and-drop. Two reasons: a drag on a
- * forty-row scrolling list fights the scroll gesture on a phone, and a
- * tap-to-pick-up model is operable with a screen reader and a keyboard, which a
- * drag never is. The same interaction also exposes explicit move controls.
+ * So every row now carries identity rather than fields. The face, the shirt
+ * number worn on the portrait, the position, the age, the squad role you
+ * promised him, one trait that makes him different, how fit he is and how long
+ * his deal has left — and the rows are visibly not the same as each other: your
+ * star wears a volt rule, a player in the treatment room is dimmed and marked,
+ * a contract running down is amber, a player in form carries a flame. Scanning
+ * the list should feel like looking at a dressing room, not a spreadsheet.
+ *
+ * Tapping a row opens the player sheet over the list rather than navigating
+ * away, so checking three players in a row costs three taps and no page loads.
  */
 
 type SortKey = 'order' | 'rating' | 'position' | 'age' | 'form' | 'fitness' | 'wage' | 'contract';
@@ -46,13 +53,30 @@ const SORT_LABELS: Record<SortKey, string> = {
 const GROUP_OPTIONS = [
   { value: 'ALL', label: 'All' },
   { value: 'GK', label: 'GK' },
-  { value: 'DEF', label: 'DEF' },
-  { value: 'MID', label: 'MID' },
-  { value: 'ATT', label: 'ATT' },
+  { value: 'DEF', label: 'Def' },
+  { value: 'MID', label: 'Mid' },
+  { value: 'ATT', label: 'Att' },
 ] as const;
 type GroupFilter = (typeof GROUP_OPTIONS)[number]['value'];
 
+const GROUP_TITLES: Record<PositionGroup, string> = {
+  GK: 'Goalkeepers',
+  DEF: 'Defenders',
+  MID: 'Midfielders',
+  ATT: 'Forwards',
+};
+
+const GROUP_ORDER: readonly PositionGroup[] = ['GK', 'DEF', 'MID', 'ATT'];
 const POSITION_ORDER = new Map(POSITIONS.map((p, index) => [p, index]));
+
+/** The left rule. It is the fastest read on the row: who matters, who is a problem. */
+const ROLE_RULE: Record<SquadRole, string> = {
+  STAR: 'border-l-volt',
+  STARTER: 'border-l-volt/45',
+  ROTATION: 'border-l-info/40',
+  SQUAD: 'border-l-white/12',
+  PROSPECT: 'border-l-special/45',
+};
 
 interface SquadEntry {
   readonly player: Player;
@@ -60,55 +84,131 @@ interface SquadEntry {
   readonly group: PositionGroup;
   readonly unavailable: boolean;
   readonly expiring: boolean;
+  readonly trait: TraitDefinition | undefined;
 }
 
 const fitnessTone = (value: number): 'positive' | 'warning' | 'danger' =>
-  value >= 75 ? 'positive' : value >= 45 ? 'warning' : 'danger';
+  (value >= 75 ? 'positive' : value >= 45 ? 'warning' : 'danger');
+
+const FITNESS_FILL = {
+  positive: 'bg-positive', warning: 'bg-warning', danger: 'bg-danger',
+} as const;
+
+/* --- the row ----------------------------------------------------------- */
 
 const SquadRow = memo(function SquadRow({
-  entry, club, selected, reordering, onOpen, onSelect, onMove,
+  entry, primary, secondary, selected, reordering, divided, onOpen, onSelect, onMove,
 }: {
   entry: SquadEntry;
-  club: PlayerCardClub;
+  primary: string;
+  secondary: string;
   selected: boolean;
   reordering: boolean;
-  onOpen: (playerId: string) => void;
-  onSelect: (playerId: string) => void;
-  onMove: (playerId: string, delta: number) => void;
+  divided: boolean;
+  onOpen: (playerId: Player['id']) => void;
+  onSelect: (playerId: Player['id']) => void;
+  onMove: (playerId: Player['id'], delta: number) => void;
 }): ReactNode {
   const { player, contract } = entry;
+  const role = contract?.role ?? 'SQUAD';
+  const hot = player.form.rating >= 0.45;
+  const cold = player.form.rating <= -0.45;
+
+  const rule = entry.unavailable
+    ? 'border-l-danger/70'
+    : entry.expiring
+      ? 'border-l-warning/70'
+      : ROLE_RULE[role];
+
   return (
     <div className="flex items-center gap-1">
-      <div className="min-w-0 flex-1">
-        <PlayerCard
-          player={player}
-          club={club}
-          variant="compact"
-          selected={selected}
-          dimmed={entry.unavailable}
-          onPress={reordering ? onSelect : onOpen}
-          trailing={
-            <span className="flex shrink-0 items-center gap-2.5">
-              <span className="hidden w-16 sm:block">
-                <ProgressBar value={player.fitness} tone={fitnessTone(player.fitness)} size="xs" />
+      <ListRow
+        className={cn('min-w-0 flex-1 border-l-2 pl-2.5', rule)}
+        divided={divided}
+        density="relaxed"
+        selected={selected}
+        dimmed={entry.unavailable}
+        onPress={() => (reordering ? onSelect(player.id) : onOpen(player.id))}
+        leading={
+          <span className="relative">
+            <PlayerPortrait
+              seed={player.portraitSeed}
+              size={46}
+              shape="squircle"
+              colors={{ primary, secondary }}
+            />
+            {player.shirtNumber !== null && (
+              <span
+                className="absolute -bottom-1 -right-1 flex min-w-5 items-center justify-center rounded-pill bg-base px-1 num-broadcast text-[10px] font-bold text-ink-muted ring-1 ring-white/10"
+                aria-hidden="true"
+              >
+                {player.shirtNumber}
+              </span>
+            )}
+          </span>
+        }
+        title={
+          <span className="flex items-center gap-1.5">
+            <NameText
+              name={player.displayName}
+              short={`${player.firstName.charAt(0)}. ${player.lastName}`}
+              role="bodyStrong"
+              className="min-w-0 flex-1"
+            />
+            {player.injury && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-danger/85 px-1.5 py-0.5 text-[10px] font-bold text-ink">
+                <IconInjury size={11} />
+                {player.injury.weeksRemaining}w
+              </span>
+            )}
+            {!player.injury && player.suspensionMatches > 0 && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-warning/85 px-1.5 py-0.5 text-[10px] font-bold text-void">
+                <IconCard size={11} />
+                {player.suspensionMatches}
+              </span>
+            )}
+            {!entry.unavailable && hot && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-volt/18 px-1.5 py-0.5 text-[10px] font-bold text-volt">
+                <IconFlame size={11} />
+                Hot
+              </span>
+            )}
+          </span>
+        }
+        subtitle={
+          <span className="mt-1 flex flex-col gap-1.5">
+            <span className="flex flex-wrap items-center gap-1.5">
+              <PositionChip position={player.position} size="xs" />
+              <span className="num-broadcast text-[12px] text-ink-muted">{player.age}</span>
+              <span className="text-[12px] text-ink-dim">{SQUAD_ROLE_LABELS[role]}</span>
+              {entry.trait && <TraitChip trait={entry.trait} />}
+            </span>
+            <span className="flex items-center gap-2">
+              <span
+                className="h-1 w-16 shrink-0 overflow-hidden rounded-pill bg-white/10"
+                title={`Fitness ${Math.round(player.fitness)}%`}
+              >
+                <span
+                  className={cn('block h-full rounded-pill', FITNESS_FILL[fitnessTone(player.fitness)])}
+                  style={{ width: `${Math.max(2, Math.min(100, player.fitness))}%` }}
+                />
+              </span>
+              <span className="text-[11px] text-ink-dim">
+                {player.fitness >= 80 ? 'Fresh' : player.fitness >= 55 ? 'Tiring' : 'Needs a rest'}
               </span>
               {contract && (
-                <span
-                  className={cn(
-                    'tnum w-9 text-right text-[12px] font-semibold',
-                    entry.expiring ? 'text-warning' : 'text-ink-dim',
-                  )}
-                  title={`${contract.weeksRemaining} cycles remaining`}
-                >
-                  {contract.weeksRemaining}w
+                <span className={cn('text-[11px]', entry.expiring ? 'text-warning' : 'text-ink-dim')}>
+                  · {entry.expiring ? `deal ends in ${contract.weeksRemaining}w` : `${contract.weeksRemaining}w left`}
                 </span>
               )}
-              <PlayerFormPip rating={player.form.rating} />
-              <RatingBadge value={player.overall} size="sm" />
+              {cold && !entry.unavailable && (
+                <span className="text-[11px] text-danger">· off form</span>
+              )}
             </span>
-          }
-        />
-      </div>
+          </span>
+        }
+        trailing={<RatingBadge value={player.overall} size="sm" />}
+      />
       {reordering && (
         <span className="flex shrink-0 flex-col gap-0.5">
           <GlassIcon
@@ -131,6 +231,8 @@ const SquadRow = memo(function SquadRow({
   );
 });
 
+/* --- screen ------------------------------------------------------------ */
+
 export function SquadScreen(): ReactNode {
   const phase = useGameStore((s) => s.phase);
   const error = useGameStore((s) => s.error);
@@ -152,12 +254,13 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
   const apply = useGameStore((s) => s.apply);
 
   const [group, setGroup] = useState<GroupFilter>('ALL');
-  const [sort, setSort] = useState<SortKey>('order');
+  const [sort, setSort] = useState<SortKey>('position');
   const [availableOnly, setAvailableOnly] = useState(false);
   const [expiringOnly, setExpiringOnly] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [reordering, setReordering] = useState(false);
-  const [picked, setPicked] = useState<string | null>(null);
+  const [picked, setPicked] = useState<Player['id'] | null>(null);
+  const [opened, setOpened] = useState<Player['id'] | null>(null);
 
   const data = useMemo(() => {
     const club = playerClub(state);
@@ -170,26 +273,29 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
       group: positionGroup(player.position),
       unavailable: player.injury !== null || player.suspensionMatches > 0,
       expiring: expiringIds.has(player.id),
+      trait: player.traitIds
+        .map((id) => TRAIT_BY_ID.get(id))
+        .find((t): t is TraitDefinition => t !== undefined && t.kind !== 'negative'),
     }));
+
+    const injured = entries.filter((e) => e.player.injury !== null).length;
+    const suspended = entries.filter((e) => e.player.suspensionMatches > 0).length;
 
     return {
       club,
       entries,
       expiringCount: expiringIds.size,
-      injured: entries.filter((e) => e.player.injury !== null).length,
-      suspended: entries.filter((e) => e.player.suspensionMatches > 0).length,
+      injured,
+      suspended,
+      unavailable: injured + suspended,
       wages: squadWageBill(state, club.id),
       usage: wageBudgetUsage(state, club.id),
       averageAge: squad.length ? squad.reduce((sum, p) => sum + p.age, 0) / squad.length : 0,
       averageRating: squad.length ? squad.reduce((sum, p) => sum + p.overall, 0) / squad.length : 0,
       youth: state.clubs[club.id]?.youthSquad.length ?? 0,
+      best: starPlayer(state, club.id),
     };
   }, [state]);
-
-  const clubCard = useMemo(
-    () => ({ name: data.club.name, abbreviation: data.club.abbreviation, visual: data.club.visual }),
-    [data.club.name, data.club.abbreviation, data.club.visual],
-  );
 
   const visible = useMemo(() => {
     let rows = data.entries;
@@ -216,12 +322,25 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
     return sorted;
   }, [data.entries, group, sort, availableOnly, expiringOnly]);
 
-  /** Squad order is stored on the club; reordering is a plain state write. */
-  const reorder = useCallback((playerId: string, targetId: string) => {
+  /**
+   * The list is grouped by department whenever the ordering is one the player
+   * did not explicitly choose to break — a squad reads as a team sheet, not as
+   * one undifferentiated column of twenty names.
+   */
+  const sections = useMemo(() => {
+    if (sort !== 'position' || group !== 'ALL') {
+      return [{ key: 'all' as const, title: null, rows: visible }];
+    }
+    return GROUP_ORDER
+      .map((key) => ({ key, title: GROUP_TITLES[key], rows: visible.filter((e) => e.group === key) }))
+      .filter((section) => section.rows.length > 0);
+  }, [visible, sort, group]);
+
+  const reorder = useCallback((playerId: Player['id'], targetId: Player['id']) => {
     apply((current) => patchClub(current, current.playerClubId, (club) => {
       const ids = [...club.squad];
-      const from = ids.indexOf(playerId as Player['id']);
-      const to = ids.indexOf(targetId as Player['id']);
+      const from = ids.indexOf(playerId);
+      const to = ids.indexOf(targetId);
       if (from < 0 || to < 0 || from === to) return {};
       const [moved] = ids.splice(from, 1);
       if (!moved) return {};
@@ -230,10 +349,10 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
     }));
   }, [apply]);
 
-  const move = useCallback((playerId: string, delta: number) => {
+  const move = useCallback((playerId: Player['id'], delta: number) => {
     apply((current) => patchClub(current, current.playerClubId, (club) => {
       const ids = [...club.squad];
-      const from = ids.indexOf(playerId as Player['id']);
+      const from = ids.indexOf(playerId);
       const to = from + delta;
       if (from < 0 || to < 0 || to >= ids.length) return {};
       const [moved] = ids.splice(from, 1);
@@ -243,7 +362,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
     }));
   }, [apply]);
 
-  const onSelect = useCallback((playerId: string) => {
+  const onSelect = useCallback((playerId: Player['id']) => {
     setPicked((current) => {
       if (current === null) return playerId;
       if (current === playerId) return null;
@@ -252,26 +371,27 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
     });
   }, [reorder]);
 
-  const onOpen = useCallback((playerId: string) => {
-    navigate(buildPath(ROUTES.player, { playerId }));
-  }, [navigate]);
+  const onOpen = useCallback((playerId: Player['id']) => setOpened(playerId), []);
 
   const groupCounts = useMemo(() => {
     const counts: Record<string, number> = { ALL: data.entries.length };
-    for (const key of Object.keys(POSITION_GROUPS)) {
-      counts[key] = data.entries.filter((e) => e.group === key).length;
-    }
+    for (const key of GROUP_ORDER) counts[key] = data.entries.filter((e) => e.group === key).length;
     return counts;
   }, [data.entries]);
+
+  const openedPlayer = opened ? data.entries.find((e) => e.player.id === opened)?.player ?? null : null;
+  const verdict = data.unavailable === 0
+    ? `${data.entries.length} players, everybody available`
+    : `${data.entries.length} players, ${data.unavailable} unavailable`;
 
   return (
     <Screen
       title="Squad"
-      subtitle={`${data.entries.length} players · ${formatMoney(data.wages)} a cycle in wages`}
+      subtitle={`${formatMoney(data.wages)} a week in wages · ${Math.round(data.usage * 100)}% of your budget`}
       actions={
         <>
           <GlassIcon
-            label={reordering ? 'Finish reordering' : 'Reorder squad'}
+            label={reordering ? 'Finish reordering' : 'Reorder the squad'}
             icon={reordering ? <IconCheck /> : <IconSwap />}
             variant={reordering ? 'volt' : 'ghost'}
             active={reordering}
@@ -290,39 +410,32 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
           value={group}
           onChange={setGroup}
           size="sm"
-          aria-label="Filter by position group"
+          aria-label="Filter by position"
           options={GROUP_OPTIONS.map((option) => ({
             value: option.value,
-            label: `${option.label}${groupCounts[option.value] ? ` ${groupCounts[option.value]}` : ''}`,
+            label: `${option.label} ${groupCounts[option.value] ?? 0}`,
           }))}
         />
       }
       aside={
-        <>
-          <GlassPanel title="Squad shape" padding="md">
-            <KeyValueRow label="Average rating" value={Math.round(data.averageRating)} />
-            <KeyValueRow label="Average age" value={data.averageAge.toFixed(1)} />
-            <KeyValueRow label="Youth squad" value={data.youth} />
-            <KeyValueRow label="Unavailable" value={data.injured + data.suspended} divided={false} hint={`${data.injured} injured, ${data.suspended} suspended`} />
-          </GlassPanel>
-          <GlassPanel title="Wages" padding="md">
-            <ProgressBar
-              value={Math.min(150, data.usage * 100)}
-              max={150}
-              marker={100}
-              tone={data.usage > 1 ? 'danger' : data.usage > 0.9 ? 'warning' : 'positive'}
-              label="Against budget"
-              valueLabel={`${Math.round(data.usage * 100)}%`}
-            />
-          </GlassPanel>
-        </>
+        <GlassPanel title="Squad shape" padding="md">
+          <ListRow title="Average rating" trailing={<Text role="stat">{Math.round(data.averageRating)}</Text>} />
+          <ListRow title="Average age" trailing={<Text role="stat">{data.averageAge.toFixed(1)}</Text>} />
+          <ListRow title="In the academy" trailing={<Text role="stat">{data.youth}</Text>} />
+          <ListRow
+            divided={false}
+            title="Unavailable"
+            subtitle={`${data.injured} injured, ${data.suspended} suspended`}
+            trailing={<Text role="stat">{data.unavailable}</Text>}
+          />
+        </GlassPanel>
       }
       footer={
         reordering ? (
           <div className="flex items-center gap-3">
-            <p className="min-w-0 flex-1 text-[13px] text-ink-muted text-pretty">
-              {picked ? 'Now tap where you want them.' : 'Tap a player to pick them up, or use the arrows.'}
-            </p>
+            <Text role="caption" className="min-w-0 flex-1 text-pretty">
+              {picked ? 'Now tap where you want him.' : 'Tap a player to pick him up, or use the arrows.'}
+            </Text>
             <GlassButton variant="primary" size="sm" onClick={() => { setReordering(false); setPicked(null); }}>
               Done
             </GlassButton>
@@ -330,6 +443,55 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
         ) : undefined
       }
     >
+      {/* --- the state of the squad ----------------------------------- */}
+      <HeroSurface
+        eyebrow="Your squad"
+        texture="haze"
+        bleed={data.club.visual.primary}
+        padding="md"
+      >
+        <Text role="title" as="h2" className="text-pretty">{verdict}</Text>
+        <Text role="caption" className="mt-1.5 text-pretty">
+          The rule down the left of each row is the job you have promised him. Amber means his contract is nearly up;
+          red means he cannot play.
+        </Text>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <StatBlock
+            tone="volt"
+            label="Average rating"
+            value={Math.round(data.averageRating)}
+            caption="Across the whole squad"
+          />
+          <StatBlock
+            label="Average age"
+            value={data.averageAge.toFixed(1)}
+            caption={data.averageAge >= 29 ? 'An old squad — plan the rebuild' : data.averageAge <= 24 ? 'A young squad with room to grow' : 'A balanced age profile'}
+          />
+        </div>
+
+        {data.best && (
+          <button
+            type="button"
+            onClick={() => setOpened(data.best?.id ?? null)}
+            className="mt-3 flex w-full items-center gap-3 rounded-md bg-white/[0.05] p-2 text-left outline-none hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base"
+          >
+            <PlayerPortrait
+              seed={data.best.portraitSeed}
+              size={40}
+              shape="squircle"
+              colors={{ primary: data.club.visual.primary, secondary: data.club.visual.secondary }}
+            />
+            <span className="min-w-0 flex-1">
+              <Text role="micro" as="span" className="block">Your best player</Text>
+              <NameText name={data.best.displayName} role="bodyStrong" className="mt-0.5" />
+            </span>
+            <RatingBadge value={data.best.overall} size="sm" />
+          </button>
+        )}
+      </HeroSurface>
+
+      {/* --- what needs doing ----------------------------------------- */}
       {data.expiringCount > 0 && (
         <GlassPanel padding="sm" accent="danger">
           <button
@@ -338,34 +500,32 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
             className="flex w-full min-h-11 items-center gap-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base"
           >
             <IconWarning size={18} className="shrink-0 text-warning" />
-            <span className="min-w-0 flex-1 text-[13px] text-ink text-pretty">
-              <strong className="font-semibold">{data.expiringCount} contract{data.expiringCount === 1 ? '' : 's'} running down.</strong>{' '}
-              Renew now or lose them for nothing.
+            <span className="min-w-0 flex-1">
+              <Text role="bodyStrong" as="span" className="block text-pretty">
+                {data.expiringCount} {data.expiringCount === 1 ? 'contract is' : 'contracts are'} running out
+              </Text>
+              <Text role="caption" as="span" className="mt-0.5 block text-pretty">
+                Renew them now, or they leave at the end of their deal and you get nothing for them.
+              </Text>
             </span>
           </button>
         </GlassPanel>
       )}
 
-      <StatGrid columns={2}>
-        <StatCard label="Squad" value={data.entries.length} footnote={`${data.youth} in the academy`} />
-        <StatCard
-          label="Unavailable"
-          value={data.injured + data.suspended}
-          tone={data.injured + data.suspended > 2 ? 'danger' : 'positive'}
-          icon={<IconInjury size={13} />}
-          footnote={`${data.injured} injured · ${data.suspended} suspended`}
-        />
-      </StatGrid>
-
-      <SectionHeader
-        title={group === 'ALL' ? 'Every player' : `${group} — ${groupCounts[group] ?? 0}`}
-        subtitle={`Sorted by ${SORT_LABELS[sort].toLowerCase()}`}
-        action={
-          <GlassButton variant="ghost" size="sm" icon={<IconSort size={15} />} onClick={() => setSortOpen(true)}>
-            {SORT_LABELS[sort]}
-          </GlassButton>
-        }
-      />
+      {/* --- the list -------------------------------------------------- */}
+      <div className="flex items-end justify-between gap-3 pt-1">
+        <div className="min-w-0">
+          <Text role="section" as="h2">
+            {group === 'ALL' ? 'Every player' : GROUP_TITLES[group as PositionGroup]}
+          </Text>
+          <Text role="caption" className="mt-0.5 text-ink-dim">
+            {visible.length} shown, sorted by {SORT_LABELS[sort].toLowerCase()}
+          </Text>
+        </div>
+        <GlassButton variant="ghost" size="sm" icon={<IconSort size={15} />} onClick={() => setSortOpen(true)}>
+          Sort
+        </GlassButton>
+      </div>
 
       {visible.length === 0 ? (
         <EmptyState
@@ -376,36 +536,62 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
               variant="secondary"
               onClick={() => { setGroup('ALL'); setAvailableOnly(false); setExpiringOnly(false); }}
             >
-              Clear filters
+              Clear the filters
             </GlassButton>
           }
         />
       ) : (
-        <GlassPanel padding="sm">
-          <div className="flex flex-col">
-            {visible.map((entry) => (
-              <SquadRow
-                key={entry.player.id}
-                entry={entry}
-                club={clubCard}
-                selected={picked === entry.player.id}
-                reordering={reordering}
-                onOpen={onOpen}
-                onSelect={onSelect}
-                onMove={move}
-              />
-            ))}
+        sections.map((section) => (
+          <div key={section.key} className="flex flex-col gap-2">
+            {section.title && (
+              <div className="flex items-baseline gap-2 pt-1">
+                <Text role="section" as="h3" className="text-[13px]">{section.title}</Text>
+                <Text role="caption" className="text-ink-dim">{section.rows.length}</Text>
+              </div>
+            )}
+            <GlassPanel padding="sm">
+              <div className="flex flex-col">
+                {section.rows.map((entry, index) => (
+                  <SquadRow
+                    key={entry.player.id}
+                    entry={entry}
+                    primary={data.club.visual.primary}
+                    secondary={data.club.visual.secondary}
+                    selected={picked === entry.player.id}
+                    reordering={reordering}
+                    divided={index !== section.rows.length - 1}
+                    onOpen={onOpen}
+                    onSelect={onSelect}
+                    onMove={move}
+                  />
+                ))}
+              </div>
+            </GlassPanel>
           </div>
-        </GlassPanel>
+        ))
       )}
 
       <Divider />
       <div className="flex flex-wrap gap-2 pb-2">
         <GlassButton variant="secondary" size="sm" onClick={() => navigate(ROUTES.tactics)}>Tactics</GlassButton>
         <GlassButton variant="secondary" size="sm" onClick={() => navigate(ROUTES.training)}>Training</GlassButton>
-        <GlassButton variant="ghost" size="sm" onClick={() => navigate(ROUTES.market)}>Market</GlassButton>
+        <GlassButton variant="ghost" size="sm" onClick={() => navigate(ROUTES.market)}>Sign somebody</GlassButton>
       </div>
 
+      {/* --- the player sheet ------------------------------------------ */}
+      <PlayerSheet
+        state={state}
+        player={openedPlayer}
+        open={openedPlayer !== null}
+        onClose={() => setOpened(null)}
+        onOpenProfile={(playerId) => {
+          setOpened(null);
+          navigate(buildPath(ROUTES.player, { playerId }));
+        }}
+        onOpenTactics={() => { setOpened(null); navigate(ROUTES.tactics); }}
+      />
+
+      {/* --- sort and filter ------------------------------------------- */}
       <GlassSheet
         open={sortOpen}
         onClose={() => setSortOpen(false)}
@@ -442,7 +628,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
           checked={expiringOnly}
           onChange={setExpiringOnly}
           label="Expiring contracts only"
-          description="Six cycles or fewer remaining"
+          description="Six weeks or fewer remaining"
         />
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(['STAR', 'STARTER', 'ROTATION', 'SQUAD', 'PROSPECT'] as const).map((role) => (
