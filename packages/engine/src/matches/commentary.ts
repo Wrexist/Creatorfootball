@@ -1,5 +1,6 @@
 import type { Rng } from '../core/rng';
-import type { MatchEventType } from './events';
+import type { CommentaryLine } from '../content/schema';
+import { MATCH_EVENT_TYPES, type MatchEventType } from './events';
 
 /**
  * Commentary.
@@ -301,6 +302,64 @@ for (const template of COMMENTARY_TEMPLATES) {
   BY_EVENT.set(template.event, list);
 }
 
+/**
+ * The content schema's tone vocabulary and the live book's differ by exactly
+ * one voice: packs author CRITICAL (a cold verdict on a mistake), the match
+ * feed expresses that as ANALYTICAL. The mapping is a table rather than an
+ * identity function so the disagreement between the two enums is answered in
+ * one reviewable place instead of being papered over with a cast.
+ */
+export const PACK_TONE_TO_LIVE: Readonly<Record<CommentaryLine['tone'], CommentaryTone>> = {
+  NEUTRAL: 'NEUTRAL',
+  HYPE: 'HYPE',
+  DRAMATIC: 'DRAMATIC',
+  WRY: 'WRY',
+  CRITICAL: 'ANALYTICAL',
+};
+
+const PACK_EVENT_TYPES = new Set<string>(MATCH_EVENT_TYPES);
+
+/**
+ * Translate schema `CommentaryLine`s into live templates.
+ *
+ * Two kinds of line are deliberately dropped: ones bound to an event type the
+ * engine never emits, and ones carrying `conditions`, because there is no
+ * cascade fact source mid-match to evaluate conditions against and playing a
+ * gated line unconditionally would lie about the world it describes.
+ */
+export function packLinesToTemplates(lines: readonly CommentaryLine[]): CommentaryTemplate[] {
+  const out: CommentaryTemplate[] = [];
+  for (const line of lines) {
+    if (!PACK_EVENT_TYPES.has(line.eventType)) continue;
+    if (line.conditions && Object.keys(line.conditions).length > 0) continue;
+    out.push({
+      id: line.id,
+      event: line.eventType as MatchEventType,
+      tone: PACK_TONE_TO_LIVE[line.tone],
+      text: line.text,
+      weight: line.weight,
+    });
+  }
+  return out;
+}
+
+/** Built-in pools plus pack lines; on an id collision the built-in wins. */
+function mergePools(
+  base: ReadonlyMap<MatchEventType, CommentaryTemplate[]>,
+  extra: readonly CommentaryTemplate[],
+): Map<MatchEventType, CommentaryTemplate[]> {
+  const merged = new Map<MatchEventType, CommentaryTemplate[]>();
+  for (const [event, list] of base) merged.set(event, list.slice());
+  const ids = new Set(COMMENTARY_TEMPLATES.map((tpl) => tpl.id));
+  for (const tpl of extra) {
+    if (ids.has(tpl.id)) continue;
+    const list = merged.get(tpl.event) ?? [];
+    list.push(tpl);
+    merged.set(tpl.event, list);
+  }
+  return merged;
+}
+
 export interface LineOptions {
   /** Variant filters. Templates tagged with any of these are preferred. */
   readonly tags?: readonly string[];
@@ -311,14 +370,22 @@ export interface LineOptions {
 /**
  * One book per match. It remembers what it has already said so the same line
  * never lands twice in a single game while an unused alternative exists.
+ *
+ * A book built with registry commentary speaks from the merged bank; without
+ * one it falls back to the built-in table, so the engine runs headless with no
+ * pack loaded at all.
  */
 export class CommentaryBook {
   private used = new Map<MatchEventType, Set<string>>();
+  private readonly pools: ReadonlyMap<MatchEventType, CommentaryTemplate[]>;
 
-  constructor(private readonly rng: Rng) {}
+  constructor(private readonly rng: Rng, pack?: readonly CommentaryLine[]) {
+    const extra = packLinesToTemplates(pack ?? []);
+    this.pools = extra.length === 0 ? BY_EVENT : mergePools(BY_EVENT, extra);
+  }
 
   line(event: MatchEventType, ctx: CommentaryContext, opts: LineOptions = {}): string {
-    const pool = BY_EVENT.get(event);
+    const pool = this.pools.get(event);
     if (!pool || pool.length === 0) return fallback(event, ctx);
 
     const tagged = opts.tags?.length

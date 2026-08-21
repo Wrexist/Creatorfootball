@@ -2,6 +2,7 @@ import type { ClubId, MatchId, PlayerId } from '../core/brand';
 import { Rng } from '../core/rng';
 import { clamp, clamp01, round } from '../core/math';
 import { invariant } from '../core/invariant';
+import type { CommentaryLine } from '../content/schema';
 import type { Player } from '../players/player';
 import type { Position } from '../players/positions';
 import type { TraitCondition } from '../players/traits';
@@ -79,6 +80,11 @@ export interface MatchSetup {
   readonly neutralVenue?: boolean;
   /** Optional theatrical tie-break. Off by default; the league decides. */
   readonly tieBreak?: 'NONE' | 'SHOOTOUT';
+  /**
+   * Registry commentary to merge into the live book, passed in rather than
+   * reached for so the simulator stays runnable headless with no pack loaded.
+   */
+  readonly commentaryLines?: readonly CommentaryLine[];
 }
 
 export interface MatchTeam {
@@ -275,7 +281,7 @@ export class MatchSimulator {
   constructor(setup: MatchSetup) {
     this.setup = setup;
     this.rng = new Rng(`${setup.seed}|${setup.matchId as unknown as string}`);
-    this.commentary = new CommentaryBook(this.rng.fork('commentary'));
+    this.commentary = new CommentaryBook(this.rng.fork('commentary'), setup.commentaryLines);
 
     const tpm = BALANCE.TICKS_PER_MINUTE;
     this.totalPlannedTicks = setup.config.minutes * tpm;

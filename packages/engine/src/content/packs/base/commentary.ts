@@ -94,6 +94,18 @@ export const BASE_COMMENTARY: readonly CommentaryLine[] = [
     'Struck with real conviction by {player}, which is more than can be said for the direction.',
     'That is the fourth time {player} has tried that. It has not worked yet.',
   ]),
+  ...lines('SHOT', 'DRAMATIC', 6, [
+    '{player} lets go and the whole end rises with it.',
+    'It falls to {player}, and there is no hesitation in it.',
+    '{player} snatches at the chance the move deserved.',
+    'Half a second of space, and {player} spent it on a shot.',
+    '{player} shapes to shoot from a place no coach would approve of.',
+    'The ball runs to {player} at the edge of the box — shot!',
+    '{player} goes for it from somewhere only he believed was in range.',
+    'One step off the defender\'s shoulder and {player} hits it first time!',
+    'The clearance lands at the feet of {player}, who asks no questions.',
+    'A sight of goal opens for a heartbeat, and {player} takes the shot on!',
+  ]),
 
   /* --------------------------------------------------------------- SAVE */
   ...lines('SAVE', 'HYPE', 10, [
@@ -119,6 +131,20 @@ export const BASE_COMMENTARY: readonly CommentaryLine[] = [
     'Saved, and the keeper looks more surprised than anybody.',
     'He got a boot to it. Not elegant. Entirely effective.',
   ]),
+  ...lines('SAVE', 'CRITICAL', 6, [
+    '{player} gave the keeper the eyes and the keeper did not buy it.',
+    'Good position all the way through, and that is why the save looks simple.',
+    'The strike was clean. The hands behind it were cleaner.',
+    '{club} will wonder how that stayed out. The answer is goalkeeping.',
+    'He waited, he set himself, and then he won it.',
+    'That should have beaten him, and everybody in the ground knows it.',
+  ]),
+  ...lines('SAVE', 'DRAMATIC', 4, [
+    '{player} cannot believe it. The keeper never doubted for a second.',
+    'The rebound fell somewhere safe, and that is down to how he punched it.',
+    'A save with the match on the line, and {opponent} cannot believe their luck.',
+    'The crowd thought it was in. He knew otherwise from the moment it left the boot.',
+  ]),
 
   /* --------------------------------------------------------------- MISS */
   ...lines('MISS', 'CRITICAL', 10, [
@@ -143,6 +169,21 @@ export const BASE_COMMENTARY: readonly CommentaryLine[] = [
   ...lines('MISS', 'DRAMATIC', 5, [
     'He will see that one for the rest of his career. {player}, minute {minute}, and it is wide.',
     'A moment {player} would trade everything to have back.',
+  ]),
+  ...lines('MISS', 'HYPE', 6, [
+    'Wide! And {club} had the whole goal to aim at!',
+    'Just past the post from {player} — so close the net moved!',
+    '{player} bends it inches wide and the groan is enormous!',
+    'It has to go in from {player} — it does not!',
+    'Millimetres. That is what separated {player} from the goal.',
+    'Off target, but {opponent} defended none of that.',
+  ]),
+  ...lines('MISS', 'CRITICAL', 5, [
+    'That was the chance, and {player} will know it before he reaches halfway.',
+    'The move deserved better than {player} managed at the end of it.',
+    'All that work, and {club} finish it with a miss from six yards.',
+    'Nobody in the ground can quite believe {player} did not score there.',
+    'A bad one to miss, and {player} missed it badly.',
   ]),
 
   /* --------------------------------------------------------------- POST */
@@ -499,17 +540,33 @@ export const BASE_COMMENTARY: readonly CommentaryLine[] = [
     'Full time. Thirty minutes of our lives, and one of them was quite good.',
   ]),
 
-  /* -------------------------------------------------------------- CROSS */
-  ...lines('CROSS', 'NEUTRAL', 10, [
-    '{player} whips it in.',
-    'A cross from {player}, cleared at the near post.',
-    'Delivered by {player} — and headed away.',
+  /* --------------------------------------------------------------- PASS */
+  ...lines('PASS', 'NEUTRAL', 10, [
+    '{player} finds the switch.',
+    'Neat from {player}.',
+    '{player} keeps it moving.',
+    'Short to {assist}, and {club} build again from {player}.',
+    'The simple ball, taken by {player}. Often the right one.',
+    '{player} recycles it backwards while the space is still closed.',
   ]),
-  ...lines('CROSS', 'HYPE', 7, [
-    'What a ball from {player}!',
+  ...lines('PASS', 'HYPE', 6, [
+    'Oh, that is a lovely ball from {player}!',
+    'Ripped into {assist} feet by {player} — no backlift, no warning!',
+    'That is a pass only three players in this league see, and {player} is one of them!',
+    'Fifty yards, one bounce, straight to the badge. Wonderful from {player}!',
   ]),
-  ...lines('CROSS', 'CRITICAL', 6, [
-    'Poor delivery from {player}. Nobody attacked it because nobody could.',
+  ...lines('PASS', 'CRITICAL', 6, [
+    'Sloppy from {player}. That has to find a shirt.',
+    'A loose one from {player}, and it puts everybody under pressure.',
+    '{player} tried the brave option when the sensible one was on.',
+    'That is twice {player} has overhit the simple pass.',
+    'Careless in possession from {club}. {player} will get the blame.',
+  ]),
+  ...lines('PASS', 'WRY', 4, [
+    'Ten passes, none of them risky, all of them {player}\'s idea.',
+    '{player} passes it to somebody in more room than him. Civilised.',
+    'The crowd wanted it forward. {player} went sideways anyway.',
+    'A hospital ball is at least delivered promptly. {player} obliged.',
   ]),
 
   /* -------------------------------------------------------------- CARRY */
@@ -517,23 +574,54 @@ export const BASE_COMMENTARY: readonly CommentaryLine[] = [
     '{player} drives forward.',
     '{player} carries it through midfield.',
     'Space for {player}, and he takes it.',
+    '{player} strides out of pressure that had already arrived.',
+    'Twenty metres of open grass, and {player} eats it up.',
+    '{player} takes a touch and suddenly the pitch opens.',
   ]),
   ...lines('CARRY', 'HYPE', 8, [
     '{player} is off! Nobody can get near him!',
     'Look at this run from {player}!',
+    '{player} surges past the first man, then the second — he is flying!',
+    'He knocks it into space and simply out-runs all of them!',
+    'The {opponent} midfield part like a curtain for {player}!',
+    'This is direct. This is {player} at full sprint with the ball glued down!',
+  ]),
+  ...lines('CARRY', 'WRY', 5, [
+    '{player} runs a very long way without actually going anywhere.',
+    'He dribbles into the one defender who had stayed home. Bold from {player}.',
+    '{player} carries it forward, then carries his breath back.',
+    'Three touches, four defenders converging. {player} fancies the hard way.',
+    'That run deserved an exit plan, and {player} did not bring one.',
   ]),
 
-  /* --------------------------------------------------------------- PASS */
-  ...lines('PASS', 'NEUTRAL', 10, [
-    '{player} finds the switch.',
-    'Neat from {player}.',
-    '{player} keeps it moving.',
+  /* -------------------------------------------------------------- CROSS */
+  ...lines('CROSS', 'NEUTRAL', 10, [
+    '{player} whips it in.',
+    'A cross from {player}, cleared at the near post.',
+    'Delivered by {player} — and headed away.',
+    '{player} swings it toward the far post.',
+    'Deep from {player}, and it is punched clear.',
+    'Early from {player}, looking for the run in behind.',
   ]),
-  ...lines('PASS', 'HYPE', 6, [
-    'Oh, that is a lovely ball from {player}!',
+  ...lines('CROSS', 'HYPE', 8, [
+    'What a ball from {player}!',
+    'Whipped in by {player} with real venom — anybody\'s touch wins it!',
+    'That is a delivery worth a striker\'s fee from {player}!',
+    'Flat, fast, and begging to be attacked. Superb from {player}!',
+    '{player} puts it exactly where the panic starts!',
   ]),
-  ...lines('PASS', 'CRITICAL', 6, [
-    'Sloppy from {player}. That has to find a shirt.',
+  ...lines('CROSS', 'CRITICAL', 6, [
+    'Poor delivery from {player}. Nobody attacked it because nobody could.',
+    'The first defender dealt with that easily. {player} has to do better.',
+    'Overhit badly by {player}, out for a goal kick.',
+    'That cross needed pace or precision and {player} found neither.',
+    'Straight into the keeper\'s arms from {player}. Wasted.',
+  ]),
+  ...lines('CROSS', 'WRY', 4, [
+    '{player} crosses early. Very early. The forwards are still jogging.',
+    'A cross so deep it nearly became a throw-in.',
+    '{player} aims for the far post and finds a sponsor board.',
+    'Somewhere under that flight of the ball, a plan quietly died.',
   ]),
 
   /* --------------------------------------------------- POSSESSION_CHANGE */

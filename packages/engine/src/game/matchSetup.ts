@@ -8,6 +8,7 @@ import { attendanceFor } from '../fans/fans';
 import { Rng } from '../core/rng';
 import { clamp } from '../core/math';
 import type { CreatorSeasonConfigDef } from '../content';
+import type { CommentaryLine } from '../content/schema';
 import type { SpecialRuleId } from '../matches/specialRules';
 
 /**
@@ -92,6 +93,8 @@ export interface BuildMatchSetupOptions {
   /** Live, player-controlled matches get decision prompts; simulated ones do not. */
   readonly live?: boolean;
   readonly maxDecisions?: number;
+  /** Registry commentary for the live book; absent means the built-in bank. */
+  readonly commentaryLines?: readonly CommentaryLine[];
 }
 
 export function buildMatchSetup(
@@ -142,6 +145,9 @@ export function buildMatchSetup(
     neutralVenue: true,
     enabledSpecialRules: fixture.enabledSpecialRules as readonly SpecialRuleId[],
     tieBreak: fixture.stageLabel ? 'SHOOTOUT' : 'NONE',
+    ...(opts.commentaryLines && opts.commentaryLines.length > 0
+      ? { commentaryLines: opts.commentaryLines }
+      : {}),
   };
 }
 

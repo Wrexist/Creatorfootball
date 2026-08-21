@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
-import { COMMENTARY_TEMPLATES, COMMENTARY_TONES, CommentaryBook, render } from './commentary';
+import type { CommentaryLine } from '../content/schema';
+import { BASE_COMMENTARY } from '../content/packs/base/commentary';
+import {
+  COMMENTARY_TEMPLATES, COMMENTARY_TONES, PACK_TONE_TO_LIVE, CommentaryBook, packLinesToTemplates, render,
+} from './commentary';
 import { MATCH_EVENT_TYPES } from './events';
 
 describe('the commentary book', () => {
@@ -98,4 +102,87 @@ describe('the selector', () => {
     const book = new CommentaryBook(new Rng('sel4'));
     expect(book.line('MATCH_START', {}).length).toBeGreaterThan(0);
   });
+});
+
+/**
+ * The authored bank in the base pack was loaded into the registry and then read
+ * by nobody: the live book only ever saw its own built-in table. These tests
+ * pin the merge — registry lines join the pool, their tone vocabulary is
+ * translated explicitly, and a headless engine with no pack still works.
+ */
+describe('merging registry commentary', () => {
+  const packLine = (over: Partial<CommentaryLine> & { id: string; text: string }): CommentaryLine => ({
+    eventType: 'SHOT', tone: 'NEUTRAL', weight: 1, ...over,
+  });
+
+  it('maps every pack tone onto a live tone, explicitly', () => {
+    const packTones: readonly CommentaryLine['tone'][] = ['NEUTRAL', 'HYPE', 'CRITICAL', 'DRAMATIC', 'WRY'];
+    for (const tone of packTones) {
+      expect(COMMENTARY_TONES).toContain(PACK_TONE_TO_LIVE[tone]);
+    }
+    // The pack's CRITICAL voice is cold judgment of a mistake — the live book
+    // expresses that as ANALYTICAL. The mapping must be deliberate, not lost.
+    expect(PACK_TONE_TO_LIVE.CRITICAL).toBe('ANALYTICAL');
+  });
+
+  it('reads registry lines that no runtime ever read before', () => {
+    const mine = packLine({ id: 'pack_x1', text: '{player} pings one from the merged bank.', tone: 'NEUTRAL', weight: 500 });
+    const book = new CommentaryBook(new Rng('merge'), [mine]);
+    // The heavy weight makes the authored line win its first selection.
+    expect(book.line('SHOT', { player: 'X' })).toBe('X pings one from the merged bank.');
+  });
+
+  it('still speaks from the built-in bank when there is no pack', () => {
+    for (let i = 0; i < 20; i++) {
+      expect(new CommentaryBook(new Rng('headless')).line('SHOT', { player: 'X' }).length)
+        .toBeGreaterThan(0);
+    }
+    // And an empty pack is the same as no pack at all.
+    const bare = new CommentaryBook(new Rng('headless2'));
+    const empty = new CommentaryBook(new Rng('headless2'), []);
+    expect(empty.line('SHOT', { player: 'X' })).toBe(bare.line('SHOT', { player: 'X' }));
+  });
+
+  it('skips pack lines bound to unknown event types or carrying conditions', () => {
+    const gated = packLine({ id: 'pack_g1', text: '{player} never appears.', tone: 'HYPE', weight: 9_000, conditions: { reputation: 50 } });
+    const stray = packLine({ id: 'pack_s1', text: '{player} also never appears.', tone: 'HYPE', weight: 9_000, eventType: 'NOT_A_MATCH_EVENT' });
+    const book = new CommentaryBook(new Rng('gated'), [gated, stray]);
+    for (let i = 0; i < 30; i++) {
+      const line = book.line('SHOT', { player: 'X' });
+      expect(line).not.toContain('never appears');
+    }
+  });
+
+  it('is deterministic for a given stream and pack', () => {
+    const pack = BASE_COMMENTARY.slice(0, 40);
+    const a = new CommentaryBook(new Rng('same-pack'), pack);
+    const b = new CommentaryBook(new Rng('same-pack'), pack);
+    for (let i = 0; i < 25; i++) {
+      expect(a.line('GOAL', { player: 'X', score: '1-0' })).toBe(b.line('GOAL', { player: 'X', score: '1-0' }));
+    }
+  });
+
+  it('converts only schema-valid lines and keeps the weight through the merge', () => {
+    const converted = packLinesToTemplates([
+      packLine({ id: 'pack_c1', text: '{player} tries his luck.', tone: 'CRITICAL', weight: 7 }),
+    ]);
+    expect(converted).toHaveLength(1);
+    expect(converted[0]?.tone).toBe('ANALYTICAL');
+    expect(converted[0]?.weight).toBe(7);
+    expect(MATCH_EVENT_TYPES).toContain(converted[0]?.event);
+  });
+});
+
+describe('the base pack commentary depth', () => {
+  // Depth where the events are frequent: these six types fire dozens of times
+  // per match, and each used to recycle after a handful of lines.
+  const FLOORS: Readonly<Record<string, number>> = {
+    SHOT: 26, MISS: 23, SAVE: 23, PASS: 15, CARRY: 15, CROSS: 15,
+  };
+  for (const [eventType, floor] of Object.entries(FLOORS)) {
+    it(`ships real depth for ${eventType}`, () => {
+      expect(BASE_COMMENTARY.filter((c) => c.eventType === eventType).length,
+        `thin pack commentary for ${eventType}`).toBeGreaterThanOrEqual(floor);
+    });
+  }
 });
