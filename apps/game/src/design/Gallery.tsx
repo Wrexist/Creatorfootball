@@ -339,7 +339,7 @@ function ScreenDemo(): ReactNode {
             ))}
           </div>
         </Screen>
-        <TabBar value={tab} onChange={setTab} className="absolute" badges={{ social: 5 }} />
+        <TabBar value={tab} onChange={setTab} className="absolute" badges={{ world: 5 }} />
       </div>
 
       <div className="flex w-full max-w-[390px] shrink-0 flex-col gap-4">
@@ -361,7 +361,7 @@ function ScreenDemo(): ReactNode {
                 Ashvale Phoenix 2 - 1 Saltpine Harriers Athletic, 78 minutes.
               </p>
             </div>
-            <TabBar value={tab} onChange={setTab} appearance={appearance} className="absolute" badges={{ social: 5 }} />
+            <TabBar value={tab} onChange={setTab} appearance={appearance} className="absolute" badges={{ world: 5 }} />
           </div>
         ))}
       </div>
@@ -370,7 +370,7 @@ function ScreenDemo(): ReactNode {
         <SideNav
           value={tab}
           onChange={setTab}
-          badges={{ social: 5 }}
+          badges={{ world: 5 }}
           header={club ? <ClubBadge visual={club.visual} size={40} label={club.name} /> : undefined}
         />
         <div className="min-w-0 flex-1">

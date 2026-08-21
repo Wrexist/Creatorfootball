@@ -2,10 +2,11 @@ import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { playerClub, unreadStories } from '@cf/engine';
-import { AppShell, ClubBadge, useDesignMotion, type TabId } from '@/design';
+import { AppShell, ClubBadge, HeaderSlotProvider, useDesignMotion, type TabId } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
-import { PRIMARY_NAV, isImmersive, screenNameFor } from './routes';
+import { PRIMARY_NAV, isImmersive, screenNameFor, sectionFor } from './routes';
+import { SectionNav } from './SectionNav';
 import { trackScreenView } from './analytics';
 import { AppRoutes, ScreenFallback } from './router';
 import { preloadMatchday } from './featureModules';
@@ -20,13 +21,8 @@ import { preloadMatchday } from './featureModules';
  * into forty files.
  */
 
-/** The tab that owns this path, by longest matching prefix. */
-function activeTab(pathname: string): TabId {
-  const match = [...PRIMARY_NAV]
-    .sort((a, b) => b.matchPrefix.length - a.matchPrefix.length)
-    .find((nav) => pathname.startsWith(nav.matchPrefix));
-  return (match?.key ?? 'home') as TabId;
-}
+/** The tab that owns this path. Sections claim several prefixes, so ask routes. */
+const activeTab = (pathname: string): TabId => (sectionFor(pathname) ?? 'home') as TabId;
 
 function NavHeader(): ReactNode {
   const state = useGameStore((s) => s.state);
@@ -68,7 +64,7 @@ export function Shell(): ReactNode {
   }, [pathname]);
 
   const badges = useMemo(
-    () => (state ? { social: unreadStories(state).length } : undefined),
+    () => (state ? { world: unreadStories(state).length } : undefined),
     [state],
   );
 
@@ -98,7 +94,8 @@ export function Shell(): ReactNode {
       {...(badges ? { badges } : {})}
       navHeader={<NavHeader />}
     >
-      <AnimatePresence mode="wait" initial={false}>
+      <HeaderSlotProvider accessory={immersive ? null : <SectionNav />}>
+        <AnimatePresence mode="wait" initial={false}>
         <motion.main
           key={screenNameFor(pathname)}
           variants={variants}
@@ -111,7 +108,8 @@ export function Shell(): ReactNode {
             <AppRoutes location={location} />
           </Suspense>
         </motion.main>
-      </AnimatePresence>
+        </AnimatePresence>
+      </HeaderSlotProvider>
     </AppShell>
   );
 }

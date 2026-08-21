@@ -5,23 +5,27 @@ import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { FOCUS_RING } from '../glass/glassLevel';
 import {
-  IconClub, IconHome, IconLeague, IconMarket, IconMatchday, IconSocial, IconSquad,
+  IconClub, IconHome, IconLeague, IconMatchday, IconSquad,
   type IconComponent,
 } from '../icons';
 
 /**
- * The seven destinations. Seven is the ceiling: an eighth would drop each
- * target below the width a thumb can hit reliably on a 375pt phone, and the
- * product does not have an eighth thing worth permanent navigation.
+ * Five sections.
+ *
+ * This was seven, which fitted only by shrinking each target to around fifty
+ * points and the labels to a size nobody reads. Five is not just a smaller
+ * number — it is a truer description of the game: recruiting is part of
+ * building a squad, and the table, the fixtures and the feed are all the same
+ * act of following the world outside your club. Everything that moved down is
+ * one tap away on the rail under each section's header, which is quicker than
+ * it was when it lived behind a seventh tab.
  */
 export const TAB_DESTINATIONS = [
   { id: 'home', label: 'Home', icon: IconHome },
-  { id: 'club', label: 'Club', icon: IconClub },
   { id: 'squad', label: 'Squad', icon: IconSquad },
   { id: 'matchday', label: 'Match', icon: IconMatchday },
-  { id: 'market', label: 'Market', icon: IconMarket },
-  { id: 'league', label: 'League', icon: IconLeague },
-  { id: 'social', label: 'Social', icon: IconSocial },
+  { id: 'club', label: 'Club', icon: IconClub },
+  { id: 'world', label: 'World', icon: IconLeague },
 ] as const satisfies readonly { id: string; label: string; icon: IconComponent }[];
 
 export type TabId = (typeof TAB_DESTINATIONS)[number]['id'];

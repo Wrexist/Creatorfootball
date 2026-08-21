@@ -9,6 +9,7 @@ import { GlassIcon } from '../glass/GlassIcon';
 import { IconChevronLeft } from '../icons';
 import { FitText } from '../typography/FitText';
 import { TYPE_CLASS } from '../typography/type';
+import { useHeaderSlot } from './headerSlot';
 
 /**
  * The screen scaffold. Every route in the product is one of these.
@@ -38,7 +39,12 @@ export interface ScreenProps {
   onBack?: () => void;
   /** Header controls, right aligned. Use `GlassIcon` — they must be labelled. */
   actions?: ReactNode;
-  /** Pinned directly under the header: tabs, a segmented control, a search field. */
+  /**
+   * Pinned directly under the header: tabs, a segmented control, a search
+   * field. When omitted, the application's shared header slot is used, which
+   * is how section navigation reaches every screen without being threaded
+   * through each one by hand.
+   */
   headerAccessory?: ReactNode;
   /** Sticky bottom action area. Never put navigation here. */
   footer?: ReactNode;
@@ -76,6 +82,14 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
   forwardedRef,
 ) {
   const m = useDesignMotion();
+  // Both are rendered, shared slot first.
+  //
+  // An earlier version let a screen's own accessory replace the shared one,
+  // which quietly cost the Squad and Market screens their section navigation —
+  // they have a filter of their own, so the rail vanished and their sibling
+  // screens became unreachable from them. Section navigation is not something
+  // a screen may opt out of.
+  const sharedSlot = useHeaderSlot();
   const breakpoint = useBreakpoint();
   const wide = breakpoint !== 'mobile';
   const localRef = useRef<HTMLDivElement>(null);
@@ -135,8 +149,14 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           <div className="flex min-w-11 items-center justify-end gap-1">{actions}</div>
         </div>
 
-        {headerAccessory !== undefined && (
-          <div className="mx-auto w-full max-w-[1180px] px-4 pb-2.5 sm:px-6">{headerAccessory}</div>
+        {sharedSlot !== undefined && sharedSlot !== null && (
+          <div className="mx-auto w-full max-w-[1180px] px-4 sm:px-6">{sharedSlot}</div>
+        )}
+
+        {headerAccessory !== undefined && headerAccessory !== null && (
+          <div className="mx-auto w-full max-w-[1180px] px-4 pb-2.5 pt-2.5 sm:px-6">
+            {headerAccessory}
+          </div>
         )}
       </header>
 

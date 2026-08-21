@@ -93,10 +93,17 @@ function stanceFor(author: Author, hook: ContentHook, state: GameState): number 
   }
 }
 
-interface Engagement { likes: number; reposts: number; replies: number }
+export interface Engagement { likes: number; reposts: number; replies: number }
 
-/** Derived from reach and stakes; the jitter band is deliberately narrow. */
-function engagementFor(reach: number, importance: number, sentiment: number, rng: Rng): Engagement {
+/**
+ * Derived from reach and stakes; the jitter band is deliberately narrow.
+ *
+ * Exported because the player's own posts, press reaction and creator drops
+ * have to be measured on exactly the same scale as the world's chatter. Two
+ * engagement models would show up immediately as the player's posts reading
+ * either implausibly huge or oddly ignored next to the feed around them.
+ */
+export function engagementFor(reach: number, importance: number, sentiment: number, rng: Rng): Engagement {
   const importanceMult = 1 + (importance - 2) * S.importanceEngagement;
   const feelingMult = 1 + Math.abs(sentiment) * S.sentimentEngagement;
   const jitter = rng.float(S.jitter[0], S.jitter[1]);
@@ -107,7 +114,8 @@ function engagementFor(reach: number, importance: number, sentiment: number, rng
   return { likes, reposts, replies };
 }
 
-function weightFor(kind: SocialPostKind, importance: number, likes: number): number {
+/** Feed weight — shared with the authored-post path for the same reason. */
+export function weightFor(kind: SocialPostKind, importance: number, likes: number): number {
   const engagementTerm = Math.log10(likes + 10) * S.weightPerEngagementDecade;
   const kindBonus = S.kindWeightBonus[kind] ?? 0;
   return clamp(Math.round(importance * S.weightPerImportance + engagementTerm + kindBonus), 1, 100);

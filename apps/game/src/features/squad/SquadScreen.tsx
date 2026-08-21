@@ -438,8 +438,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
       >
         <Text role="title" as="h2" className="text-pretty">{verdict}</Text>
         <Text role="caption" className="mt-1.5 text-pretty">
-          The rule down the left of each row is the job you have promised him. Amber means his contract is nearly up;
-          red means he cannot play.
+          Each row shows the job you have promised him, how fresh he is, and how long his deal has left.
         </Text>
 
         <div className="mt-4 grid grid-cols-2 gap-2">

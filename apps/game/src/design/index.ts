@@ -131,6 +131,7 @@ export {
 
 /* --- layout & navigation ---------------------------------------------- */
 export { Screen, ScreenBleed, type ScreenProps } from './layout/Screen';
+export { HeaderSlotProvider, useHeaderSlot } from './layout/headerSlot';
 export {
   TabBar, SideNav, AppShell, TAB_DESTINATIONS,
   type TabBarProps, type SideNavProps, type AppShellProps, type TabId,
