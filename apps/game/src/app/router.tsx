@@ -4,7 +4,8 @@ import {
 } from 'react-router-dom';
 import { nextFixture, standings } from '@cf/engine';
 import {
-  ClubBadge, EmptyState, GlassButton, GlassPanel, IconTrophy, Screen, Skeleton, SkeletonRegion,
+  ClubBadge, EmptyState, GlassButton, GlassPanel, IconTrophy, ordinal, Screen, Skeleton,
+  SkeletonRegion,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { TitleScreen } from '@/features/onboarding';
@@ -153,8 +154,7 @@ function SeasonComplete(): ReactNode {
         <span className="inline-flex text-volt [&_svg]:size-10"><IconTrophy /></span>
         <h2 className="mt-3 font-display text-[26px] font-bold tracking-[-0.03em] text-ink">
           {row ? `You finished ${ordinal(row.position)}` : 'The final whistle has gone'}
-        </h2>
-        {us && (
+        </h2>        {us && (
           <p className="mt-1 text-[14px] text-ink-muted">
             {us.shortName} · {row ? `${row.points} points` : ''} · {row?.won ?? 0}W {row?.drawn ?? 0}D{' '}
             {row?.lost ?? 0}L
@@ -184,15 +184,6 @@ function SeasonComplete(): ReactNode {
       </div>
     </Screen>
   );
-}
-
-const ORDINALS = [
-  '', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th',
-] as const;
-
-/** Table positions top out at the league size (twelve), so a lookup is enough. */
-function ordinal(position: number): string {
-  return ORDINALS[position] ?? `${position}th`;
 }
 
 function NotFound(): ReactNode {

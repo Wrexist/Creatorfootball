@@ -2,6 +2,7 @@ import type {
   DecisionOption, DecisionTrigger, MatchEvent, MatchEventType, PlayPhase, SpecialRuleId,
 } from '@cf/engine';
 import type { PillTone } from '@/design';
+import type { PlaybackState } from '@/state/matchStore';
 
 /**
  * Matchday vocabulary.
@@ -154,6 +155,15 @@ export const percent = (value: number): string => `${Math.round(value * 100)}%`;
 export const one = (value: number): string => value.toFixed(1);
 
 export const two = (value: number): string => value.toFixed(2);
+
+/**
+ * Whether leaving now would throw away a match in motion. Before kick-off or
+ * after full time, walking out is free; between those, the header X must ask
+ * first. Kept pure so the gate can be tested without a running simulator.
+ */
+export function shouldConfirmMatchExit(minute: number, playback: PlaybackState): boolean {
+  return minute > 0 && playback !== 'COMPLETE' && playback !== 'IDLE';
+}
 
 /* --- presentation vocabulary ------------------------------------------ */
 

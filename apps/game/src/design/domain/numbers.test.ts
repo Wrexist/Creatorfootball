@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCount, formatDelta, formatMoney, formatWeeks, sidesWord } from './numbers';
+import { formatCount, formatDelta, formatMoney, formatWeeks, ordinal, sidesWord } from './numbers';
 
 /**
  * The post-match screen once printed `-8.157399521093865`, twice, on a tile
@@ -87,5 +87,15 @@ describe('sidesWord', () => {
     expect(sidesWord(4)).toBe('4');
     expect(sidesWord(0)).toBe('0');
     expect(sidesWord(13)).toBe('13');
+  });
+});
+
+describe('ordinal', () => {
+  it('says positions the way tables do', () => {
+    expect(ordinal(1)).toBe('1st');
+    expect(ordinal(2)).toBe('2nd');
+    expect(ordinal(3)).toBe('3rd');
+    expect(ordinal(11)).toBe('11th');
+    expect(ordinal(21)).toBe('21st');
   });
 });

@@ -54,11 +54,15 @@ export function MatchPreviewScreen(): ReactNode {
     // Yielding one frame lets the button paint its spinner before the whole
     // match runs synchronously on the main thread.
     requestAnimationFrame(() => {
+      const SIM_FAIL = {
+        title: 'That match cannot be simulated',
+        description: 'Kick it off live instead.',
+      } as const;
       const sim = useGameStore.getState().createSimulator(fixtureId);
       if (!sim) {
         setSimulating(false);
         // Silence here reads as a broken button: the tap must answer.
-        toast.error('That match cannot be simulated', 'Kick it off live instead.');
+        toast.error(SIM_FAIL.title, SIM_FAIL.description);
         return;
       }
       const store = useMatchStore.getState();
@@ -68,7 +72,7 @@ export function MatchPreviewScreen(): ReactNode {
       if (result) navigate(`/matchday/result/${result.matchId}`);
       else {
         setSimulating(false);
-        toast.error('That match cannot be simulated', 'Kick it off live instead.');
+        toast.error(SIM_FAIL.title, SIM_FAIL.description);
       }
     });
   }, [fixtureId, simulating, navigate, toast]);
