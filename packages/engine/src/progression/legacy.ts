@@ -1,6 +1,7 @@
-import type { ClubId, PlayerId } from '../core/brand';
-import type { AnyDomainEvent } from '../core/events';
+import type { ClubId, CreatorId, PlayerId } from '../core/brand';
+import type { AnyDomainEvent, DomainEventType } from '../core/events';
 import type { GameState, LegacyState, SeasonSummary } from '../game/state';
+import { formatMoney } from '../economy/ledger';
 import { points as leaguePoints } from '../clubs/club';
 import { PROGRESSION_BALANCE as P } from './balance';
 
@@ -107,6 +108,109 @@ export function detectRecords(
   return out;
 }
 
+const playerNameOf = (state: GameState, id: PlayerId | undefined): string =>
+  (id ? state.players[id]?.displayName : undefined) ?? 'A player';
+const clubNameOf = (state: GameState, id: ClubId | undefined): string =>
+  (id ? state.clubs[id]?.name : undefined) ?? 'Another club';
+const creatorNameOf = (state: GameState, id: CreatorId | undefined): string =>
+  (id ? state.creators[id]?.displayName : undefined) ?? 'A creator';
+
+/**
+ * Prose for milestone-worthy events the switch above does not model explicitly.
+ *
+ * The default branch used to write `${event.type}` with underscores swapped for
+ * spaces straight onto the history screen — "player morale changed", "objective
+ * completed" — which told every reader that nobody had written the sentence on
+ * purpose. This table is keyed exhaustively by event type, so a new emitter can
+ * never silently reintroduce a slug: adding a key to DomainEventPayloads without
+ * an entry here is a compile error, not a code-review catch. Most entries will
+ * never fire at milestone importance; they exist because any event CAN be pushed
+ * at importance 5, and whatever fires should read like someone wrote it.
+ */
+const MILESTONE_PROSE: {
+  [K in DomainEventType]: (
+    event: Extract<AnyDomainEvent, { type: K }>,
+    state: GameState,
+  ) => string;
+} = {
+  /* --- lifecycle ------------------------------------------------------- */
+  GAME_STARTED: (e, s) => `Took charge of ${clubNameOf(s, e.payload.clubId)}`,
+  SEASON_STARTED: (e) => `Season ${e.payload.season} began`,
+  SEASON_COMPLETED: (e) => `Season ${e.payload.season} came to a close`,
+  CYCLE_ADVANCED: () => 'Another week at the club',
+
+  /* --- match ----------------------------------------------------------- */
+  MATCH_SCHEDULED: () => 'A new fixture landed on the calendar',
+  MATCH_STARTED: () => 'Kick-off',
+  GOAL_SCORED: (e, s) =>
+    `${playerNameOf(s, e.payload.scorerId)} scored in a ${e.payload.homeScore}-${e.payload.awayScore} match`,
+  MATCH_WON: (e, s) => `Beat ${clubNameOf(s, e.payload.opponentId)} by ${e.payload.margin}`,
+  MATCH_LOST: (e, s) => `Defeat to ${clubNameOf(s, e.payload.opponentId)}, by ${e.payload.margin}`,
+  MATCH_DRAWN: (e, s) => `Drew ${e.payload.score} with ${clubNameOf(s, e.payload.opponentId)}`,
+  PLAYER_INJURED: (e, s) =>
+    `${playerNameOf(s, e.payload.playerId)} was ruled out for ${e.payload.weeksOut} weeks`,
+  PLAYER_RECOVERED: (e, s) => `${playerNameOf(s, e.payload.playerId)} returned to full training`,
+  RED_CARD: (e, s) => `${playerNameOf(s, e.payload.playerId)} was sent off`,
+  MOTM_AWARDED: (e, s) => `${playerNameOf(s, e.payload.playerId)} took man of the match`,
+  SPECIAL_RULE_TRIGGERED: (e) =>
+    `The ${e.payload.rule.replace(/_/g, ' ').toLowerCase()} card changed everything`,
+  LIVE_DECISION_MADE: () => 'A touchline call reshaped the match',
+
+  /* --- squad ----------------------------------------------------------- */
+  PLAYER_SIGNED: (e, s) =>
+    `${playerNameOf(s, e.payload.playerId)} arrived${e.payload.fee > 0 ? ` for ${formatMoney(e.payload.fee)}` : ' on a free'}`,
+  PLAYER_SOLD: (e, s) => `${playerNameOf(s, e.payload.playerId)} left for ${clubNameOf(s, e.payload.toClubId)}`,
+  PLAYER_RELEASED: (e, s) => `${playerNameOf(s, e.payload.playerId)} was released`,
+  CONTRACT_SIGNED: (e, s) => `${playerNameOf(s, e.payload.playerId)} signed a new deal`,
+  CONTRACT_EXPIRING: (e, s) =>
+    `${playerNameOf(s, e.payload.playerId)} entered the final weeks of his contract`,
+  PLAYER_DEVELOPED: (e, s) =>
+    `${playerNameOf(s, e.payload.playerId)} took his ${e.payload.attribute} to ${e.payload.to}`,
+  PLAYER_BREAKOUT: (e, s) => `${playerNameOf(s, e.payload.playerId)} forced his way into the first team`,
+  YOUTH_PROSPECT_PROMOTED: (e, s) => `${playerNameOf(s, e.payload.playerId)} stepped up from the academy`,
+  PLAYER_MORALE_CHANGED: (e, s) => `${playerNameOf(s, e.payload.playerId)}'s head turned (${e.payload.reason})`,
+
+  /* --- transfers ------------------------------------------------------- */
+  TRANSFER_BID_MADE: (e, s) =>
+    `${formatMoney(e.payload.amount)} bid lodged for ${playerNameOf(s, e.payload.playerId)}`,
+  TRANSFER_BID_REJECTED: (e, s) =>
+    `A bid for ${playerNameOf(s, e.payload.playerId)} was knocked back`,
+  TRANSFER_COMPLETED: (e, s) =>
+    `${playerNameOf(s, e.payload.playerId)} completed a move to ${clubNameOf(s, e.payload.toClubId)}`,
+  TRANSFER_HIJACKED: (e, s) =>
+    `${clubNameOf(s, e.payload.byClubId)} snatched ${playerNameOf(s, e.payload.playerId)} at the last moment`,
+  SCOUT_REPORT_READY: (e, s) => `Scouts filed their report on ${playerNameOf(s, e.payload.playerId)}`,
+
+  /* --- club / world ---------------------------------------------------- */
+  CLUB_CREATED: (e, s) => `${clubNameOf(s, e.payload.clubId)} came into existence`,
+  FACILITY_UPGRADED: () => 'Training ground work was completed',
+  SPONSOR_SIGNED: (e) => `New sponsorship income secured (${formatMoney(e.payload.value)})`,
+  SPONSOR_LOST: (e) => `A sponsor walked away (${e.payload.reason})`,
+  FAN_SENTIMENT_CHANGED: (e) => `Supporters reacted: ${e.payload.reason}`,
+  ATTENDANCE_RECORDED: (e) =>
+    `A crowd of ${e.payload.attendance.toLocaleString('en-GB')} filled the ground`,
+  REPUTATION_CHANGED: (e) => `Reputation shifted (${e.payload.reason})`,
+  MANAGER_SACKED: (e) => `${e.payload.managerName} lost his job`,
+
+  /* --- rivalry / story -------------------------------------------------- */
+  RIVALRY_INTENSIFIED: (e) => `The rivalry boiled over (${e.payload.reason})`,
+  RIVALRY_CREATED: () => 'A new rivalry was born',
+  RECORD_BROKEN: () => 'The record book was rewritten',
+  STORY_PUBLISHED: (e) => `"${e.payload.headline}" made the papers`,
+  CREATOR_MOMENT: (e) =>
+    `Creator content about the club reached ${e.payload.reach.toLocaleString('en-GB')} people`,
+  CREATOR_JOINED: (e, s) => `${creatorNameOf(s, e.payload.creatorId)} joined the club's content team`,
+
+  /* --- progression / economy -------------------------------------------- */
+  OBJECTIVE_COMPLETED: (e) => `"${e.payload.title}" delivered (${e.payload.rewardSummary})`,
+  OBJECTIVE_FAILED: (e) => `"${e.payload.title}" slipped away`,
+  REWARD_CLAIMED: () => 'A reward was claimed',
+  TROPHY_WON: (e) => `Won the ${e.payload.competition}`,
+  PROMOTED: (e) => `Promoted to tier ${e.payload.toTier}`,
+  RELEGATED: (e) => `Relegated to tier ${e.payload.toTier}`,
+  BALANCE_LOW: () => 'The money ran low',
+};
+
 /**
  * Fold events into the durable record. Pure; returns a new LegacyState.
  */
@@ -159,13 +263,21 @@ export function updateLegacy(state: GameState, events: readonly AnyDomainEvent[]
         if (player) milestones.push({ cycle: event.cycle, text: `${player.displayName} broke into the first team`, importance: 3 });
         break;
       }
-      default:
+      default: {
         // Anything genuinely big that we did not model explicitly still belongs
-        // in the history feed rather than being lost.
+        // in the history feed rather than being lost — written as prose, never
+        // as the raw event slug. The exhaustive MILESTONE_PROSE table above
+        // makes that a compile-time guarantee for every known event type.
         if (event.importance >= 5 && event.entities.some((e) => e.id === clubId)) {
-          milestones.push({ cycle: event.cycle, text: `${event.type.replace(/_/g, ' ').toLowerCase()}`, importance: 5 });
+          // The cast only erases the per-key event narrowing TypeScript cannot
+          // correlate through a union index; the table itself stays exhaustive.
+          const prose = (MILESTONE_PROSE as Readonly<
+            Record<DomainEventType, (e: AnyDomainEvent, s: GameState) => string>
+          >)[event.type];
+          milestones.push({ cycle: event.cycle, text: prose(event, state), importance: 5 });
         }
         break;
+      }
     }
   }
 
