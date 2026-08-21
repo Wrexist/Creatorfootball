@@ -9,6 +9,8 @@ import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { GateScreen, useGameStatus } from './gate';
 import { useStories } from './data';
+import { useSocialWorld } from './engine';
+import { BroadcastStack } from './components/Broadcast';
 
 /**
  * The press.
@@ -53,6 +55,7 @@ const StoryRow = memo(function StoryRow({
 function MediaView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const apply = useGameStore((s) => s.apply);
+  useSocialWorld(state);
   const [scope, setScope] = useState<'ALL' | 'UNREAD'>('ALL');
   const [limit, setLimit] = useState(PAGE);
   const [open, setOpen] = useState<string | null>(null);
@@ -129,6 +132,12 @@ function MediaView({ state }: { state: GameState }): ReactNode {
         </GlassPanel>
       }
     >
+      {/* The broadcast layer sits above the archive: this week's verdict, the
+          pundit's running argument and the rumour mill are all *about* the same
+          events the stories below report, and they are what a player opens this
+          screen for. */}
+      <BroadcastStack state={state} />
+
       {stories.length === 0 ? (
         <EmptyState
           icon={<IconBell />}

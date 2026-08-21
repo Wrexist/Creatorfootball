@@ -16,6 +16,8 @@ import { rivalriesOf, rivalOpponent } from '../rivalries/rivalries';
 import { OUTLETS } from '../media/balance';
 import { FAN_PERSONAS, SOCIAL_BALANCE as S, SPONSOR_ACCOUNTS } from './balance';
 import { FALLBACK_SOCIAL_TEMPLATES } from './fallbackTemplates';
+import { engagementFor, weightFor } from './engagement';
+import { socialStanding, standingFacts } from './standing';
 
 /**
  * The social feed.
@@ -91,34 +93,6 @@ function stanceFor(author: Author, hook: ContentHook, state: GameState): number 
     case 'LEAK': return clamp(hook.sentiment * 0.3, -1, 1);
     default: return hook.sentiment;
   }
-}
-
-export interface Engagement { likes: number; reposts: number; replies: number }
-
-/**
- * Derived from reach and stakes; the jitter band is deliberately narrow.
- *
- * Exported because the player's own posts, press reaction and creator drops
- * have to be measured on exactly the same scale as the world's chatter. Two
- * engagement models would show up immediately as the player's posts reading
- * either implausibly huge or oddly ignored next to the feed around them.
- */
-export function engagementFor(reach: number, importance: number, sentiment: number, rng: Rng): Engagement {
-  const importanceMult = 1 + (importance - 2) * S.importanceEngagement;
-  const feelingMult = 1 + Math.abs(sentiment) * S.sentimentEngagement;
-  const jitter = rng.float(S.jitter[0], S.jitter[1]);
-  const likes = Math.max(1, Math.round(reach * S.baseEngagementRate * importanceMult * feelingMult * jitter));
-  const reposts = Math.max(0, Math.round(likes * S.repostRatio * (1 + Math.abs(sentiment) * 0.5)));
-  const replyBoost = sentiment < 0 ? S.negativeReplyBoost : 1;
-  const replies = Math.max(0, Math.round(likes * S.replyRatio * replyBoost));
-  return { likes, reposts, replies };
-}
-
-/** Feed weight — shared with the authored-post path for the same reason. */
-export function weightFor(kind: SocialPostKind, importance: number, likes: number): number {
-  const engagementTerm = Math.log10(likes + 10) * S.weightPerEngagementDecade;
-  const kindBonus = S.kindWeightBonus[kind] ?? 0;
-  return clamp(Math.round(importance * S.weightPerImportance + engagementTerm + kindBonus), 1, 100);
 }
 
 function fanAuthors(
@@ -272,6 +246,13 @@ export function generatePosts(
   const allHooks = [...cascade.socialHooks, ...(opts.extraHooks ?? [])].filter((h) => h.cycle === cycle);
   if (allHooks.length === 0) return [];
 
+  // How the club is currently perceived is published to every template as a
+  // fact, and it also scales how hard hostile voices swing. A club everybody
+  // finds funny is written about differently from one everybody fears — that
+  // difference is the point of building a standing at all.
+  const standing = socialStanding(state);
+  const standingVocabulary = standingFacts(standing);
+
   const packTemplates = registry?.socialTemplates() ?? [];
   const templates = blendTemplates(packTemplates, FALLBACK_SOCIAL_TEMPLATES, S.builtInWeightWithPack);
   const byKey = new Map<string, SocialTemplate[]>();
@@ -327,6 +308,7 @@ export function generatePosts(
       const authorRng = hookRng.fork(`a:${author.kind}:${index}`);
       const facts = {
         ...hook.facts,
+        ...standingVocabulary,
         authorKind: author.kind,
         ...(author.tone ? { tone: author.tone } : {}),
         ...(author.tier ? { tier: author.tier } : {}),
@@ -345,8 +327,16 @@ export function generatePosts(
       seenTemplates.add(template.id);
       usedText.add(text);
 
-      const sentiment = clamp((stanceFor(author, hook, state) + template.sentiment) / 2, -1, 1);
-      const engagement = engagementFor(author.reach, hook.importance, sentiment, authorRng);
+      const rawSentiment = clamp((stanceFor(author, hook, state) + template.sentiment) / 2, -1, 1);
+      // Hostility is amplified against a club that has made itself a target and
+      // damped against one the sport has decided it likes.
+      const sentiment = rawSentiment < 0
+        ? clamp(rawSentiment * standing.hostilityMultiplier, -1, 1)
+        : rawSentiment;
+      const engagement = engagementFor(
+        Math.round(author.reach * (hook.clubId === state.playerClubId ? standing.reachMultiplier : 1)),
+        hook.importance, sentiment, authorRng,
+      );
       posts.push({
         id: `sp_${hook.sourceEventId}_${hook.trigger}_${author.kind}_${index}`.toLowerCase(),
         kind: author.kind,
@@ -501,3 +491,28 @@ export function socialReach(state: GameState): { impressions: number; followerDe
   );
   return { impressions: Math.round(impressions), followerDelta };
 }
+
+
+/* --- the interactive layer ----------------------------------------------- */
+
+/**
+ * The social layer's public surface.
+ *
+ * Re-exported from here rather than added to the engine's root barrel so the
+ * whole feature area is reachable through the module that already owns the
+ * feed. Everything below turns the feed from a thing the player reads into a
+ * thing the player plays.
+ */
+export * from './worldState';
+export * from './engagement';
+export * from './standing';
+export * from './moments';
+export * from './effects';
+export * from './postFactory';
+export * from './compose';
+export * from './reactions';
+export * from './pressConference';
+export * from './community';
+export * from './trending';
+export * from './milestones';
+export * from './socialTick';

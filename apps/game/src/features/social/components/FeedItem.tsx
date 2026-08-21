@@ -4,7 +4,7 @@ import {
   CreatorAvatar, FOCUS_RING, GlassPill, IconHeart, IconInfo, IconRepost, IconVerified,
   NameText, Numeric, Text, cn,
 } from '@/design';
-import { KIND_LABEL, KIND_TONE, tierFor, type Tier } from '../data';
+import { labelForPost, tierFor, toneForPost, type Tier } from '../data';
 
 /**
  * One item in the feed.
@@ -42,9 +42,12 @@ const Kicker = memo(function Kicker({
 }: { post: PostData; timeLabel: string }): ReactNode {
   return (
     <div className="flex items-center gap-2">
-      <GlassPill tone={KIND_TONE[post.kind]} size="xs" filled>
-        {KIND_LABEL[post.kind]}
+      <GlassPill tone={toneForPost(post)} size="xs" filled>
+        {labelForPost(post)}
       </GlassPill>
+      {post.tags.includes('viral') && (
+        <GlassPill tone="special" size="xs">Went everywhere</GlassPill>
+      )}
       <Text role="micro" as="span">{timeLabel}</Text>
     </div>
   );

@@ -160,7 +160,10 @@ export const SOCIAL_ACTION_BALANCE = {
       warmth: 0.5, credibility: -0.25, volume: 0.7, stake: 0.5,
     },
     CLASSY: {
-      reach: 0.82, fanSentiment: 0.9, fanExcitement: 0.4, squadMorale: 0.9,
+      // Deliberately deflationary. A measured line lowers the temperature in the
+      // ground as well as in the press room — that is what it costs, and without
+      // a cost the safe option would simply be the correct one every week.
+      reach: 0.82, fanSentiment: 0.9, fanExcitement: -0.95, squadMorale: 0.9,
       rivalryHeat: -0.4, mediaGoodwill: 2.2, trust: 1.4,
       warmth: 0.6, credibility: 0.6, volume: 0.3, stake: 0.15,
     },

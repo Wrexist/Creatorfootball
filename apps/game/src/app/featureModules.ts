@@ -38,7 +38,10 @@ const league: Loader<
   'LeagueScreen' | 'StandingsScreen' | 'FixturesScreen' | 'RivalriesScreen' | 'SeasonOverviewScreen'
 > = () => import('@/features/league');
 
-const social: Loader<'SocialScreen' | 'MediaScreen' | 'CreatorProfileScreen'> =
+const social: Loader<
+  'SocialScreen' | 'MediaScreen' | 'CreatorProfileScreen'
+  | 'PressConferenceScreen' | 'CreatorHubScreen' | 'CommunityScreen'
+> =
   () => import('@/features/social');
 
 const progression: Loader<
@@ -88,6 +91,9 @@ export const SeasonOverviewScreen = screen(league, 'SeasonOverviewScreen');
 
 /* Social */
 export const SocialScreen = screen(social, 'SocialScreen');
+export const PressConferenceScreen = screen(social, 'PressConferenceScreen');
+export const CreatorHubScreen = screen(social, 'CreatorHubScreen');
+export const CommunityScreen = screen(social, 'CommunityScreen');
 export const MediaScreen = screen(social, 'MediaScreen');
 export const CreatorProfileScreen = screen(social, 'CreatorProfileScreen');
 

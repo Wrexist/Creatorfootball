@@ -1,18 +1,20 @@
 import { useMemo, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CREATOR_ATTRIBUTE_KEYS, CREATOR_ATTRIBUTE_LABELS, MANAGER_ATTRIBUTE_LABELS, creatorReach,
-  type Creator, type GameState, type Manager, type Player, type SocialPost,
+  CREATOR_ATTRIBUTE_KEYS, CREATOR_ATTRIBUTE_LABELS, CREATOR_BALANCE, MANAGER_ATTRIBUTE_LABELS,
+  creatorReach, declineCampaign, formatMoney, greenlightCampaign, liveFeuds, socialWorld,
+  type Creator, type CreatorCampaign, type GameState, type Manager, type Player, type SocialPost,
 } from '@cf/engine';
 import {
   AttributeBar, ClubBadge, CreatorAvatar, CreatorCard, Divider, EmptyState, GlassButton,
-  GlassPanel, GlassPill, IconSocial, KeyValueRow, MomentumBar, MoneyLabel, PlayerCard,
-  ProgressBar, Screen, SectionHeader, StatCard, StatGrid, formatCount,
-  NameText,
+  GlassPanel, GlassPill, IconSocial, IconWarning, KeyValueRow, ListRow, MomentumBar, MoneyLabel,
+  PlayerCard, ProgressBar, Screen, SectionHeader, StatCard, StatGrid, Text, formatCount,
+  useToast, NameText,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { FeedItem } from './components/FeedItem';
+import { useSocialAction, useSocialWorld } from './engine';
 
 /**
  * A creator, in full.
@@ -64,6 +66,63 @@ interface ViewProps {
 
 function CreatorView({ state, creator }: ViewProps): ReactNode {
   const navigate = useNavigate();
+  const toast = useToast();
+  const run = useSocialAction();
+  useSocialWorld(state);
+
+  const world = socialWorld(state);
+
+  /**
+   * The working relationship, not just the opinion.
+   *
+   * A creator's sentiment is mostly a function of whether the club gives them
+   * anything to make, so the two are shown together: what is on the table, what
+   * is in production, what has been delivered, and how long it has been since
+   * anybody called. Losing your biggest creator should never be a surprise.
+   */
+  const briefs = useMemo(
+    () => world.creatorCampaigns.filter(
+      (c) => c.creatorId === creator.id && c.status === 'OFFERED' && c.expiresCycle > state.clock.cycle,
+    ),
+    [world.creatorCampaigns, creator.id, state.clock.cycle],
+  );
+  const inProduction = useMemo(
+    () => world.creatorCampaigns.filter((c) => c.creatorId === creator.id && c.status === 'RUNNING'),
+    [world.creatorCampaigns, creator.id],
+  );
+  const madeForUs = useMemo(
+    () => world.creatorCampaigns
+      .filter((c) => c.creatorId === creator.id && (c.status === 'DELIVERED' || c.status === 'FLOPPED'))
+      .sort((a, b) => (b.deliveredCycle ?? 0) - (a.deliveredCycle ?? 0))
+      .slice(0, 5),
+    [world.creatorCampaigns, creator.id],
+  );
+  const lastWorked = useMemo(() => {
+    let best = -999;
+    for (const campaign of world.creatorCampaigns) {
+      if (campaign.creatorId !== creator.id) continue;
+      if (campaign.status !== 'DELIVERED' && campaign.status !== 'RUNNING') continue;
+      best = Math.max(best, campaign.deliveredCycle ?? campaign.offeredCycle);
+    }
+    return best;
+  }, [world.creatorCampaigns, creator.id]);
+  const idleCycles = lastWorked < -900 ? null : state.clock.cycle - lastWorked;
+  const feud = useMemo(
+    () => liveFeuds(state).find((f) => f.aId === creator.id || f.bId === creator.id),
+    [state, creator.id],
+  );
+
+  const commission = (campaignId: string): void => {
+    const outcome = run((current) => greenlightCampaign(current, { campaignId, at: Date.now() }));
+    if (outcome.ok) toast.success('In production', `${creator.displayName} starts this week.`);
+    else toast.error('Not commissioned', outcome.reason ?? 'No longer available.');
+  };
+  const pass = (campaignId: string): void => {
+    const outcome = run((current) => declineCampaign(current, { campaignId }));
+    if (outcome.ok) {
+      toast.show({ tone: 'neutral', title: 'Passed', description: 'They will remember it.' });
+    } else toast.error('Not possible', outcome.reason ?? 'Already gone.');
+  };
 
   const club = creator.clubId ? state.clubs[creator.clubId] : undefined;
   const player: Player | undefined = creator.playerId ? state.players[creator.playerId] : undefined;
@@ -194,6 +253,18 @@ function CreatorView({ state, creator }: ViewProps): ReactNode {
         </div>
         <p className="mt-3 text-[14px] leading-relaxed text-ink-muted text-pretty">{creator.bio}</p>
       </GlassPanel>
+
+      <WorkingRelationship
+        creator={creator}
+        state={state}
+        briefs={briefs}
+        inProduction={inProduction}
+        madeForUs={madeForUs}
+        idleCycles={idleCycles}
+        feudCause={feud?.cause ?? null}
+        onCommission={commission}
+        onPass={pass}
+      />
 
       <StatGrid columns={3}>
         <StatCard label="Followers" value={formatCount(creator.followers)} size="sm" icon={<IconSocial />} />
@@ -388,4 +459,147 @@ export function CreatorProfileScreen(): ReactNode {
   }
 
   return <CreatorView state={gate.state} creator={creator} />;
+}
+
+/**
+ * The working relationship.
+ *
+ * Separated out because it is a different question from "who is this person" —
+ * it is "what have we actually done together, and when did anybody last call".
+ * Neglect is the failure mode a creator-owned club really has, so the counter
+ * is shown plainly rather than hidden behind a sentiment bar.
+ */
+function WorkingRelationship({
+  creator, state, briefs, inProduction, madeForUs, idleCycles, feudCause, onCommission, onPass,
+}: {
+  creator: Creator;
+  state: GameState;
+  briefs: readonly CreatorCampaign[];
+  inProduction: readonly CreatorCampaign[];
+  madeForUs: readonly CreatorCampaign[];
+  idleCycles: number | null;
+  feudCause: string | null;
+  onCommission: (id: string) => void;
+  onPass: (id: string) => void;
+}): ReactNode {
+  const ours = creator.clubId === state.playerClubId;
+  const neglected = ours && idleCycles !== null && idleCycles > CREATOR_BALANCE.sentiment.neglectAfter;
+  const never = ours && idleCycles === null;
+
+  return (
+    <GlassPanel
+      title="Working relationship"
+      padding="md"
+      accent={neglected || never ? 'danger' : 'volt'}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <GlassPill
+          size="xs"
+          tone={creator.clubSentiment >= 25 ? 'positive'
+            : creator.clubSentiment <= CREATOR_BALANCE.roster.unhappyAt ? 'danger' : 'warning'}
+          filled
+        >
+          {creator.clubSentiment >= 25 ? 'Happy here'
+            : creator.clubSentiment <= CREATOR_BALANCE.roster.unhappyAt ? 'Looking to leave' : 'Restless'}
+        </GlassPill>
+        {ours && (
+          <Text role="micro" as="span">
+            {never
+              ? 'You have never given them anything to make'
+              : `Last worked together ${idleCycles} ${idleCycles === 1 ? 'week' : 'weeks'} ago`}
+          </Text>
+        )}
+      </div>
+
+      {feudCause && (
+        <div className="mt-2.5 flex gap-2 rounded-md bg-danger/12 p-2">
+          <span aria-hidden="true" className="mt-0.5 shrink-0 text-danger [&_svg]:size-3.5"><IconWarning /></span>
+          <Text role="caption" as="p" className="text-pretty text-danger">
+            {`In a public feud. ${feudCause}`}
+          </Text>
+        </div>
+      )}
+
+      {briefs.length > 0 && (
+        <>
+          <Divider label="They want to make something" />
+          <div className="flex flex-col gap-2.5">
+            {briefs.map((brief) => (
+              <div key={brief.id} className="glass-1 rounded-md p-2.5">
+                <div className="flex items-center gap-2">
+                  <Text role="label" as="span">{CREATOR_BALANCE.formats[brief.format].label}</Text>
+                  <GlassPill size="xs" tone="neutral">{formatMoney(brief.cost)}</GlassPill>
+                  <span className="ml-auto shrink-0">
+                    <Text role="micro" as="span">{`${formatCount(brief.projectedReach)} projected`}</Text>
+                  </span>
+                </div>
+                <Text role="caption" as="p" className="mt-1 text-pretty">{brief.brief}</Text>
+                <div className="mt-2 flex gap-2">
+                  <GlassButton variant="secondary" size="sm" onClick={() => onPass(brief.id)}>Pass</GlassButton>
+                  <GlassButton variant="primary" size="sm" block onClick={() => onCommission(brief.id)}>
+                    Commission
+                  </GlassButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {inProduction.length > 0 && (
+        <>
+          <Divider label="In production" />
+          {inProduction.map((campaign) => (
+            <div key={campaign.id} className="mt-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <Text role="label" as="span">{campaign.title}</Text>
+                <Text role="micro" as="span">{`${campaign.cyclesRemaining} to go`}</Text>
+              </div>
+              <ProgressBar
+                value={campaign.totalCycles - campaign.cyclesRemaining}
+                max={campaign.totalCycles}
+                tone="volt"
+                size="xs"
+                className="mt-1"
+              />
+            </div>
+          ))}
+        </>
+      )}
+
+      {madeForUs.length > 0 && (
+        <>
+          <Divider label="What they have made for you" />
+          <div className="flex flex-col">
+            {madeForUs.map((campaign, index) => (
+              <ListRow
+                key={campaign.id}
+                density="compact"
+                divided={index < madeForUs.length - 1}
+                title={<NameText name={campaign.title} role="bodyStrong" lines={2} />}
+                subtitle={`Matchweek ${campaign.deliveredCycle ?? campaign.offeredCycle}`}
+                trailing={
+                  <div className="flex flex-col items-end">
+                    <GlassPill size="xs" tone={campaign.status === 'DELIVERED' ? 'positive' : 'danger'}>
+                      {campaign.status === 'DELIVERED' ? 'Landed' : 'Flopped'}
+                    </GlassPill>
+                    <Text role="micro" as="span" className="mt-0.5">
+                      {`${formatCount(campaign.deliveredReach ?? 0)} → ${formatCount(campaign.followerGain ?? 0)}`}
+                    </Text>
+                  </div>
+                }
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {briefs.length === 0 && inProduction.length === 0 && madeForUs.length === 0 && (
+        <Text role="caption" as="p" className="mt-2 text-ink-dim text-pretty">
+          Nothing has been made together yet. Creators bring briefs off the back of results,
+          signings and rows — give them something worth filming.
+        </Text>
+      )}
+    </GlassPanel>
+  );
 }

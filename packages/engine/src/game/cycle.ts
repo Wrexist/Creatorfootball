@@ -12,6 +12,7 @@ import { simulateMatch } from '../matches/simulator';
 import { tickWorld } from '../simulation/worldTick';
 import { runFinancialCycle } from '../economy/cycle';
 import { refreshMarket } from '../transfers/market';
+import { tickSocialWorld, type SettledStake } from '../social/socialTick';
 import { generateSponsorOffers, signSponsorOffer } from '../sponsors/sponsors';
 import { advanceScouting } from '../transfers/scouting';
 import { facilityEffect } from '../facilities/facilities';
@@ -72,6 +73,10 @@ export interface CycleSummary {
   readonly objectivesCompleted: number;
   readonly seasonComplete: boolean;
   readonly notes: readonly string[];
+  /** Promises the player made in public that this week's results judged. */
+  readonly settledStakes: readonly SettledStake[];
+  readonly followerMilestones: readonly string[];
+  readonly viralMoments: readonly string[];
 }
 
 export interface AdvanceCycleResult {
@@ -310,6 +315,19 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
     }, { importance: 2, entities: [events.playerRef(report.playerId)] }));
   }
 
+  // --- 5b. the internet remembers what you said ------------------------
+  // Stakes settle against the result, polls close, commissioned content lands,
+  // milestones pay out. It runs here rather than on a screen mount so its
+  // consequences are part of the matchweek, and so a player who never opens
+  // the feed is still held to what they posted.
+  const socialTick = tickSocialWorld(next, {
+    at: opts.now,
+    ...(registry ? { registry } : {}),
+  });
+  next = socialTick.state;
+  allEvents.push(...socialTick.events);
+  notes.push(...socialTick.notes);
+
   // --- 6. revalue the market ------------------------------------------
   // Without this, players develop but their price tags never move, and the
   // brake the design depends on — a growing club facing bigger fees and bigger
@@ -429,6 +447,9 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
       objectivesCompleted: objectiveUpdates.filter((u) => u.justCompleted).length,
       seasonComplete,
       notes,
+      settledStakes: socialTick.settled,
+      followerMilestones: socialTick.milestones.map((m) => m.label),
+      viralMoments: socialTick.viral.map((v) => v.label),
     },
   };
 }

@@ -13,6 +13,9 @@ import {
 } from '../simulation/templating';
 import { MEDIA_BALANCE as M, OUTLETS, outletByName, type Outlet } from './balance';
 import { FALLBACK_MEDIA_TEMPLATES } from './fallbackTemplates';
+import { SOCIAL_ACTION_BALANCE as A } from '../social/balance';
+import { socialWorld } from '../social/worldState';
+import { socialStanding, standingFacts } from '../social/standing';
 
 /**
  * The media engine.
@@ -60,6 +63,23 @@ function archetypeAmplifier(manager: Manager | null): { negative: number; positi
     if (id.includes(row.match)) return { negative: row.negative, positive: row.positive };
   }
   return { negative: 1, positive: 1 };
+}
+
+/**
+ * Media goodwill, spent and earned in the press room.
+ *
+ * A conference is only a decision if the answers travel, so goodwill above or
+ * below neutral shifts published sentiment directly. A manager who has been
+ * straight with the room for a month gets the benefit of the doubt on a bad
+ * afternoon; one who has walked past them four times running does not.
+ */
+function goodwillShift(sentiment: number, hook: ContentHook, state: GameState): number {
+  if (hook.clubId !== state.playerClubId) return sentiment;
+  const goodwill = socialWorld(state).mediaGoodwill;
+  const swing = ((goodwill - 50) / 50) * A.press.goodwillSentimentSwing;
+  // Goodwill softens criticism far more than it inflates praise: the press are
+  // not going to write you a love letter because you were polite on Thursday.
+  return sentiment < 0 ? sentiment * (1 - swing) : sentiment * (1 + swing * 0.4);
 }
 
 /**
@@ -148,6 +168,10 @@ export function generateStories(
   }
 
   const manager = state.managers[state.playerManagerId] ?? null;
+  // Standing is published to the press the same way it is to the feed, so a
+  // club the sport finds ridiculous is covered as one.
+  const standing = socialStanding(state);
+  const standingVocabulary = standingFacts(standing);
   const damping = manager ? (manager.attributes.mediaHandling / 100) * M.mediaHandlingDamping : 0;
   const spikeRng = rng.fork(`media:spike:${cycle}`);
 
@@ -189,8 +213,9 @@ export function generateStories(
   for (const candidate of chosen) {
     const hook = candidate.hook;
     const local = rng.fork(`media:${hook.sourceEventId}:${hook.trigger}`);
+    const facts = { ...hook.facts, ...standingVocabulary };
     const pool = templatesForTrigger((key) => byTrigger.get(key), hook.trigger).filter(
-      (t) => matchesConditions(t.conditions, hook.facts) && renderTemplate(t.headline, hook.tokens) !== null && renderTemplate(t.body, hook.tokens) !== null,
+      (t) => matchesConditions(t.conditions, facts) && renderTemplate(t.headline, hook.tokens) !== null && renderTemplate(t.body, hook.tokens) !== null,
     );
     if (pool.length === 0) continue;
 
@@ -210,7 +235,11 @@ export function generateStories(
 
     const outlet = chooseOutlet(template, hook, local);
     const rawSentiment = clamp((hook.sentiment + template.sentiment) / 2 * outlet.bias, -1, 1);
-    const sentiment = clamp(applyManagerDamping(rawSentiment, hook, state), -1, 1);
+    const damped = applyManagerDamping(rawSentiment, hook, state);
+    const sentiment = clamp(
+      goodwillShift(damped, hook, state) * (damped < 0 ? standing.hostilityMultiplier : 1),
+      -1, 1,
+    );
 
     usedTemplates.add(template.id);
     seenTemplates.add(template.id);

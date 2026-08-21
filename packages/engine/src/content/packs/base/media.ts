@@ -53,6 +53,173 @@ const story = (
     ...(conditions ? { conditions } : {}),
   }));
 
+
+/**
+ * The press cover the interactive layer too.
+ *
+ * When the player speaks, promises, asks the supporters something or opens the
+ * doors to a creator, that is a story — and it is often a bigger one than the
+ * football. Every trigger below is produced by a real action the player took
+ * about a real event, so the press are still reporting rather than inventing.
+ */
+const INTERACTIVE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
+  ...story('PRESS_CONFERENCE', 3, 0.35, 8, ['Touchline Daily', 'Matchday Wire', 'Pressbox'], [
+    {
+      headline: '{manager} gives the room a straight answer on {topic}',
+      body: 'Asked directly about {topic}, the {club} manager did not reach for the usual formula. "{quote}" It was the kind of answer a press officer spends a career trying to prevent and a dressing room hears first, and it will be replayed all week.',
+    },
+    {
+      headline: '"{quote}" — {manager} sets the terms',
+      body: 'There was no ambiguity in the {club} press room. {manager} was asked about {topic} and answered it in one sentence, which in this sport is close to a revolutionary act.',
+    },
+  ], { stance: 'WARM' }),
+  ...story('PRESS_CONFERENCE', 4, -0.55, 9, ['Kickback Daily', 'The Terrace Post', 'Frontline Football'], [
+    {
+      headline: '{manager} turns on his own',
+      body: 'Nobody in the room expected it and nobody in the room missed it. On {topic}, {manager} chose a form of words that leaves very little room for interpretation. "{quote}" Somebody inside {club} will have read that this morning and taken it exactly as it sounds.',
+    },
+    {
+      headline: 'The {club} press conference that will not stay in the press room',
+      body: '"{quote}" It is a sentence that solves a problem with the supporters and creates a different one with the players, and {manager} said it knowing both of those things.',
+    },
+  ], { stance: 'COLD' }),
+  ...story('PRESS_CONFERENCE', 2, -0.1, 6, ['Counter Press', 'The Long Ball'], [
+    {
+      headline: '{manager} gives nothing away before the weekend',
+      body: 'Twelve minutes, three questions, and a {club} manager who has clearly decided that the interesting version of this week happens on the pitch. "{quote}"',
+    },
+  ], { stance: 'FLAT' }),
+
+  ...story('CONTENT_DROP', 3, 0.5, 8, ['ClipCity', 'The Signal Box Review', 'Standing Room'], [
+    {
+      headline: '{creator} takes {club} to an audience that does not watch this league',
+      body: '"{title}" has now reached {reach} people, most of whom could not have named the division a week ago. The commercial department at {club} will be reading the numbers with considerable interest; the football department will be hoping nobody asks about the bits that were left in.',
+    },
+    {
+      headline: 'The {club} film everybody is talking about',
+      body: '{creator} was given access that clubs at this level do not give, and did something with it. "{title}" is not a promotional video, which is exactly why it has travelled.',
+    },
+  ], { flopped: false }),
+  ...story('CONTENT_DROP', 2, -0.4, 6, ['Counter Press', 'Pitchside Weekly'], [
+    {
+      headline: 'A misfire for {club} and {creator}',
+      body: '"{title}" was supposed to be the piece that widened the audience. It has not been, and somebody at {club} has signed off a budget that did not come back. Not every bet on attention pays.',
+    },
+  ], { flopped: true }),
+
+  ...story('POLL_HONOURED', 3, 0.6, 8, ['The Terrace', 'Bootroom Digest', 'The Away End'], [
+    {
+      headline: '{club} asked, and then did what they were told',
+      body: 'Supporter consultation is a phrase most clubs use and few clubs mean. {club} put {topic} to a vote, the answer came back {choice}, and the club has gone with it. The interesting part is not the decision. It is that anybody believed them enough to vote.',
+    },
+  ]),
+  ...story('POLL_OVERRULED', 4, -0.7, 9, ['Kickback Daily', 'The Terrace Post'], [
+    {
+      headline: 'The {club} vote that was never going to change anything',
+      body: 'The supporters were asked about {topic}. They answered clearly. The club has done something else. Every consultation this club runs from here will be read through this one, which is a high price for a decision that could have been taken quietly.',
+    },
+  ]),
+
+  ...story('CAMPAIGN_BACKED', 3, 0.55, 7, ['The Away End', 'The Terrace', 'Standing Room'], [
+    {
+      headline: '{club} get behind {campaign}',
+      body: 'It started with {group} and it has ended with the club’s name on it. Backing something the supporters organised costs a board very little and buys a great deal — provided, and this is the part most clubs get wrong, it is done without trying to take the credit.',
+    },
+  ]),
+  ...story('CAMPAIGN_REFUSED', 3, -0.5, 7, ['Kickback Daily', 'The Terrace Post'], [
+    {
+      headline: '{club} say no to their own supporters',
+      body: '{campaign} will go ahead without the club’s help. {group} were told directly, which is more than most clubs manage, and it will not make the next meeting any warmer.',
+    },
+  ]),
+
+  ...story('STAKE_VINDICATED', 4, 0.8, 9, ['Frontline Football', 'Matchday Wire', 'Touchline Daily'], [
+    {
+      headline: '{club} said it out loud, and then went and did it',
+      body: 'Talking before a football match is the cheapest thing in the sport and the most expensive when it goes wrong. It did not go wrong. Whatever else happens this season, nobody at {club} will have to apologise for this week.',
+    },
+  ]),
+  ...story('STAKE_EMBARRASSED', 4, -0.8, 10, ['Kickback Daily', 'The Terrace Post', 'ClipCity'], [
+    {
+      headline: 'The {club} post that is still up',
+      body: 'It was confident, it was public, and it was wrong. There is no version of this week where {club} come out of it well, and the part that will sting longest is that none of it was necessary.',
+    },
+  ]),
+
+  ...story('CLUB_POSTED', 3, -0.3, 6, ['Kickback Daily', 'The Signal Box Review'], [
+    {
+      headline: '{club} pick a fight before kick-off',
+      body: 'Club accounts are usually run by somebody whose entire job is not doing this. Whoever runs {club}’s has done it deliberately, and the reaction has been exactly what you would expect.',
+    },
+  ], { tone: 'PROVOCATIVE' }),
+];
+
+/**
+ * Depth on the triggers the press cover most often.
+ *
+ * A season produces the same handful of stories dozens of times, and a shallow
+ * pool is why an audit found one headline carrying a quarter of a season. These
+ * exist purely so the archive reads like a newspaper rather than a template.
+ */
+const DEPTH_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
+  ...story('MATCH_WON', 3, 0.45, 9, ['Matchday Wire', 'Bootroom Digest', 'Pitchside Weekly'], [
+    {
+      headline: '{club} find a way past {opponent}',
+      body: 'It was not pretty and for a long spell it was not likely, but {club} have three points and a considerably calmer week ahead of them. {opponent} will feel they gave it away; {club} will not care in the slightest.',
+    },
+    {
+      headline: 'Three points and a bit of belief for {club}',
+      body: '{score}. The performance will not be studied in years to come, but the reaction at full time told you what it meant to a squad that had been asked a lot of questions lately.',
+    },
+    {
+      headline: '{club} take the points, and the argument',
+      body: 'For an hour this was a match nobody deserved to win. Then {club} did something about it. {opponent} had no answer and, in truth, had not looked like finding one.',
+    },
+  ]),
+  ...story('MATCH_LOST', 3, -0.5, 9, ['The Terrace Post', 'Kickback Daily', 'Touchline Daily'], [
+    {
+      headline: '{club} come up short at {opponent}',
+      body: '{score}. The margin flatters nobody and the manner will worry a support that has watched several versions of this already. {opponent} did not have to be excellent, which is the part that will sting.',
+    },
+    {
+      headline: 'Familiar problems, familiar afternoon for {club}',
+      body: 'There is nothing new in the way {club} lost this. That is precisely the problem, and it is now a problem with a growing audience.',
+    },
+    {
+      headline: '{opponent} take it as {club} fade',
+      body: 'A bright twenty minutes, an hour of nothing, and a scoreline that will be quoted at {club} all week.',
+    },
+  ]),
+  ...story('MATCH_DRAWN', 2, 0, 8, ['Counter Press', 'The Long Ball', 'Pitchside Weekly'], [
+    {
+      headline: 'Honours even between {club} and {opponent}',
+      body: 'A point each, and two managers who will both privately believe they should have had three. On the balance of chances, neither is wrong.',
+    },
+    {
+      headline: '{club} and {opponent} cancel each other out',
+      body: 'A tactical afternoon in the least flattering sense of the phrase. Whatever the plan was on both benches, it worked, which is why nothing happened.',
+    },
+  ]),
+  ...story('MANAGER_PRESSURE', 4, -0.6, 9, ['Kickback Daily', 'Frontline Football'], [
+    {
+      headline: 'The questions around {manager} are getting louder',
+      body: 'Nobody at {club} has said anything, which is not the same as nobody thinking anything. The next fortnight will decide whether this is a wobble or the start of the other thing.',
+    },
+  ]),
+  ...story('CREATOR_JOINED', 3, 0.5, 8, ['ClipCity', 'The Signal Box Review', 'Standing Room'], [
+    {
+      headline: '{creator} joins {club}',
+      body: 'An audience arrives at a football club, which is a sentence that would have made no sense twenty years ago and makes perfect commercial sense now. What it is worth depends entirely on whether any of that audience ever buys a ticket.',
+    },
+  ]),
+  ...story('CREATOR_MOMENT', 3, 0.4, 8, ['ClipCity', 'Standing Room'], [
+    {
+      headline: '{creator} puts {club} in front of {reach} people',
+      body: 'Reach is not fandom and fandom is not revenue, and everybody in this industry now says both of those sentences while quietly checking the numbers anyway. These particular numbers are very good.',
+    },
+  ]),
+];
+
 export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ...story('MATCH_WON', 3, 0.5, 10, ['Matchday Wire', 'Touchline Daily', 'Frontline Football'], [
     {
@@ -523,6 +690,10 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
       body: 'One change, made at exactly the point where doing nothing would have been forgivable. It worked, and if it had not, this piece would have been written in a very different register.',
     },
   ]),
+
+  /* The press covering the interactive layer, and depth on the regulars. */
+  ...INTERACTIVE_MEDIA_TEMPLATES,
+  ...DEPTH_MEDIA_TEMPLATES,
 ];
 
 export const BASE_MEDIA_TEMPLATE_COUNT = BASE_MEDIA_TEMPLATES.length;

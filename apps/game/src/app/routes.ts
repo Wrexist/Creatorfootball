@@ -43,6 +43,9 @@ export const ROUTES = {
   seasonOverview: '/league/season',
 
   social: '/social',
+  press: '/social/press',
+  creators: '/social/creators',
+  community: '/social/community',
   media: '/social/media',
   creator: '/social/creator/:creatorId',
 
@@ -137,8 +140,11 @@ export const SECTION_NAV: Readonly<Record<SectionKey, readonly SubDestination[]>
   world: [
     { path: ROUTES.league, label: 'League', matchPrefix: '/league' },
     { path: ROUTES.fixtures, label: 'Fixtures', matchPrefix: '/league/fixtures' },
-    { path: ROUTES.rivalries, label: 'Rivalries', matchPrefix: '/league/rivalries' },
     { path: ROUTES.social, label: 'Social', matchPrefix: '/social' },
+    { path: ROUTES.press, label: 'Press', matchPrefix: '/social/press' },
+    { path: ROUTES.creators, label: 'Creators', matchPrefix: '/social/creators' },
+    { path: ROUTES.community, label: 'Community', matchPrefix: '/social/community' },
+    { path: ROUTES.rivalries, label: 'Rivalries', matchPrefix: '/league/rivalries' },
     { path: ROUTES.media, label: 'Media', matchPrefix: '/social/media' },
   ],
 };

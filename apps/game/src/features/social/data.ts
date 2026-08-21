@@ -23,13 +23,23 @@ export type Tier = 'LEAD' | 'STANDARD' | 'CHATTER';
  * throwaway line, and that difference is the whole reason the number exists.
  */
 export function tierFor(weight: number): Tier {
-  if (weight >= 0.78) return 'LEAD';
-  if (weight >= 0.42) return 'STANDARD';
+  if (weight >= LEAD_FLOOR) return 'LEAD';
+  if (weight >= STANDARD_FLOOR) return 'STANDARD';
   return 'CHATTER';
 }
 
-/** A post has to clear this before it can be a lead at all. */
-const LEAD_FLOOR = 0.78;
+/**
+ * Thresholds on the engine's own scale.
+ *
+ * `post.weight` is 1-100 — importance dominates it and engagement is the
+ * tiebreak. These were originally written against a 0-1 scale, which meant
+ * every post in the product cleared the lead threshold and the tiering did
+ * nothing on its own; only the per-cycle ranking in `assignTiers` was holding
+ * the hierarchy up. Set against the real range, a lead has to be a genuine
+ * matchweek-defining post and most chatter correctly falls to a single line.
+ */
+const LEAD_FLOOR = 74;
+const STANDARD_FLOOR = 42;
 
 /** How many full-size posts sit under the lead before the week turns to chatter. */
 const RUNNERS_UP = 2;
@@ -80,6 +90,43 @@ export function assignTiers(posts: readonly SocialPost[]): Map<string, Tier> {
   return tiers;
 }
 
+/**
+ * Who is talking, in the feed's own language.
+ *
+ * The player's own posts arrive as `CLUB` kind — the post union is fixed — so
+ * the authored tags are what distinguish the club account from the manager
+ * speaking personally and from a quote-dunk. Without this the most consequential
+ * posts in the feed, the ones the player wrote, are indistinguishable from a
+ * routine club announcement.
+ */
+export function labelForPost(post: SocialPost): string {
+  if (post.tags.includes('quote-dunk')) return 'Your reply';
+  if (post.tags.includes('authored')) {
+    return post.tags.includes('voice:manager') ? 'You' : 'Your club';
+  }
+  if (post.tags.includes('reply-to-club')) return `${KIND_LABEL[post.kind]} · replying`;
+  if (post.tags.includes('content-drop')) return 'Creator drop';
+  if (post.tags.includes('press-reaction')) return `${KIND_LABEL[post.kind]} · press`;
+  return KIND_LABEL[post.kind];
+}
+
+/**
+ * Accent colour for a feed item.
+ *
+ * Named `PostAccent` rather than `PostTone` deliberately: the engine already
+ * has a `PostTone`, and that one means the *register* the player chose to speak
+ * in. Two things called tone in the same feature would be a bug waiting for a
+ * quiet afternoon.
+ */
+export type PostAccent = 'neutral' | 'volt' | 'info' | 'positive' | 'danger' | 'warning' | 'special';
+
+/** Posts the player wrote are accented as their own, whatever kind they carry. */
+export function toneForPost(post: SocialPost): PostAccent {
+  if (post.tags.includes('authored')) return 'volt';
+  if (post.tags.includes('viral')) return 'special';
+  return KIND_TONE[post.kind];
+}
+
 export const KIND_LABEL: Record<SocialPost['kind'], string> = {
   FAN: 'Supporter',
   CREATOR: 'Creator',
@@ -91,7 +138,7 @@ export const KIND_LABEL: Record<SocialPost['kind'], string> = {
   LEAK: 'Leak',
 };
 
-export const KIND_TONE: Record<SocialPost['kind'], 'neutral' | 'volt' | 'info' | 'positive' | 'danger' | 'warning' | 'special'> = {
+export const KIND_TONE: Record<SocialPost['kind'], PostAccent> = {
   FAN: 'neutral',
   CREATOR: 'volt',
   MEDIA: 'info',

@@ -83,3 +83,14 @@ export const creatorReach = (c: Creator): number =>
 
 export const emptyCreatorAttributes = (fill = 50): CreatorAttributes =>
   Object.fromEntries(CREATOR_ATTRIBUTE_KEYS.map((k) => [k, fill])) as CreatorAttributes;
+
+
+/* --- creator operations --------------------------------------------------- */
+
+/**
+ * Re-exported from the creator entity module so the whole creator surface —
+ * the roster, briefs, feuds, departures and the balance table behind them — is
+ * reachable wherever `Creator` itself is.
+ */
+export * from './balance';
+export * from './campaigns';

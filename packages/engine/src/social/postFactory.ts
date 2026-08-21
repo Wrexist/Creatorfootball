@@ -9,7 +9,7 @@ import {
 } from '../simulation/templating';
 import { SOCIAL_BALANCE as S } from './balance';
 import { FALLBACK_SOCIAL_TEMPLATES } from './fallbackTemplates';
-import { engagementFor, weightFor } from './socialEngine';
+import { engagementFor, weightFor } from './engagement';
 import { socialStanding, standingFacts } from './standing';
 
 /**

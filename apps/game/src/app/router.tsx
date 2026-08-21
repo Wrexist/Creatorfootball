@@ -13,6 +13,7 @@ import {
   MatchLiveScreen, MatchPreviewScreen, MatchResultScreen, MediaScreen, NegotiationScreen,
   ObjectivesScreen, PlayerProfileScreen, PlayerSearchScreen, RewardsScreen, RivalriesScreen,
   ScoutingScreen, SeasonOverviewScreen, SettingsScreen, SocialScreen, SponsorsScreen,
+  PressConferenceScreen, CreatorHubScreen, CommunityScreen,
   SquadScreen, StandingsScreen, StoreScreen, TacticsScreen, TrainingScreen, TrophyRoomScreen,
 } from './featureModules';
 
@@ -195,6 +196,9 @@ export function AppRoutes({ location }: { location: Location }): ReactNode {
         <Route path={ROUTES.seasonOverview} element={<SeasonOverviewScreen />} />
 
         <Route path={ROUTES.social} element={<SocialScreen />} />
+        <Route path={ROUTES.press} element={<PressConferenceScreen />} />
+        <Route path={ROUTES.creators} element={<CreatorHubScreen />} />
+        <Route path={ROUTES.community} element={<CommunityScreen />} />
         <Route path={ROUTES.media} element={<MediaScreen />} />
         <Route path={ROUTES.creator} element={<CreatorProfileScreen />} />
 
