@@ -246,8 +246,15 @@ export function composeEffect(
     squadMorale: t.squadMorale * gain * inside,
     mediaGoodwill: t.mediaGoodwill >= 0 ? t.mediaGoodwill * gain : t.mediaGoodwill * cost,
     supportersTrust: t.trust * gain,
-    ...(opponentId && t.rivalryHeat !== 0
-      ? { rivalryHeat: { opponentClubId: opponentId, delta: t.rivalryHeat * (t.rivalryHeat > 0 ? cost : gain) } }
+    ...(opponentId
+      ? {
+        rivalryHeat: {
+          opponentClubId: opponentId,
+          // Heat you generate on purpose scales with how badly the post read;
+          // heat you *defuse* only works when the post was well judged.
+          delta: (t.rivalryHeat as number) * ((t.rivalryHeat as number) > 0 ? cost : gain),
+        },
+      }
       : {}),
   };
 }
