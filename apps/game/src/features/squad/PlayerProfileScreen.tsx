@@ -12,12 +12,14 @@ import {
   Accordion, AttributeBar, ClubBadge, DataCell, DataGrid, Divider, EmptyState, GlassButton,
   GlassPanel, GlassPill, GlassSheet, ListRow, PlayerPortrait, PositionChip, ProgressBar,
   RatingBadge, Screen, Sparkline, StatBlock, Text, Timeline, TraitChip, cn, formatMoney, rgba,
+  useToast,
   IconBall, IconCard, IconInjury, IconScout, IconSocial, IconStar, IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
 import { playerArc, sentenceCase } from './arc';
+import { canOfferRenewal, offerRenewal } from './renewal';
 
 /**
  * Player profile — a signature screen.
@@ -126,6 +128,28 @@ export function PlayerProfileScreen(): ReactNode {
 function ProfileBody({ state, player }: { state: GameState; player: Player }): ReactNode {
   const navigate = useNavigate();
   const [trait, setTrait] = useState<TraitDefinition | null>(null);
+  const toast = useToast();
+
+  /**
+   * The renewal action the contract warning always demanded and the interface
+   * never had. One honest offer — meet what he currently deserves — with the
+   * engine's own verdict, priced in morale and loyalty when it goes badly.
+   */
+  const handleRenew = (): void => {
+    const result = offerRenewal(player.id);
+    if (!result.ok || !result.outcome) {
+      toast.error('No talks', result.reason ?? 'That cannot be offered right now.');
+      return;
+    }
+    const { tone, title, detail } = result.outcome;
+    if (tone === 'success') {
+      toast.success(`${title} — ${formatMoney(result.wage ?? 0)} a week`, detail);
+    } else if (tone === 'error') {
+      toast.error(title, detail);
+    } else {
+      toast.show({ tone: 'neutral', title, description: detail });
+    }
+  };
 
   const data = useMemo(() => {
     const club: Club | undefined = player.clubId ? clubById(state, player.clubId) : undefined;
@@ -479,6 +503,19 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
                   <Text role="caption" as="p" className="mt-1 text-pretty">
                     Renew it or he leaves for nothing. Rival clubs can already talk to him.
                   </Text>
+                </div>
+              )}
+              {data.ownClub && canOfferRenewal(data.contract.weeksRemaining, true) && (
+                <div className="mt-3">
+                  <GlassButton variant="primary" size="sm" onClick={handleRenew}>
+                    Offer him a new deal
+                  </GlassButton>
+                  {data.contract.weeksRemaining > 6 && (
+                    <Text role="caption" as="p" className="mt-1.5 text-ink-dim text-pretty">
+                      Meet what he currently deserves and he signs today — or lowball him and remember it goes both
+                      ways.
+                    </Text>
+                  )}
                 </div>
               )}
             </>

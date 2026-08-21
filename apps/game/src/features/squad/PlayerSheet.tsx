@@ -8,10 +8,11 @@ import {
 import {
   AttributeBar, DataCell, DataGrid, Divider, GlassButton, GlassPanel, GlassPill, GlassSheet,
   PlayerPortrait, PositionChip, ProgressBar, RatingBadge, Sparkline, Text, Timeline,
-  TraitChip, formatMoney,
+  TraitChip, formatMoney, useToast,
   IconBall, IconInjury, IconScout, IconStar,
 } from '@/design';
 import { playerArc, sentenceCase } from './arc';
+import { canOfferRenewal, offerRenewal } from './renewal';
 
 /**
  * The player sheet.
@@ -66,6 +67,8 @@ export function PlayerSheet({
 }
 
 function SheetBody({ state, player }: { state: GameState; player: Player }): ReactNode {
+  const toast = useToast();
+  const isOwnSquad = player.clubId === state.playerClubId;
   const data = useMemo(() => {
     const club = player.clubId ? clubById(state, player.clubId) : undefined;
     const contract = contractFor(state, player.id);
@@ -231,6 +234,27 @@ function SheetBody({ state, player }: { state: GameState; player: Player }): Rea
                 ? 'He is getting the minutes you promised him when he signed.'
                 : 'He is playing less than you promised him, and it is costing morale every week.'}
           </Text>
+          {canOfferRenewal(data.contract.weeksRemaining, isOwnSquad) && (
+            <div className="mt-2.5">
+              <GlassButton
+                variant={data.contract.weeksRemaining <= 6 ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => {
+                  const result = offerRenewal(player.id);
+                  if (!result.ok || !result.outcome) {
+                    toast.error('No talks', result.reason ?? 'That cannot be offered right now.');
+                    return;
+                  }
+                  const { tone, title, detail } = result.outcome;
+                  if (tone === 'success') toast.success(`${title} — ${formatMoney(result.wage ?? 0)} a week`, detail);
+                  else if (tone === 'error') toast.error(title, detail);
+                  else toast.show({ tone: 'neutral', title, description: detail });
+                }}
+              >
+                Offer him a new deal
+              </GlassButton>
+            </div>
+          )}
         </div>
       )}
 
