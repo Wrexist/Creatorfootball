@@ -5,7 +5,7 @@ import {
   ClubBadge, Divider, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill,
   IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
   PositionChip, ProgressBar, RatingBadge, Screen, SectionHeader, Skeleton, StatCard, StatGrid,
-  cn, haptics,
+  cn, haptics, sidesWord, useToast,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
@@ -30,6 +30,7 @@ export function MatchPreviewScreen(): ReactNode {
   const navigate = useNavigate();
   const context = useMatchdayContext(fixtureId);
   const [simulating, setSimulating] = useState(false);
+  const toast = useToast();
 
   const ourKit = useMemo(
     () => (context ? kitColors(context.us.id, context.us.visual) : null),
@@ -54,15 +55,23 @@ export function MatchPreviewScreen(): ReactNode {
     // match runs synchronously on the main thread.
     requestAnimationFrame(() => {
       const sim = useGameStore.getState().createSimulator(fixtureId);
-      if (!sim) { setSimulating(false); return; }
+      if (!sim) {
+        setSimulating(false);
+        // Silence here reads as a broken button: the tap must answer.
+        toast.error('That match cannot be simulated', 'Kick it off live instead.');
+        return;
+      }
       const store = useMatchStore.getState();
       store.attach(sim);
       store.skipToEnd();
       const result = useMatchStore.getState().result;
       if (result) navigate(`/matchday/result/${result.matchId}`);
-      else setSimulating(false);
+      else {
+        setSimulating(false);
+        toast.error('That match cannot be simulated', 'Kick it off live instead.');
+      }
     });
-  }, [fixtureId, simulating, navigate]);
+  }, [fixtureId, simulating, navigate, toast]);
 
   if (!context || !ourKit) {
     return (
@@ -131,7 +140,7 @@ export function MatchPreviewScreen(): ReactNode {
       <OpponentPanel context={context} />
 
       <section>
-        <SectionHeader title="Your predicted eleven" subtitle={context.formation.name} />
+        <SectionHeader title={`Your predicted ${sidesWord(context.lineup.length)}`} subtitle={context.formation.name} />
         <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <LineupBoard slots={context.lineup} kit={ourKit} />
           <GlassPanel nested level={2} padding="md" title="Bench">

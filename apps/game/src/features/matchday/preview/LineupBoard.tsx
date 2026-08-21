@@ -4,7 +4,7 @@ import type { KitColors } from '../shared/kit';
 import type { LineupSlot } from '../shared/context';
 
 /**
- * The predicted eleven, on a board.
+ * The predicted side, on a board.
  *
  * Static SVG rather than the canvas the live match uses: nothing here moves, it
  * has to be crisp at any size, and each shirt is a real focusable element with

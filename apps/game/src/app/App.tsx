@@ -87,6 +87,20 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     );
   }, [recovered, toast]);
 
+  // Persistence failures are the store's to detect and the player's to know
+  // about: one global toast here, cleared once shown, so every write path is
+  // covered without each screen learning what a save file is.
+  const persistFailed = useGameStore((s) => s.persistFailed);
+  const clearPersistFailed = useGameStore((s) => s.clearPersistFailed);
+  useEffect(() => {
+    if (!persistFailed) return;
+    toast.error(
+      'Changes could not be saved',
+      'Everything on screen is live, but this device refused the write. Your last safe save still stands.',
+    );
+    clearPersistFailed();
+  }, [persistFailed, clearPersistFailed, toast]);
+
   if (phase === 'ERROR') return <SaveRecoveryScreen />;
   if (phase === 'BOOTING' || splashHeld) return <SplashScreen />;
   return children;

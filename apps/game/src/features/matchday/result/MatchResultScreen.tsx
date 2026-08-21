@@ -6,10 +6,10 @@ import {
   type Club, type DecisionOutcome, type MatchEvent, type MatchResult, type Player,
 } from '@cf/engine';
 import {
-  ClubBadge, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill, GlassTabs,
-  IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait, RatingBadge,
-  ScoreDisplay, SectionHeader, Skeleton, SocialPost, StatCard, StatGrid, TrendIndicator, cn,
-  useDesignMotion,
+  ClubBadge, EmptyState, ErrorState, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
+  GlassTabs, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
+  RatingBadge, ScoreDisplay, SectionHeader, Skeleton, SocialPost, StatCard, StatGrid,
+  TrendIndicator, cn, useDesignMotion,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
@@ -18,6 +18,7 @@ import { MomentumWave } from '../shared/MomentumWave';
 import { kitColors, paletteFor } from '../shared/kit';
 import { minuteLabel, one, stateOfPlay } from '../shared/format';
 import { AnalyticsTab } from './AnalyticsTab';
+import { concernRoute } from './concernRoute';
 
 /**
  * The post-match sequence.
@@ -56,6 +57,7 @@ export function MatchResultScreen(): ReactNode {
   const state = useGameStore((s) => s.state);
   const lastCycle = useGameStore((s) => s.lastCycle);
   const busy = useGameStore((s) => s.busy);
+  const storeError = useGameStore((s) => s.error);
 
   const before = useRef<Snapshot | null>(null);
   const [tab, setTab] = useState<'STORY' | 'ANALYTICS'>('STORY');
@@ -99,6 +101,16 @@ export function MatchResultScreen(): ReactNode {
     useMatchStore.getState().reset();
     navigate(next ? `/matchday/preview/${next.id}` : '/home');
   }, [navigate]);
+
+  /**
+   * The result was committed to memory but the world refused to move. Every
+   * stage below reads pre-match state in that case, so the failure is shown
+   * where it happens — with a retry that re-offers the same result — instead
+   * of a "quiet week" fiction rendered on top of a broken save.
+   */
+  const retryAdvance = useCallback(() => {
+    void useGameStore.getState().advance(useMatchStore.getState().result);
+  }, []);
 
   /* --- guards ---------------------------------------------------------- */
 
@@ -161,6 +173,23 @@ export function MatchResultScreen(): ReactNode {
 
       <div className="scroll-y min-h-0 flex-1">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-8 pt-4 sm:px-6">
+          {tab === 'STORY' && storeError !== null && !busy && (
+            <GlassPanel padding="md" accent="danger" className="border border-danger/40">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-danger">
+                The week did not advance
+              </p>
+              <p className="mt-1 text-[14px] leading-snug text-ink text-pretty">
+                Your result was recorded, but the world could not move on from it. The numbers
+                below are not final.
+              </p>
+              <p className="mt-1 text-[12px] text-ink-dim">{storeError}</p>
+              <div className="mt-3">
+                <GlassButton variant="secondary" size="sm" onClick={retryAdvance}>
+                  Try again
+                </GlassButton>
+              </div>
+            </GlassPanel>
+          )}
           {tab === 'ANALYTICS' ? (
             <AnalyticsTab
               result={result}
@@ -615,7 +644,9 @@ function StandingsStage({ state, before }: StageProps): ReactNode {
 }
 
 function NextStage({ state }: StageProps): ReactNode {
+  const navigate = useNavigate();
   const concern = useMemo(() => topConcern(state), [state]);
+  const route = useMemo(() => concernRoute(concern), [concern]);
   const next = useMemo(() => nextFixture(state), [state]);
   const opponent = next
     ? state.clubs[next.homeClubId === state.playerClubId ? next.awayClubId : next.homeClubId]
@@ -624,13 +655,31 @@ function NextStage({ state }: StageProps): ReactNode {
   return (
     <>
       <SectionHeader title="What now" />
-      <GlassPanel nested level={2} padding="md" accent="volt" className="mt-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-volt">Needs a decision</p>
-        <p className="mt-1 text-[19px] font-bold leading-tight tracking-[-0.02em] text-ink text-balance">
-          {concern.headline}
-        </p>
-        <p className="mt-1 text-[14px] leading-snug text-ink-muted text-pretty">{concern.detail}</p>
-      </GlassPanel>
+      <GlassCard
+        padding="md"
+        className="mt-3 border border-volt/25"
+        {...(route ? { onPress: () => navigate(route) } : {})}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-volt">Needs a decision</p>
+            <p className="mt-1 text-[19px] font-bold leading-tight tracking-[-0.02em] text-ink text-balance">
+              {concern.headline}
+            </p>
+            <p className="mt-1 text-[14px] leading-snug text-ink-muted text-pretty">{concern.detail}</p>
+          </div>
+          {route && (
+            <span aria-hidden="true" className="mt-1 shrink-0 text-volt [&_svg]:size-5">
+              <IconChevronRight />
+            </span>
+          )}
+        </div>
+        {route && (
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-volt">
+            Handle it now
+          </p>
+        )}
+      </GlassCard>
 
       {next && opponent && (
         <GlassPanel nested level={2} padding="md" className="mt-3">

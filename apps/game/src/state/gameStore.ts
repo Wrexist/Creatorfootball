@@ -36,6 +36,13 @@ interface GameStoreState {
   recoveredFromBackup: boolean;
   busy: boolean;
   lastCycle: CycleFeedback | null;
+  /**
+   * A write to storage failed. The mutation is already on screen, so play can
+   * continue — but the player must know the next crash costs them this week.
+   * Consumed (and cleared) by one global toast rather than per-screen handling,
+   * because the failure belongs to persistence, not to whatever button ran it.
+   */
+  persistFailed: boolean;
 
   boot: () => Promise<void>;
   startNewGame: (opts: { seed?: string; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
@@ -45,6 +52,7 @@ interface GameStoreState {
   save: () => Promise<void>;
   abandon: () => Promise<void>;
   clearCycleFeedback: () => void;
+  clearPersistFailed: () => void;
 }
 
 let registry: ContentRegistry | null = null;
@@ -66,7 +74,19 @@ async function persist(state: GameState): Promise<SaveMeta | null> {
   return result.ok ? result.value : null;
 }
 
-export const useGameStore = create<GameStoreState>((set, get) => ({
+export const useGameStore = create<GameStoreState>((set, get) => {
+  /**
+   * Shared by every write path. `null` means storage rejected the write; the
+   * caller has usually already shown the new state, so all that is left is to
+   * make sure the player hears about it.
+   */
+  const notePersist = async (next: GameState): Promise<SaveMeta | null> => {
+    const meta = await persist(next);
+    if (meta === null) set({ persistFailed: true });
+    return meta;
+  };
+
+  return {
   phase: 'BOOTING',
   state: null,
   meta: null,
@@ -74,6 +94,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   recoveredFromBackup: false,
   busy: false,
   lastCycle: null,
+  persistFailed: false,
 
   boot: async () => {
     set({ phase: 'BOOTING', error: null });
@@ -116,7 +137,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         manager,
         club,
       });
-      const meta = await persist(state);
+      const meta = await notePersist(state);
       set({ phase: 'READY', state, meta, busy: false, lastCycle: null });
     } catch (error) {
       set({ phase: 'ERROR', error: String(error), busy: false });
@@ -134,11 +155,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         registry: contentRegistry(),
         ledger: Ledger.restore(current.ledger),
       });
-      const meta = await persist(result.state);
+      const meta = await notePersist(result.state);
       set({
         state: result.state,
         meta,
         busy: false,
+        error: null,
         lastCycle: {
           summary: result.summary,
           stories: result.stories,
@@ -172,13 +194,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (!current) return;
     const next = mutate(current);
     set({ state: next });
-    void persist(next);
+    void notePersist(next);
   },
 
   save: async () => {
     const state = get().state;
     if (!state) return;
-    const meta = await persist(state);
+    const meta = await notePersist(state);
     set({ meta });
   },
 
@@ -188,7 +210,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
 
   clearCycleFeedback: () => set({ lastCycle: null }),
-}));
+  clearPersistFailed: () => set({ persistFailed: false }),
+  };
+});
 
 /**
  * Read the current state or throw.

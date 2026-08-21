@@ -147,6 +147,20 @@ export function formatCount(value: number): string {
   return String(Math.round(value));
 }
 
+const SIDE_WORDS = new Map([
+  [5, 'five'], [6, 'six'], [7, 'seven'], [8, 'eight'], [9, 'nine'],
+  [10, 'ten'], [11, 'eleven'],
+]);
+
+/**
+ * The size of a side, as words, because "your predicted eleven" is copy while
+ * "your predicted 7" is a spreadsheet. This league fields seven; other packs
+ * may field eleven — the word follows the config rather than assuming either.
+ */
+export function sidesWord(count: number): string {
+  return SIDE_WORDS.get(count) ?? String(count);
+}
+
 export interface MoneyLabelProps {
   amount: number;
   compact?: boolean;

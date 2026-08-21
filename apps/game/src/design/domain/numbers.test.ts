@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCount, formatDelta, formatMoney, formatWeeks } from './numbers';
+import { formatCount, formatDelta, formatMoney, formatWeeks, sidesWord } from './numbers';
 
 /**
  * The post-match screen once printed `-8.157399521093865`, twice, on a tile
@@ -71,5 +71,21 @@ describe('compact figures', () => {
   it('formats counts the way a follower total reads', () => {
     expect(formatCount(96_000)).toBe('96.0K');
     expect(formatCount(14_000_000)).toBe('14M');
+  });
+});
+
+describe('sidesWord', () => {
+  it('names the small-sided counts this game actually fields', () => {
+    expect(sidesWord(7)).toBe('seven');
+  });
+
+  it('keeps working for a conventional full side', () => {
+    expect(sidesWord(11)).toBe('eleven');
+  });
+
+  it('falls back to digits for anything else', () => {
+    expect(sidesWord(4)).toBe('4');
+    expect(sidesWord(0)).toBe('0');
+    expect(sidesWord(13)).toBe('13');
   });
 });

@@ -2,8 +2,10 @@ import { lazy, type ReactNode } from 'react';
 import {
   Navigate, Outlet, Route, Routes, useNavigate, type Location,
 } from 'react-router-dom';
-import { nextFixture } from '@cf/engine';
-import { EmptyState, GlassButton, Screen, Skeleton, SkeletonRegion } from '@/design';
+import { nextFixture, standings } from '@cf/engine';
+import {
+  ClubBadge, EmptyState, GlassButton, GlassPanel, IconTrophy, Screen, Skeleton, SkeletonRegion,
+} from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { TitleScreen } from '@/features/onboarding';
 import { ROUTES, buildPath } from './routes';
@@ -123,8 +125,74 @@ function MatchdayIndex(): ReactNode {
   if (fixture) {
     return <Navigate to={buildPath(ROUTES.matchPreview, { fixtureId: fixture.id })} replace />;
   }
-  // Nothing left to play — the preview screen says so better than a redirect can.
-  return <MatchPreviewScreen />;
+  // Nothing left to play. That is a moment worth marking, not an error: the
+  // season is over, and the tab must say so instead of dead-ending into
+  // "match not found".
+  return <SeasonComplete />;
+}
+
+/**
+ * The last match has been played and the table is final. A small ceremony —
+ * where you finished, who won — plus the routes that make sense now, so the
+ * season ends on a beat rather than a broken link.
+ */
+function SeasonComplete(): ReactNode {
+  const state = useGameStore((s) => s.state);
+  const navigate = useNavigate();
+  if (!state) return <ScreenFallback />;
+
+  const table = standings(state);
+  const row = table.find((entry) => entry.clubId === state.playerClubId);
+  const championRow = table[0];
+  const champions = championRow ? state.clubs[championRow.clubId] : undefined;
+  const us = state.clubs[state.playerClubId];
+
+  return (
+    <Screen title="Season complete" withTabBar={false}>
+      <GlassPanel padding="lg" accent="volt" className="text-center">
+        <span className="inline-flex text-volt [&_svg]:size-10"><IconTrophy /></span>
+        <h2 className="mt-3 font-display text-[26px] font-bold tracking-[-0.03em] text-ink">
+          {row ? `You finished ${ordinal(row.position)}` : 'The final whistle has gone'}
+        </h2>
+        {us && (
+          <p className="mt-1 text-[14px] text-ink-muted">
+            {us.shortName} · {row ? `${row.points} points` : ''} · {row?.won ?? 0}W {row?.drawn ?? 0}D{' '}
+            {row?.lost ?? 0}L
+          </p>
+        )}
+        {champions && championRow && (
+          <div className="mt-4 flex items-center justify-center gap-2 border-t border-white/[0.07] pt-4">
+            <ClubBadge visual={champions.visual} size={28} flat label={champions.name} />
+            <p className="text-[13px] text-ink-muted">
+              Champions: <span className="font-semibold text-ink">{champions.name}</span> ·{' '}
+              {championRow.points} pts
+            </p>
+          </div>
+        )}
+      </GlassPanel>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <GlassButton variant="primary" size="lg" block onClick={() => navigate(ROUTES.standings)}>
+          See the final table
+        </GlassButton>
+        <GlassButton variant="secondary" size="md" block onClick={() => navigate(ROUTES.seasonOverview)}>
+          Season review
+        </GlassButton>
+        <GlassButton variant="ghost" size="md" block onClick={() => navigate(ROUTES.home)}>
+          Back to the club
+        </GlassButton>
+      </div>
+    </Screen>
+  );
+}
+
+const ORDINALS = [
+  '', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th',
+] as const;
+
+/** Table positions top out at the league size (twelve), so a lookup is enough. */
+function ordinal(position: number): string {
+  return ORDINALS[position] ?? `${position}th`;
 }
 
 function NotFound(): ReactNode {
