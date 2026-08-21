@@ -47,27 +47,25 @@ pnpm --filter @cf/game build
 pnpm --filter @cf/game cap:sync   # copy the web build into the iOS/Android shells
 ```
 
-> **Current state.** This repository is under active parallel development against
-> `docs/INTEGRATION_CONTRACT.md`. Most of the engine now exists: the match simulator,
-> the fictional base content pack and generators, transfers, scouting, training,
-> facilities, fans, sponsors, the economy cycle and audit, media, social, rivalries, AI
-> clubs, the world tick, objectives, legacy and analytics. `apps/game` has a full design
-> component library and a gallery. 20 test files, 262 tests.
+> **Current state.** The engine is complete: the match simulator, the fictional
+> base content pack and generators, transfers, scouting, training, facilities,
+> fans, sponsors, the economy cycle and audit, media, social, rivalries, AI
+> clubs, the world tick, objectives, legacy and analytics. `apps/game` has a
+> full design component library and a gallery. 50 test files, 653 tests.
 >
-> Four things are known-broken or missing, all of them Phase 0 or Phase 2 work
-> (`docs/ROADMAP.md`):
+> CI gates every push on lint (including the engine-purity boundary),
+> typecheck, all tests, the production build, a real-browser smoke test of the
+> built artefact, and three headless balance audits.
 >
-> - **`pnpm typecheck` fails.** `packages/engine/test/save.test.ts` sits outside the
->   `rootDir` the engine's `tsconfig.json` declares.
-> - **`pnpm test` fails 2 of 262.** The audience/support modifier exceeds its 6-point cap
->   (measured 9.6pp), and one special-rule window test passes in isolation but fails in a
->   full run — a test-isolation problem worth taking seriously in a codebase whose central
->   claim is determinism.
-> - **`pnpm audit:*` fails.** `tools/sim` is a real package now but its four entry points
->   (`simAudit.ts`, `economyAudit.ts`, `invariantAudit.ts`, `runAll.ts`) do not exist.
-> - **`pnpm lint` does nothing.** No ESLint configuration exists anywhere, and no package
->   defines a `lint` script, so the engine-purity rules below are unenforced. See
->   `docs/RISKS.md` R14.
+> iOS is wired for release: Capacitor 8 with haptics, status bar and splash
+> plugins, a committed `ios/` shell with brand icon and splash assets, and
+> App Store metadata in `docs/APP_STORE.md` +
+> `apps/game/fastlane/metadata/en-US/`. Building the archive itself requires
+> macOS/Xcode; everything up to that point is reproducible here.
+>
+> Known remaining work before shipping (`docs/FINAL_AUDIT.md` §6): a real-
+> device pass, the save-size ceiling against localStorage quota, and an AI
+> that counters the player's tactics.
 
 ---
 

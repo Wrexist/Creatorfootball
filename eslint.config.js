@@ -33,6 +33,7 @@ export default tseslint.config(
       '**/ios/**', '**/android/**', 'eslint.config.js',
       // Throwaway audit probes; see .gitignore.
       'tools/sim/src/zz*.ts', 'tools/sim/src/__*.ts', 'tools/sim/src/_audit/**',
+      'tmp/**',
     ],
   },
 

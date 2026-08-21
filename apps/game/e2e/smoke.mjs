@@ -16,14 +16,17 @@
 import { chromium } from 'playwright';
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:4173';
-const CHROME = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+// CHROMIUM_PATH pins a specific Chromium (sandboxed machines, pinned builds).
+// Unset, Playwright resolves the browser it installed itself — which is what
+// CI does via `playwright install chromium`.
+const CHROME = process.env.CHROMIUM_PATH || undefined;
 const VIEWPORT = { width: 393, height: 852 };
 
 const failures = [];
 const fail = (msg) => { failures.push(msg); console.log(`  FAIL  ${msg}`); };
 const pass = (msg) => console.log(`  PASS  ${msg}`);
 
-const browser = await chromium.launch({ executablePath: CHROME });
+const browser = await chromium.launch(CHROME ? { executablePath: CHROME } : {});
 const ctx = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const page = await ctx.newPage();
 

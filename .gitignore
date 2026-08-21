@@ -8,8 +8,18 @@ coverage/
 .env
 .env.*
 !.env.example
-ios/
-android/
+# Native shells are committed (they carry the Xcode project, plists and asset
+# catalogues); only their build products and synced copies are ignored.
+ios/App/output/
+ios/App/Pods/
+ios/App/public/
+ios/App/capacitor.config.json
+ios/DerivedData/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/app/src/main/assets/public/
 .vite/
 *.tsbuildinfo
 /tmp/

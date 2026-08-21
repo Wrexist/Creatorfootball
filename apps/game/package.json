@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit false && vite build",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "cap:sync": "cap sync",
@@ -13,6 +13,10 @@
     "test:smoke": "vite build && vite preview --port 4173 --strictPort & sleep 4 && node e2e/smoke.mjs http://127.0.0.1:4173"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@cf/engine": "workspace:*",
     "clsx": "^2.1.1",
     "motion": "^12.23.12",
@@ -23,6 +27,8 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@tailwindcss/vite": "^4.1.13",
     "@types/node": "^22.20.1",
     "@types/react": "^19.1.13",

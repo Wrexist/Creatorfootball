@@ -6,6 +6,7 @@ import {
   setHapticsEnabled, useToast,
 } from '@/design';
 import { detectCapabilities, shouldReduceEffects } from '@/platform/capabilities';
+import { hideNativeSplash, installNativeBridge } from '@/platform/native';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 import { SPLASH_MINIMUM_MS, SaveRecoveryScreen, SplashScreen } from '@/features/onboarding';
@@ -47,6 +48,10 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     installAnalytics();
     trackEvent('session_start', {});
 
+    // Native drivers (haptics, status bar) exist only inside the Capacitor
+    // shell; in a browser this resolves immediately as a no-op.
+    void installNativeBridge();
+
     // Decide the presentation tier once, here, rather than per frame: heavy
     // glass and the animated pitch are what drop frames on a low-end device.
     const capabilities = detectCapabilities();
@@ -67,6 +72,12 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
       window.removeEventListener('pagehide', onLeave);
     };
   }, []);
+
+  // The native launch image hands over exactly when the React splash does —
+  // not before (white flash) and not after (a frozen double-splash).
+  useEffect(() => {
+    if (!splashHeld) void hideNativeSplash();
+  }, [splashHeld]);
 
   useEffect(() => {
     if (!recovered) return;
