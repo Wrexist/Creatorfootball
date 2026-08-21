@@ -77,6 +77,25 @@ const opt = (
   risk: DecisionOption['risk'],
 ): DecisionOption => ({ id, label, effect, modifiers, durationMinutes, risk });
 
+const RISK_RANK: Record<DecisionOption['risk'], number> = { LOW: 0, MEDIUM: 1, HIGH: 2 };
+
+/**
+ * The option that auto-applies when the player does not answer. The UI promises
+ * "the bench makes the safe call", so the bench must actually take the safest
+ * option — ranked by each option's own `risk` tag, which is the same signal the
+ * button renders. Recipes deliberately list gambles first sometimes, so taking
+ * options[0] would quietly break that promise. Ties resolve to the earlier
+ * option in recipe order: deterministic without spending a draw from the Rng
+ * stream here, which would shift every later roll in the match.
+ */
+const safeDefault = (options: readonly DecisionOption[]): DecisionOption => {
+  let best = options[0] as DecisionOption;
+  for (const option of options.slice(1)) {
+    if (RISK_RANK[option.risk] < RISK_RANK[best.risk]) best = option;
+  }
+  return best;
+};
+
 /**
  * The recipe table. Read the `effect` strings alongside the `modifiers` — they
  * must always agree, because the effect string is the promise the UI makes and
@@ -321,7 +340,7 @@ export class DecisionEngine {
       situation: recipe.situation(s),
       options,
       timeoutSeconds: BALANCE.DECISION_TIMEOUT_SECONDS,
-      defaultOptionId: (options[0] as DecisionOption).id,
+      defaultOptionId: safeDefault(options).id,
     };
   }
 

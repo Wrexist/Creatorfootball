@@ -33,7 +33,41 @@ describe('prompt generation', () => {
     expect(prompt?.situation.length).toBeGreaterThan(20);
     expect(prompt?.options.length).toBeGreaterThanOrEqual(2);
     expect(prompt?.options.length).toBeLessThanOrEqual(3);
-    expect(prompt?.defaultOptionId).toBe(prompt?.options[0]?.id);
+  });
+
+  it('auto-picks the lowest-risk option — the bench keeps the match safe', () => {
+    const riskOrder = { LOW: 0, MEDIUM: 1, HIGH: 2 } as const;
+    // Sweep enough situations that every recipe in the table fires at least
+    // once; the promise is made to the player on every prompt, not some.
+    const cases: Partial<DecisionSituation>[] = [
+      {}, { scoreFor: 2, scoreAgainst: 0, elapsedFraction: 0.8, momentum: 0.1 },
+      { tiredPlayerName: 'K. Moro', fatigue: 0.6, elapsedFraction: 0.6, momentum: 0 },
+      { possessionShare: 0.3, momentum: 0 }, { bookedPlayerName: 'A. Falk', momentum: 0 },
+      { injuredNoSubs: true }, { minutesToWindow: 1 }, { momentum: 0.7 },
+      { opponentChanged: true, momentum: 0 }, { atHalfTime: true, elapsedFraction: 0.5 },
+      { creatorMoment: true, momentum: 0 },
+      { possessionShare: 0.6, momentum: 0, scoreFor: 0, scoreAgainst: 0 },
+      // CHASING_GAME lists its gamble (overload) first on purpose: the default
+      // must not follow the list order just because it is convenient.
+      { scoreFor: 0, scoreAgainst: 2, elapsedFraction: 0.7, momentum: -0.3, possessionShare: 0.5, fatigue: 0.1 },
+    ];
+    let prompts = 0;
+    let firstIsSafest = 0;
+    for (let i = 0; i < cases.length; i++) {
+      const prompt = engine(99).consider(situation({ ...cases[i], minute: 10 + i * 20 }));
+      if (!prompt) continue;
+      prompts += 1;
+      const safest = Math.min(...prompt.options.map((o) => riskOrder[o.risk]));
+      const defaultRisk = riskOrder[
+        prompt.options.find((o) => o.id === prompt.defaultOptionId)?.risk ?? 'HIGH'
+      ];
+      expect(defaultRisk, `${prompt.trigger} defaults to a non-safe option`).toBe(safest);
+      if (prompt.options[0] && riskOrder[prompt.options[0].risk] === safest) firstIsSafest += 1;
+    }
+    expect(prompts).toBeGreaterThanOrEqual(cases.length);
+    // The sweep is only meaningful if it exercises recipes where the safest
+    // option is not simply listed first.
+    expect(firstIsSafest).toBeLessThan(prompts);
   });
 
   it('stays silent when nothing is happening', () => {

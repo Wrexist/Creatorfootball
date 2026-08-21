@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
 import { SPECIAL_RULE_IDS } from './specialRules';
-import { SPECIAL_RULES, SPECIAL_RULE_DEFINITIONS, SpecialRuleEngine, scheduleSwingWindows, specialRuleById } from './specialRuleEngine';
+import { SPECIAL_RULES, DEFAULT_WINDOW_RULE, SpecialRuleEngine, scheduleSwingWindows, specialRuleById } from './specialRuleEngine';
 import { BALANCE } from './balance';
 
 const OPTS = { matchMinutes: 30, halves: 2, enabled: [...SPECIAL_RULE_IDS] };
@@ -57,12 +57,65 @@ describe('clock-anchored swing windows', () => {
     expect(windows[1]?.endMinute).toBe(30);
   });
 
-  it('only draws symmetric rules — a league rule must not simply gift one side an edge', () => {
-    for (let i = 0; i < 200; i++) {
-      for (const w of scheduleSwingWindows(new Rng(`w${i}`), OPTS)) {
-        expect(SPECIAL_RULE_DEFINITIONS[w.ruleId].beneficiary).toBe('BOTH');
-      }
+  it('draws every window rule from the fixture’s enabled set — never the format default', () => {
+    // Neither rule is symmetric, so under a BOTH-only pool this fixture would
+    // silently collapse to SUDDEN_SPARK twice. The competition chose these
+    // rules; scarcity may decide which fires, never whether.
+    const pool = ['POWER_PLAY', 'LAST_STAND'] as const;
+    const seen = new Set<string>();
+    for (let i = 0; i < 50; i++) {
+      const windows = scheduleSwingWindows(new Rng(`p${i}`), { ...OPTS, enabled: [...pool] });
+      expect(windows).toHaveLength(2);
+      for (const w of windows) expect(pool).toContain(w.ruleId);
+      expect(windows[0]?.ruleId).not.toBe(windows[1]?.ruleId);
+      for (const w of windows) seen.add(w.ruleId);
     }
+    // Both rules colour a window across seeds — the full pool is reachable,
+    // each within its own phase gate (LAST_STAND only opens at phase 0.5, so
+    // it can never take the first half's early window).
+    expect(seen.size).toBe(2);
+    expect([...seen]).not.toContain(DEFAULT_WINDOW_RULE);
+
+    // Among rules that share the first window's phase, both orders occur.
+    const pair = ['POWER_PLAY', 'CREATOR_MOMENT'] as const;
+    const firstHalfRules = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const windows = scheduleSwingWindows(new Rng(`o${i}`), { ...OPTS, enabled: [...pair] });
+      firstHalfRules.add(windows[0]?.ruleId ?? '');
+    }
+    expect(firstHalfRules.size).toBe(2);
+  });
+
+  it('is deterministic for a given seed', () => {
+    const a = scheduleSwingWindows(new Rng('det'), OPTS);
+    const b = scheduleSwingWindows(new Rng('det'), OPTS);
+    expect(a).toEqual(b);
+  });
+
+  it('resolves an unheld holder rule to both sides at fire time', () => {
+    // A league window has no holder — nobody played a card — so the holder
+    // modifiers land on both ends rather than gifting one side an edge.
+    const engine = new SpecialRuleEngine(new Rng('holder'), { ...OPTS, enabled: ['POWER_PLAY'] });
+    const t = engine.tick({ minute: 12 + BALANCE.SWING_WINDOW_MINUTES / 2, homeScore: 1, awayScore: 0 });
+    expect(t.started).toHaveLength(1);
+    expect(t.started[0]?.ruleId).toBe('POWER_PLAY');
+    expect(t.started[0]?.side).toBe('both');
+    expect(Object.keys(engine.modifiersFor('home')).length).toBeGreaterThan(0);
+    expect(engine.modifiersFor('home')).toEqual(engine.modifiersFor('away'));
+  });
+
+  it('resolves a trailing-side window to whichever side is actually behind', () => {
+    const engine = new SpecialRuleEngine(new Rng('trailing'), { ...OPTS, enabled: ['LAST_STAND'] });
+    const t = engine.tick({ minute: 12 + BALANCE.SWING_WINDOW_MINUTES / 2, homeScore: 0, awayScore: 2 });
+    expect(t.started[0]?.side).toBe('home');
+    expect(engine.modifiersFor('home')['defensiveSolidity']).toBeGreaterThan(0);
+    expect(engine.modifiersFor('away')['chanceQuality']).toBeLessThan(0);
+
+    // Level scores: nobody is behind, so the rule covers both ends instead of
+    // picking an arbitrary beneficiary.
+    const level = new SpecialRuleEngine(new Rng('level'), { ...OPTS, enabled: ['LAST_STAND'] });
+    const started = level.tick({ minute: 12 + BALANCE.SWING_WINDOW_MINUTES / 2, homeScore: 1, awayScore: 1 });
+    expect(started.started[0]?.side).toBe('both');
   });
 
   it('draws different rules for the two halves and varies across matches', () => {
