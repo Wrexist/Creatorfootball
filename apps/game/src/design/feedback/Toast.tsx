@@ -140,7 +140,6 @@ function ToastViewport({
                 role={toast.tone === 'error' ? 'alert' : 'status'}
                 className="glass-3 glass-sheen pointer-events-auto relative flex w-full max-w-md items-start gap-3 overflow-hidden rounded-lg py-3 pl-3.5 pr-2"
               >
-                <span className={cn('absolute inset-y-0 left-0 w-0.5', tone.bar)} aria-hidden="true" />
                 <span className="mt-px shrink-0 text-ink-muted [&_svg]:size-[18px]" aria-hidden="true">
                   {toast.icon ?? tone.icon}
                 </span>

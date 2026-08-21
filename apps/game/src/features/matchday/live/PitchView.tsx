@@ -4,7 +4,10 @@ import { cn, useReducedMotionPreference } from '@/design';
 import { useMatchStore } from '@/state/matchStore';
 import { PHASE_HINT, PHASE_LABEL } from '../shared/format';
 import type { KitPalette, PitchRole } from '../shared/kit';
-import { PitchRenderer, type PitchCamera, type PitchOrientation } from './pitchRenderer';
+import {
+  PitchRenderer,
+  type PitchCamera, type PitchLabelMode, type PitchOrientation,
+} from './pitchRenderer';
 
 /**
  * The React shell around the canvas renderer.
@@ -27,6 +30,12 @@ export interface PitchViewProps {
   roles: Readonly<Record<string, PitchRole>>;
   orientation: PitchOrientation;
   camera: PitchCamera;
+  /** playerId -> surname, for the labelled modes. */
+  names?: Readonly<Record<string, string>>;
+  /** playerId -> live match rating. */
+  ratings?: Readonly<Record<string, number>>;
+  /** How the shirts are labelled. Owned by the parent so the control can live in the footer. */
+  labelMode?: PitchLabelMode;
   /** Presentation-only emphasis while a genuinely important beat is running. */
   drama?: boolean;
   /**
@@ -43,6 +52,7 @@ const PROFILE = typeof window !== 'undefined' && window.location.search.includes
 
 export const PitchView = memo(function PitchView({
   homePalette, awayPalette, playerSide, numbers, keepers, roles, orientation, camera,
+  names, ratings, labelMode = 'NUMBERS',
   drama = false, impactKey = null, impactStrength = 1, className,
 }: PitchViewProps): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,6 +76,9 @@ export const PitchView = memo(function PitchView({
       playerSide,
       orientation,
       camera,
+      names,
+      ratings,
+      labelMode,
       reducedMotion: reduced,
       numbers,
       keepers,
@@ -138,9 +151,9 @@ export const PitchView = memo(function PitchView({
   useEffect(() => {
     rendererRef.current?.setOptions({
       home: homePalette, away: awayPalette, playerSide, orientation, camera,
-      reducedMotion: reduced, numbers, keepers, roles,
+      reducedMotion: reduced, numbers, keepers, roles, names, ratings, labelMode,
     });
-  }, [homePalette, awayPalette, playerSide, orientation, camera, reduced, numbers, keepers, roles]);
+  }, [homePalette, awayPalette, playerSide, orientation, camera, reduced, numbers, keepers, roles, names, ratings, labelMode]);
 
   useEffect(() => {
     rendererRef.current?.setDrama(drama);

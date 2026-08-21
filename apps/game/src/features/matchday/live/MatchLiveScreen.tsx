@@ -186,17 +186,24 @@ export function MatchLiveScreen(): ReactNode {
     return map;
   }, [setup]);
 
-  const { numbers, keepers, roles } = useMemo(() => {
+  const { numbers, keepers, roles, surnames } = useMemo(() => {
     const n: Record<string, number> = {};
     const k: Record<string, boolean> = {};
     const r: Record<string, PitchRole> = {};
+    const s: Record<string, string> = {};
     for (const p of [...(setup?.home.players ?? []), ...(setup?.away.players ?? [])]) {
       if (p.shirtNumber !== null) n[p.id] = p.shirtNumber;
       if (p.position === 'GK') k[p.id] = true;
       r[p.id] = roleOfPosition(p.position);
+      // Surname only. A full name under a token the size of a fingertip stops
+      // being a label and becomes clutter.
+      s[p.id] = p.lastName;
     }
-    return { numbers: n, keepers: k, roles: r };
+    return { numbers: n, keepers: k, roles: r, surnames: s };
   }, [setup]);
+
+  /** Live ratings come from the engine, sampled once a match minute. */
+  const liveRatings = useMatchStore((s) => s.ratings);
 
   const homePalette = useMemo(() => (context ? paletteFor(context.home) : null), [context]);
   const awayPalette = useMemo(() => (context ? paletteFor(context.away) : null), [context]);
@@ -292,6 +299,8 @@ export function MatchLiveScreen(): ReactNode {
         )}
       >
         <PitchStage
+          names={surnames}
+          ratings={liveRatings}
           homePalette={homePalette}
           awayPalette={awayPalette}
           playerSide={playerSide}

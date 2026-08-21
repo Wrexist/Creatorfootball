@@ -4,7 +4,7 @@ import {
   CreatorAvatar, FOCUS_RING, GlassPill, IconHeart, IconInfo, IconRepost, IconVerified,
   NameText, Numeric, Text, cn,
 } from '@/design';
-import { KIND_LABEL, KIND_RAIL, KIND_TONE, tierFor, type Tier } from '../data';
+import { KIND_LABEL, KIND_TONE, tierFor, type Tier } from '../data';
 
 /**
  * One item in the feed.
@@ -96,8 +96,7 @@ const Conversation = memo(function Conversation({
 }: FeedItemProps): ReactNode {
   const quoted = post.quoted;
   return (
-    <article className="glass-2 glass-sheen relative overflow-hidden rounded-lg p-3.5">
-      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-0.5', KIND_RAIL[post.kind])} />
+    <article className="glass-2 glass-sheen raised raised-edge relative overflow-hidden rounded-lg p-3.5">
       <Kicker post={post} timeLabel={timeLabel} />
 
       {quoted && (
@@ -162,8 +161,7 @@ const Lead = memo(function Lead({
   post, timeLabel, hasEvent, onOpenEvent,
 }: FeedItemProps): ReactNode {
   return (
-    <article className="glass-2 glass-sheen relative overflow-hidden rounded-lg p-4">
-      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', KIND_RAIL[post.kind])} />
+    <article className="glass-2 glass-sheen raised-strong raised-edge relative overflow-hidden rounded-lg p-4">
       <Kicker post={post} timeLabel={timeLabel} />
       {/* The lead is the one story of the matchweek, so it gets display type
           and the room to breathe that goes with being the only one. */}
@@ -189,8 +187,7 @@ const Standard = memo(function Standard({
   post, timeLabel, hasEvent, onOpenEvent,
 }: FeedItemProps): ReactNode {
   return (
-    <article className="glass-1 relative overflow-hidden rounded-lg p-3.5">
-      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-0.5', KIND_RAIL[post.kind])} />
+    <article className="glass-1 raised relative overflow-hidden rounded-lg p-3.5">
       <div className="flex gap-3">
         <CreatorAvatar seed={post.avatarSeed} size={34} verified={post.verified} />
         <div className="min-w-0 flex-1">

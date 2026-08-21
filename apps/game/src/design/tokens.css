@@ -83,6 +83,26 @@
   --shadow-lift: 0 18px 48px -20px rgb(0 0 0 / 0.85);
   --shadow-volt: 0 0 0 1px rgb(200 255 46 / 0.28), 0 8px 32px -8px rgb(200 255 46 / 0.22);
 
+  /*
+    Depth.
+
+    Used instead of a coloured rail down the leading edge of a container. A rail
+    is a flat mark that says "this one is different" without saying anything
+    about hierarchy, and repeated down a feed it reads as decoration rather than
+    structure. Depth says the same thing structurally: the surface that matters
+    sits closer to the viewer.
+  */
+  --shadow-raised:
+    0 1px 0 0 rgb(255 255 255 / 0.09) inset,
+    0 -1px 0 0 rgb(0 0 0 / 0.4) inset,
+    0 2px 6px -2px rgb(0 0 0 / 0.55),
+    0 12px 28px -14px rgb(0 0 0 / 0.8);
+  --shadow-raised-strong:
+    0 1px 0 0 rgb(255 255 255 / 0.13) inset,
+    0 -1px 0 0 rgb(0 0 0 / 0.5) inset,
+    0 3px 10px -3px rgb(0 0 0 / 0.62),
+    0 22px 44px -18px rgb(0 0 0 / 0.9);
+
   /* --- pitch --- */
   --color-pitch-deep: #0a1410;
   --color-pitch-mid: #0e1c16;
@@ -204,6 +224,26 @@
   }
 
   .tnum { font-variant-numeric: tabular-nums; }
+
+  /*
+    Depth, in place of an accent rail.
+
+    `raised` lifts a surface a step above its neighbours; `raised-strong` is for
+    the one item on a screen that genuinely leads. Both keep the surface's own
+    glass level — this is elevation, not a second material.
+  */
+  .raised { box-shadow: var(--shadow-raised); }
+  .raised-strong { box-shadow: var(--shadow-raised-strong); }
+
+  /* The top edge catches light when a surface is lifted. */
+  .raised-edge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.055), transparent 38%);
+  }
 
   /* Used by hero moments only. */
   .volt-glow { box-shadow: var(--shadow-volt); }

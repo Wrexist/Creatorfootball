@@ -1,10 +1,13 @@
-import { memo, type ReactNode } from 'react';
+import { memo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Side } from '@cf/engine';
 import { IconEye, cn, haptics, useDesignMotion } from '@/design';
 import { ROLE_SHORT, type KitPalette, type PitchRole } from '../shared/kit';
 import { CAMERA_HINT, CAMERA_LABEL } from '../shared/format';
 import { PitchView } from './PitchView';
+import {
+  PITCH_LABEL_DESCRIPTION, PITCH_LABEL_LABEL, nextLabelMode, type PitchLabelMode,
+} from './pitchRenderer';
 import type { PitchCamera } from './pitchRenderer';
 
 /**
@@ -32,6 +35,10 @@ export interface PitchStageProps {
   roles: Readonly<Record<string, PitchRole>>;
   camera: PitchCamera;
   onCamera: (camera: PitchCamera) => void;
+  /** playerId -> surname, for the labelled shirt modes. */
+  names?: Readonly<Record<string, string>>;
+  /** playerId -> live match rating. */
+  ratings?: Readonly<Record<string, number>>;
   drama: string | null;
   impactKey: string | null;
   /** 0-1. A goal for the managed side lands harder than one against it. */
@@ -45,11 +52,15 @@ const ROLE_KEY: readonly PitchRole[] = ['DEF', 'MID', 'ATT'];
 
 export const PitchStage = memo(function PitchStage({
   homePalette, awayPalette, playerSide, numbers, keepers, roles, camera, onCamera,
+  names, ratings,
   drama, impactKey, impactStrength = 1, fill = false, className,
 }: PitchStageProps): ReactNode {
   const m = useDesignMotion();
   const ours = playerSide === 'home' ? homePalette : awayPalette;
   const next: PitchCamera = camera === 'WIDE' ? 'FOLLOW' : 'WIDE';
+  // Shirt labelling lives here beside the camera: both answer "how do I read
+  // this pitch?", and neither is a decision about the football.
+  const [labelMode, setLabelMode] = useState<PitchLabelMode>('NUMBERS');
 
   return (
     <section
@@ -69,6 +80,9 @@ export const PitchStage = memo(function PitchStage({
           roles={roles}
           orientation="horizontal"
           camera={camera}
+          names={names}
+          ratings={ratings}
+          labelMode={labelMode}
           drama={drama !== null}
           impactKey={impactKey}
           impactStrength={impactStrength}
@@ -113,7 +127,10 @@ export const PitchStage = memo(function PitchStage({
           You attack →
         </span>
 
-        <ul className="flex items-center gap-1.5">
+        {/* The role key is the first thing to go when the strip gets tight:
+            the plate colours are also explained by the shirts themselves, and
+            a wrapped control row is worse than a missing legend. */}
+        <ul className="flex items-center gap-1.5 max-[420px]:hidden">
           {ROLE_KEY.map((role) => (
             <li key={role} className="flex items-center gap-1">
               <span
@@ -127,6 +144,21 @@ export const PitchStage = memo(function PitchStage({
             </li>
           ))}
         </ul>
+
+        <button
+          type="button"
+          aria-label={`Shirt labels: ${PITCH_LABEL_DESCRIPTION[labelMode]}. Tap to change.`}
+          onClick={() => { haptics.selection(); setLabelMode(nextLabelMode); }}
+          className={cn(
+            'flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-pill px-2.5',
+            'text-[10px] font-bold uppercase tracking-[0.12em]',
+            'outline-none transition-colors duration-[var(--duration-fast)] hover:bg-white/[0.08]',
+            'focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
+            labelMode === 'NUMBERS' ? 'text-ink-dim' : 'text-volt',
+          )}
+        >
+          {PITCH_LABEL_LABEL[labelMode]}
+        </button>
 
         <button
           type="button"

@@ -72,6 +72,7 @@ export interface SimulatorHandle {
   score(): { home: number; away: number };
   minute(): number;
   momentum(): number;
+  liveRatings(): Readonly<Record<string, number>>;
 }
 
 interface MatchState {
@@ -88,6 +89,12 @@ interface MatchState {
   highlight: MatchEvent | null;
   decision: DecisionPrompt | null;
   decisionDeadline: number | null;
+  /**
+   * Ratings as they stand, for the pitch labels. Sampled once a match minute
+   * rather than every tick: the renderer caches each label as a sprite keyed
+   * by its rating, and churning this per tick would throw that cache away.
+   */
+  ratings: Readonly<Record<string, number>>;
   result: MatchResult | null;
   presentation: 'PITCH' | 'BROADCAST';
   /**
@@ -144,13 +151,17 @@ export const useMatchStore = create<MatchState>((set, get) => {
     const score = sim.score();
     const pending = sim.pendingDecision();
 
+    const minute = sim.minute();
+    const ratingsDue = minute !== state.minute;
+
     set({
-      minute: sim.minute(),
+      minute,
       homeScore: score.home,
       awayScore: score.away,
       momentum: sim.momentum(),
       frame: sim.frame(),
       feed: nextFeed,
+      ...(ratingsDue ? { ratings: sim.liveRatings() } : {}),
       ...(bigMoment ? { highlight: bigMoment } : {}),
     });
 
@@ -205,6 +216,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
     highlight: null,
     decision: null,
     decisionDeadline: null,
+    ratings: {},
     result: null,
     presentation: 'PITCH',
     playerSide: 'home',
@@ -217,7 +229,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
       set({
         playerSide: resolvedSide,
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
-        frame: sim.frame(), feed: [], highlight: null, decision: null,
+        frame: sim.frame(), feed: [], highlight: null, decision: null, ratings: {},
         decisionDeadline: null, result: null,
       });
     },
@@ -298,7 +310,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
       simulator = null;
       set({
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
-        frame: null, feed: [], highlight: null, decision: null,
+        frame: null, feed: [], highlight: null, decision: null, ratings: {},
         decisionDeadline: null, result: null,
       });
     },

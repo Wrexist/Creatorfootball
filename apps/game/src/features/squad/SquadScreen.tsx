@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   contractFor, expiringContracts, patchClub, playerClub, squadOf, squadWageBill, starPlayer,
   wageBudgetUsage, POSITIONS, SQUAD_ROLE_LABELS, TRAIT_BY_ID, positionGroup,
-  type Contract, type GameState, type Player, type PositionGroup, type SquadRole,
+  type Contract, type GameState, type Player, type PositionGroup,
   type TraitDefinition,
 } from '@cf/engine';
 import {
@@ -70,14 +70,6 @@ const GROUP_ORDER: readonly PositionGroup[] = ['GK', 'DEF', 'MID', 'ATT'];
 const POSITION_ORDER = new Map(POSITIONS.map((p, index) => [p, index]));
 
 /** The left rule. It is the fastest read on the row: who matters, who is a problem. */
-const ROLE_RULE: Record<SquadRole, string> = {
-  STAR: 'border-l-volt',
-  STARTER: 'border-l-volt/45',
-  ROTATION: 'border-l-info/40',
-  SQUAD: 'border-l-white/12',
-  PROSPECT: 'border-l-special/45',
-};
-
 interface SquadEntry {
   readonly player: Player;
   readonly contract: Contract | undefined;
@@ -114,16 +106,10 @@ const SquadRow = memo(function SquadRow({
   const hot = player.form.rating >= 0.45;
   const cold = player.form.rating <= -0.45;
 
-  const rule = entry.unavailable
-    ? 'border-l-danger/70'
-    : entry.expiring
-      ? 'border-l-warning/70'
-      : ROLE_RULE[role];
-
   return (
     <div className="flex items-center gap-1">
       <ListRow
-        className={cn('min-w-0 flex-1 border-l-2 pl-2.5', rule)}
+        className="min-w-0 flex-1"
         divided={divided}
         density="relaxed"
         selected={selected}

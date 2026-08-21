@@ -454,6 +454,52 @@ export class MatchSimulator {
     return this.result();
   }
 
+  /**
+   * Ratings as they stand right now, for the live pitch labels.
+   *
+   * The same `ratePlayer` the final result uses, applied to the tally so far,
+   * so the number a player watches climb during a match is the number he is
+   * given at full time. Computing a separate live rating in the interface
+   * would have been two models disagreeing in front of the user.
+   */
+  liveRatings(): Readonly<Record<string, number>> {
+    const out: Record<string, number> = {};
+    const elapsed = Math.max(1, this.minute());
+
+    for (const team of [this.home, this.away]) {
+      const conceded = team.side === 'home' ? this.awayScore : this.homeScore;
+      for (const rt of team.all) {
+        if (rt.ticksOn === 0) continue;
+        const minutes = Math.max(1, Math.round(rt.ticksOn / BALANCE.TICKS_PER_MINUTE));
+        out[rt.player.id as unknown as string] = ratePlayer({
+          playerId: rt.player.id,
+          role: rt.slot.role as SlotRole,
+          minutes,
+          goals: rt.stats.goals,
+          assists: rt.stats.assists,
+          shots: rt.stats.shots,
+          shotsOnTarget: rt.stats.shotsOnTarget,
+          keyPasses: rt.stats.keyPasses,
+          passes: rt.stats.passes,
+          passesCompleted: rt.stats.passesCompleted,
+          tackles: rt.stats.tackles,
+          interceptions: rt.stats.interceptions,
+          duelsWon: rt.stats.duelsWon,
+          duelsLost: rt.stats.duelsLost,
+          saves: rt.stats.saves,
+          yellowCards: rt.stats.yellowCards,
+          redCards: rt.stats.redCards,
+          bigChancesMissed: rt.stats.bigChancesMissed,
+          goalsConcededWhileOn: rt.stats.goalsConcededWhileOn,
+          // A clean sheet only means something once there is a match behind it.
+          cleanSheet: conceded === 0 && elapsed >= this.setup.config.minutes * 0.6,
+          matchMinutes: this.setup.config.minutes,
+        });
+      }
+    }
+    return out;
+  }
+
   result(): MatchResult {
     invariant(this.complete, 'MATCH_INCOMPLETE', 'result() called before the match finished');
     if (this.cachedResult) return this.cachedResult;

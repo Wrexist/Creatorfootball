@@ -425,7 +425,7 @@ function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode 
             nested
             level={2}
             padding="sm"
-            style={{ borderLeftColor: rule.accent, borderLeftWidth: 3 }}
+            className="raised raised-edge relative overflow-hidden"
           >
             <div className="flex items-start justify-between gap-2">
               <h4 className="text-[15px] font-bold text-ink">{rule.name}</h4>

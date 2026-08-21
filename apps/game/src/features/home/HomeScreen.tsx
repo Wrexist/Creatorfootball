@@ -70,13 +70,20 @@ const TONE_DOT: Record<Tone, string> = {
   neutral: 'bg-ink-faint',
 };
 
-/** A hairline down the leading edge, in the tone of the news. */
+/**
+ * Depth in place of a coloured edge.
+ *
+ * These cards used to carry a hairline down the leading edge in the tone of the
+ * news. Stacked down a feed that read as decoration rather than hierarchy, so
+ * the card that needs the player now is lifted instead, and the tone survives
+ * in its kicker.
+ */
 const ACCENT_EDGE: Record<Tone, string> = {
-  volt: 'border-l-2 border-l-volt',
-  danger: 'border-l-2 border-l-danger',
-  warning: 'border-l-2 border-l-warning',
-  positive: 'border-l-2 border-l-positive',
-  neutral: 'border-l-2 border-l-white/12',
+  volt: 'raised-strong raised-edge',
+  danger: 'raised-strong raised-edge',
+  warning: 'raised raised-edge',
+  positive: 'raised raised-edge',
+  neutral: 'raised',
 };
 
 const TONE_BLOCK: Record<Tone, 'volt' | 'danger' | 'warning' | 'positive' | 'neutral'> = {

@@ -363,8 +363,7 @@ export function RuleCardSheet({ open, onClose, cards, onPlay }: RuleCardSheetPro
         {cards.map(({ definition, quantity }) => (
           <li
             key={definition.id}
-            className="rounded-lg border border-white/[0.07] bg-white/[0.04] p-3.5"
-            style={{ borderLeftColor: definition.accent, borderLeftWidth: 3 }}
+            className="raised raised-edge relative overflow-hidden rounded-lg border border-white/[0.07] bg-white/[0.04] p-3.5"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">

@@ -83,6 +83,36 @@ export type PitchOrientation = 'vertical' | 'horizontal';
 /** Full-pitch tactical framing, or a camera that tracks the ball. */
 export type PitchCamera = 'WIDE' | 'FOLLOW';
 
+/**
+ * How much each shirt says about itself.
+ *
+ * NUMBERS  the shirt number alone — the cleanest read of shape
+ * FULL     surname and live rating, for following individuals
+ * RATINGS  rating alone, once you already know who is who
+ */
+export type PitchLabelMode = 'NUMBERS' | 'FULL' | 'RATINGS';
+
+/**
+ * One word each. The control sits in a strip beside the legend and the camera
+ * on a 375px phone; "Names + ratings" wrapped to three lines and pushed the
+ * camera control off the screen.
+ */
+export const PITCH_LABEL_LABEL: Record<PitchLabelMode, string> = {
+  NUMBERS: 'Numbers',
+  FULL: 'Names',
+  RATINGS: 'Ratings',
+};
+
+/** Spelled out for assistive technology, where there is no width to lose. */
+export const PITCH_LABEL_DESCRIPTION: Record<PitchLabelMode, string> = {
+  NUMBERS: 'shirt numbers only',
+  FULL: 'surnames and live ratings',
+  RATINGS: 'live ratings only',
+};
+
+export const nextLabelMode = (mode: PitchLabelMode): PitchLabelMode =>
+  mode === 'NUMBERS' ? 'FULL' : mode === 'FULL' ? 'RATINGS' : 'NUMBERS';
+
 export interface PitchRendererOptions {
   readonly home: PitchTeamStyle;
   readonly away: PitchTeamStyle;
@@ -97,6 +127,11 @@ export interface PitchRendererOptions {
   readonly keepers: Readonly<Record<string, boolean>>;
   /** playerId -> which band of the team he belongs to. */
   readonly roles: Readonly<Record<string, PitchRole>>;
+  /** playerId -> surname, shown under the shirt in FULL mode. */
+  readonly names?: Readonly<Record<string, string>>;
+  /** playerId -> live match rating, 1.0-10.0. */
+  readonly ratings?: Readonly<Record<string, number>>;
+  readonly labelMode?: PitchLabelMode;
 }
 
 interface Node {
@@ -149,6 +184,29 @@ const PHASE_WASH: Record<PlayPhase, number> = {
 };
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+const LABEL_FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
+const LABEL_H = 14;
+
+/** Ratings read at a glance: poor, ordinary, good, outstanding. */
+function ratingColour(rating: number): string {
+  if (rating >= 8) return '#c8ff2e';
+  if (rating >= 7) return '#34d399';
+  if (rating >= 5.5) return '#eef2f5';
+  return '#f4525a';
+}
+
+function roundRectPath(
+  c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number,
+): void {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 
 export class PitchRenderer {
@@ -167,6 +225,8 @@ export class PitchRenderer {
   private readonly nodes = new Map<string, Node>();
   private ball = { x: 0.5, y: 0.5, targetX: 0.5, targetY: 0.5 };
   private trail: number[] = [];
+  private labelCache = new Map<string, HTMLCanvasElement>();
+  private labelProbe: CanvasRenderingContext2D | null = null;
   private trailHead = 0;
 
   private phase: PlayPhase = 'BUILD_UP';
@@ -503,6 +563,7 @@ export class PitchRenderer {
     for (const [id, node] of ordered) this.drawPlayer(id, node);
 
     this.drawBall();
+    this.drawLabels(ordered);
 
     ctx.restore();
 
@@ -760,6 +821,119 @@ export class PitchRenderer {
       ctx.arc(x, y, r + 5 * scale, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
+    }
+  }
+
+  /**
+   * Labels are sprites, not text.
+   *
+   * The reason this renderer holds its frame budget is that `fillText` never
+   * runs in the draw loop — shirts are pre-rendered and blitted. Labels obey
+   * the same rule: each is rasterised once per (player, mode, rating) and
+   * reused, so a rating ticking over a handful of times a match costs one
+   * raster rather than a text measurement per player per frame.
+   */
+  private labelSprite(id: string): HTMLCanvasElement | null {
+    const mode = this.opts.labelMode ?? 'NUMBERS';
+    if (mode === 'NUMBERS') return null;
+
+    const name = this.opts.names?.[id];
+    const rating = this.opts.ratings?.[id];
+    const showName = mode === 'FULL' && name !== undefined && name !== '';
+    const showRating = rating !== undefined;
+    if (!showName && !showRating) return null;
+
+    const ratingText = showRating ? (rating as number).toFixed(1) : '';
+    const key = `${id}:${mode}:${showName ? name : '-'}:${ratingText || '-'}`;
+    const cached = this.labelCache.get(key);
+    if (cached) return cached;
+
+    const probe =
+      this.labelProbe ?? (this.labelProbe = document.createElement('canvas').getContext('2d'));
+    if (!probe) return null;
+
+    const size = 9.5;
+    const padX = 3.5;
+    const gap = 3.5;
+    probe.font = `700 ${size}px ${LABEL_FONT}`;
+    const nameW = showName ? probe.measureText(name as string).width : 0;
+    probe.font = `800 ${size}px ${LABEL_FONT}`;
+    const ratingW = showRating ? probe.measureText(ratingText).width : 0;
+
+    const w = Math.ceil(nameW + (showName && showRating ? gap : 0) + ratingW + padX * 2);
+    const dpr = this.dpr;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.ceil(w * dpr));
+    canvas.height = Math.max(1, Math.ceil(LABEL_H * dpr));
+    const c = canvas.getContext('2d');
+    if (!c) return null;
+    c.scale(dpr, dpr);
+
+    // A dark plate, so the label stays legible over grass, over a shirt and
+    // over the possession wash without borrowing colour from any of them.
+    c.fillStyle = 'rgba(4, 6, 5, 0.86)';
+    roundRectPath(c, 0.5, 0.5, w - 1, LABEL_H - 1, 3.5);
+    c.fill();
+    c.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    c.lineWidth = 1;
+    c.stroke();
+
+    c.textBaseline = 'middle';
+    c.textAlign = 'left';
+    let cursor = padX;
+    if (showName) {
+      c.font = `700 ${size}px ${LABEL_FONT}`;
+      c.fillStyle = '#e8edf1';
+      c.fillText(name as string, cursor, LABEL_H / 2 + 0.5);
+      cursor += nameW + gap;
+    }
+    if (showRating) {
+      c.font = `800 ${size}px ${LABEL_FONT}`;
+      c.fillStyle = ratingColour(rating as number);
+      c.fillText(ratingText, cursor, LABEL_H / 2 + 0.5);
+    }
+
+    // Bounded: one entry per player per rating step, cleared if a long match
+    // with many rating changes ever grows it beyond reason.
+    if (this.labelCache.size > 400) this.labelCache.clear();
+    this.labelCache.set(key, canvas);
+    return canvas;
+  }
+
+  /**
+   * Drawn after every shirt, so a label is never buried under another player,
+   * and nudged apart when two would collide — overlapping labels are worse
+   * than no labels, because they are unreadable *and* they hide the football.
+   */
+  private drawLabels(ordered: readonly (readonly [string, Node])[]): void {
+    if ((this.opts.labelMode ?? 'NUMBERS') === 'NUMBERS') return;
+    const ctx = this.ctx;
+    const placed: { x: number; y: number; w: number }[] = [];
+
+    for (const [id, node] of ordered) {
+      if (!node.present) continue;
+      const sprite = this.labelSprite(id);
+      if (!sprite) continue;
+
+      const w = sprite.width / this.dpr;
+      const cx = this.px(node.x, node.y);
+      let x = Math.round(cx - w / 2);
+      let y = Math.round(this.py(node.x, node.y) + this.radius + 2.5);
+
+      // Keep the plate on the pitch rather than half off the edge.
+      x = Math.max(2, Math.min(this.width - w - 2, x));
+
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const clash = placed.some(
+          (r) => Math.abs(r.y - y) < LABEL_H + 1 && x < r.x + r.w + 2 && r.x < x + w + 2,
+        );
+        if (!clash) break;
+        y += LABEL_H + 2;
+      }
+      if (y > this.height - LABEL_H - 2) y = Math.round(this.py(node.x, node.y) - this.radius - LABEL_H - 2.5);
+
+      placed.push({ x, y, w });
+      ctx.drawImage(sprite, x, y, w, LABEL_H);
     }
   }
 

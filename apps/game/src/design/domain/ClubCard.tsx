@@ -190,7 +190,7 @@ export const ClubCard = memo(function ClubCard({
         {trailing}
       </span>
       {featured && club.motto && (
-        <p className="relative mt-4 border-l-2 border-volt/40 pl-3 text-caption italic leading-snug text-ink-muted">
+        <p className="relative mt-4 text-caption italic leading-snug text-ink-muted">
           {club.motto}
         </p>
       )}

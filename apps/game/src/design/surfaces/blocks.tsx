@@ -22,15 +22,6 @@ import { IconChevronRight } from '../icons';
 
 export type StatBlockTone = 'neutral' | 'volt' | 'positive' | 'warning' | 'danger' | 'info';
 
-const RULE: Record<StatBlockTone, string> = {
-  neutral: 'bg-ink-faint/60',
-  volt: 'bg-volt',
-  positive: 'bg-positive',
-  warning: 'bg-warning',
-  danger: 'bg-danger',
-  info: 'bg-info',
-};
-
 const WASH: Record<StatBlockTone, string> = {
   neutral: 'from-white/[0.045]',
   volt: 'from-volt/[0.09]',
@@ -67,13 +58,15 @@ export const StatBlock = memo(function StatBlock({
   return (
     <div
       className={cn(
-        'relative flex min-w-0 flex-col justify-center rounded-r-md bg-gradient-to-r to-transparent pl-3 pr-2',
+        // Lifted rather than railed: the tone still reads through the wash,
+        // and the block sits above the surface behind it instead of being
+        // marked by a stripe.
+        'raised relative flex min-w-0 flex-col justify-center rounded-md bg-gradient-to-r to-transparent px-3',
         WASH[tone],
         size === 'lg' ? 'py-3' : 'py-2',
         className,
       )}
     >
-      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-[3px] rounded-pill', RULE[tone])} />
       <span className={cn(TYPE_CLASS.label, 'text-ink-dim')}>{label}</span>
       <span className="mt-1 flex min-w-0 items-baseline gap-1.5">
         <FitBox
