@@ -4,7 +4,8 @@ import { makeClub, makeContract, makePlayer, makeState } from '../economy/testin
 import type { GameState } from '../game/state';
 import { emptyAttributes } from '../players/attributes';
 import type { Player } from '../players/player';
-import { positionScarcity, refreshMarket, searchPlayers, squadNeeds, type MarketContext } from './market';
+import { MARKET_BALANCE } from './balance';
+import { positionScarcity, refreshMarket, RUMOUR_TEMPLATES, searchPlayers, squadNeeds, type MarketContext } from './market';
 
 const ctx: MarketContext = { cycle: 4, season: 1, windowOpen: true, leagueSize: 12 };
 
@@ -97,13 +98,74 @@ describe('refreshMarket', () => {
     expect(later.rumours.some((r) => r.id === 'old')).toBe(false);
   });
 
+  it('draws fresh rumour copy from the banded template table', () => {
+    const state = league();
+    const delta = refreshMarket(state, new Rng('rumours-copy'), ctx);
+    const known = new Set<string>();
+    for (const pool of Object.values(RUMOUR_TEMPLATES)) {
+      for (const template of pool!) {
+        for (const rumour of delta.rumours) {
+          const player = state.players[rumour.playerId];
+          const club = state.clubs[rumour.clubId];
+          if (!player || !club || rumour.cycle !== ctx.cycle) continue;
+          known.add(template({ player: player.displayName, club: club.shortName }));
+        }
+      }
+    }
+    const fresh = delta.rumours.filter((r) => r.cycle === ctx.cycle);
+    expect(fresh.length).toBeGreaterThan(0);
+    for (const rumour of fresh) {
+      expect(known.has(rumour.text), `off-table rumour copy: "${rumour.text}"`).toBe(true);
+    }
+  });
+
   it('is deterministic for a given seed', () => {
     const state = league();
     const a = refreshMarket(state, new Rng('same'), ctx);
     const b = refreshMarket(state, new Rng('same'), ctx);
     expect(Object.keys(a.listings).sort()).toEqual(Object.keys(b.listings).sort());
     expect(a.playerValues).toEqual(b.playerValues);
+    expect(a.rumours.map((r) => r.text)).toEqual(b.rumours.map((r) => r.text));
   });
+
+/**
+ * Rumour copy.
+ *
+ * Two sentences carried the entire rumour feed, so every link read like the
+ * last one. The bank is keyed by credibility band and fee size: a solid story
+ * about a marquee fee should sound like reporting, and a thin one about a
+ * squad filler should sound like a gossip column hedging its bets.
+ */
+describe('rumour templates', () => {
+  const CELLS = ['solid-big', 'solid-modest', 'thin-big', 'thin-modest'] as const;
+
+  it('covers every credibility-and-fee cell with real variety', () => {
+    for (const cell of CELLS) {
+      const pool = RUMOUR_TEMPLATES[cell];
+      expect(pool?.length, `thin template pool for ${cell}`).toBeGreaterThanOrEqual(3);
+    }
+    const total = CELLS.reduce((n, cell) => n + RUMOUR_TEMPLATES[cell]!.length, 0);
+    expect(total).toBeGreaterThanOrEqual(12);
+    expect(total).toBeLessThanOrEqual(16);
+  });
+
+  it('renders every template with both names in place and no stray tokens', () => {
+    for (const pool of Object.values(RUMOUR_TEMPLATES)) {
+      for (const template of pool!) {
+        const text = template({ player: 'K. Moro', club: 'Northside' });
+        expect(text).toContain('Moro');
+        expect(text).toContain('Northside');
+        expect(text).not.toMatch(/[{}]/);
+      }
+    }
+  });
+
+  it('bands by the balance constants, not magic numbers in the loop', () => {
+    expect(MARKET_BALANCE.RUMOUR_SOLID_AT).toBeGreaterThan(0);
+    expect(MARKET_BALANCE.RUMOUR_SOLID_AT).toBeLessThan(1);
+    expect(MARKET_BALANCE.RUMOUR_BIG_FEE).toBeGreaterThan(0);
+  });
+});
 
   it('measures position scarcity against a balanced league', () => {
     const state = league();

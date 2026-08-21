@@ -39,6 +39,56 @@ export interface MarketDelta {
   readonly inflation: number;
 }
 
+/**
+ * Rumour copy, keyed by credibility band and fee size.
+ *
+ * Two sentences used to carry the whole feed and every link read like the last
+ * one. The cells are the design: `solid` stories are written like reporting
+ * because several clubs are genuinely circling, `thin` ones hedge like gossip
+ * because they are gossip; `big` fees get marquee framing because a record
+ * transfer is a different kind of news from a squad filler. The band edges
+ * themselves live in MARKET_BALANCE (`RUMOUR_SOLID_AT`, `RUMOUR_BIG_FEE`).
+ */
+export interface RumourTokens {
+  readonly player: string;
+  readonly club: string;
+}
+
+type RumourTemplate = (tokens: RumourTokens) => string;
+
+const t = (text: string): RumourTemplate => (tokens) => text
+  .replace(/\{player\}/g, tokens.player)
+  .replace(/\{club\}/g, tokens.club);
+
+export const RUMOUR_TEMPLATES: Readonly<
+  Record<'solid-big' | 'solid-modest' | 'thin-big' | 'thin-modest', readonly RumourTemplate[]>
+> = {
+  'solid-big': [
+    t('{club} are working on a club-record move for {player}, and sources describe talks as advanced.'),
+    t('{club} have tabled a formal offer for {player}. The fee under discussion is enormous.'),
+    t('This one has legs. {club} are pushing hard to sign {player} before the window shuts.'),
+    t('{club} expect to complete the signing of {player} within days, according to those close to the deal.'),
+  ],
+  'solid-modest': [
+    t('{club} are close to agreeing a fee for {player}.'),
+    t('A move for {player} to {club} is at an advanced stage.'),
+    t('{club} have made {player} their priority target and talks are progressing.'),
+    t('{player} is expected to undergo a medical with {club} shortly.'),
+  ],
+  'thin-big': [
+    t('There is talk that {club} admire {player}, though nobody will put a number on it yet.'),
+    t('Some at {club} would like a statement signing. The name being whispered is {player}.'),
+    t('{player} has been mentioned around {club}. Treat that how you like.'),
+    t('If {club} find the money, {player} is believed to be high on their list.'),
+  ],
+  'thin-modest': [
+    t('{player} has been linked with {club}.'),
+    t('{club} are said to be keeping an eye on {player}.'),
+    t('Agents have floated {player} towards {club}. Whether anything follows is another matter.'),
+    t('{club} were represented at a match where {player} played well. That is all this is — for now.'),
+  ],
+};
+
 /** Scarcity index per position: >1 means the league is short of them. */
 export function positionScarcity(players: readonly Player[]): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -328,7 +378,7 @@ export function refreshMarket(state: GameState, rng: Rng, ctx: MarketContext): M
   );
   rumours.push(...fresh);
 
-  for (const listing of stream.sample(rumourPool, M.RUMOURS_PER_REFRESH)) {
+  for (const [index, listing] of stream.sample(rumourPool, M.RUMOURS_PER_REFRESH).entries()) {
     const player = state.players[listing.playerId];
     const clubId = listing.interestedClubIds[0];
     if (!player || !clubId) continue;
@@ -337,16 +387,21 @@ export function refreshMarket(state: GameState, rng: Rng, ctx: MarketContext): M
     const credibility = clamp01(
       M.RUMOUR_MIN_CREDIBILITY + listing.interestedClubIds.length * 0.18 + stream.float(0, 0.3),
     );
+    // Copy follows the story's shape: a well-sourced big fee reads like
+    // reporting, a thin link about a squad filler reads like gossip hedging.
+    const solid = credibility >= M.RUMOUR_SOLID_AT;
+    const fee = Math.max(listing.askingPrice, player.marketValue);
+    const cell = `${solid ? 'solid' : 'thin'}-${fee >= M.RUMOUR_BIG_FEE ? 'big' : 'modest'}` as keyof typeof RUMOUR_TEMPLATES;
+    const text = stream
+      .forkSequential('rumour-copy', index)
+      .pick(RUMOUR_TEMPLATES[cell])({ player: player.displayName, club: club.shortName });
     rumours.push({
       id: `rumour_${ctx.cycle}_${player.id}_${club.id}`,
       playerId: player.id,
       clubId: club.id,
       credibility,
       cycle: ctx.cycle,
-      text:
-        credibility > 0.6
-          ? `${club.shortName} are close to a move for ${player.displayName}.`
-          : `${player.displayName} has been linked with ${club.shortName}.`,
+      text,
     });
   }
 
