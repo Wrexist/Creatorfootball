@@ -169,6 +169,8 @@ export interface SponsorOffer {
   readonly id: string;
   readonly sponsorId: string;
   readonly name: string;
+  /** Business sector of the brand, so world copy can speak in its voice. */
+  readonly sector?: string;
   readonly slot: 'SHIRT' | 'SLEEVE' | 'STADIUM' | 'TRAINING' | 'CREATOR';
   readonly valuePerCycle: number;
   readonly signingFee: number;
@@ -183,6 +185,8 @@ export interface SponsorDeal {
   readonly id: string;
   readonly sponsorId: string;
   readonly name: string;
+  /** Business sector of the brand, so world copy can speak in its voice. */
+  readonly sector?: string;
   readonly slot: SponsorOffer['slot'];
   readonly valuePerCycle: number;
   readonly weeksRemaining: number;

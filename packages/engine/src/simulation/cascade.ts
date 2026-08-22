@@ -176,6 +176,17 @@ function completeHook(
 const FAN_ANGER: readonly SocialPostKind[] = ['FAN', 'RIVAL', 'CREATOR', 'MEDIA'];
 const FAN_JOY: readonly SocialPostKind[] = ['FAN', 'CLUB', 'CREATOR', 'PLAYER', 'MEDIA'];
 
+/**
+ * A win is also a commercial asset. Clubs with a live deal get their sponsor's
+ * voice in the celebrations — that is what the partner is paying reach for —
+ * while clubs without one hear nothing, because an invented brand would be
+ * worse than silence.
+ */
+const fanJoyWithSponsor = (state: GameState, clubId: ClubId): readonly SocialPostKind[] =>
+  clubId === state.playerClubId && state.sponsors.active.length > 0
+    ? [...FAN_JOY, 'SPONSOR' as const]
+    : FAN_JOY;
+
 // --- rules -----------------------------------------------------------------
 
 /**
@@ -467,7 +478,7 @@ const matchWonRule: RuleFor<'MATCH_WON'> = (e, ctx) => {
       importance: (isDerbyMoment ? 4 : big ? 3 : 2) as EventImportance,
       sentiment: 0.7, tokens, facts, entities,
       clubId: p.clubId, opponentClubId: p.opponentId,
-      audiences: FAN_JOY, tags: ['match', 'result'],
+      audiences: fanJoyWithSponsor(ctx.state, p.clubId), tags: ['match', 'result'],
     }],
     derived,
   };
