@@ -71,6 +71,11 @@ describe('base pack inventory', () => {
       .toBeGreaterThanOrEqual(NAME_BANK_MINIMUMS.clubAffixes);
     expect(BASE_NAME_BANK.nationalities).toHaveLength(NAME_BANK_MINIMUMS.nationalities);
 
+    // Headroom floors: a five-season save with yearly intakes and a living
+    // creator scene burns through names faster than the pack minimums assume.
+    expect(BASE_NAME_BANK.cities.length).toBeGreaterThanOrEqual(100);
+    expect(BASE_NAME_BANK.handles.length).toBeGreaterThanOrEqual(150);
+
     for (const list of [BASE_NAME_BANK.firstNames, BASE_NAME_BANK.lastNames]) {
       expect(new Set(list.map((n) => n.value)).size).toBe(list.length);
     }

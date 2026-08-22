@@ -144,6 +144,12 @@ const CITIES: readonly string[] = [
   'Moorcross', 'Nightvale', 'Orchardgate', 'Pelbury', 'Quillon', 'Rushmere',
   'Steepleford', 'Tinderbrook', 'Umberfell', 'Vaunt Harbour', 'Whitmarsh', 'Yewbridge',
   'Ashenford', 'Brimhaven', 'Dunmere', 'Everly', 'Fallowmoor', 'Grimhold', 'Hollowmere',
+  // Future-pack headroom: same naming grammar, same region, no real places.
+  'Woldgate', 'Fernharrow', 'Copperholt', 'Bramblewick', 'Ottermoor', 'Slatefell',
+  'Duskmere', 'Gorsevale', 'Pennyholt', 'Marshendon', 'Thornmere', 'Eavesdale',
+  'Granholm', 'Willowshaw', 'Blakeholt', 'Corvewood', 'Duncombe', 'Elmsworth',
+  'Fairleigh', 'Heronmere', 'Ivycliff', 'Junipercove', 'Kettlebridge', 'Lambscross',
+  'Mistvale', 'Netherby', 'Ostbourne',
 ];
 
 const CLUB_PREFIXES: readonly string[] = [
@@ -178,6 +184,19 @@ const HANDLES: readonly string[] = [
   'thephysioroom', 'strappedup', 'minutesmanaged', 'rotationriot', 'benchwarmerbrand',
   'thehypeman', 'creatorcorner', 'streamsniped', 'clipchaser', 'vodreview',
   'thepundit', 'hotmicmoment', 'presserpanic', 'quoteunquotefc', 'headlinehunter',
+  // Future-pack headroom: same voice, same culture, nobody real.
+  'counterattackcal', 'lowblocklore', 'thesecondball', 'restdefenceron', 'buildupbrad',
+  'transitiontash', 'highlineharry', 'sweeperkeepa', 'overlappingollie', 'invertedwingnut',
+  'doublepivotdee', 'falsefullback', 'boxcrashingben', 'pressingtriggers', 'midfieldmesh',
+  'widthandwhip', 'crosscounting', 'setpiecereport', 'zonalzoe', 'manmarkingmick',
+  'throwinthinker', 'goalkickgrief', 'prematchpint', 'halftimehots', 'fulltimefeels',
+  'secondyellowseb', 'offsideornot', 'penaltypalaver', 'reboundrich', 'tapintourist',
+  'wondergoalwed', 'rabonareel', 'nutmegnotes', 'skillmovesue', 'grassrootsgrit',
+  'sundayleaguesyd', 'muddybootsmia', 'floodlightfri', 'turnstiletalk', 'programmenotes',
+  'scarvesuphigh', 'chantsheetcentral', 'bannersandbants', 'concreteterraces', 'railsittingray',
+  'safestandingstan', 'tickettriage', 'coachtripclive', 'servicesandscran', 'pintsandpoints',
+  'theawayguide', 'minibusmartin', 'derbydaydread', 'tablewatcherted', 'runinrumours',
+  'maymaths', 'survivalsundays', 'relegationmaths', 'promotionpusher', 'trophydaytears',
 ];
 
 /**
