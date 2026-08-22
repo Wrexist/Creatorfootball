@@ -428,6 +428,12 @@ export const BALANCE = {
   SUB_FATIGUE_THRESHOLD: 0.42,
   /** Earliest match fraction at which the AI will make a routine substitution. 0.2-0.8. */
   SUB_EARLIEST_FRACTION: 0.4,
+  /**
+   * Match fraction at which a TRAILING AI makes its one scripted call.
+   * Late enough that the scoreline means something, early enough that there
+   * is real match left for the change to act on. 0.5-0.8.
+   */
+  TRAILING_RESPONSE_FRACTION: 0.65,
 
   // -------------------------------------------------- effective attributes ---
   /** Weight of match fitness (0-100) on effective attributes. 0.05-0.3. */

@@ -357,3 +357,65 @@ describe('tie-break', () => {
     expect(resolved).toBe(drawn);
   }, LONG);
 });
+
+// --------------------------------------------------------------------------
+
+/**
+ * The scripted response. A trailing AI manager makes exactly one call around
+ * two-thirds elapsed — drop deeper or push up, chosen from the risk the club
+ * walked out with. The player gets no such gift.
+ */
+describe('the AI manager fights back', () => {
+  const lopsided = (seed: string, awayRisk?: 'CAUTIOUS' | 'BOLD') => {
+    const rng = new Rng(seed);
+    const home = makeTestTeam(rng, { prefix: `${seed}h`, name: 'Northside', target: 80 });
+    const away = makeTestTeam(rng, { prefix: `${seed}a`, name: 'Southgate', target: 50 });
+    return makeTestSetup({
+      seed,
+      home,
+      away: awayRisk ? { ...away, tactics: { ...away.tactics, risk: awayRisk } } : away,
+    });
+  };
+
+  const scripted = (r: ReturnType<typeof simulateMatch>) =>
+    r.events.filter((e) => e.type === 'TACTICAL_CHANGE' && e.detail?.['trigger'] === 'AI_TRAILING_RESPONSE');
+
+  it('gives a TRAILING AI exactly one scripted response at about two-thirds elapsed', () => {
+    // A heavy favourite at home leaves the visitors behind well before the hour.
+    const result = simulateMatch(lopsided('trail-one'));
+    expect(result.homeScore).toBeGreaterThan(result.awayScore);
+    const responses = scripted(result);
+    expect(responses.length).toBe(1);
+    const response = responses[0] as (typeof responses)[number];
+    expect(response.side).toBe('away');
+    expect(response.minute).toBeGreaterThanOrEqual(Math.floor(BALANCE.TRAILING_RESPONSE_FRACTION * 30));
+    expect(['PUSH_UP', 'DROP_DEEPER']).toContain(response.detail?.['stance']);
+  });
+
+  it('picks the stance from the risk the club set up with', () => {
+    const cautious = simulateMatch(lopsided('trail-cautious', 'CAUTIOUS'));
+    const bold = simulateMatch(lopsided('trail-bold', 'BOLD'));
+    expect(scripted(cautious)[0]?.detail?.['stance']).toBe('DROP_DEEPER');
+    expect(scripted(bold)[0]?.detail?.['stance']).toBe('PUSH_UP');
+  });
+
+  it('never hands one to a leading side or to the player', () => {
+    // The strong HOME side is player-controlled and still trails here; the
+    // strong AWAY AI is winning and must be left alone.
+    const rng = new Rng('no-free-calls');
+    const weakPlayerHome = { ...makeTestTeam(rng, { prefix: 'fph', name: 'Northside', target: 50 }), isPlayerControlled: true };
+    const strongAway = makeTestTeam(rng, { prefix: 'fsa', name: 'Southgate', target: 80 });
+    const result = simulateMatch(makeTestSetup({ seed: 'no-free-calls', home: weakPlayerHome, away: strongAway }));
+    expect(result.awayScore).toBeGreaterThan(result.homeScore);
+    // The player's side never gets a free call...
+    expect(scripted(result).filter((e) => e.side === 'home')).toHaveLength(0);
+    // ...and the winning AI is left alone as well.
+    expect(scripted(result).filter((e) => e.side === 'away')).toHaveLength(0);
+  });
+
+  it('changes nothing before the threshold even in a thrashing', () => {
+    const result = simulateMatch(lopsided('trail-early'));
+    const early = scripted(result).filter((e) => e.minute < Math.floor(BALANCE.TRAILING_RESPONSE_FRACTION * 30));
+    expect(early).toHaveLength(0);
+  });
+});

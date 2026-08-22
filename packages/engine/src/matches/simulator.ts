@@ -221,6 +221,20 @@ const CREATOR_WEIGHT: Record<SlotRole, number> = { GK: 0.12, DEF: 1, MID: 4, ATT
 const CARRIER_WEIGHT: Record<SlotRole, number> = { GK: 0.1, DEF: 1.4, MID: 3.5, ATT: 2.2 };
 const STOPPER_WEIGHT: Record<SlotRole, number> = { GK: 0.15, DEF: 4, MID: 2.6, ATT: 0.7 };
 
+/**
+ * The two stances a trailing AI can take for its one scripted call.
+ *
+ * These are discrete choices between engine enums rather than tuning scalars,
+ * so they live here and not in the balance table — there is no number to move,
+ * only a decision to make.
+ */
+const TRAILING_PUSH_UP: Partial<TacticSetup> = {
+  line: 'HIGH', press: 'HIGH_PRESS', tempo: 'QUICK', risk: 'BOLD',
+};
+const TRAILING_DROP_DEEPER: Partial<TacticSetup> = {
+  line: 'DEEP', press: 'LOW_BLOCK', counter: 'ALWAYS', risk: 'CAUTIOUS',
+};
+
 // -------------------------------------------------------------- simulator ---
 
 export class MatchSimulator {
@@ -268,6 +282,8 @@ export class MatchSimulator {
   private opponentChangedFor: Side | null = null;
   private creatorMomentFor: Side | null = null;
   private halfTimePrompt = false;
+  /** Sides that have already spent their one scripted trailing response. */
+  private readonly trailingResponseDone = new Set<Side>();
 
   /** Per-match openness. Shared by both sides, which is what overdisperses the scorelines. */
   private readonly openness: number;
@@ -386,7 +402,7 @@ export class MatchSimulator {
     this.pending = null;
   }
 
-  applyTacticalChange(side: Side, change: Partial<TacticSetup>): void {
+  applyTacticalChange(side: Side, change: Partial<TacticSetup>, detail?: Readonly<Record<string, string | number | boolean>>): void {
     const team = this.teamFor(side);
     team.tactics = { ...team.tactics, ...change };
     if (change.formationId) {
@@ -396,7 +412,7 @@ export class MatchSimulator {
     team.baseVector = this.vectorFor(team);
     team.shapeChangedTick = this.tick;
     this.opponentChangedFor = side === 'home' ? 'away' : 'home';
-    this.emit('TACTICAL_CHANGE', { side, importance: 2 });
+    this.emit('TACTICAL_CHANGE', { side, importance: 2, ...(detail ? { detail } : {}) });
   }
 
   /** Re-seat the players already on the pitch into a changed formation's slots. */
@@ -697,7 +713,35 @@ export class MatchSimulator {
     this.maybeInjury();
     this.maybeSubstitution(minute);
     this.maybeDecision(minute, false);
+    this.maybeScriptedResponse();
     this.checkPeriodBoundary(minute);
+  }
+
+  /**
+   * The one scripted call. A TRAILING AI gets exactly one response per match,
+   * from the threshold onward: push up if it set out bold, drop deeper and
+   * counter if it did not. The choice reads off the tactics the club walked
+   * out with — the profile itself does not travel into the match, so its risk
+   * setting is the honest proxy for how its manager thinks. Deterministic by
+   * construction: no rng is consumed, only the scoreline and the setup.
+   */
+  private maybeScriptedResponse(): void {
+    if (this.elapsedFraction() < BALANCE.TRAILING_RESPONSE_FRACTION) return;
+    for (const team of [this.home, this.away]) {
+      if (team.team.isPlayerControlled) continue;
+      if (this.trailingResponseDone.has(team.side)) continue;
+      const scoreFor = team.side === 'home' ? this.homeScore : this.awayScore;
+      const scoreAgainst = team.side === 'home' ? this.awayScore : this.homeScore;
+      if (scoreFor >= scoreAgainst) continue;
+
+      this.trailingResponseDone.add(team.side);
+      const pushUp = team.tactics.risk === 'BOLD' || team.tactics.risk === 'RECKLESS';
+      const change = pushUp ? TRAILING_PUSH_UP : TRAILING_DROP_DEEPER;
+      this.applyTacticalChange(team.side, change, {
+        trigger: 'AI_TRAILING_RESPONSE',
+        stance: pushUp ? 'PUSH_UP' : 'DROP_DEEPER',
+      });
+    }
   }
 
   private checkPeriodBoundary(minute: number): void {

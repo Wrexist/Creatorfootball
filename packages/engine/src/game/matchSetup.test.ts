@@ -3,6 +3,7 @@ import { asId } from '../core/brand';
 import type { ClubId, CompetitionId, FixtureId, MatchId, SeasonId } from '../core/brand';
 import type { Fixture } from '../league/types';
 import type { GameState } from '../game/state';
+import type { MatchSetup, MatchTeam } from '../matches/simulator';
 import type { TacticSetup } from '../tactics/tactics';
 import { BASE_PACK, ContentRegistry, type CreatorSeasonConfigDef } from '../content';
 import { DEFAULT_TACTICS } from '../tactics/tactics';
@@ -47,7 +48,7 @@ const withPlayerTactics = (state: GameState, over: Partial<TacticSetup>): GameSt
   };
 };
 
-const sideFor = (setup: { home: { clubId: ClubId }; away: { clubId: ClubId } }, clubId: ClubId) =>
+const sideFor = (setup: Pick<MatchSetup, 'home' | 'away'>, clubId: ClubId): MatchTeam =>
   setup.home.clubId === clubId ? setup.home : setup.away;
 
 describe('buildMatchSetup counter-lean wiring', () => {
