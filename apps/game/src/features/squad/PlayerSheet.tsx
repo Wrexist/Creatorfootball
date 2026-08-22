@@ -11,7 +11,8 @@ import {
   TraitChip, formatMoney, useToast,
   IconBall, IconInjury, IconScout, IconStar,
 } from '@/design';
-import { playerArc, sentenceCase } from './arc';
+import { playerArc } from './arc';
+import { sentenceCase } from '@/design/text';
 import { canOfferRenewal, offerRenewal, presentRenewal } from './renewal';
 
 /**

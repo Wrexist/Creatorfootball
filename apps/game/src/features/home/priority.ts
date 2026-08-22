@@ -6,6 +6,8 @@ import {
   type Club, type Fixture, type GameState, type Objective, type Player, type StandingRow,
 } from '@cf/engine';
 import { HOME_BALANCE } from './balance';
+import { ordinal } from '@/design/domain/numbers';
+import { plural, sentenceCase } from '@/design/text';
 
 /**
  * The home screen's priority engine.
@@ -142,28 +144,12 @@ const freshness = (cycle: number, since: number): number => clamp01(1 - (cycle -
 
 /* --- language --------------------------------------------------------- */
 
-const ordinal = (n: number): string => {
-  const rest = n % 100;
-  if (rest >= 11 && rest <= 13) return `${n}th`;
-  switch (n % 10) {
-    case 1: return `${n}st`;
-    case 2: return `${n}nd`;
-    case 3: return `${n}rd`;
-    default: return `${n}th`;
-  }
-};
-
 const ZONE_WORD: Record<StandingRow['zone'], string> = {
   CHAMPION: 'the title places',
   PLAYOFF: 'the playoff places',
   MID: 'mid-table',
   RELEGATION: 'the drop zone',
 };
-
-const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
-
-/** Engine copy is lower case; these strings open a sentence in the interface. */
-const sentence = (text: string): string => (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
 
 /**
  * How far into the season we are, and whether the table is evidence yet.
@@ -453,7 +439,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
         tone: 'danger',
         glyph: 'injury',
         headline: `${key.displayName} is injured.`,
-        meaning: `${sentence(key.injury?.description ?? 'Injured')} — out for about ${weeks} ${plural(weeks, 'week', 'weeks')}. He is rated ${key.overall}.`,
+        meaning: `${sentenceCase(key.injury?.description ?? 'Injured')} — out for about ${weeks} ${plural(weeks, 'week', 'weeks')}. He is rated ${key.overall}.`,
         actionLabel: 'Open his profile',
         route: `/squad/player/${key.id}`,
         playerId: key.id,
@@ -600,7 +586,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
     const meaning = ultimatum
       ? `${ultimatum.description} You have won ${Math.min(ultimatum.progress, ultimatum.target)} of ${ultimatum.target} so far.`
       : levers.length > 0
-        ? `${sentence(levers.join('; '))}. ${
+        ? `${sentenceCase(levers.join('; '))}. ${
           board.mood === 'ANGRY'
             ? 'One more bad stretch and this stops being a mood and becomes an ultimatum.'
             : 'Keep this up and restlessness becomes anger — wins are what cools it.'

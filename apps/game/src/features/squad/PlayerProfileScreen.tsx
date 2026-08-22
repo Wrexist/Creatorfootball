@@ -18,7 +18,8 @@ import {
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
-import { playerArc, sentenceCase } from './arc';
+import { playerArc } from './arc';
+import { sentenceCase } from '@/design/text';
 import { canOfferRenewal, offerRenewal, presentRenewal } from './renewal';
 
 /**
