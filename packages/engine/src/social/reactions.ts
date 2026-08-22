@@ -6,7 +6,7 @@ import { clamp } from '../core/math';
 import type { ContentRegistryPort } from '../simulation/ports';
 import { clubToken, personToken } from '../simulation/ports';
 import { seedFrom } from '../simulation/templating';
-import { SOCIAL_ACTION_BALANCE as A } from './balance';
+import { SOCIAL_ACTION_BALANCE as A, SOCIAL_BALANCE as S } from './balance';
 import { applySocialEffect, describeEffect, importanceScale, type EffectLine, type SocialEffect } from './effects';
 import { hookFromMoment, momentById, socialMoments, type SocialMoment } from './moments';
 import { appendPosts, postRenderContext, renderPost, type PostAuthor } from './postFactory';
@@ -338,8 +338,8 @@ export function reactToPost(state: GameState, input: ReactionInput): ReactionRes
   };
 
   next = withSocialWorld(next, (w) => ({
-    handled: [...w.handled, target.id].slice(-160),
-    actions: [...w.actions, action].slice(-240),
+    handled: [...w.handled, target.id].slice(-S.historyCap.handledReactions),
+    actions: [...w.actions, action].slice(-S.historyCap.actions),
   }));
 
   return {
@@ -561,8 +561,8 @@ export function replyToPlayer(state: GameState, input: ReplyInput): ReactionResu
     : null;
 
   next = withSocialWorld(next, (w) => ({
-    handled: [...w.handled, voice.post.id].slice(-160),
-    actions: [...w.actions, action].slice(-240),
+    handled: [...w.handled, voice.post.id].slice(-S.historyCap.handledReactions),
+    actions: [...w.actions, action].slice(-S.historyCap.actions),
     ...(stake ? { stakes: [...w.stakes, stake] } : {}),
   }));
 

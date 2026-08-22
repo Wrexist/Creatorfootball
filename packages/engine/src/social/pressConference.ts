@@ -1886,8 +1886,8 @@ export function answerPressConference(state: GameState, input: PressAnswerInput)
   };
 
   next = withSocialWorld(next, (w) => ({
-    conferences: [...w.conferences, record].slice(-40),
-    actions: [...w.actions, action].slice(-240),
+    conferences: [...w.conferences, record].slice(-S.historyCap.conferences),
+    actions: [...w.actions, action].slice(-S.historyCap.actions),
     stakes: [...w.stakes, ...stakes],
   }));
 
@@ -1929,7 +1929,7 @@ export function skipPressConference(state: GameState, input: { at: number }): Pr
     goodwillDelta: Math.round(A.press.skipGoodwill * multiplier * 10) / 10,
   };
   const next = withSocialWorld(applied.state, (w) => ({
-    conferences: [...w.conferences, record].slice(-40),
+    conferences: [...w.conferences, record].slice(-S.historyCap.conferences),
     actions: [...w.actions, {
       id: `pa_skip_${conference.id}`,
       kind: 'PRESS_ANSWER' as const,
@@ -1939,7 +1939,7 @@ export function skipPressConference(state: GameState, input: { at: number }): Pr
       warmth: -0.3,
       credibility: -0.2,
       summary: 'Walked past the press',
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
 
   return {

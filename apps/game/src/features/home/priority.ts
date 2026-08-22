@@ -5,6 +5,7 @@ import {
   starPlayer, suspendedPlayers, wageBudgetUsage, BOARD_BALANCE,
   type Club, type Fixture, type GameState, type Objective, type Player, type StandingRow,
 } from '@cf/engine';
+import { HOME_BALANCE } from './balance';
 
 /**
  * The home screen's priority engine.
@@ -120,13 +121,8 @@ export interface HomeFeed {
 
 /* --- scoring ---------------------------------------------------------- */
 
-const W = { urgency: 0.32, importance: 0.30, novelty: 0.14, emotion: 0.24 };
-
 /** Below this a card is not worth a slot; the screen is better off shorter. */
-const FLOOR = 0.26;
-const MAX_CARDS = 5;
-/** Two from any one part of the game — otherwise a bad week is six squad cards. */
-const MAX_PER_FAMILY = 2;
+const { weight: W, floor: FLOOR, maxCards: MAX_CARDS, maxPerFamily: MAX_PER_FAMILY } = HOME_BALANCE;
 
 /** The board's card is exempt from the per-family cap: a live crisis never waits its turn behind two other CLUB cards. */
 export const BOARD_CARD_ID = 'board:pressure';

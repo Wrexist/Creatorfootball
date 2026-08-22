@@ -370,7 +370,7 @@ export function runPoll(state: GameState, input: { pollId: string; at: number })
       warmth: 0.6,
       credibility: 0.3,
       summary: `Asked the supporters about ${poll.topic.toLowerCase()}`,
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
   return { state: next, ok: true, effect, posts: [], events: applied.events };
 }
@@ -437,7 +437,7 @@ export function settlePoll(
       summary: input.honour
         ? `Did what the vote said about ${poll.topic.toLowerCase()}`
         : `Overruled the vote about ${poll.topic.toLowerCase()}`,
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
 
   const ctx = postRenderContext(next, input.registry ?? null, state.clock.cycle);
@@ -712,7 +712,7 @@ export function respondToCampaign(
       warmth: input.response === 'BACK' ? 0.8 : -0.4,
       credibility: input.response === 'BACK' ? 0.3 : 0.6,
       summary: `${option.label}: ${campaign.title}`,
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
 
   const ctx = postRenderContext(next, input.registry ?? null, state.clock.cycle);
@@ -790,8 +790,8 @@ export function chooseFanOfTheWeek(state: GameState, rng: Rng, cycle: number): F
   const moments = socialMoments(state, { windowCycles: 1, limit: 6 });
   const moment = moments[0];
   if (!moment) return null;
-  const recentNames = new Set(world.fanOfTheWeek.slice(-8).map((f) => f.name));
-  const recentReasons = new Set(world.fanOfTheWeek.slice(-8).map((f) => f.reason));
+  const recentNames = new Set(world.fanOfTheWeek.slice(-S.fanOfTheWeekRepeatWindow).map((f) => f.name));
+  const recentReasons = new Set(world.fanOfTheWeek.slice(-S.fanOfTheWeekRepeatWindow).map((f) => f.reason));
   const namePool = FAN_PERSONAS.filter((n) => !recentNames.has(n));
   const reasonPool = FAN_REASONS.filter((r) => !recentReasons.has(r));
   const name = rng.fork('name').pick(namePool.length > 0 ? namePool : FAN_PERSONAS);
