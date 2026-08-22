@@ -214,6 +214,272 @@ const DEPTH_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ]),
 ];
 
+/**
+ * Depth on the season-over-season beats.
+ *
+ * The triggers that recur every campaign — a sale, a sacking, a promotion, the
+ * season review itself — were carrying one or two templates each, which is why
+ * an archive of a five-season save read like a local paper with one reporter.
+ * Everything below widens those pools, and where a story only makes sense for
+ * part of the table it declares that in `conditions` rather than risking copy
+ * that is false in half its appearances.
+ */
+const SEASON_DEPTH_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
+  ...story('PLAYER_SOLD', 3, -0.35, 9, ['The Long Ball', 'Pressbox'], [
+    {
+      headline: 'The fee is fair. That is not the point.',
+      body: '{club} have done sensible business in taking {fee} for {player}, and everybody at the club would trade the number back for a fit, settled, committed player in March. Sensible business is what this club does instead of competing.',
+    },
+  ], { big: true }),
+  ...story('PLAYER_SOLD', 2, 0, 7, ['Bootroom Digest', 'The Long Ball'], [
+    {
+      headline: 'A quiet exit that suits everyone',
+      body: 'Not every sale is a betrayal. {player} needs minutes, {club} need the wage space, and somebody has paid a fair price for both. These are the moves squads are actually built on.',
+    },
+  ], { big: false }),
+  ...story('PLAYER_SOLD', 3, -0.5, 8, ['The Terrace'], [
+    {
+      headline: 'What {club} do with the money matters more than the sale',
+      body: 'Supporters can recite what happened to the last significant fee this club received. The reinvestment question arrives immediately and deserves better than the usual promise about the future of the squad.',
+    },
+  ]),
+
+  ...story('TROPHY_WON', 4, 0.15, 8, ['Counter Press', 'Frontline Football'], [
+    {
+      headline: 'And for everybody else: the long postscript',
+      body: 'There are eleven other clubs who will spend the summer explaining what went wrong, and none of them has a convincing answer yet. {club} did not win the {competition} because others failed; they won it by being relentless when nobody else could sustain it.',
+    },
+  ]),
+
+  ...story('SEASON_COMPLETED', 3, 0.05, 8, ['Pitchside Weekly', 'Common Ground Quarterly'], [
+    {
+      headline: 'Exactly where they finished: the honest review',
+      body: 'Mid-table is where a club tells you the truth about itself. {club} were never really going up and never really going down, and whether that reads as stability or stagnation is the argument that will run all summer.',
+    },
+  ], { position_gte: 4, position_lte: 9 }),
+  ...story('SEASON_COMPLETED', 4, 0.55, 8, ['The Touchline', 'Standing Room'], [
+    {
+      headline: 'Nobody had {club} doing this',
+      body: 'Picked for the middle of the table in August, finished with the sides above looking over their shoulders. Seasons like this are exactly why nobody sensible writes the script before a ball is kicked.',
+    },
+  ], { position_lte: 3 }),
+
+  ...story('RIVALRY_INTENSIFIED', 4, -0.35, 8, ['Kickback Daily', 'Frontline Football'], [
+    {
+      headline: 'The fixture neither side can treat normally now',
+      body: 'Heat readings around this pairing are the highest in the league, which is a statistic nobody collects proudly. Both boards will say the correct things publicly. Both dugouts will remember everything privately.',
+    },
+  ]),
+
+  ...story('MANAGER_SACKED', 5, -0.3, 8, ['Matchday Wire', 'Pressbox'], [
+    {
+      headline: 'Who takes the {club} job now?',
+      body: 'Every sacked manager leaves behind two vacancies: their own, and the one they were warned about. {club} will appoint again within a fortnight, and whoever it is inherits a squad that has heard every promise once already.',
+    },
+  ]),
+
+  ...story('CONTRACT_EXPIRING', 3, -0.45, 8, ['The Terrace', 'The Long Ball'], [
+    {
+      headline: 'The silence around {player} is getting expensive',
+      body: 'Months left, no announcement scheduled, and a support that has learned what this pattern usually means. Clubs always believe they are controlling the negotiation. Players running down deals know better than anybody who is actually in charge.',
+    },
+  ]),
+  ...story('CONTRACT_EXPIRING', 2, -0.25, 7, ['Pressbox'], [
+    {
+      headline: '{weeks} weeks on the clock at {club}',
+      body: 'The club remain relaxed in public. Behind the scenes the list of replacements has been drawn up twice, which is not the behaviour of a confident negotiation.',
+    },
+  ]),
+
+  ...story('TRANSFER_HIJACKED', 4, -0.6, 8, ['Kickback Daily', 'Frontline Football'], [
+    {
+      headline: 'How {opponent} took {player} from under {club}',
+      body: 'It was agreed, it was advanced and it was reversible — three things nobody at {club} believed until the call came. Late moves of this kind are legal, ruthless and increasingly common, which is no consolation whatsoever.',
+    },
+  ]),
+  ...story('TRANSFER_HIJACKED', 3, -0.3, 7, ['The Long Ball'], [
+    {
+      headline: 'What the {player} collapse actually costs',
+      body: 'Beyond the player himself: a recruitment plan rebuilt around his arrival, a budget earmarked and a fanbase told to expect him. Deals that die late take their collateral damage quietly.',
+    },
+  ]),
+
+  ...story('BALANCE_LOW', 4, -0.65, 8, ['The Signal Box Review'], [
+    {
+      headline: 'The numbers behind the squeeze at {club}',
+      body: 'A balance of {balance} is survivable for exactly as long as nothing unexpected happens. Football being football, something unexpected is already scheduled somewhere in the fixture list.',
+    },
+  ]),
+
+  ...story('CONTRACT_SIGNED', 2, 0.35, 6, ['The Chalkboard', 'Bootroom Digest'], [
+    {
+      headline: 'The smartest deals are the ones nobody films',
+      body: 'No photoshoot, no countdown, just a player tied down before speculation could start. In a market that punishes hesitation, {club} moved first and paid less for it.',
+    },
+  ]),
+
+  ...story('FACILITY_UPGRADED', 2, 0.25, 5, ['Common Ground Quarterly', 'The Signal Box Review'], [
+    {
+      headline: 'Another quiet week of actual infrastructure',
+      body: 'Nobody sings about drainage, gym floors or recovery suites, and the table awards no points for them. Then a squad stays intact through February while rivals fall apart, and everybody asks what the difference was.',
+    },
+  ]),
+
+  ...story('GAME_STARTED', 3, 0.1, 6, ['The Long Ball', 'Matchday Wire'], [
+    {
+      headline: 'New season, new room, same questions for {manager}',
+      body: 'Every appointment arrives wrapped in a plan and gets unwrapped by autumn. {manager} inherits players other people signed and problems other people created. What happens next is the part nobody can legislate for.',
+    },
+  ]),
+
+  ...story('GOAL_SCORED', 3, 0.55, 6, ['ClipCity', 'Frontline Football'], [
+    {
+      headline: 'The finish worth the entry money',
+      body: 'Some goals get argued about for weeks and some are simply admired. This was the second kind, and even the side behind will have watched the replay once or twice.',
+    },
+  ]),
+
+  ...story('MANAGER_PRESSURE', 3, -0.5, 8, ['The Away End', 'The Terrace'], [
+    {
+      headline: 'The away end has started singing about it',
+      body: 'Pressure travels: first the phone-ins, then the columns, then the stands. Once supporters start naming the problem out loud, the boardroom hears it whether it wants to or not.',
+    },
+  ]),
+
+  ...story('OBJECTIVE_COMPLETED', 2, 0.4, 6, ['Matchday Wire'], [
+    {
+      headline: 'Targets met early change what a club believes',
+      body: 'Hitting the target with time to spare does more than bank credit. It resets what everybody inside the building considers normal, which is either the start of something or the beginning of complacency.',
+    },
+  ]),
+
+  ...story('OBJECTIVE_FAILED', 3, -0.45, 7, ['The Chalkboard'], [
+    {
+      headline: 'The gap between the plan and the table',
+      body: 'Objectives are set in the calm of June and audited in the noise of spring. Falling short turns every earlier decision into evidence, and some of the conclusions will be uncomfortable.',
+    },
+  ]),
+
+  ...story('PLAYER_DEVELOPED', 2, 0.45, 6, ['The Signal Box Review', 'Counter Press'], [
+    {
+      headline: 'Development curves do not happen by accident',
+      body: 'Player improvement is the cheapest squad-building there is, and {club} are getting more of it than anybody. Somewhere in the training ground data there is a method, and rival analysts are trying to reverse-engineer it.',
+    },
+  ]),
+
+  ...story('PLAYER_RELEASED', 2, -0.15, 5, ['The Long Ball'], [
+    {
+      headline: 'The list nobody celebrates',
+      body: 'For every farewell post there is a phone call that lasts ninety seconds. {player} leaves with the club\'s thanks and very little else, which is how most careers in this sport actually end.',
+    },
+  ]),
+
+  ...story('PROMOTED', 4, 0.75, 8, ['Frontline Football', 'The Terrace'], [
+    {
+      headline: 'Up, and deserving every word of it',
+      body: 'Promotion is the hardest thing to do and the easiest thing to explain: they were better than the sides below them for long enough that luck stopped mattering. Now comes the harder conversation about what the next level costs.',
+    },
+  ]),
+
+  ...story('SCOUT_REPORT_READY', 2, 0.15, 5, ['The Chalkboard'], [
+    {
+      headline: 'Inside a scouting report that took months',
+      body: 'Dozens of live viewings, pages of data, and a recommendation signed by people whose jobs depend on being right. Most reports end in nothing. The value is knowing that before the money moves.',
+    },
+  ]),
+
+  ...story('SEASON_STARTED', 3, 0.4, 7, ['Standing Room', 'ClipCity'], [
+    {
+      headline: 'Pre-season optimism, audited',
+      body: 'Every club is undefeated, every signing exciting and every budget balanced until week one. Season {season} begins with the usual unearned confidence, and thank goodness for that.',
+    },
+  ]),
+
+  ...story('SPECIAL_RULE_TRIGGERED', 3, 0.3, 6, ['ClipCity', 'Frontline Football'], [
+    {
+      headline: 'The format keeps producing moments the table cannot hold',
+      body: 'Whatever the purists say, the rule window made eleven professionals look up from the plan at the same time, and for three minutes nobody in the building was bored. That is not nothing.',
+    },
+  ]),
+
+  ...story('SPONSOR_LOST', 3, -0.4, 7, ['The Signal Box Review'], [
+    {
+      headline: 'Reading the small print on the {sponsor} exit',
+      body: 'Partnerships end for boring reasons far more often than dramatic ones. The concern at {club} is not who walked. It is what the next brand in the meeting thinks they would be buying.',
+    },
+  ]),
+
+  ...story('SPONSOR_SIGNED', 2, 0.3, 6, ['The Long Ball', 'Pressbox'], [
+    {
+      headline: 'What the {sponsor} deal says about where {club} are heading',
+      body: 'Brands buy trajectories, not teams. This partnership was priced on where {club} are going rather than where they have been, which makes the next two seasons a commercial obligation as well as a sporting one.',
+    },
+  ]),
+
+  ...story('TRANSFER_BID_REJECTED', 2, 0, 6, ['The Long Ball', 'Pressbox'], [
+    {
+      headline: 'Rejection as strategy',
+      body: 'Turning down a bid is easy. Holding the line when the improved offer lands within the fortnight is the actual test, and everybody on both sides of this one knows the second act is coming.',
+    },
+  ]),
+
+  ...story('TRANSFER_COMPLETED', 2, 0.2, 6, ['The Signal Box Review'], [
+    {
+      headline: 'Grading the completed business',
+      body: 'The deal is done, the fee is known and the real assessment starts now. History says roughly half of these work immediately, half take a season, and the remainder become quiz questions.',
+    },
+  ]),
+
+  ...story('YOUTH_PROSPECT_PROMOTED', 2, 0.5, 6, ['Standing Room'], [
+    {
+      headline: 'The pathway is the product',
+      body: 'Every academy claims to build a route to the first team. At {club} a teenager can walk it, which is worth more to the next fourteen-year-old than any brochure ever written.',
+    },
+  ]),
+
+  ...story('FAN_SENTIMENT_CHANGED', 3, 0.35, 6, ['Common Ground Quarterly'], [
+    {
+      headline: 'Mood is data too',
+      body: 'Attendance holds longer than patience, and patience holds longer than hope. Tracking the order in which those three fade is football\'s closest thing to an early warning system, and at {club} the trendline just turned.',
+    },
+  ]),
+
+  ...story('PLAYER_INJURED', 3, -0.35, 8, ['Pressbox', 'The Long Ball'], [
+    {
+      headline: 'The medical update nobody wanted to read',
+      body: 'Injuries reshape tables more quietly than transfers do. {club} must now find the version of themselves that existed before the one player the whole shape depended on.',
+    },
+  ]),
+
+  ...story('RELEGATED', 5, -0.6, 8, ['The Signal Box Review'], [
+    {
+      headline: 'The audit nobody at {club} will enjoy',
+      body: 'Relegation is rarely one bad month. It is a hundred small decisions compounding politely until the mathematics became irreversible, and the post-mortem will find every single one of them.',
+    },
+  ]),
+
+  ...story('RED_CARD', 3, -0.45, 7, ['The Chalkboard'], [
+    {
+      headline: 'Discipline is a skill and {club} are failing it',
+      body: 'Sending-off data is unfashionable until it decides four fixtures a season. Keep gifting opponents forty minutes against ten men and no amount of quality covers it.',
+    },
+  ]),
+
+  ...story('PLAYER_BREAKOUT', 3, 0.6, 7, ['ClipCity', 'Bootroom Digest'], [
+    {
+      headline: 'From nobody\'s list to everybody\'s shortlist',
+      body: 'Breakout seasons compress slowly and then suddenly. One month {player} is a name scouts mention carefully; the next there are representatives at every home fixture and a price tag forming in public.',
+    },
+  ]),
+
+  ...story('RIVALRY_CREATED', 3, -0.15, 6, ['Standing Room'], [
+    {
+      headline: 'A grudge is born, and nobody minds',
+      body: 'The healthiest leagues have fixtures that mean too much. Nobody planned {club} against {opponent} as anything, and now neither set of supporters will accept it being described as just another match.',
+    },
+  ]),
+];
+
 export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ...story('MATCH_WON', 3, 0.5, 10, ['Matchday Wire', 'The Touchline', 'Frontline Football'], [
     {
@@ -688,6 +954,7 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   /* The press covering the interactive layer, and depth on the regulars. */
   ...INTERACTIVE_MEDIA_TEMPLATES,
   ...DEPTH_MEDIA_TEMPLATES,
+  ...SEASON_DEPTH_MEDIA_TEMPLATES,
 ];
 
 export const BASE_MEDIA_TEMPLATE_COUNT = BASE_MEDIA_TEMPLATES.length;
