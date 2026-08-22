@@ -86,6 +86,17 @@ export interface DomainEventPayloads {
   PROMOTED: { clubId: ClubId; toTier: number };
   RELEGATED: { clubId: ClubId; toTier: number };
   BALANCE_LOW: { clubId: ClubId; balance: number };
+
+  // --- board ---
+  BOARD_MOOD_CHANGED: { clubId: ClubId; mood: string; pressure: number };
+  BOARD_ULTIMATUM_ISSUED: { clubId: ClubId; objectiveId: ObjectiveId; targetWins: number; windowCycles: number };
+  BOARD_ULTIMATUM_FAILED: {
+    clubId: ClubId;
+    objectiveId: ObjectiveId;
+    wageBudgetBefore: number;
+    wageBudgetAfter: number;
+    listedPlayerId?: PlayerId;
+  };
 }
 
 export type DomainEventType = keyof DomainEventPayloads;

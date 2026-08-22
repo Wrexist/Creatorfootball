@@ -209,6 +209,13 @@ const MILESTONE_PROSE: {
   PROMOTED: (e) => `Promoted to tier ${e.payload.toTier}`,
   RELEGATED: (e) => `Relegated to tier ${e.payload.toTier}`,
   BALANCE_LOW: () => 'The money ran low',
+
+  /* --- board ------------------------------------------------------------ */
+  BOARD_MOOD_CHANGED: (e) => `The board's mood shifted (${e.payload.mood.toLowerCase()})`,
+  BOARD_ULTIMATUM_ISSUED: (e) =>
+    `The board demanded ${e.payload.targetWins} wins from the next ${e.payload.windowCycles} matches`,
+  BOARD_ULTIMATUM_FAILED: (e) =>
+    `An ultimatum failed; wages were cut and players put up for sale`,
 };
 
 /**

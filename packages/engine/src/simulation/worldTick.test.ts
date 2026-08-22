@@ -5,7 +5,9 @@ import type { ClubId, EventId, MatchId, PlayerId } from '../core/brand';
 import type { GameState } from '../game/state';
 import type { Ledger } from '../economy/ledger';
 import { WORLD_BALANCE } from './balance';
-import { buildTestWorld, makeTestEvent } from './fixtures';
+import { BOARD_BALANCE } from '../progression/balance';
+import { ULTIMATUM_OBJECTIVE_PREFIX, buildBoardUltimatum } from '../progression/board';
+import { buildTestWorld, makeTestEvent, withFixture } from './fixtures';
 import { squadCohesion, squadMoraleSpread, tickWorld, type WorldTickContext } from './worldTick';
 
 const ctxFor = (ledger: Ledger, over: Partial<WorldTickContext> = {}): WorldTickContext => ({
@@ -193,6 +195,137 @@ describe('the tick wires the cascade into state', () => {
     expect(result.stories).toEqual([]);
     expect(result.posts).toEqual([]);
     expect(result.emergent).toEqual([]);
+  });
+});
+
+/**
+ * The board step. A crisis world is one where the player's club sits bottom
+ * of a six-club league on terrible form with angry fans — deep enough into
+ * the ladder that the mood derives as ULTIMATUM.
+ */
+describe('the board watches the player and acts', () => {
+  const SPONSORED_DEALS = [
+    { id: 'deal_d1', sponsorId: 'sp_1', name: 'ShirtCo', slot: 'SHIRT' as const, valuePerCycle: 100_000, weeksRemaining: 20, satisfaction: 70 },
+    { id: 'deal_d2', sponsorId: 'sp_2', name: 'KitCo', slot: 'SLEEVE' as const, valuePerCycle: 40_000, weeksRemaining: 30, satisfaction: 55 },
+  ];
+
+  const crisisWorld = (): {
+    readonly state: GameState;
+    readonly ledger: Ledger;
+  } => {
+    const world = buildTestWorld({ clubCount: 6, seed: 'board-crisis' });
+    let st = world.state;
+    // Bottom of the table: zero points while everyone else collects some.
+    const clubs = { ...st.clubs };
+    for (const [id, club] of Object.entries(clubs)) {
+      if (!club) continue;
+      const won = id === st.playerClubId ? 0 : 6 + Number(id.split('_')[1] ?? 0);
+      clubs[id] = { ...club, seasonRecord: { ...club.seasonRecord, played: 12, won, drawn: 0, lost: 12 - won, goalsFor: 6, goalsAgainst: 30 } };
+    }
+    st = { ...st, clubs };
+    // Angry fans and a losing run.
+    const club = st.clubs[st.playerClubId];
+    if (club) {
+      st = { ...st, clubs: { ...st.clubs, [club.id]: { ...club, fans: { ...club.fans, sentiment: 25 } } } };
+    }
+    for (let i = 0; i < 5; i++) {
+      st = withFixture(st, {
+        id: `fx_crisis_${i}`,
+        week: 50 + i,
+        home: st.playerClubId,
+        away: 'club_5' as ClubId,
+        homeScore: 0,
+        awayScore: 3,
+      });
+    }
+    // Commercial partners who can be wounded later.
+    st = { ...st, sponsors: { available: [], active: SPONSORED_DEALS } };
+    return { state: st, ledger: world.ledger };
+  };
+
+  it('issues a public ultimatum when the season becomes indefensible', () => {
+    const { state, ledger } = crisisWorld();
+    const result = tickWorld(state, new Rng('issue'), ctxFor(ledger));
+    const issued = result.state.objectives.active.find((o) => o.id.startsWith(ULTIMATUM_OBJECTIVE_PREFIX));
+    expect(issued).toBeTruthy();
+    if (!issued) return;
+    expect(issued.status).toBe('ACTIVE');
+    expect(issued.target).toBe(BOARD_BALANCE.ultimatumTargetWins);
+    expect(issued.expiresCycle).toBe(state.clock.cycle + BOARD_BALANCE.ultimatumWindowCycles);
+    expect(result.state.boardPressure.lastUltimatumCycle).toBe(state.clock.cycle);
+    expect(result.events.some((e) => e.type === 'BOARD_ULTIMATUM_ISSUED')).toBe(true);
+    // Announced loudly enough that the feed reacts.
+    const event = result.events.find((e) => e.type === 'BOARD_ULTIMATUM_ISSUED');
+    expect(event?.importance).toBe(5);
+  });
+
+  it('does not issue twice while an ultimatum is live', () => {
+    const { state, ledger } = crisisWorld();
+    const first = tickWorld(state, new Rng('first'), ctxFor(ledger));
+    // Advance the clock like the cycle would, keeping the objective live.
+    const nextClock = { ...first.state.clock, cycle: first.state.clock.cycle + 1 };
+    const second = tickWorld({ ...first.state, clock: nextClock }, new Rng('second'), ctxFor(ledger));
+    const live = second.state.objectives.active.filter((o) => o.id.startsWith(ULTIMATUM_OBJECTIVE_PREFIX));
+    expect(live.length).toBe(1);
+  });
+
+  it('announces a mood change when the ladder moves', () => {
+    const { state, ledger } = crisisWorld();
+    // Seed the journal with a prior announcement from a calmer week.
+    const seeded: GameState = {
+      ...state,
+      eventLog: [
+        makeTestEvent('BOARD_MOOD_CHANGED', { clubId: state.playerClubId, mood: 'RESTLESS', pressure: 25 }, { id: 'ev_prev_mood' }),
+      ],
+    };
+    const result = tickWorld(seeded, new Rng('mood'), ctxFor(ledger));
+    const changes = result.events.filter((e) => e.type === 'BOARD_MOOD_CHANGED');
+    expect(changes.length).toBeGreaterThan(0);
+    const last = changes.at(-1);
+    if (!last) return;
+    expect((last.payload as { mood: string }).mood).not.toBe('RESTLESS');
+  });
+
+  it('failing the ultimatum cuts wages, lists the best player and wounds sponsors', () => {
+    const { state, ledger } = crisisWorld();
+    const budgetBefore = state.clubs[state.playerClubId]?.finance.wageBudgetPerCycle ?? 0;
+    // An ultimatum already out and just expired with no wins banked.
+    const failedObjective = { ...buildBoardUltimatum(state), expiresCycle: state.clock.cycle, progress: 0 };
+    const doomed: GameState = {
+      ...state,
+      objectives: { ...state.objectives, active: [failedObjective] },
+    };
+    const result = tickWorld(doomed, new Rng('fail'), ctxFor(ledger));
+    const clubAfter = result.state.clubs[state.playerClubId];
+    expect(clubAfter?.finance.wageBudgetPerCycle).toBeLessThan(budgetBefore);
+
+    // The highest-value player is now on the market (values as of this tick,
+    // since the world drifts them before the board acts).
+    const listingIds = Object.keys(result.state.transfers.listings);
+    expect(listingIds.length).toBeGreaterThan(0);
+    const squadAfter = result.state.clubs[state.playerClubId]?.squad ?? [];
+    let bestId: string | null = null;
+    let bestValue = -1;
+    for (const id of squadAfter) {
+      const value = result.state.players[id]?.marketValue ?? 0;
+      if (value > bestValue) {
+        bestValue = value;
+        bestId = id;
+      }
+    }
+    expect(bestId).not.toBeNull();
+    if (!bestId) return;
+    const listed = result.state.transfers.listings[bestId];
+    expect(listed).toBeTruthy();
+    expect(listed?.askingPrice).toBe(Math.round(bestValue * BOARD_BALANCE.forcedListingPriceFactor));
+
+    for (const deal of result.state.sponsors.active) {
+      expect(deal.satisfaction).toBeLessThan(60); // below renewal willingness
+    }
+
+    expect(result.events.some((e) => e.type === 'BOARD_ULTIMATUM_FAILED')).toBe(true);
+    // And the sanctions fire exactly once — the failed objective is gone.
+    expect(result.state.objectives.active.some((o) => o.id.startsWith(ULTIMATUM_OBJECTIVE_PREFIX))).toBe(false);
   });
 });
 
