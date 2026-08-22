@@ -214,7 +214,7 @@ function stateFor(
  * what stops eleven identical dots looking like a formation diagram.
  */
 function personalOffset(playerId: PlayerId): Pos {
-  const h = hashString(playerId as unknown as string);
+  const h = hashString(playerId);
   const a = ((h & 0xff) / 255 - 0.5) * 0.05;
   const b = (((h >>> 8) & 0xff) / 255 - 0.5) * 0.06;
   return { x: a, y: b };

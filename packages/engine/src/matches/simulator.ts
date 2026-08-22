@@ -301,7 +301,7 @@ export class MatchSimulator {
 
   constructor(setup: MatchSetup) {
     this.setup = setup;
-    this.rng = new Rng(`${setup.seed}|${setup.matchId as unknown as string}`);
+    this.rng = new Rng(`${setup.seed}|${setup.matchId}`);
     this.commentary = new CommentaryBook(this.rng.fork('commentary'), setup.commentaryLines);
 
     const tpm = BALANCE.TICKS_PER_MINUTE;
@@ -503,7 +503,7 @@ export class MatchSimulator {
       for (const rt of team.all) {
         if (rt.ticksOn === 0) continue;
         const minutes = Math.max(1, Math.round(rt.ticksOn / BALANCE.TICKS_PER_MINUTE));
-        out[rt.player.id as unknown as string] = ratePlayer({
+        out[rt.player.id] = ratePlayer({
           playerId: rt.player.id,
           role: rt.slot.role as SlotRole,
           minutes,
@@ -561,17 +561,17 @@ export class MatchSimulator {
       if (!tactics.setPieceTakerId) tactics = { ...tactics, setPieceTakerId: auto.setPieceTakerId };
     }
 
-    const byId = new Map<string, Player>(team.players.map((p) => [p.id as unknown as string, p]));
+    const byId = new Map<string, Player>(team.players.map((p) => [p.id, p]));
     const all: PlayerRuntime[] = [];
     const onPitch: PlayerRuntime[] = [];
     const taken = new Set<string>();
 
     for (const slot of formation.slots) {
       const id = tactics.lineup[slot.id];
-      const player = id ? byId.get(id as unknown as string) : undefined;
-      const chosen = player ?? team.players.find((p) => !taken.has(p.id as unknown as string));
+      const player = id ? byId.get(id) : undefined;
+      const chosen = player ?? team.players.find((p) => !taken.has(p.id));
       if (!chosen) continue;
-      taken.add(chosen.id as unknown as string);
+      taken.add(chosen.id);
       const rt = this.makeRuntime(chosen, side, slot, true);
       all.push(rt);
       onPitch.push(rt);
@@ -580,14 +580,14 @@ export class MatchSimulator {
     const benchIds = tactics.bench.length ? tactics.bench : [];
     const benchPlayers: Player[] = [];
     for (const id of benchIds) {
-      const p = byId.get(id as unknown as string);
-      if (p && !taken.has(p.id as unknown as string)) { benchPlayers.push(p); taken.add(p.id as unknown as string); }
+      const p = byId.get(id);
+      if (p && !taken.has(p.id)) { benchPlayers.push(p); taken.add(p.id); }
     }
     for (const p of team.players) {
       if (benchPlayers.length >= this.setup.config.benchSize) break;
-      if (taken.has(p.id as unknown as string)) continue;
+      if (taken.has(p.id)) continue;
       benchPlayers.push(p);
-      taken.add(p.id as unknown as string);
+      taken.add(p.id);
     }
 
     const bench = benchPlayers.map((p) => {
@@ -1818,7 +1818,7 @@ export class MatchSimulator {
     const text = this.commentary.line(type, ctx, opts.tags ? { tags: opts.tags } : {});
 
     const event: MatchEvent = {
-      id: `${this.setup.matchId as unknown as string}:${this.eventSeq}`,
+      id: `${this.setup.matchId}:${this.eventSeq}`,
       type,
       minute: ctx.minute ?? 0,
       tick: this.tick,
@@ -1886,7 +1886,7 @@ export class MatchSimulator {
           matchMinutes: this.setup.config.minutes,
         });
 
-        playerStats[rt.player.id as unknown as string] = {
+        playerStats[rt.player.id] = {
           playerId: rt.player.id,
           minutes,
           goals: rt.stats.goals,

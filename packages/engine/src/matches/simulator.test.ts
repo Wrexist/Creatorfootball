@@ -201,7 +201,7 @@ function staminaUnder(press: 'HIGH_PRESS' | 'LOW_BLOCK'): number {
     config: { substitutions: 0 },
   });
   const r = simulateMatch(setup);
-  const homeIds = new Set(home.players.map((p) => p.id as unknown as string));
+  const homeIds = new Set<string>(home.players.map((p) => p.id));
   const values = Object.entries(r.playerStats)
     .filter(([id]) => homeIds.has(id))
     .map(([, s]) => s.endStamina);

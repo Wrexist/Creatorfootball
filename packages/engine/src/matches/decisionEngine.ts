@@ -536,7 +536,7 @@ export class DecisionEngine {
     if (!this.served.includes(recipe.trigger)) this.served.push(recipe.trigger);
 
     return {
-      id: `${this.opts.matchId as unknown as string}:dec:${this.counter}`,
+      id: `${this.opts.matchId}:dec:${this.counter}`,
       matchId: this.opts.matchId,
       minute: s.minute,
       tick: s.tick,
