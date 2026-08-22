@@ -7,6 +7,7 @@ import { traitModifier, traitMultiplier } from '../players/traits';
 import type { TacticVector } from '../tactics/tactics';
 import type { Rng } from '../core/rng';
 import { clamp, clamp01, lerp } from '../core/math';
+import type { Side } from './events';
 import { BALANCE } from './balance';
 
 /**
@@ -394,6 +395,23 @@ export function gameManagement(leadMargin: number, goalsScored = 0): number {
   );
   if (excess <= 0) return 1;
   return 1 - Math.min(BALANCE.GAME_STATE_EASE_MAX, excess * BALANCE.GAME_STATE_EASE_PER_GOAL);
+}
+
+/**
+ * The crowd's hand on the shot rate.
+ *
+ * `support` is the share of the arena backing `side` (0-1; see
+ * `arenaSupportShare`). The supported end plays in front of its own noise and
+ * rises; the other end wears only part of the cost, because an arena roaring
+ * for someone else lifts the home team more than it suppresses the visitors.
+ * Zero support — nobody travelled — leaves both sides untouched.
+ */
+export function crowdFactor(side: Side, support: number): number {
+  const s = clamp01(support);
+  if (s <= 0) return 1;
+  return side === 'home'
+    ? 1 + BALANCE.SUPPORT_ADVANTAGE_MAX * s
+    : 1 - BALANCE.SUPPORT_ADVANTAGE_MAX * s * 0.5;
 }
 
 // --------------------------------------------------------------------------

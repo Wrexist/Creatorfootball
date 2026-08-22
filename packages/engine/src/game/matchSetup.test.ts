@@ -8,6 +8,7 @@ import type { TacticSetup } from '../tactics/tactics';
 import { BASE_PACK, ContentRegistry, type CreatorSeasonConfigDef } from '../content';
 import { DEFAULT_TACTICS } from '../tactics/tactics';
 import { buildTestWorld } from '../simulation/fixtures';
+import { arenaSupportShare } from './selectors';
 import { buildMatchSetup } from './matchSetup';
 
 const configOf = (): CreatorSeasonConfigDef => {
@@ -100,5 +101,27 @@ describe('buildMatchSetup counter-lean wiring', () => {
       expect(team.isPlayerControlled).toBe(false);
       expect(team.tactics.press).toBe(DEFAULT_TACTICS.press);
     }
+  });
+});
+
+describe('buildMatchSetup arena support', () => {
+  it('carries the real arena share instead of a placeholder half', () => {
+    const world = buildTestWorld({ clubCount: 4 });
+    const home = 'club_1' as ClubId;
+    const away = 'club_2' as ClubId;
+    const setup = buildMatchSetup(world.state, fixtureBetween(home, away), configOf());
+    expect(setup.homeAdvantage).toBeCloseTo(arenaSupportShare(world.state, home, away), 6);
+  });
+
+  it('still arrives at the same share when the away club holds the bigger audience', () => {
+    let { state } = buildTestWorld({ clubCount: 4 });
+    const club = state.clubs['club_2' as ClubId];
+    if (!club) throw new Error('fixture club missing');
+    state = {
+      ...state,
+      clubs: { ...state.clubs, ['club_2' as ClubId]: { ...club, fans: { ...club.fans, onlineFollowers: 5_000_000 } } },
+    };
+    const setup = buildMatchSetup(state, fixtureBetween('club_1' as ClubId, 'club_2' as ClubId), configOf());
+    expect(setup.homeAdvantage).toBeLessThan(0.5);
   });
 });

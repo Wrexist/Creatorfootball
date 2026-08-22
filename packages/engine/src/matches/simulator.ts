@@ -16,9 +16,9 @@ import type { ActiveSpecialRule, SpecialRuleId } from './specialRules';
 import type { MatchResult, PlayerMatchStats, TeamMatchStats } from './result';
 import { BALANCE } from './balance';
 import {
-  buildChance, computeAggregates, defensivePressure, effectiveAttribute, fatigueDelta,
-  foulChance, injuryChance, progressionChance, resolveCard, resolveShot, rollInjury,
-  shotChance, throughBallChance, turnoverChance,
+  buildChance, computeAggregates, crowdFactor, defensivePressure, effectiveAttribute,
+  fatigueDelta, foulChance, injuryChance, progressionChance, resolveCard, resolveShot,
+  rollInjury, shotChance, throughBallChance, turnoverChance,
 } from './model';
 import type { EffectiveContext, SlotRole, TeamAggregates, UnitView } from './model';
 import { MomentumTracker, momentumBoost } from './momentum';
@@ -70,10 +70,10 @@ export interface MatchSetup {
   readonly rivalryIntensity: number;
   readonly attendance: number;
   /**
-   * 0-1. This competition plays every match at one neutral venue, so there is
-   * no home advantage to model: the field is reused as the share of the arena
-   * supporting the home side, and is capped at a swing far smaller than a real
-   * home effect. Defaults to 0.
+   * 0-1. This competition plays every match at one shared venue, so this field
+   * is not a home advantage — it carries the share of the arena backing the
+   * nominal home side (`arenaSupportShare`), and the engine caps what it can
+   * do to the result. Defaults to 0.
    */
   readonly homeAdvantage: number;
   readonly enabledSpecialRules: readonly SpecialRuleId[];
@@ -309,7 +309,11 @@ export class MatchSimulator {
     this.periodEndTick = Math.round(this.totalPlannedTicks / Math.max(1, setup.config.halves));
 
     this.rivalry = clamp01(setup.rivalryIntensity / 100);
-    this.support = setup.neutralVenue ? 0 : clamp01(setup.homeAdvantage)
+    // The crowd term is the arena-share channel, not a home advantage: every
+    // match is played at the league's single venue and `homeAdvantage` carries
+    // the share of supporters in the building (see `arenaSupportShare`). It is
+    // thinned by how full the ground actually ran against the reference crowd.
+    this.support = clamp01(setup.homeAdvantage)
       * clamp01(setup.attendance / BALANCE.ATTENDANCE_REFERENCE);
     this.pressure = clamp01(
       0.12
@@ -1666,10 +1670,7 @@ export class MatchSimulator {
   private opennessFactor(): number { return this.openness; }
 
   private supportFactor(side: Side): number {
-    if (this.support <= 0) return 1;
-    return side === 'home'
-      ? 1 + BALANCE.SUPPORT_ADVANTAGE_MAX * this.support
-      : 1 - BALANCE.SUPPORT_ADVANTAGE_MAX * this.support * 0.5;
+    return crowdFactor(side, this.support);
   }
 
   private stopClock(ticks: number): void {

@@ -2,7 +2,7 @@ import type { ClubId, FixtureId } from '../core/brand';
 import type { GameState } from './state';
 import type { MatchSetup, MatchTeam, MatchConfig, ManagerMatchBonus } from '../matches/simulator';
 import type { Fixture } from '../league/types';
-import { squadOf, clubTotalReach } from './selectors';
+import { squadOf, clubTotalReach, arenaSupportShare } from './selectors';
 import { aiCounterLeanVsPlayer } from '../simulation/aiClub';
 import { rivalryFor } from '../rivalries/rivalries';
 import { attendanceFor } from '../fans/fans';
@@ -153,8 +153,9 @@ export function buildMatchSetup(
     recentDecisionTriggers: state.decisionMemory.recentTriggers,
     // Every fixture is played at the league's single venue, so there is no home
     // advantage to model. The field carries the share of the arena backing the
-    // nominal home side, which the engine caps at a small swing.
-    homeAdvantage: 0.5,
+    // nominal home side — derived from both clubs' creators and fans — which
+    // the engine caps at a small swing.
+    homeAdvantage: arenaSupportShare(state, fixture.homeClubId, fixture.awayClubId),
     neutralVenue: true,
     enabledSpecialRules: fixture.enabledSpecialRules as readonly SpecialRuleId[],
     tieBreak: fixture.stageLabel ? 'SHOOTOUT' : 'NONE',

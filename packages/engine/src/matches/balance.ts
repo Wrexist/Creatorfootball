@@ -485,15 +485,19 @@ export const BALANCE = {
   /**
    * There is NO home advantage in this competition: every match is played at
    * the same neutral venue on a shared matchday. This slot is reused as the
-   * audience/support modifier — whose fans filled the arena — and is capped so
-   * it can never move win probability by more than about six percentage points,
-   * the size of the measured real-world home effect.
+   * audience/support modifier — whose fans filled the arena — sized so the
+   * swing between a maximal and an empty arena lands inside the documented
+   * 2-4pp of win probability (ECONOMY.md §8.4 rule 4a allows up to 6).
+   * Measured at n=10,000 paired matches: ~2.7pp at full support, with the
+   * shot-rate edge visible in the box score (+4% for the supported end). The
+   * modifier only reaches the pitch through the setup's `homeAdvantage` share;
+   * a match wired with zero share feels nothing at all.
    *
    * COUNTS TOWARD THE AUDIENCE CAP together with ATMOSPHERE_WEIGHT; see the
    * note there. Neither may be raised without re-measuring the joint swing,
-   * and the cap is a product constraint, not a tuning knob. 0-0.04.
+   * and the cap is a product constraint, not a tuning knob. 0-0.09.
    */
-  SUPPORT_ADVANTAGE_MAX: 0.01,
+  SUPPORT_ADVANTAGE_MAX: 0.07,
   /** Attendance treated as "full house" for the atmosphere term. */
   ATTENDANCE_REFERENCE: 20000,
   /** How much rivalry intensity raises match volatility. 0-0.5. */
