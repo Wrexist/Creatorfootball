@@ -799,6 +799,180 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['fans']),
 ];
 
+/**
+ * Depth on the quiet corners of the feed.
+ *
+ * An audit found eighteen triggers carrying one or two variants each — the
+ * scouting line, the reward confirmation, the wildcard-week aside — so those
+ * moments read identically every time they fire. Everything below brings each
+ * of them to four or better, written inside the audience each hook actually
+ * publishes, because a template addressed to a voice the hook never summons is
+ * not depth, it is shelfware.
+ */
+const TRIGGER_TOPUP_TEMPLATES: readonly SocialTemplate[] = [
+  /* --------------------------------------------------- SCOUT_REPORT_READY */
+  ...post('SCOUT_REPORT_READY', 'LEAK', -0.05, 2, [
+    'Understand the report on {player} is filed and the recommendation is not the name anybody outside {club} expected.',
+    'Told {club} have watched {player} four times live this season alone. That is not curiosity, that is intent.',
+    'Hearing confidence inside the {club} recruitment room went up a notch this week. Somebody senior has read the file.',
+  ], ['scouting', 'rumour']),
+
+  /* ------------------------------------------------------ PLAYER_DEVELOPED */
+  ...post('PLAYER_DEVELOPED', 'CREATOR', 0.55, 3, [
+    '{player} has come on further in twelve months than anyone else in this league can show. Whatever the coaching staff are doing, it is working.',
+    'Everyone queuing up to praise how far {player} has come. Nobody mentioning that improved players attract improved offers.',
+  ], ['development']),
+  ...post('PLAYER_DEVELOPED', 'FAN', 0.6, 2, [
+    'The improvement in {player} is not a hot run of form. You can see the coaching in it now.',
+    'However they are doing it, {player} came back from pre-season a different footballer. Long may it continue.',
+  ], ['development']),
+
+  /* ----------------------------------------------------- TRANSFER_COMPLETED */
+  ...post('TRANSFER_COMPLETED', 'MEDIA', 0.15, 3, [
+    '{player} has completed his move to {club}. The fee is the story today; whether he displaces anybody already here is the story for months.',
+  ], ['transfer']),
+  ...post('TRANSFER_COMPLETED', 'LEAK', -0.05, 2, [
+    'Paperwork on {player} finally went through this evening, hours after everybody involved insisted it had never been in doubt.',
+    'Deal sheet signed, medical passed, announcement timed for the evening rush. This one at least was finished properly.',
+  ], ['transfer', 'rumour']),
+
+  /* -------------------------------------------------------- REWARD_CLAIMED */
+  ...post('REWARD_CLAIMED', 'CLUB', 0.35, 1, [
+    'Banked. Straight into the club, not the drawer.',
+  ], ['reward']),
+  ...post('REWARD_CLAIMED', 'FAN', 0.25, 1, [
+    'A reward claimed and actually reinvested. More of this, please.',
+  ], ['reward']),
+  ...post('REWARD_CLAIMED', 'MEDIA', 0.1, 2, [
+    'Small print worth reading: another reward banked this week. Nothing on its own. Together, a transfer window.',
+  ], ['reward']),
+
+  /* ---------------------------------------------------------- CLUB_CREATED */
+  ...post('CLUB_CREATED', 'MEDIA', 0.2, 2, [
+    'A second application, an inspection, and a vote. Somewhere a new club is about to learn what this league does to newcomers.',
+  ], ['league']),
+  ...post('CLUB_CREATED', 'FAN', -0.1, 2, [
+    'A new club. New badge, new songs, no scars yet. We had none of that once either, apparently.',
+  ], ['league']),
+  ...post('CLUB_CREATED', 'RIVAL', -0.45, 2, [
+    'Another club, another set of supporters who think arriving loudly counts as tradition. Welcome, I suppose.',
+  ], ['league', 'rivalry']),
+
+  /* ------------------------------------------------------- RIVALRY_CREATED */
+  ...post('RIVALRY_CREATED', 'FAN', -0.25, 3, [
+    'Could not have picked {opponent} out of a lineup in August. Now the fixture gets circled twice. Nobody planned this, which is why it works.',
+  ], ['rivalry']),
+  ...post('RIVALRY_CREATED', 'RIVAL', -0.5, 3, [
+    'We are assured this is not a rivalry. Somebody should tell the tackles that.',
+  ], ['rivalry']),
+  ...post('RIVALRY_CREATED', 'MEDIA', -0.1, 3, [
+    '{club} and {opponent} have met a handful of times and already need separating. The fixture list owes nobody an apology.',
+  ], ['rivalry']),
+
+  /* ------------------------------------------------------- CYCLE_ADVANCED */
+  ...post('CYCLE_ADVANCED', 'CREATOR', 0.3, 1, [
+    'Wildcard deadline day. Changed my mind four times today and the final version is worse than the first. See you all in the replies.',
+  ], ['squad']),
+  ...post('CYCLE_ADVANCED', 'FAN', 0.15, 1, [
+    'Wildcard week and the group chat has become unbearable. Everybody is a director of football until Thursday.',
+  ], ['squad']),
+  ...post('CYCLE_ADVANCED', 'MEDIA', 0, 1, [
+    'The wildcard window closes on its usual mixture of masterstrokes and panic. The table will spend a month deciding which was which.',
+  ], ['squad']),
+
+  /* ------------------------------------------------------ STORY_PUBLISHED */
+  ...post('STORY_PUBLISHED', 'FAN', -0.35, 2, [
+    'Read past the headline before reacting. It is not as bad as the screenshot suggests. It is worse.',
+  ], ['media']),
+  ...post('STORY_PUBLISHED', 'MEDIA', -0.25, 3, [
+    'The piece is live. It is fair, which is not the same as kind, and both halves of it will be quoted selectively by Friday.',
+  ], ['media']),
+  ...post('STORY_PUBLISHED', 'CREATOR', -0.1, 3, [
+    'Good article about our lot going round today. Read the whole thing before you argue with it. I know that is asking a lot.',
+  ], ['media']),
+
+  /* --------------------------------------------------------- SPONSOR_LOST */
+  ...post('SPONSOR_LOST', 'FAN', -0.45, 2, [
+    '{sponsor} off next season. The statement will be polite and the real reason will not be money.',
+  ], ['commercial']),
+  ...post('SPONSOR_LOST', 'MEDIA', -0.4, 3, [
+    'The {sponsor} exit was decided weeks ago and announced around fixtures, which tells you how little either side wanted the noise.',
+  ], ['commercial']),
+
+  /* ------------------------------------------------------------ PROMOTED */
+  ...post('PROMOTED', 'MEDIA', 0.7, 4, [
+    'Promotion, sealed early and celebrated properly. At this level a season like that is the whole point of having seasons.',
+  ], ['season']),
+  ...post('PROMOTED', 'RIVAL', -0.7, 3, [
+    'Congratulations on going up. Genuinely. Now enjoy being everybody else’s biggest fixture at a higher standard.',
+  ], ['season', 'rivalry']),
+
+  /* -------------------------------------------------- OBJECTIVE_COMPLETED */
+  ...post('OBJECTIVE_COMPLETED', 'CLUB', 0.55, 2, [
+    'Target hit. Credit to the squad and the staff. Nobody here mentions it again until it happens twice.',
+  ], ['objective']),
+  ...post('OBJECTIVE_COMPLETED', 'FAN', 0.6, 1, [
+    'Remember being told the objective was unrealistic? Quite. Next.',
+  ], ['objective']),
+
+  /* ---------------------------------------------------- OBJECTIVE_FAILED */
+  ...post('OBJECTIVE_FAILED', 'MEDIA', -0.45, 3, [
+    '{club} set a target in public and missed it in public. The order of those two events is the entire problem.',
+  ], ['objective']),
+  ...post('OBJECTIVE_FAILED', 'FAN', -0.5, 2, [
+    'Missed it. And nobody connected with the club looked surprised, which tells you what the dressing room knew in October.',
+  ], ['objective']),
+
+  /* -------------------------------------------------- REPUTATION_CHANGED */
+  ...post('REPUTATION_CHANGED', 'MEDIA', 0.35, 3, [
+    'Quietly, without a statement or a launch event, {club} have become a club other clubs study. Reputation moves like that: slowly, then obviously.',
+  ], ['reputation']),
+  ...post('REPUTATION_CHANGED', 'CREATOR', -0.35, 3, [
+    'Whatever reason was given, {club}’s standing took the hit. You can hear it in who stops returning calls first.',
+  ], ['reputation']),
+
+  /* ----------------------------------------------------- PLAYER_RELEASED */
+  ...post('PLAYER_RELEASED', 'FAN', -0.25, 2, [
+    'Released, and it never quite happened for him here. He never hid, though. That counts for more than people think.',
+  ], ['transfer']),
+  ...post('PLAYER_RELEASED', 'PLAYER', 0.15, 2, [
+    'My time at {club} is over. No hard feelings, plenty of good people, onto whatever comes next.',
+  ], ['transfer']),
+
+  /* -------------------------------------------------------- MATCH_STARTED */
+  ...post('MATCH_STARTED', 'CLUB', 0.3, 1, [
+    'Under way against {opponent}. Stay loud.',
+  ], ['matchday']),
+  ...post('MATCH_STARTED', 'FAN', 0.35, 2, [
+    'Kick-off. Ninety minutes of irrational confidence ahead of us.',
+  ], ['matchday']),
+
+  /* -------------------------------------------------- LIVE_DECISION_MADE */
+  ...post('LIVE_DECISION_MADE', 'CREATOR', 0.35, 3, [
+    'He has actually made the call everybody wanted and nobody expected. If that comes off, it is the moment of the season.',
+  ], ['tactics']),
+  ...post('LIVE_DECISION_MADE', 'FAN', -0.3, 2, [
+    'That change makes no sense to me and I have watched every minute of this season.',
+  ], ['tactics']),
+
+  /* ------------------------------------------------------ MANAGER_CRISIS */
+  ...post('MANAGER_CRISIS', 'FAN', -0.7, 4, [
+    'It has stopped being about results and started being about whether anybody still believes the plan. That is a worse place than the table suggests.',
+  ], ['manager']),
+  ...post('MANAGER_CRISIS', 'RIVAL', -0.6, 3, [
+    'A crisis across the city is meant to be funny and mostly it is just familiar. We have all sat where their supporters are sitting.',
+  ], ['manager', 'rivalry']),
+
+  /* ------------------------------------------------------------ FAN_BUZZ */
+  ...post('FAN_BUZZ', 'CREATOR', 0.65, 3, [
+    'There is a genuinely strange energy around {club} right now and I am here for every minute of it.',
+  ], ['fans']),
+  ...post('FAN_BUZZ', 'FAN', 0.75, 2, [
+    'Cannot remember the last time I looked forward to a Saturday this much.',
+    '{reason} and suddenly the whole ground believes again. Dangerous. Wonderful. Both.',
+  ], ['fans']),
+];
+
 
 /**
  * The second half of the interactive library.
@@ -1753,6 +1927,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ...INTERACTIVE_REACTION_TEMPLATES,
   ...STANDING_SOCIAL_TEMPLATES,
   ...DEPTH_SOCIAL_TEMPLATES,
+  ...TRIGGER_TOPUP_TEMPLATES,
 ];
 
 export const BASE_SOCIAL_TEMPLATE_COUNT = BASE_SOCIAL_TEMPLATES.length;
