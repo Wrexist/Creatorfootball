@@ -98,37 +98,7 @@ const QUIET_EVENTS: ReadonlySet<MatchEventType> = new Set<MatchEventType>([
 export const isNoteworthy = (event: MatchEvent): boolean =>
   !QUIET_EVENTS.has(event.type) || event.importance >= 3;
 
-const EVENT_TONE: Partial<Record<MatchEventType, PillTone>> = {
-  GOAL: 'volt',
-  PENALTY_SCORED: 'volt',
-  PENALTY_MISSED: 'danger',
-  RED_CARD: 'danger',
-  YELLOW_CARD: 'warning',
-  INJURY: 'danger',
-  SAVE: 'info',
-  POST: 'warning',
-  SUBSTITUTION: 'neutral',
-  SPECIAL_RULE_START: 'special',
-  SPECIAL_RULE_END: 'special',
-  CREATOR_MOMENT: 'special',
-  DECISION_RESOLVED: 'info',
-  TACTICAL_CHANGE: 'info',
-};
-
-export const eventTone = (event: MatchEvent): PillTone => EVENT_TONE[event.type] ?? 'neutral';
-
 export const minuteLabel = (minute: number): string => `${Math.max(0, Math.floor(minute))}'`;
-
-/**
- * Clock in mm:ss. The simulation only reports whole minutes, so the seconds
- * field is a presentation flourish driven by tick fraction — never read back.
- */
-export const clockLabel = (minute: number): string => {
-  const m = Math.max(0, Math.floor(minute));
-  return `${String(m).padStart(2, '0')}:00`;
-};
-
-export const scoreLine = (home: number, away: number): string => `${home} – ${away}`;
 
 /** "You are 2-1 up", written from the player's side, for announcements. */
 export function stateOfPlay(
@@ -149,8 +119,6 @@ export function momentumPhrase(momentum: number, homeName: string, awayName: str
   if (magnitude < 0.7) return `${side} on top`;
   return `${side} in full control`;
 }
-
-export const percent = (value: number): string => `${Math.round(value * 100)}%`;
 
 export const one = (value: number): string => value.toFixed(1);
 

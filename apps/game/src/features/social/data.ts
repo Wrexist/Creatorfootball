@@ -149,18 +149,6 @@ export const KIND_TONE: Record<SocialPost['kind'], PostAccent> = {
   LEAK: 'special',
 };
 
-/** Accent rail colour per kind — the strip that makes a feed scannable by source. */
-export const KIND_RAIL: Record<SocialPost['kind'], string> = {
-  FAN: 'bg-white/20',
-  CREATOR: 'bg-volt',
-  MEDIA: 'bg-info',
-  CLUB: 'bg-white/35',
-  PLAYER: 'bg-positive',
-  RIVAL: 'bg-danger',
-  SPONSOR: 'bg-warning',
-  LEAK: 'bg-special',
-};
-
 /* --- feed --------------------------------------------------------------- */
 
 export type FeedFilter = 'ALL' | 'CREATOR' | 'RIVAL' | 'CLUB' | 'MEDIA';

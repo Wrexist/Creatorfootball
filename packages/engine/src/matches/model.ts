@@ -614,19 +614,6 @@ export const saveProbability = (xg: number, keeper: number): number =>
 // Duels, passes, fouls, cards
 // --------------------------------------------------------------------------
 
-/** Symmetric contest. Returns true when the first rating wins. */
-export function duelWin(rng: Rng, a: number, b: number, bias = 0): boolean {
-  const p = clamp01(0.5 + (a - b) / 90 + bias);
-  return rng.chance(p);
-}
-
-/** Pass completion given passer quality and the pressure he is under. */
-export function passSuccess(rng: Rng, passer: number, pressure: number, defenderQuality: number): boolean {
-  const base = 0.62 + 0.3 * ((passer - 50) / 60);
-  const p = clamp(base - 0.22 * clamp01(pressure) - 0.1 * ((defenderQuality - 55) / 55), 0.25, 0.96);
-  return rng.chance(p);
-}
-
 export interface FoulInput {
   readonly defenceVector: TacticVector;
   readonly rivalry: number;      // 0-1
