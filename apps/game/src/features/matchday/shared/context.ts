@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  aiRuleCards, autoLineup, clubById, computeStandings, currentCompetition,
+  aiRuleCards, arenaSupportShare, autoLineup, clubById, computeStandings, currentCompetition,
   formationById, injuredPlayers, leaguePosition, positionContext, recentForm, rivalryFor,
   squadOf, specialRuleById, standings, starPlayer, suspendedPlayers, topScorer,
   type Club, type ClubId, type Fixture, type FixtureId, type Formation, type FormationSlot,
@@ -81,6 +81,9 @@ export interface MatchdayContext {
   /** What the opposition is carrying — derived exactly as the simulation derives it. */
   readonly theirHeldCards: readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[];
 
+  /** Share of the arena backing us, 0-1, from the engine's own selector. */
+  readonly arenaShare: number;
+
   readonly ourStar: Player | null;
   readonly theirStar: Player | null;
   readonly theirTopScorer: Player | null;
@@ -126,6 +129,12 @@ const ORDINALS = [
 ] as const;
 
 const ordinal = (n: number): string => ORDINALS[n] ?? `${n}th`;
+
+/** Below this the arena split is not worth a line — nobody sings about 55%. */
+export const NOTABLE_ARENA_SHARE = 0.6;
+
+export const arenaShareLine = (share: number): string | null =>
+  share >= NOTABLE_ARENA_SHARE ? `${Math.round(share * 100)}% of the arena is in your colours.` : null;
 
 function stakesFor(state: GameState, fixture: Fixture, clubId: ClubId): StakesLine[] {
   const current = leaguePosition(state, clubId)?.position ?? null;
@@ -301,6 +310,10 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
     ruleWindows: (fixture.enabledSpecialRules as readonly SpecialRuleId[]).map(specialRuleById),
     heldCards,
     theirHeldCards,
+
+    // The same figure the simulation feeds in as the crowd term, so the
+    // flavour line on the preview and the walk-out cannot drift from it.
+    arenaShare: arenaSupportShare(state, us.id, them.id),
 
     ourStar: starPlayer(state, us.id),
     theirStar: starPlayer(state, them.id),

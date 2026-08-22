@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { Club, FixtureId, Player } from '@cf/engine';
 import {
   ClubBadge, Divider, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill,
-  IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
+  IconFans, IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
   PositionChip, ProgressBar, RatingBadge, Screen, SectionHeader, Skeleton, StatCard, StatGrid,
   cn, haptics, sidesWord, useToast,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
-import { useMatchdayContext, type KeyBattle, type MatchdayContext } from '../shared/context';
+import { useMatchdayContext, arenaShareLine, type KeyBattle, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitColors } from '../shared/kit';
 import { SPECIAL_RULE_TONE } from '../shared/format';
 import { LineupBoard } from './LineupBoard';
@@ -137,6 +137,8 @@ export function MatchPreviewScreen(): ReactNode {
         isDerby={fixture.isDerby}
       />
 
+      <ArenaLine share={context.arenaShare} />
+
       {fixture.isDerby && <RivalryPanel context={context} />}
 
       <StakesPanel context={context} />
@@ -233,6 +235,20 @@ function FixtureSide({
       </div>
       <FormGuide results={form} size="sm" />
     </div>
+  );
+}
+
+function ArenaLine({ share }: { share: number }): ReactNode {
+  const line = arenaShareLine(share);
+  if (!line) return null;
+  // One row, no panel: flavour with stakes. The sentence carries the whole
+  // meaning on its own — the icon is decoration, and reduced-transparency
+  // themes lose nothing by dropping it.
+  return (
+    <p className="flex items-center gap-1.5 px-1 text-[13px] font-semibold text-volt">
+      <span aria-hidden="true" className="shrink-0 text-volt [&_svg]:size-4"><IconFans /></span>
+      {line}
+    </p>
   );
 }
 
