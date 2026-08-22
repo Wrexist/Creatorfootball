@@ -9,9 +9,11 @@ import {
   AI_PROFILE_IDS, BASE_CLUBS, BASE_COMMENTARY, BASE_CREATORS, BASE_FACILITIES,
   BASE_MEDIA_TEMPLATES, BASE_NAME_BANK, BASE_OBJECTIVES, BASE_OFFERS, BASE_PACK,
   BASE_PLAYERS, BASE_SOCIAL_TEMPLATES, BASE_SPONSORS, CLUB_LORE, FACILITY_EFFECT_KEYS,
+  MEDIA_OUTLETS,
 } from './index';
 import { FALLBACK_SOCIAL_TEMPLATES } from '../../../social/fallbackTemplates';
 import { FALLBACK_MEDIA_TEMPLATES } from '../../../media/fallbackTemplates';
+import { OUTLETS, OUTLET_MERGES, outletByName } from '../../../media/balance';
 import { COMMUNITY_EXAMPLE_PACK } from '../community/example';
 import { LICENSED_EXAMPLE_PACK } from '../licensed/example';
 
@@ -357,6 +359,52 @@ describe('originality and IP guardrails', () => {
     expect(COMMUNITY_EXAMPLE_PACK.data.clubs).toHaveLength(3);
     expect(COMMUNITY_EXAMPLE_PACK.data.players).toHaveLength(6);
     expect(COMMUNITY_EXAMPLE_PACK.data.creators).toHaveLength(4);
+  });
+});
+
+/**
+ * The press universe is one registry. A story whose outlet does not resolve is
+ * not an error the engine reports — mediaEngine silently falls back to a
+ * reach-weighted pick over every outlet, so a typo rewrites journalism without
+ * ever failing. These tests close that door: every cited title must exist, and
+ * the pack's outlet list must be the canonical registry verbatim.
+ */
+describe('media outlet registry', () => {
+  it('resolves every authored story to a real outlet', () => {
+    const offenders = BASE_MEDIA_TEMPLATES
+      .flatMap((t) => t.outlets.map((o) => ({ id: t.id, outlet: o })))
+      .filter(({ outlet }) => !outletByName(outlet))
+      .map(({ id, outlet }) => `${id} cites "${outlet}"`);
+    expect(offenders).toEqual([]);
+  });
+
+  it('resolves every fallback story to a real outlet', () => {
+    const offenders = FALLBACK_MEDIA_TEMPLATES
+      .flatMap((t) => t.outlets.map((o) => ({ id: t.id, outlet: o })))
+      .filter(({ outlet }) => !outletByName(outlet))
+      .map(({ id, outlet }) => `${id} cites "${outlet}"`);
+    expect(offenders).toEqual([]);
+  });
+
+  it('ships no citation for a retired working title', () => {
+    const retired = Object.keys(OUTLET_MERGES);
+    const cited = new Set(BASE_MEDIA_TEMPLATES.flatMap((t) => t.outlets));
+    const offenders = retired.filter((name) => cited.has(name));
+    expect(offenders).toEqual([]);
+  });
+
+  it('derives the pack outlet list from the canonical registry', () => {
+    expect(MEDIA_OUTLETS).toEqual(OUTLETS.map((o) => o.name));
+  });
+
+  it('keeps the registry itself clean and distinct', () => {
+    expect(new Set(OUTLETS.map((o) => o.name)).size).toBe(OUTLETS.length);
+    expect(new Set(OUTLETS.map((o) => o.handle)).size).toBe(OUTLETS.length);
+    for (const outlet of OUTLETS) {
+      expect(outlet.reach).toBeGreaterThan(0);
+      expect(outlet.bias).toBeGreaterThanOrEqual(0.5);
+      expect(outlet.bias).toBeLessThanOrEqual(1.5);
+    }
   });
 });
 
