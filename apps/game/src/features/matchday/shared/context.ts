@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
 import {
-  autoLineup, clubById, computeStandings, currentCompetition, formationById, injuredPlayers,
-  leaguePosition, positionContext, recentForm, rivalryFor, squadOf, standings, starPlayer,
-  suspendedPlayers, topScorer,
+  aiRuleCards, autoLineup, clubById, computeStandings, currentCompetition,
+  formationById, injuredPlayers, leaguePosition, positionContext, recentForm, rivalryFor,
+  squadOf, specialRuleById, standings, starPlayer, suspendedPlayers, topScorer,
   type Club, type ClubId, type Fixture, type FixtureId, type Formation, type FormationSlot,
   type GameState, type Player, type Rivalry, type SpecialRuleDefinition, type SpecialRuleId,
   type StandingRow, type TacticSetup,
-  specialRuleById,
 } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
 
@@ -79,6 +78,8 @@ export interface MatchdayContext {
 
   readonly ruleWindows: readonly SpecialRuleDefinition[];
   readonly heldCards: readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[];
+  /** What the opposition is carrying — derived exactly as the simulation derives it. */
+  readonly theirHeldCards: readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[];
 
   readonly ourStar: Player | null;
   readonly theirStar: Player | null;
@@ -249,6 +250,16 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
     .filter((card) => card.quantity > 0)
     .map((card) => ({ definition: specialRuleById(card.ruleId), quantity: card.quantity }));
 
+  // The opposition's holdings are never stored — the simulation derives them
+  // deterministically at kick-off, so the preview derives them identically and
+  // both hands agree when the whistle goes.
+  const theirCounts = new Map<SpecialRuleId, number>();
+  for (const id of aiRuleCards(state, them.id)) {
+    theirCounts.set(id, (theirCounts.get(id) ?? 0) + 1);
+  }
+  const theirHeldCards = [...theirCounts]
+    .map(([id, quantity]) => ({ definition: specialRuleById(id), quantity }));
+
   return {
     fixture,
     home,
@@ -289,6 +300,7 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
 
     ruleWindows: (fixture.enabledSpecialRules as readonly SpecialRuleId[]).map(specialRuleById),
     heldCards,
+    theirHeldCards,
 
     ourStar: starPlayer(state, us.id),
     theirStar: starPlayer(state, them.id),

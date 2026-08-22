@@ -425,8 +425,8 @@ function BattleFace({
 }
 
 function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode {
-  const { ruleWindows, heldCards } = context;
-  if (ruleWindows.length === 0 && heldCards.length === 0) return null;
+  const { ruleWindows, heldCards, theirHeldCards, them } = context;
+  if (ruleWindows.length === 0 && heldCards.length === 0 && theirHeldCards.length === 0) return null;
 
   return (
     <section>
@@ -461,6 +461,32 @@ function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode 
               ))}
             </div>
             <p className="mt-2 text-[12px] text-ink-dim">Playable once the match is under way.</p>
+          </GlassPanel>
+        )}
+
+        {/* Knowing what they hold is the point of the hand being visible at
+            all: every card names its own counterplay, and who a window ends up
+            serving is decided by whoever fires into it — never promised here. */}
+        {theirHeldCards.length > 0 && (
+          <GlassPanel nested level={2} padding="sm" title={`In their hand (${them.shortName})`}>
+            <ul className="flex flex-col gap-2.5">
+              {theirHeldCards.map(({ definition, quantity }) => (
+                <li key={definition.id} className="flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[14px] font-semibold text-ink">
+                      {definition.name}{quantity > 1 ? ` ×${quantity}` : ''}
+                    </span>
+                    <GlassPill tone={SPECIAL_RULE_TONE[definition.id]} size="xs">{definition.rarity}</GlassPill>
+                  </div>
+                  <p className="text-[12px] leading-snug text-ink-muted text-pretty">
+                    Counterplay: {definition.counterplay}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[12px] text-ink-dim">
+              They choose their moment. A swing window serves whoever fires into it.
+            </p>
           </GlassPanel>
         )}
       </div>

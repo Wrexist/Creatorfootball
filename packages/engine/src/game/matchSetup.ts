@@ -47,10 +47,14 @@ const creatorPresenceFor = (state: GameState, clubId: ClubId): number => {
 };
 
 /**
- * What an AI club brings to a match. Deterministic from the save seed, the club
- * and the season, so the same fixture always plays out the same way.
+ * What an AI club brings to a match. Deterministic from the save seed, the
+ * club and the season, so the same fixture always plays out the same way.
+ *
+ * Exported so the pre-match screen can show the same holdings the simulation
+ * will actually use at fire time — derived once, in one place, or the preview
+ * and the pitch quietly disagree.
  */
-function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
+export function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
   const club = state.clubs[clubId];
   if (!club) return [];
   const competition = state.competitions[state.currentCompetitionId];
