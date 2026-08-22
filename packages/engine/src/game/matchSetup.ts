@@ -150,6 +150,7 @@ export function buildMatchSetup(
     isDerby: fixture.isDerby,
     rivalryIntensity: rivalry?.intensity ?? 0,
     attendance,
+    recentDecisionTriggers: state.decisionMemory.recentTriggers,
     // Every fixture is played at the league's single venue, so there is no home
     // advantage to model. The field carries the share of the arena backing the
     // nominal home side, which the engine caps at a small swing.

@@ -49,6 +49,12 @@ export interface DecisionOutcome {
   readonly promptId: string;
   readonly optionId: string;
   readonly minute: number;
+  /**
+   * The trigger that raised this prompt, when the engine knows it. The world
+   * folds these into `GameState.decisionMemory` so future matches stop
+   * repeating the same questions.
+   */
+  readonly trigger?: DecisionTrigger;
   /** Filled in after the match: did this choice measurably help? Drives post-match feedback. */
   readonly evaluation?: {
     readonly xgDelta: number;

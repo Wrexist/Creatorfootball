@@ -520,6 +520,13 @@ export const BALANCE = {
   DECISION_WORKED_THRESHOLD: 0.014,
   /** Seconds the UI gives the player before auto-applying the default option. */
   DECISION_TIMEOUT_SECONDS: 15,
+  /**
+   * How many recently served triggers the save carries for the recency
+   * dampener. At the observed ~3 prompts per match this spans roughly two to
+   * three fixtures — long enough that "you just answered this" bites, short
+   * enough that a recipe never disappears from the game. 4-16.
+   */
+  DECISION_MEMORY_DEPTH: 8,
 
   // ---------------------------------------------------------- special rules ---
   /**

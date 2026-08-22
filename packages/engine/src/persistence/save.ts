@@ -14,7 +14,7 @@ import { err, ok, type Result } from '../core/result';
  *  - No progression lives only in component state.
  */
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'cf.save.v1';
 export const BACKUP_KEY = 'cf.save.backup.v1';
 export const META_KEY = 'cf.save.meta.v1';
@@ -66,6 +66,9 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 1 -> 2: the board-confidence system. Saves from before it existed have no
   // board state at all, which the board module reads as "no ultimatum history".
   1: (state) => ({ ...state, boardPressure: { lastUltimatumCycle: null } }),
+  // 2 -> 3: decision recency memory. Older saves simply have not been asked
+  // anything yet, so an empty list is exactly what they mean.
+  2: (state) => ({ ...state, decisionMemory: { recentTriggers: [] } }),
 };
 
 export function migrate(raw: Record<string, unknown>, from: number): Result<GameState, LoadError> {

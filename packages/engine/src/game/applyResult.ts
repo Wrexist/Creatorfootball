@@ -7,6 +7,8 @@ import type { AnyDomainEvent } from '../core/events';
 import { clamp, decayToward, mean } from '../core/math';
 import { patchClub, patchPlayer, setFixture, setContract } from './mutations';
 import type { GameEventFactory } from './eventFactory';
+import type { DecisionTrigger } from '../matches/decisions';
+import { BALANCE } from '../matches/balance';
 
 /**
  * Folding a match result back into the world.
@@ -77,6 +79,24 @@ export function applyMatchResult(
     homeScore: result.homeScore,
     awayScore: result.awayScore,
   });
+
+  // --- the decision engine's recency memory ------------------------------
+  // Only the player's own matches count: the dampener exists because *the
+  // player* pattern-matches repeated questions, and AI-vs-AI prompts are never
+  // seen by anyone. Triggers dedupe within a match and the list is bounded so
+  // it can never grow without limit.
+  if (homeId === state.playerClubId || awayId === state.playerClubId) {
+    const served: DecisionTrigger[] = [];
+    for (const decision of result.decisions) {
+      if (!decision.trigger || served.includes(decision.trigger)) continue;
+      served.push(decision.trigger);
+    }
+    if (served.length > 0) {
+      const merged = [...state.decisionMemory.recentTriggers, ...served]
+        .slice(-BALANCE.DECISION_MEMORY_DEPTH);
+      next = { ...next, decisionMemory: { recentTriggers: merged } };
+    }
+  }
 
   for (const [clubId, scored, conceded] of [
     [homeId, result.homeScore, result.awayScore],

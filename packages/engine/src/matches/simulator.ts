@@ -11,7 +11,7 @@ import type { Formation, FormationSlot, TacticSetup, TacticVector } from '../tac
 import { formationById, formationsFor, autoLineup } from '../tactics/formations';
 import { applyVectorModifiers, toTacticVector } from '../tactics/vector';
 import type { MatchEvent, MatchEventType, PitchFrame, PitchPoint, PlayPhase, Side } from './events';
-import type { DecisionPrompt, DecisionOption, DecisionOutcome } from './decisions';
+import type { DecisionPrompt, DecisionOption, DecisionOutcome, DecisionTrigger } from './decisions';
 import type { ActiveSpecialRule, SpecialRuleId } from './specialRules';
 import type { MatchResult, PlayerMatchStats, TeamMatchStats } from './result';
 import { BALANCE } from './balance';
@@ -85,6 +85,11 @@ export interface MatchSetup {
    * reached for so the simulator stays runnable headless with no pack loaded.
    */
   readonly commentaryLines?: readonly CommentaryLine[];
+  /**
+   * Triggers served in the player's recent matches, newest last. Fed to the
+   * decision engine's recency dampener; absent means a fresh memory.
+   */
+  readonly recentDecisionTriggers?: readonly DecisionTrigger[];
 }
 
 export interface MatchTeam {
@@ -337,6 +342,7 @@ export class MatchSimulator {
       matchMinutes: setup.config.minutes,
       sides: decisionSides,
       adaptability: (setup.home.managerBonus.adaptability + setup.away.managerBonus.adaptability) / 2,
+      ...(setup.recentDecisionTriggers?.length ? { recentTriggers: setup.recentDecisionTriggers } : {}),
     });
 
     this.possession = this.rng.chance(0.5) ? 'home' : 'away';
@@ -1595,7 +1601,7 @@ export class MatchSimulator {
       modifiers: this.decisions.scaleModifiers(option.modifiers),
       untilTick: this.tick + option.durationMinutes * BALANCE.TICKS_PER_MINUTE,
     });
-    this.decisions.record(prompt.id, option.id, prompt.minute);
+    this.decisions.record(prompt.id, option.id, prompt.minute, prompt.trigger);
     team.shapeChangedTick = this.tick;
     this.opponentChangedFor = side === 'home' ? 'away' : 'home';
     this.emit('DECISION_RESOLVED', {

@@ -153,6 +153,154 @@ describe('prompt generation', () => {
   });
 });
 
+describe('recipe variants', () => {
+  const flavour = (prompt: ReturnType<DecisionEngine['consider']>): string =>
+    (prompt?.options ?? []).map((o) => o.id).join('|');
+
+  it('serves a different half-time talk when behind than when level', () => {
+    const behind = engine(9).consider(situation({
+      atHalfTime: true, elapsedFraction: 0.5, minute: 15,
+      scoreFor: 0, scoreAgainst: 1, momentum: -0.2,
+    }));
+    const level = engine(9).consider(situation({
+      atHalfTime: true, elapsedFraction: 0.5, minute: 15,
+      scoreFor: 1, scoreAgainst: 1, momentum: 0,
+    }));
+    expect(behind?.trigger).toBe('HALFTIME_TALK');
+    expect(level?.trigger).toBe('HALFTIME_TALK');
+    expect(flavour(behind)).not.toBe(flavour(level));
+  });
+
+  it('asks a tired side a different question when pinned back', () => {
+    const fresh = engine(9).consider(situation({ fatigue: 0.25 }));
+    const spent = engine(9).consider(situation({ fatigue: 0.8 }));
+    expect(fresh?.trigger).toBe('UNDER_PRESSURE');
+    expect(spent?.trigger).toBe('UNDER_PRESSURE');
+    expect(flavour(fresh)).not.toBe(flavour(spent));
+  });
+
+  it('frames momentum differently for a level match than for a comeback', () => {
+    const level = engine(9).consider(situation({
+      momentum: 0.7, elapsedFraction: 0.4, scoreFor: 1, scoreAgainst: 1,
+    }));
+    const chasingIntoIt = engine(9).consider(situation({
+      momentum: 0.7, elapsedFraction: 0.4, scoreFor: 0, scoreAgainst: 1,
+    }));
+    expect(level?.trigger).toBe('MOMENTUM_SWING');
+    expect(chasingIntoIt?.trigger).toBe('MOMENTUM_SWING');
+    expect(flavour(level)).not.toBe(flavour(chasingIntoIt));
+  });
+
+  it('chases differently on fresh legs than on spent ones', () => {
+    const base = {
+      scoreFor: 0, scoreAgainst: 2, elapsedFraction: 0.7, minute: 21,
+      momentum: -0.3, possessionShare: 0.5,
+    };
+    const fresh = engine(9).consider(situation({ ...base, fatigue: 0.15 }));
+    const spent = engine(9).consider(situation({ ...base, fatigue: 0.85 }));
+    expect(fresh?.trigger).toBe('CHASING_GAME');
+    expect(spent?.trigger).toBe('CHASING_GAME');
+    expect(flavour(fresh)).not.toBe(flavour(spent));
+  });
+
+  it('wants a different delivery from a set piece ahead than behind', () => {
+    const base = { elapsedFraction: 0.5, minute: 15, momentum: 0, possessionShare: 0.48 };
+    const ahead = engine(9).consider(situation({ ...base, scoreFor: 2, scoreAgainst: 0 }));
+    const behind = engine(9).consider(situation({ ...base, scoreFor: 0, scoreAgainst: 1 }));
+    expect(ahead?.trigger).toBe('SET_PIECE_CALL');
+    expect(behind?.trigger).toBe('SET_PIECE_CALL');
+    expect(flavour(ahead)).not.toBe(flavour(behind));
+  });
+
+  it('handles a booked star differently when protecting a lead', () => {
+    const base = {
+      bookedPlayerName: 'A. Falk', elapsedFraction: 0.5, minute: 15,
+      momentum: 0, possessionShare: 0.44,
+    };
+    const level = engine(9).consider(situation({ ...base, scoreFor: 1, scoreAgainst: 1 }));
+    const ahead = engine(9).consider(situation({ ...base, scoreFor: 2, scoreAgainst: 1 }));
+    expect(level?.trigger).toBe('CARD_RISK');
+    expect(ahead?.trigger).toBe('CARD_RISK');
+    expect(flavour(level)).not.toBe(flavour(ahead));
+  });
+
+  it('keeps the honesty contract in every variant it can serve', () => {
+    // Each case lands in one variant of one recipe; together they cover every
+    // variant the table ships.
+    const cases: Partial<DecisionSituation>[] = [
+      { atHalfTime: true, elapsedFraction: 0.5, scoreFor: 0, scoreAgainst: 1, momentum: -0.2 },
+      { atHalfTime: true, elapsedFraction: 0.5, scoreFor: 1, scoreAgainst: 1, momentum: 0 },
+      { atHalfTime: true, elapsedFraction: 0.5, scoreFor: 2, scoreAgainst: 0, momentum: 0 },
+      { fatigue: 0.25 },
+      { fatigue: 0.8 },
+      { momentum: 0.7, elapsedFraction: 0.4, scoreFor: 1, scoreAgainst: 1 },
+      { momentum: 0.7, elapsedFraction: 0.4, scoreFor: 0, scoreAgainst: 1 },
+      { scoreFor: 0, scoreAgainst: 2, elapsedFraction: 0.7, momentum: -0.3, possessionShare: 0.5, fatigue: 0.15, minute: 21 },
+      { scoreFor: 0, scoreAgainst: 2, elapsedFraction: 0.7, momentum: -0.3, possessionShare: 0.5, fatigue: 0.85, minute: 21 },
+      { elapsedFraction: 0.5, momentum: 0, possessionShare: 0.48, scoreFor: 2, scoreAgainst: 0 },
+      { elapsedFraction: 0.5, momentum: 0, possessionShare: 0.48, scoreFor: 0, scoreAgainst: 1 },
+      { bookedPlayerName: 'A. Falk', elapsedFraction: 0.5, momentum: 0, possessionShare: 0.44, scoreFor: 1, scoreAgainst: 1 },
+      { bookedPlayerName: 'A. Falk', elapsedFraction: 0.5, momentum: 0, possessionShare: 0.44, scoreFor: 2, scoreAgainst: 1 },
+    ];
+    let prompts = 0;
+    for (let i = 0; i < cases.length; i++) {
+      const prompt = engine(99).consider(situation({ ...cases[i], minute: 10 + i * 20 } as Partial<DecisionSituation>));
+      if (!prompt) continue;
+      prompts += 1;
+      for (const option of prompt.options) {
+        const values = Object.values(option.modifiers);
+        const negatives = values.filter((v) => v < 0).length;
+        const costKeys = ['fatigueRate', 'foulRate', 'volatility', 'spaceBehind'];
+        const hasCost = negatives > 0
+          || Object.entries(option.modifiers).some(([k, v]) => costKeys.includes(k) && v > 0);
+        expect(hasCost, `${prompt.trigger}/${option.id} is pure upside`).toBe(true);
+      }
+    }
+    expect(prompts).toBe(cases.length);
+  });
+});
+
+describe('recency dampener', () => {
+  // A tick where four recipes genuinely co-fire: CHASING_GAME (9),
+  // UNDER_PRESSURE (8), CARD_RISK (7) and LOSING_MIDFIELD (5).
+  const crowded = (over: Partial<DecisionSituation> = {}): DecisionSituation => situation({
+    scoreFor: 0, scoreAgainst: 2, elapsedFraction: 0.7,
+    momentum: -0.5, possessionShare: 0.35, bookedPlayerName: 'A. Falk',
+    minute: 20, ...over,
+  });
+
+  const engineWithMemory = (recent: readonly string[], max = 9): DecisionEngine =>
+    new DecisionEngine(new Rng('d'), {
+      matchId, maxDecisions: max, matchMinutes: 30, sides: ['home'], adaptability: 60,
+      recentTriggers: recent as never[],
+    });
+
+  it('skips a recently served recipe when an alternative applies', () => {
+    // Without memory the top-priority recipe wins the tick outright.
+    expect(engineWithMemory([]).consider(crowded())?.trigger).toBe('CHASING_GAME');
+    // Having just answered CHASING_GAME hands the mic to the next recipe up.
+    expect(engineWithMemory(['CHASING_GAME']).consider(crowded())?.trigger).toBe('UNDER_PRESSURE');
+  });
+
+  it('keeps skipping until it reaches something fresh', () => {
+    const e = engineWithMemory(['CHASING_GAME', 'UNDER_PRESSURE']);
+    expect(e.consider(crowded())?.trigger).toBe('CARD_RISK');
+  });
+
+  it('still asks when every eligible recipe was recently served', () => {
+    const e = engineWithMemory(['CHASING_GAME', 'UNDER_PRESSURE', 'CARD_RISK', 'LOSING_MIDFIELD']);
+    expect(e.consider(crowded())).not.toBeNull();
+  });
+
+  it('remembers what it served this match so the world can keep the list', () => {
+    const e = engine(99);
+    e.consider(situation({ minute: 4 }));
+    e.consider(situation({ atHalfTime: true, elapsedFraction: 0.5, minute: 15, momentum: -0.2 }));
+    e.consider(situation({ momentum: 0.7, elapsedFraction: 0.4, minute: 22, scoreFor: 1, scoreAgainst: 1 }));
+    expect(e.servedTriggers()).toEqual(['UNDER_PRESSURE', 'HALFTIME_TALK', 'MOMENTUM_SWING']);
+  });
+});
+
 describe('post-match evaluation', () => {
   const flat = (v: number): number[] => Array.from({ length: 30 }, () => v);
   const timelines = (forSide: number[], against: number[]): Record<Side, XgTimeline> => ({

@@ -22,6 +22,16 @@ import { BALANCE } from './balance';
  *    fixture's cap. Interrupting a match too often is worse than not
  *    interrupting it at all.
  *
+ * Two mechanisms stop the questions becoming wallpaper:
+ *
+ * - **Variants.** The highest-frequency recipes carry several option sets and
+ *   pick between them on the live situation (scoreline, fatigue), so the same
+ *   trigger does not ask the same question every week.
+ * - **Recency damping.** The caller passes the triggers served in recent
+ *   matches; a recipe asked recently is skipped whenever an alternative also
+ *   applies. A question the match genuinely needs answering still goes through
+ *   when nothing else qualifies — silence would be the worse failure.
+ *
  * After the match each choice is graded by comparing xG for and against in the
  * window that followed it against the window that preceded it. That is a
  * genuinely honest measure — it can and does return BACKFIRED for choices that
@@ -59,14 +69,34 @@ export interface DecisionSituation {
   readonly opponentName: string;
 }
 
+/**
+ * One option set for a recipe. Variants are listed most specific first; the
+ * first whose condition matches serves its options and situation line, and the
+ * trailing default (no `when`) catches everything the earlier ones did not.
+ */
+interface RecipeVariant {
+  readonly when?: (s: DecisionSituation) => boolean;
+  readonly situation: (s: DecisionSituation) => string;
+  readonly options: (s: DecisionSituation) => readonly DecisionOption[];
+}
+
+const variant = (
+  situation: (s: DecisionSituation) => string,
+  options: (s: DecisionSituation) => readonly DecisionOption[],
+  when?: (s: DecisionSituation) => boolean,
+): RecipeVariant => (when ? { when, situation, options } : { situation, options });
+
 interface Recipe {
   readonly trigger: DecisionTrigger;
   /** Higher wins when several triggers fire on the same tick. */
   readonly priority: number;
   readonly applies: (s: DecisionSituation) => boolean;
-  readonly situation: (s: DecisionSituation) => string;
-  readonly options: (s: DecisionSituation) => readonly DecisionOption[];
+  readonly variants: readonly RecipeVariant[];
 }
+
+/** The variant that answers this situation — context-selected, never random. */
+const serveVariant = (recipe: Recipe, s: DecisionSituation): RecipeVariant =>
+  recipe.variants.find((v) => v.when?.(s)) ?? (recipe.variants[recipe.variants.length - 1] as RecipeVariant);
 
 const opt = (
   id: string,
@@ -100,188 +130,343 @@ const safeDefault = (options: readonly DecisionOption[]): DecisionOption => {
  * The recipe table. Read the `effect` strings alongside the `modifiers` — they
  * must always agree, because the effect string is the promise the UI makes and
  * the modifiers are the promise the engine keeps.
+ *
+ * Variant selection follows measured prompt frequency (AUDIT_GAMEPLAY.md G10
+ * distribution): the recipes that fire in a third of matches or more carry
+ * context variants, because those are the ones players pattern-match.
  */
 const RECIPES: readonly Recipe[] = [
   {
     trigger: 'UNDER_PRESSURE',
     priority: 8,
     applies: (s) => s.momentum <= -0.45 && s.elapsedFraction > 0.15,
-    situation: () => "You're getting pinned back. Every clearance is coming straight back at you.",
-    options: () => [
-      opt('drop', 'Drop the block', 'Sit deeper and make them play round you. You will barely see the ball.',
-        { defensiveSolidity: 0.2, spaceBehind: -0.16, aggression: -0.2, possessionBias: -0.16, attackVolume: -0.14 }, 8, 'LOW'),
-      opt('press', 'Press out of it', 'Squeeze up and try to win it high. It costs legs and leaves space in behind.',
-        { pressRecovery: 0.22, aggression: 0.22, spaceBehind: 0.2, fatigueRate: 0.28, defensiveSolidity: -0.08 }, 6, 'HIGH'),
-      opt('hold', 'Ride it out', 'Keep the shape and save your legs. You hand them the initiative to do it.',
-        { defensiveSolidity: 0.06, fatigueRate: -0.08, attackVolume: -0.1, volatility: 0.08 }, 6, 'MEDIUM'),
+    variants: [
+      // Spent legs cannot press out of anything, so the tired variant swaps
+      // the gamble for ways to survive the siege.
+      variant(
+        () => "You're getting pinned back and the legs are going with it. Something has to give.",
+        () => [
+          opt('drop', 'Drop the block', 'Sit deeper and make them play round you. You will barely see the ball.',
+            { defensiveSolidity: 0.2, spaceBehind: -0.14, aggression: -0.24, attackVolume: -0.16 }, 8, 'LOW'),
+          opt('slow', 'Take the sting out', 'Keep the ball and walk it out. Every minute passing is a minute not defending — and not scoring.',
+            { possessionBias: 0.14, chanceQuality: 0.06, attackVolume: -0.18, fatigueRate: -0.2 }, 8, 'MEDIUM'),
+          opt('ride', 'Press anyway', 'Ask the exhausted legs for one more squeeze. They will give it, and there is nothing left after.',
+            { pressRecovery: 0.18, aggression: 0.2, fatigueRate: 0.32, spaceBehind: 0.16, defensiveSolidity: -0.08 }, 6, 'HIGH'),
+        ],
+        (s) => s.fatigue > 0.55,
+      ),
+      variant(
+        () => "You're getting pinned back. Every clearance is coming straight back at you.",
+        () => [
+          opt('drop', 'Drop the block', 'Sit deeper and make them play round you. You will barely see the ball.',
+            { defensiveSolidity: 0.2, spaceBehind: -0.16, aggression: -0.2, possessionBias: -0.16, attackVolume: -0.14 }, 8, 'LOW'),
+          opt('press', 'Press out of it', 'Squeeze up and try to win it high. It costs legs and leaves space in behind.',
+            { pressRecovery: 0.22, aggression: 0.22, spaceBehind: 0.2, fatigueRate: 0.28, defensiveSolidity: -0.08 }, 6, 'HIGH'),
+          opt('hold', 'Ride it out', 'Keep the shape and save your legs. You hand them the initiative to do it.',
+            { defensiveSolidity: 0.06, fatigueRate: -0.08, attackVolume: -0.1, volatility: 0.08 }, 6, 'MEDIUM'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'CHASING_GAME',
     priority: 9,
     applies: (s) => s.scoreFor < s.scoreAgainst && s.elapsedFraction > 0.55,
-    situation: (s) => `You're ${s.scoreAgainst - s.scoreFor} down with the clock against you. This is the moment to decide how much you gamble.`,
-    options: () => [
-      opt('overload', 'Push everyone up', 'Commit bodies forward. You will create more and concede the counter.',
-        { attackVolume: 0.3, spaceBehind: 0.26, defensiveSolidity: -0.24, counterWeight: -0.1, fatigueRate: 0.2 }, 10, 'HIGH'),
-      opt('direct', 'Go direct', 'Skip the middle and attack the box early. Cruder chances, but more of them.',
-        { attackVolume: 0.16, chanceQuality: -0.16, possessionBias: -0.18, counterWeight: 0.12 }, 8, 'MEDIUM'),
-      opt('patient', 'Keep the shape', 'Work an opening properly. Fewer chances, better ones, less time.',
-        { chanceQuality: 0.16, possessionBias: 0.12, attackVolume: -0.08 }, 8, 'LOW'),
+    variants: [
+      // On empty legs the all-out gamble is a different kind of reckless, so it
+      // gets its own wording and its own price.
+      variant(
+        (s) => `You're ${s.scoreAgainst - s.scoreFor} down, the clock is against you and so are your players' legs.`,
+        () => [
+          opt('direct', 'Go direct', 'Skip the middle and attack the box early. Cruder chances, but more of them.',
+            { attackVolume: 0.16, chanceQuality: -0.16, possessionBias: -0.18, counterWeight: 0.12 }, 8, 'MEDIUM'),
+          opt('patient', 'Pick your moment', 'Work one proper opening rather than chasing five. Fewer chances, better ones, less time.',
+            { chanceQuality: 0.16, possessionBias: 0.12, attackVolume: -0.08 }, 8, 'LOW'),
+          opt('empty', 'Empty the tank', 'Everyone up regardless of what is left in the legs. It is all-in on chaos.',
+            { attackVolume: 0.26, spaceBehind: 0.24, defensiveSolidity: -0.26, counterWeight: -0.12, fatigueRate: 0.34 }, 10, 'HIGH'),
+        ],
+        (s) => s.fatigue > 0.5,
+      ),
+      variant(
+        (s) => `You're ${s.scoreAgainst - s.scoreFor} down with the clock against you. This is the moment to decide how much you gamble.`,
+        () => [
+          opt('overload', 'Push everyone up', 'Commit bodies forward. You will create more and concede the counter.',
+            { attackVolume: 0.3, spaceBehind: 0.26, defensiveSolidity: -0.24, counterWeight: -0.1, fatigueRate: 0.2 }, 10, 'HIGH'),
+          opt('direct', 'Go direct', 'Skip the middle and attack the box early. Cruder chances, but more of them.',
+            { attackVolume: 0.16, chanceQuality: -0.16, possessionBias: -0.18, counterWeight: 0.12 }, 8, 'MEDIUM'),
+          opt('patient', 'Keep the shape', 'Work an opening properly. Fewer chances, better ones, less time.',
+            { chanceQuality: 0.16, possessionBias: 0.12, attackVolume: -0.08 }, 8, 'LOW'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'PROTECTING_LEAD',
     priority: 7,
     applies: (s) => s.scoreFor > s.scoreAgainst && s.elapsedFraction > 0.62,
-    situation: () => "You're in front and they're coming. How do you want to see this out?",
-    options: () => [
-      opt('shut', 'Shut the door', 'Everything behind the ball. You will not threaten again all match.',
-        { defensiveSolidity: 0.26, aggression: -0.22, attackVolume: -0.26, possessionBias: -0.12 }, 10, 'MEDIUM'),
-      opt('keep', 'Keep the ball', 'Play keep-ball in their half. It works until you lose it in a bad area.',
-        { possessionBias: 0.22, chanceQuality: 0.08, attackVolume: -0.12, volatility: 0.12 }, 10, 'LOW'),
-      opt('kill', 'Go and kill it', 'Chase the second goal. The best defence, until it is not.',
-        { attackVolume: 0.2, defensiveSolidity: -0.16, spaceBehind: 0.14, fatigueRate: 0.14 }, 8, 'HIGH'),
+    variants: [
+      variant(
+        () => "You're in front and they're coming. How do you want to see this out?",
+        () => [
+          opt('shut', 'Shut the door', 'Everything behind the ball. You will not threaten again all match.',
+            { defensiveSolidity: 0.26, aggression: -0.22, attackVolume: -0.26, possessionBias: -0.12 }, 10, 'MEDIUM'),
+          opt('keep', 'Keep the ball', 'Play keep-ball in their half. It works until you lose it in a bad area.',
+            { possessionBias: 0.22, chanceQuality: 0.08, attackVolume: -0.12, volatility: 0.12 }, 10, 'LOW'),
+          opt('kill', 'Go and kill it', 'Chase the second goal. The best defence, until it is not.',
+            { attackVolume: 0.2, defensiveSolidity: -0.16, spaceBehind: 0.14, fatigueRate: 0.14 }, 8, 'HIGH'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'KEY_PLAYER_TIRED',
     priority: 6,
     applies: (s) => s.tiredPlayerName !== null && s.fatigue > BALANCE.SUB_FATIGUE_THRESHOLD && s.elapsedFraction > 0.45,
-    situation: (s) => `${s.tiredPlayerName ?? 'Your best player'} is running on empty and the whole shape is dropping with him.`,
-    options: (s) => [
-      opt('rest', 'Take the tempo out', 'Slow it down and protect the legs. You surrender the initiative for it.',
-        { fatigueRate: -0.2, possessionBias: 0.12, attackVolume: -0.16, aggression: -0.14 }, 8, 'LOW'),
-      opt('ride', 'Ride him', `Ask ${s.tiredPlayerName ?? 'him'} for ten more minutes. He will give them, and pay for it.`,
-        { attackVolume: 0.12, fatigueRate: 0.3, volatility: 0.12 }, 8, 'HIGH'),
+    variants: [
+      variant(
+        (s) => `${s.tiredPlayerName ?? 'Your best player'} is running on empty and the whole shape is dropping with him.`,
+        (s) => [
+          opt('rest', 'Take the tempo out', 'Slow it down and protect the legs. You surrender the initiative for it.',
+            { fatigueRate: -0.2, possessionBias: 0.12, attackVolume: -0.16, aggression: -0.14 }, 8, 'LOW'),
+          opt('ride', 'Ride him', `Ask ${s.tiredPlayerName ?? 'him'} for ten more minutes. He will give them, and pay for it.`,
+            { attackVolume: 0.12, fatigueRate: 0.3, volatility: 0.12 }, 8, 'HIGH'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'LOSING_MIDFIELD',
     priority: 5,
     applies: (s) => s.possessionShare < 0.4 && s.elapsedFraction > 0.2,
-    situation: () => "You've lost the middle of the pitch. Everything they do starts in there.",
-    options: () => [
-      opt('congest', 'Congest the middle', 'Narrow up and outnumber them centrally. The flanks are theirs.',
-        { defensiveSolidity: 0.16, widthBias: -0.4, chanceQuality: 0.06, attackVolume: -0.1 }, 9, 'LOW'),
-      opt('bypass', 'Bypass it', 'Stop trying to play through them and go over the top instead.',
-        { counterWeight: 0.22, possessionBias: -0.16, chanceQuality: -0.12, attackVolume: 0.1 }, 9, 'MEDIUM'),
-      opt('man', 'Go man for man', 'Follow them everywhere. Wins the ball earlier, gives away more fouls.',
-        { pressRecovery: 0.2, foulRate: 0.25, spaceBehind: 0.14, fatigueRate: 0.18 }, 7, 'HIGH'),
+    variants: [
+      variant(
+        () => "You've lost the middle of the pitch. Everything they do starts in there.",
+        () => [
+          opt('congest', 'Congest the middle', 'Narrow up and outnumber them centrally. The flanks are theirs.',
+            { defensiveSolidity: 0.16, widthBias: -0.4, chanceQuality: 0.06, attackVolume: -0.1 }, 9, 'LOW'),
+          opt('bypass', 'Bypass it', 'Stop trying to play through them and go over the top instead.',
+            { counterWeight: 0.22, possessionBias: -0.16, chanceQuality: -0.12, attackVolume: 0.1 }, 9, 'MEDIUM'),
+          opt('man', 'Go man for man', 'Follow them everywhere. Wins the ball earlier, gives away more fouls.',
+            { pressRecovery: 0.2, foulRate: 0.25, spaceBehind: 0.14, fatigueRate: 0.18 }, 7, 'HIGH'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'STRIKER_ISOLATED',
     priority: 4,
     applies: (s) => s.possessionShare > 0.52 && s.momentum > -0.2 && s.elapsedFraction > 0.25 && s.scoreFor <= s.scoreAgainst,
-    situation: () => "You have the ball and nothing to show for it. Your front man is getting no support at all.",
-    options: () => [
-      opt('runners', 'Send runners past him', 'Bodies beyond the striker. It opens you up on the turnover.',
-        { attackVolume: 0.2, chanceQuality: 0.08, defensiveSolidity: -0.14, spaceBehind: 0.12 }, 9, 'MEDIUM'),
-      opt('wide', 'Get it wide', 'Stretch them and cross. More entries, lower-value chances.',
-        { widthBias: 0.45, attackVolume: 0.12, chanceQuality: -0.12 }, 9, 'LOW'),
+    variants: [
+      variant(
+        () => "You have the ball and nothing to show for it. Your front man is getting no support at all.",
+        () => [
+          opt('runners', 'Send runners past him', 'Bodies beyond the striker. It opens you up on the turnover.',
+            { attackVolume: 0.2, chanceQuality: 0.08, defensiveSolidity: -0.14, spaceBehind: 0.12 }, 9, 'MEDIUM'),
+          opt('wide', 'Get it wide', 'Stretch them and cross. More entries, lower-value chances.',
+            { widthBias: 0.45, attackVolume: 0.12, chanceQuality: -0.12 }, 9, 'LOW'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'CARD_RISK',
     priority: 7,
     applies: (s) => s.bookedPlayerName !== null && s.elapsedFraction > 0.3,
-    situation: (s) => `${s.bookedPlayerName ?? 'One of yours'} is booked and still flying into everything. The next one is red.`,
-    options: (s) => [
-      opt('calm', 'Tell him to pull out', 'He stops committing. He also stops winning anything.',
-        { foulRate: -0.35, defensiveSolidity: -0.12, pressRecovery: -0.14 }, 12, 'LOW'),
-      opt('leave', 'Leave him to it', `${s.bookedPlayerName ?? 'He'} keeps his game. You keep the risk.`,
-        { foulRate: 0.08, defensiveSolidity: 0.06, volatility: 0.14 }, 12, 'HIGH'),
+    variants: [
+      // Protecting a lead reframes the question: the risk is no longer losing
+      // the player's game, it is losing the man AND the points.
+      variant(
+        (s) => `${s.bookedPlayerName ?? 'One of yours'} is booked and you are ahead. A second yellow now costs more than his game.`,
+        (s) => [
+          opt('shield', 'Cover for him', 'The bank absorbs his pressing duty. Less bite high up, fewer ways he gets exposed.',
+            { foulRate: -0.28, pressRecovery: -0.2, defensiveSolidity: 0.05 }, 12, 'LOW'),
+          opt('tuck', 'Tuck him inside', 'Narrow him into the block where there is less room to lunge. He stops being an outlet.',
+            { widthBias: -0.3, defensiveSolidity: 0.08, attackVolume: -0.14 }, 12, 'MEDIUM'),
+          opt('leave', 'Leave him to it', `${s.bookedPlayerName ?? 'He'} keeps his game. You keep the risk.`,
+            { foulRate: 0.08, defensiveSolidity: 0.06, volatility: 0.14 }, 12, 'HIGH'),
+        ],
+        (s) => s.scoreFor > s.scoreAgainst,
+      ),
+      variant(
+        (s) => `${s.bookedPlayerName ?? 'One of yours'} is booked and still flying into everything. The next one is red.`,
+        (s) => [
+          opt('calm', 'Tell him to pull out', 'He stops committing. He also stops winning anything.',
+            { foulRate: -0.35, defensiveSolidity: -0.12, pressRecovery: -0.14 }, 12, 'LOW'),
+          opt('leave', 'Leave him to it', `${s.bookedPlayerName ?? 'He'} keeps his game. You keep the risk.`,
+            { foulRate: 0.08, defensiveSolidity: 0.06, volatility: 0.14 }, 12, 'HIGH'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'INJURY_DECISION',
     priority: 9,
     applies: (s) => s.injuredNoSubs,
-    situation: () => "He can't run and you have nobody left to bring on. You are playing this out one way or another.",
-    options: () => [
-      opt('hide', 'Hide him up front', 'Park him where he can do least damage. You defend a man light.',
-        { defensiveSolidity: -0.18, attackVolume: -0.06, spaceBehind: 0.12 }, 12, 'MEDIUM'),
-      opt('grit', 'Ask him to hold a position', 'He stays in the block and limps through it. Nothing works properly.',
-        { defensiveSolidity: -0.08, pressRecovery: -0.2, fatigueRate: 0.12 }, 12, 'MEDIUM'),
+    variants: [
+      variant(
+        () => "He can't run and you have nobody left to bring on. You are playing this out one way or another.",
+        () => [
+          opt('hide', 'Hide him up front', 'Park him where he can do least damage. You defend a man light.',
+            { defensiveSolidity: -0.18, attackVolume: -0.06, spaceBehind: 0.12 }, 12, 'MEDIUM'),
+          opt('grit', 'Ask him to hold a position', 'He stays in the block and limps through it. Nothing works properly.',
+            { defensiveSolidity: -0.08, pressRecovery: -0.2, fatigueRate: 0.12 }, 12, 'MEDIUM'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'SPECIAL_RULE_CHOICE',
     priority: 10,
     applies: (s) => s.minutesToWindow !== null && s.minutesToWindow <= 2 && s.minutesToWindow > 0,
-    situation: () => "The swing window is about to open. Everything that happens in the next few minutes counts for more.",
-    options: () => [
-      opt('front', 'Go at it', 'Attack the window. The rewards are doubled and so is the damage.',
-        { attackVolume: 0.26, defensiveSolidity: -0.2, volatility: 0.2, fatigueRate: 0.16 }, 5, 'HIGH'),
-      opt('survive', 'Survive it', 'Batten down for three minutes. You will not score during it either.',
-        { defensiveSolidity: 0.26, attackVolume: -0.24, aggression: -0.14 }, 5, 'LOW'),
-      opt('legs', 'Save the legs', 'Coast into the window fresh. You concede the minutes before it.',
-        { fatigueRate: -0.3, attackVolume: -0.16, pressRecovery: -0.2 }, 4, 'MEDIUM'),
+    variants: [
+      variant(
+        () => "The swing window is about to open. Everything that happens in the next few minutes counts for more.",
+        () => [
+          opt('front', 'Go at it', 'Attack the window. The rewards are doubled and so is the damage.',
+            { attackVolume: 0.26, defensiveSolidity: -0.2, volatility: 0.2, fatigueRate: 0.16 }, 5, 'HIGH'),
+          opt('survive', 'Survive it', 'Batten down for three minutes. You will not score during it either.',
+            { defensiveSolidity: 0.26, attackVolume: -0.24, aggression: -0.14 }, 5, 'LOW'),
+          opt('legs', 'Save the legs', 'Coast into the window fresh. You concede the minutes before it.',
+            { fatigueRate: -0.3, attackVolume: -0.16, pressRecovery: -0.2 }, 4, 'MEDIUM'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'MOMENTUM_SWING',
     priority: 6,
     applies: (s) => s.momentum >= 0.5 && s.elapsedFraction > 0.2,
-    situation: () => "You've got them. The crowd knows it and so do they.",
-    options: () => [
-      opt('press_on', 'Go for the throat', 'Turn the screw while it lasts. If it breaks, you are exposed.',
-        { attackVolume: 0.24, aggression: 0.18, fatigueRate: 0.24, defensiveSolidity: -0.14 }, 7, 'HIGH'),
-      opt('bank', 'Bank it', 'Take the sting out and keep what you have. The spell ends here.',
-        { possessionBias: 0.16, defensiveSolidity: 0.12, attackVolume: -0.16 }, 7, 'LOW'),
+    variants: [
+      // Momentum while trailing is a comeback brewing; the question is how far
+      // to lean into it, and the answers read differently from a lead.
+      variant(
+        () => "You've got them rattled and you're still behind. How hard do you push the comeback?",
+        () => [
+          opt('surge', 'Surge now', 'Throw everything forward while they wobble. If it breaks down, the break is lethal.',
+            { attackVolume: 0.26, spaceBehind: 0.18, defensiveSolidity: -0.2, fatigueRate: 0.2 }, 7, 'HIGH'),
+          opt('isolate', 'Stretch their block', 'Pull them apart across the width and pick the gap. Slower, and the chances are thinner.',
+            { widthBias: 0.35, attackVolume: 0.1, chanceQuality: -0.08 }, 7, 'MEDIUM'),
+          opt('patient', 'Keep doing that', 'Nothing clever — just keep playing exactly the way that turned it. The spell may fade before it pays.',
+            { chanceQuality: 0.12, possessionBias: 0.1, attackVolume: -0.06 }, 7, 'LOW'),
+        ],
+        (s) => s.scoreFor < s.scoreAgainst,
+      ),
+      variant(
+        () => "You've got them. The crowd knows it and so do they.",
+        () => [
+          opt('press_on', 'Go for the throat', 'Turn the screw while it lasts. If it breaks, you are exposed.',
+            { attackVolume: 0.24, aggression: 0.18, fatigueRate: 0.24, defensiveSolidity: -0.14 }, 7, 'HIGH'),
+          opt('bank', 'Bank it', 'Take the sting out and keep what you have. The spell ends here.',
+            { possessionBias: 0.16, defensiveSolidity: 0.12, attackVolume: -0.16 }, 7, 'LOW'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'OPPONENT_SHAPE_CHANGE',
     priority: 5,
     applies: (s) => s.opponentChanged && s.elapsedFraction > 0.2,
-    situation: (s) => `${s.opponentName} have changed shape. You can react now or find out the hard way.`,
-    options: () => [
-      opt('mirror', 'Match them', 'Copy the change and neutralise it. You also give up whatever you were doing well.',
-        { defensiveSolidity: 0.14, attackVolume: -0.1, chanceQuality: 0.06 }, 8, 'LOW'),
-      opt('ignore', 'Back your own plan', 'Stick to it and force them to solve you instead.',
-        { attackVolume: 0.12, volatility: 0.14, defensiveSolidity: -0.08 }, 8, 'MEDIUM'),
+    variants: [
+      variant(
+        (s) => `${s.opponentName} have changed shape. You can react now or find out the hard way.`,
+        () => [
+          opt('mirror', 'Match them', 'Copy the change and neutralise it. You also give up whatever you were doing well.',
+            { defensiveSolidity: 0.14, attackVolume: -0.1, chanceQuality: 0.06 }, 8, 'LOW'),
+          opt('ignore', 'Back your own plan', 'Stick to it and force them to solve you instead.',
+            { attackVolume: 0.12, volatility: 0.14, defensiveSolidity: -0.08 }, 8, 'MEDIUM'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'HALFTIME_TALK',
     priority: 8,
     applies: (s) => s.atHalfTime,
-    situation: (s) => s.scoreFor < s.scoreAgainst
-      ? "Fifteen minutes left and you're behind. What do they hear in there?"
-      : "Half time. What do they hear in there?",
-    options: () => [
-      opt('rockets', 'Tear into them', 'They come out furious. Furious players foul.',
-        { aggression: 0.16, pressRecovery: 0.16, foulRate: 0.3, fatigueRate: 0.14 }, 8, 'HIGH'),
-      opt('arm', 'Arm round the shoulder', 'Calm heads, better decisions, less intensity.',
-        { chanceQuality: 0.12, foulRate: -0.2, aggression: -0.12, attackVolume: -0.06 }, 8, 'LOW'),
-      opt('tactical', 'Talk them through it', 'Fix the shape rather than the mood. Slower to take effect.',
-        { defensiveSolidity: 0.12, chanceQuality: 0.08, volatility: -0.12, attackVolume: -0.04 }, 12, 'MEDIUM'),
+    variants: [
+      // The scoreline picks which team talk this actually is. Behind is a
+      // rescue act, ahead is a management act, level is a coin-up act — three
+      // different rooms, three different menus.
+      variant(
+        () => "Fifteen minutes left and you're behind. What do they hear in there?",
+        () => [
+          opt('rockets', 'Tear into them', 'They come out furious. Furious players foul.',
+            { aggression: 0.16, pressRecovery: 0.16, foulRate: 0.3, fatigueRate: 0.14 }, 8, 'HIGH'),
+          opt('arm', 'Arm round the shoulder', 'Calm heads, better decisions, less intensity.',
+            { chanceQuality: 0.12, foulRate: -0.2, aggression: -0.12, attackVolume: -0.06 }, 8, 'LOW'),
+          opt('tactical', 'Talk them through it', 'Fix the shape rather than the mood. Slower to take effect.',
+            { defensiveSolidity: 0.12, chanceQuality: 0.08, volatility: -0.12, attackVolume: -0.04 }, 12, 'MEDIUM'),
+        ],
+        (s) => s.scoreFor < s.scoreAgainst,
+      ),
+      variant(
+        () => "You're in front at the break. What do they hear in there?",
+        () => [
+          opt('more', 'Demand more of it', 'Same again, harder. They hold the intensity — until the legs pay for it.',
+            { attackVolume: 0.12, aggression: 0.1, fatigueRate: 0.24, foulRate: 0.12 }, 8, 'HIGH'),
+          opt('shut', 'Plan the shut-out', 'Tell them the next half is about doors and bolts. The game stops being fun to watch.',
+            { defensiveSolidity: 0.18, aggression: -0.16, attackVolume: -0.2, possessionBias: -0.08 }, 12, 'MEDIUM'),
+          opt('calm', 'Keep the heads level', 'Praise, then park it. Nothing changes, including the errors you got away with.',
+            { chanceQuality: 0.1, foulRate: -0.18, aggression: -0.14, attackVolume: -0.08 }, 8, 'LOW'),
+        ],
+        (s) => s.scoreFor > s.scoreAgainst,
+      ),
+      variant(
+        () => "Half time. What do they hear in there?",
+        () => [
+          opt('win_it', 'Tell them the next goal wins', 'They come out flying for the decisive strike. Flying players overcommit.',
+            { aggression: 0.14, attackVolume: 0.14, fatigueRate: 0.2, defensiveSolidity: -0.08 }, 8, 'HIGH'),
+          opt('shape', 'Draw it on the board', 'Fix the shape rather than the mood. Slower to take effect.',
+            { defensiveSolidity: 0.12, chanceQuality: 0.08, volatility: -0.12, attackVolume: -0.04 }, 12, 'MEDIUM'),
+          opt('settle', 'Settle them down', 'Take the emotion out and just play. Calm can slide into flat.',
+            { chanceQuality: 0.1, foulRate: -0.16, aggression: -0.1, attackVolume: -0.08 }, 8, 'LOW'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'CREATOR_OPPORTUNITY',
     priority: 4,
     applies: (s) => s.creatorMoment,
-    situation: () => "The arena has just come alive. There is a window here while the noise lasts.",
-    options: () => [
-      opt('ride_noise', 'Feed off it', 'Ask for everything while the place is bouncing. It will cost them later.',
-        { aggression: 0.2, attackVolume: 0.18, fatigueRate: 0.26 }, 5, 'MEDIUM'),
-      opt('settle', 'Settle them down', 'Take the emotion out and play. You waste the moment.',
-        { chanceQuality: 0.1, volatility: -0.16, attackVolume: -0.1 }, 5, 'LOW'),
+    variants: [
+      variant(
+        () => "The arena has just come alive. There is a window here while the noise lasts.",
+        () => [
+          opt('ride_noise', 'Feed off it', 'Ask for everything while the place is bouncing. It will cost them later.',
+            { aggression: 0.2, attackVolume: 0.18, fatigueRate: 0.26 }, 5, 'MEDIUM'),
+          opt('settle', 'Settle them down', 'Take the emotion out and play. You waste the moment.',
+            { chanceQuality: 0.1, volatility: -0.16, attackVolume: -0.1 }, 5, 'LOW'),
+        ],
+      ),
     ],
   },
   {
     trigger: 'SET_PIECE_CALL',
     priority: 3,
     applies: (s) => s.elapsedFraction > 0.3 && s.momentum > -0.3 && s.possessionShare > 0.45,
-    situation: () => "Dead ball in a dangerous area. How do you want it delivered?",
-    options: () => [
-      opt('load', 'Load the box', 'Everyone up including the keeper. Nobody is home if it comes back.',
-        { attackVolume: 0.16, defensiveSolidity: -0.2, spaceBehind: 0.18 }, 3, 'HIGH'),
-      opt('short', 'Work it short', 'Keep possession and rebuild. Safe, and rarely a goal.',
-        { possessionBias: 0.14, chanceQuality: 0.06, attackVolume: -0.08 }, 3, 'LOW'),
+    variants: [
+      // Trailing, the dead ball is a chance to breathe; the menu tilts toward
+      // manufacturing something rather than keeping possession.
+      variant(
+        () => "Dead ball in a dangerous area and you need it to count. How do you want it delivered?",
+        () => [
+          opt('load', 'Load the box', 'Everyone up including the keeper. Nobody is home if it comes back.',
+            { attackVolume: 0.16, defensiveSolidity: -0.2, spaceBehind: 0.18 }, 3, 'HIGH'),
+          opt('rehearse', 'Run the rehearsed one', 'The routine from training: blocker in the way, runner off the screen. Telegraphed if they scout you.',
+            { chanceQuality: 0.1, volatility: 0.12, attackVolume: 0.04, possessionBias: -0.1 }, 3, 'MEDIUM'),
+          opt('short', 'Work it short', 'Keep possession and rebuild. Safe, and rarely a goal.',
+            { possessionBias: 0.14, chanceQuality: 0.06, attackVolume: -0.08 }, 3, 'LOW'),
+        ],
+        (s) => s.scoreFor < s.scoreAgainst,
+      ),
+      variant(
+        () => "Dead ball in a dangerous area. How do you want it delivered?",
+        () => [
+          opt('load', 'Load the box', 'Everyone up including the keeper. Nobody is home if it comes back.',
+            { attackVolume: 0.16, defensiveSolidity: -0.2, spaceBehind: 0.18 }, 3, 'HIGH'),
+          opt('short', 'Work it short', 'Keep possession and rebuild. Safe, and rarely a goal.',
+            { possessionBias: 0.14, chanceQuality: 0.06, attackVolume: -0.08 }, 3, 'LOW'),
+        ],
+      ),
     ],
   },
 ];
@@ -294,17 +479,28 @@ export interface DecisionEngineOptions {
   readonly sides: readonly Side[];
   /** 0-100. Scales how large the chosen option's effect actually lands. */
   readonly adaptability: number;
+  /**
+   * Triggers served in the player's recent matches, newest last (see
+   * `GameState.decisionMemory`). A recipe on this list is skipped whenever an
+   * alternative also applies, so the same question is not asked week after
+   * week. Absent means a fresh memory.
+   */
+  readonly recentTriggers?: readonly DecisionTrigger[];
 }
 
 export class DecisionEngine {
   private issued = 0;
   private lastMinute = -Infinity;
   private counter = 0;
+  private readonly served: DecisionTrigger[] = [];
   private readonly outcomes: DecisionOutcome[] = [];
 
   constructor(private readonly rng: Rng, private readonly opts: DecisionEngineOptions) {}
 
   get prompted(): number { return this.issued; }
+
+  /** Distinct triggers served this match, in order of first service. */
+  servedTriggers(): readonly DecisionTrigger[] { return this.served; }
 
   /** Returns a prompt if this tick is genuinely worth interrupting for. */
   consider(s: DecisionSituation): DecisionPrompt | null {
@@ -317,18 +513,27 @@ export class DecisionEngine {
     const eligible = RECIPES.filter((r) => r.applies(s));
     if (eligible.length === 0) return null;
 
+    // Recency damping. A recipe asked recently yields to any alternative that
+    // also applies; only when nothing fresh qualifies does it come back — the
+    // match still gets its question answered either way.
+    const recent = this.opts.recentTriggers ?? [];
+    const fresh = eligible.filter((r) => !recent.includes(r.trigger));
+    const pool = fresh.length > 0 ? fresh : eligible;
+
     // Highest priority wins; ties are broken by the seeded stream so the same
     // match always asks the same question at the same moment.
-    const topPriority = Math.max(...eligible.map((r) => r.priority));
-    const top = eligible.filter((r) => r.priority === topPriority);
+    const topPriority = Math.max(...pool.map((r) => r.priority));
+    const top = pool.filter((r) => r.priority === topPriority);
     const recipe = top.length === 1 ? (top[0] as Recipe) : this.rng.pick(top);
 
-    const options = recipe.options(s);
+    const chosen = serveVariant(recipe, s);
+    const options = chosen.options(s);
     if (options.length < 2) return null;
 
     this.issued += 1;
     this.lastMinute = s.minute;
     this.counter += 1;
+    if (!this.served.includes(recipe.trigger)) this.served.push(recipe.trigger);
 
     return {
       id: `${this.opts.matchId as unknown as string}:dec:${this.counter}`,
@@ -337,7 +542,7 @@ export class DecisionEngine {
       tick: s.tick,
       side: s.side,
       trigger: recipe.trigger,
-      situation: recipe.situation(s),
+      situation: chosen.situation(s),
       options,
       timeoutSeconds: BALANCE.DECISION_TIMEOUT_SECONDS,
       defaultOptionId: safeDefault(options).id,
@@ -357,8 +562,8 @@ export class DecisionEngine {
     return out;
   }
 
-  record(promptId: string, optionId: string, minute: number): void {
-    this.outcomes.push({ promptId, optionId, minute });
+  record(promptId: string, optionId: string, minute: number, trigger?: DecisionTrigger): void {
+    this.outcomes.push(trigger ? { promptId, optionId, minute, trigger } : { promptId, optionId, minute });
   }
 
   recorded(): readonly DecisionOutcome[] { return this.outcomes; }
@@ -414,6 +619,7 @@ export function evaluateDecisions(
       promptId: o.promptId,
       optionId: o.optionId,
       minute: o.minute,
+      ...(o.trigger ? { trigger: o.trigger } : {}),
       evaluation: {
         xgDelta: round3(xgDelta),
         xgAgainstDelta: round3(xgAgainstDelta),

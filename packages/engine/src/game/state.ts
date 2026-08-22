@@ -11,6 +11,7 @@ import type { Club } from '../clubs/club';
 import type { Contract } from '../contracts/contract';
 import type { Competition, Fixture, Season } from '../league/types';
 import type { RuleCard } from '../matches/specialRules';
+import type { DecisionTrigger } from '../matches/decisions';
 
 /**
  * The complete serialisable game state.
@@ -52,6 +53,7 @@ export interface GameState {
   readonly rivalries: Readonly<Record<string, Rivalry>>;
   readonly objectives: ObjectiveState;
   readonly boardPressure: BoardPressure;
+  readonly decisionMemory: DecisionMemory;
   readonly legacy: LegacyState;
   readonly inventory: InventoryState;
   readonly settings: GameSettings;
@@ -262,6 +264,18 @@ export interface ObjectiveState {
 export interface BoardPressure {
   /** Cycle the last board ultimatum was issued; null before any crisis. */
   readonly lastUltimatumCycle: number | null;
+}
+
+/**
+ * Which live-decision recipes the player has answered lately. Nothing else in
+ * the save records which prompts a match served — match results keep outcomes,
+ * not triggers, and the event journal never sees them — so this cannot be
+ * derived and must be carried forward. The decision engine uses it to stop
+ * asking the same question week after week.
+ */
+export interface DecisionMemory {
+  /** Served triggers, newest last. Bounded by `BALANCE.DECISION_MEMORY_DEPTH`. */
+  readonly recentTriggers: readonly DecisionTrigger[];
 }
 
 export interface Objective {
