@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
-  BASE_PACK, ContentRegistry, socialTickDue, tickSocialWorld,
+  socialTickDue, tickSocialWorld,
   type GameState,
 } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
+import { contentRegistry } from '@/state/content';
 
 /**
  * The bridge between the social screens and the social engine.
@@ -12,7 +13,7 @@ import { useGameStore } from '@/state/gameStore';
  *
  * The **registry** is the loaded content pack. Every authored line the player's
  * own posts, the press reaction and the creator drops render from comes out of
- * it, so it is built once and shared rather than reloaded per screen.
+ * it; the shared accessor in `@/state/content` builds it once for the whole app.
  *
  * The **tick** advances the social world — settling promises against results,
  * closing polls, delivering content, moving the pundit — and it is driven from
@@ -21,16 +22,6 @@ import { useGameStore } from '@/state/gameStore';
  * twice, so calling it on mount is safe, idempotent and deterministic. When the
  * world tick eventually owns this, the same function moves there unchanged.
  */
-
-let registry: ContentRegistry | null = null;
-
-export function socialRegistry(): ContentRegistry {
-  if (!registry) {
-    registry = new ContentRegistry();
-    registry.load(BASE_PACK);
-  }
-  return registry;
-}
 
 /**
  * Bring the social world up to the current matchweek.
@@ -47,7 +38,7 @@ export function useSocialWorld(state: GameState): void {
     if (running.current) return;
     if (!socialTickDue(state)) return;
     running.current = true;
-    apply((current) => tickSocialWorld(current, { at: Date.now(), registry: socialRegistry() }).state);
+    apply((current) => tickSocialWorld(current, { at: Date.now(), registry: contentRegistry() }).state);
     running.current = false;
   }, [state, apply]);
 }

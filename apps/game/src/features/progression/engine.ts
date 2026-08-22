@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import {
   BASE_PACK,
-  ContentRegistry,
   Ledger,
   claimObjective,
   isRenderable,
   patchClub,
   type ClaimResult,
-  type ContentPack,
   type ContentPackManifest,
   type GameSettings,
   type GameState,
@@ -16,6 +14,7 @@ import {
   type StoreOfferDef,
 } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
+import { contentRegistry } from '@/state/content';
 
 /**
  * Progression's bridge to the engine.
@@ -25,20 +24,6 @@ import { useGameStore } from '@/state/gameStore';
  * the engine, exactly once, and the interface's job is to report what the
  * engine said rather than to keep its own idea of what has been paid out.
  */
-
-/* --- content ------------------------------------------------------------ */
-
-const PACKS: readonly ContentPack[] = [BASE_PACK];
-
-let cached: ContentRegistry | null = null;
-
-export function contentRegistry(): ContentRegistry {
-  if (!cached) {
-    cached = new ContentRegistry();
-    for (const pack of PACKS) cached.load(pack);
-  }
-  return cached;
-}
 
 export interface PackView {
   readonly manifest: ContentPackManifest;
@@ -65,7 +50,7 @@ export interface PackView {
 export function usePacks(state: GameState, now: number): PackView[] {
   return useMemo(() => {
     const region = state.settings.region || 'GLOBAL';
-    return PACKS.map((pack) => {
+    return [BASE_PACK].map((pack) => {
       const manifest = pack.manifest;
       const identity = manifest.rights
         ? { kind: manifest.identityKind, rights: manifest.rights }

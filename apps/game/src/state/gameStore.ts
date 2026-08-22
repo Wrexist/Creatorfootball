@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import {
   createNewGame, advanceCycle, saveGame, loadGame, loadMeta, deleteSave,
-  Ledger, ContentRegistry, BASE_PACK, buildMatchSetup, MatchSimulator,
+  Ledger, buildMatchSetup, MatchSimulator,
   type GameState, type NewsStory, type SocialPost, type MatchResult,
   type CycleSummary, type Fixture, type SaveMeta, type ClubChoice, type ManagerChoice,
   type CreatorSeasonConfigDef, type FixtureId,
 } from '@cf/engine';
 import { storage } from '@/platform/storage';
+import { contentRegistry } from '@/state/content';
 
 /**
  * The single bridge between the engine and the interface.
@@ -53,15 +54,6 @@ interface GameStoreState {
   abandon: () => Promise<void>;
   clearCycleFeedback: () => void;
   clearPersistFailed: () => void;
-}
-
-let registry: ContentRegistry | null = null;
-function contentRegistry(): ContentRegistry {
-  if (!registry) {
-    registry = new ContentRegistry();
-    registry.load(BASE_PACK);
-  }
-  return registry;
 }
 
 /**

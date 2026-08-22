@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import {
-  BASE_PACK,
-  ContentRegistry,
   IdFactory,
   Ledger,
   Rng,
@@ -36,6 +34,7 @@ import {
   type ValuationContext,
 } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
+import { contentRegistry } from '@/state/content';
 
 /**
  * The market's bridge to the engine.
@@ -45,19 +44,6 @@ import { useGameStore } from '@/state/gameStore';
  * is three negotiations in a trench coat. The rule this file exists to hold:
  * screens describe, the engine decides.
  */
-
-/* --- content registry -------------------------------------------------- */
-
-let cachedRegistry: ContentRegistry | null = null;
-
-/** The loaded content, used for facility-derived scouting capacity. */
-export function contentRegistry(): ContentRegistry {
-  if (!cachedRegistry) {
-    cachedRegistry = new ContentRegistry();
-    cachedRegistry.load(BASE_PACK);
-  }
-  return cachedRegistry;
-}
 
 /* --- the transfer window ---------------------------------------------- */
 
