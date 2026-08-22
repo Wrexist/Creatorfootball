@@ -14,7 +14,7 @@ import { err, ok, type Result } from '../core/result';
  *  - No progression lives only in component state.
  */
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const SAVE_KEY = 'cf.save.v1';
 export const BACKUP_KEY = 'cf.save.backup.v1';
 export const META_KEY = 'cf.save.meta.v1';
@@ -63,6 +63,9 @@ export type Migration = (state: Record<string, unknown>) => Record<string, unkno
  */
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 0 -> 1: the first shipped schema. Nothing to transform.
+  // 1 -> 2: the board-confidence system. Saves from before it existed have no
+  // board state at all, which the board module reads as "no ultimatum history".
+  1: (state) => ({ ...state, boardPressure: { lastUltimatumCycle: null } }),
 };
 
 export function migrate(raw: Record<string, unknown>, from: number): Result<GameState, LoadError> {

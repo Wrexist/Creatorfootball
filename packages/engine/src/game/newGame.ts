@@ -466,6 +466,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
     },
     rivalries: seededRivalries,
     objectives: { active: [], completed: [], seasonTargets: [] },
+    boardPressure: { lastUltimatumCycle: null },
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 3, cosmeticIds: [], facilityCredits: 0 },
     settings,

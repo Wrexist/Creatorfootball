@@ -51,6 +51,7 @@ export interface GameState {
   readonly social: SocialState;
   readonly rivalries: Readonly<Record<string, Rivalry>>;
   readonly objectives: ObjectiveState;
+  readonly boardPressure: BoardPressure;
   readonly legacy: LegacyState;
   readonly inventory: InventoryState;
   readonly settings: GameSettings;
@@ -251,6 +252,16 @@ export interface ObjectiveState {
   readonly active: readonly Objective[];
   readonly completed: readonly Objective[];
   readonly seasonTargets: readonly Objective[];
+}
+
+/**
+ * The one piece of board state that cannot be honestly derived: when the last
+ * ultimatum went out. Board mood itself is derived fresh every cycle by
+ * progression/board.ts — storing it would let two sources of truth drift.
+ */
+export interface BoardPressure {
+  /** Cycle the last board ultimatum was issued; null before any crisis. */
+  readonly lastUltimatumCycle: number | null;
 }
 
 export interface Objective {

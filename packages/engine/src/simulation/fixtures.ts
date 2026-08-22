@@ -303,6 +303,7 @@ export function buildTestWorld(opts: TestWorldOptions = {}): TestWorld {
     social: { posts: [], clubFollowers: 400_000, weeklyImpressions: 0 },
     rivalries: {},
     objectives: { active: [], completed: [], seasonTargets: [] },
+    boardPressure: { lastUltimatumCycle: null },
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 3, cosmeticIds: [], facilityCredits: 0 },
     settings: {
