@@ -181,7 +181,13 @@ export const useGameStore = create<GameStoreState>((set, get) => {
     const fixture: Fixture | undefined = state.fixtures[fixtureId];
     if (!fixture) return null;
     const config = contentRegistry().seasonConfig() as CreatorSeasonConfigDef;
-    return new MatchSimulator(buildMatchSetup(state, fixture, config, { live: true }));
+    // The authored commentary bank reaches the player's own match too — the
+    // cycle wires it for AI fixtures; without this the live game stayed on
+    // the built-in table only.
+    return new MatchSimulator(buildMatchSetup(state, fixture, config, {
+      live: true,
+      commentaryLines: contentRegistry().commentary(),
+    }));
   },
 
   /**
