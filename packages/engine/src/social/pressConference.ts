@@ -943,7 +943,7 @@ const QUESTIONS: readonly QuestionDef[] = [
       },
       {
         id: 'a_promise_home_win', label: 'Promise the next one',
-        line: (c) => `The next home game, we win. Write whatever you like around that sentence.`,
+        line: () => 'The next home game, we win. Write whatever you like around that sentence.',
         effect: () => ({ fanSentiment: 2.8, fanExcitement: 2.4, mediaGoodwill: -2 }),
         warmth: 0.1, credibility: -0.4,
         stake: { kind: 'GUARANTEE', weight: 0.8, claim: () => 'You guaranteed a home win with the whole room listening.' },
