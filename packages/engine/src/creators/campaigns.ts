@@ -176,6 +176,20 @@ export const BRIEFS: Readonly<
 };
 
 /**
+ * Who can be offered paid work.
+ *
+ * Life-cycle arrivals are scene texture until they matter: signed by a club,
+ * or arriving with an established audience. Without this gate, a rolling crowd
+ * of freelance locals diluted the brief economy — offers spread thin across
+ * voices whose reach converts to almost nothing, and every club's commercial
+ * engine quietly deflated.
+ */
+export const eligibleForBriefs = (creator: Creator): boolean =>
+  !(creator.spawnedSeason !== undefined
+    && creator.clubId === null
+    && (creator.tier === 'LOCAL' || creator.tier === 'RISING'));
+
+/**
  * New briefs from the creators who are willing to work with you.
  *
  * Every brief is attached to a moment, so the offer list is a reading of what
@@ -208,6 +222,7 @@ export function generateCampaignOffers(
 
   const pool = Object.values(state.creators)
     .filter((c) => c.clubSentiment > -50 && c.style.postingFrequency > 0)
+    .filter(eligibleForBriefs)
     .sort((a, b) => (a.id < b.id ? -1 : 1));
   if (pool.length === 0) return [];
 

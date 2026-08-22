@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { ClubId, EventId, MatchId, PlayerId } from '../core/brand';
 import { Rng } from '../core/rng';
+import type { Creator } from './creator';
+import { generateCreator } from '../content/generators/creatorGenerator';
 import { buildTestWorld, makeTestEvent, withEvents } from '../simulation/fixtures';
 import type { SocialMoment } from '../social/moments';
 import { CAMPAIGN_FORMAT_IDS } from './balance';
-import { BRIEFS, generateCampaignOffers, TITLES } from './campaigns';
+import { BRIEFS, eligibleForBriefs, generateCampaignOffers, TITLES } from './campaigns';
 
 /**
  * Campaign copy variety.
@@ -86,6 +88,54 @@ describe('generation-time selection', () => {
     for (const offer of generateCampaignOffers(state, new Rng('briefs'), CYCLE)) {
       expect(offer.brief.length).toBeGreaterThan(20);
       expect(offer.cost).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+describe('brief eligibility for life-cycle arrivals', () => {
+  const OFFER_CYCLE = 10;
+
+  const withCreator = (overrides: Partial<Creator>): Creator => ({
+    ...generateCreator(new Rng('elig'), { tier: 'LOCAL', followers: 9_000 }),
+    ...overrides,
+  });
+
+  it('makes freelance newcomers earn a seat at the brief table', () => {
+    // A freshly spawned, unattached local is scene texture, not a supplier.
+    expect(eligibleForBriefs(withCreator({ tier: 'LOCAL', spawnedSeason: 4 }))).toBe(false);
+    expect(eligibleForBriefs(withCreator({ tier: 'RISING', spawnedSeason: 3 }))).toBe(false);
+  });
+
+  it('still feeds work to signed arrivals and freelance names', () => {
+    // An established name arriving freelance gets work immediately.
+    expect(eligibleForBriefs(withCreator({ tier: 'ESTABLISHED', spawnedSeason: 4 }))).toBe(true);
+    // Signed by anybody, even a newcomer competes like anyone else.
+    expect(eligibleForBriefs(withCreator({
+      tier: 'LOCAL', spawnedSeason: 4, clubId: 'club_0' as ClubId,
+    }))).toBe(true);
+    // The authored roster keeps exactly the access it had before the
+    // life-cycle existed — no stamp means no gate.
+    expect(eligibleForBriefs(withCreator({ tier: 'LOCAL' }))).toBe(true);
+    expect(eligibleForBriefs(withCreator({ tier: 'RISING' }))).toBe(true);
+  });
+
+  it('keeps the offer pool free of ineligible freelancers', () => {
+    const base = busyWorld();
+    const freelancer = generateCreator(new Rng('freelance'), {
+      tier: 'LOCAL', followers: 8_000, handle: 'spawnedfreelancelad',
+      displayName: 'Spawned Freelancer',
+    });
+    const state = {
+      ...base,
+      creators: {
+        ...base.creators,
+        [freelancer.id]: { ...freelancer, spawnedSeason: 2 },
+      },
+    };
+    for (let i = 0; i < 30; i++) {
+      for (const offer of generateCampaignOffers(state, new Rng(`pool:${i}`), OFFER_CYCLE)) {
+        expect(offer.creatorId).not.toBe(freelancer.id);
+      }
     }
   });
 });

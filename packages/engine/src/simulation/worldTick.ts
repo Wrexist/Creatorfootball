@@ -135,8 +135,11 @@ function topCreatorPost(
     .filter((c) => `@${c.handle.replace(/^@/, '')}` === best?.authorHandle)
     .sort((a, b) => (a.id < b.id ? -1 : 1))[0];
   if (!creator) return null;
-  const clubId = creator.clubId ?? state.playerClubId;
-  return { creatorId: creator.id, clubId, reach };
+  // A freelance account's clip is not news about your club. Without an
+  // attachment there is no club to credit, and inventing one made every
+  // unaffiliated voice's breakout moment silently move the player's fandom.
+  if (!creator.clubId) return null;
+  return { creatorId: creator.id, clubId: creator.clubId, reach };
 }
 
 /**
