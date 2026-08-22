@@ -305,6 +305,7 @@ export function buildTestWorld(opts: TestWorldOptions = {}): TestWorld {
     objectives: { active: [], completed: [], seasonTargets: [] },
     boardPressure: { lastUltimatumCycle: null },
     decisionMemory: { recentTriggers: [] },
+    decisionRecord: {},
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 3, cosmeticIds: [], facilityCredits: 0 },
     settings: {

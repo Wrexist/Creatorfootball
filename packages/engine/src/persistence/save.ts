@@ -14,7 +14,7 @@ import { err, ok, type Result } from '../core/result';
  *  - No progression lives only in component state.
  */
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const SAVE_KEY = 'cf.save.v1';
 export const BACKUP_KEY = 'cf.save.backup.v1';
 export const META_KEY = 'cf.save.meta.v1';
@@ -69,6 +69,10 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 2 -> 3: decision recency memory. Older saves simply have not been asked
   // anything yet, so an empty list is exactly what they mean.
   2: (state) => ({ ...state, decisionMemory: { recentTriggers: [] } }),
+  // 3 -> 4: the career record of graded decisions. No call has been graded
+  // into an older save, so the honest seed is an empty record, which the UI
+  // reads as "no history yet" rather than a row of zeroes.
+  3: (state) => ({ ...state, decisionRecord: {} }),
 };
 
 export function migrate(raw: Record<string, unknown>, from: number): Result<GameState, LoadError> {

@@ -9,6 +9,7 @@ import { patchClub, patchPlayer, setFixture, setContract } from './mutations';
 import type { GameEventFactory } from './eventFactory';
 import type { DecisionTrigger } from '../matches/decisions';
 import { BALANCE } from '../matches/balance';
+import { foldDecisionRecord } from './decisionRecord';
 
 /**
  * Folding a match result back into the world.
@@ -96,6 +97,11 @@ export function applyMatchResult(
         .slice(-BALANCE.DECISION_MEMORY_DEPTH);
       next = { ...next, decisionMemory: { recentTriggers: merged } };
     }
+
+    // The career record of how those calls turned out. Same guard as the
+    // recency memory: AI-vs-AI prompts are never seen by anyone, so they are
+    // not history either.
+    next = { ...next, decisionRecord: foldDecisionRecord(next.decisionRecord, result.decisions) };
   }
 
   for (const [clubId, scored, conceded] of [

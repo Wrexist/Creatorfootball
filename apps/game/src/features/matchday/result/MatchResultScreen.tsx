@@ -19,6 +19,7 @@ import { kitColors, paletteFor } from '../shared/kit';
 import { minuteLabel, one, stateOfPlay } from '../shared/format';
 import { AnalyticsTab } from './AnalyticsTab';
 import { concernRoute } from './concernRoute';
+import { masteryLines } from './mastery';
 
 /**
  * The post-match sequence.
@@ -384,6 +385,10 @@ function PerformanceStage({ result, state, playerIsHome, home, away }: StageProp
 
   const motm = result.motmPlayerId ? state.players[result.motmPlayerId] : undefined;
   const decisions = useDecisionReview(result);
+  // Career aggregates live in the save (folded in as results are applied), so
+  // the panel can say how these kinds of calls have gone over time — not just
+  // tonight. One line per family, only where history exists.
+  const mastery = useMemo(() => masteryLines(state.decisionRecord), [state.decisionRecord]);
 
   return (
     <>
@@ -441,6 +446,17 @@ function PerformanceStage({ result, state, playerIsHome, home, away }: StageProp
               </li>
             ))}
           </ul>
+
+          {mastery.length > 0 && (
+            <div className="mt-3 border-t border-white/[0.07] pt-2.5">
+              {mastery.map((line) => (
+                <p key={line} className="text-[13px] leading-snug text-ink-muted text-pretty">
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
+
           <p className="mt-3 text-[12px] text-ink-dim">
             Graded on the expected goals created and conceded in the minutes after each call.
           </p>

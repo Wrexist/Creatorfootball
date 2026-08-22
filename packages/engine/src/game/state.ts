@@ -54,6 +54,7 @@ export interface GameState {
   readonly objectives: ObjectiveState;
   readonly boardPressure: BoardPressure;
   readonly decisionMemory: DecisionMemory;
+  readonly decisionRecord: DecisionRecord;
   readonly legacy: LegacyState;
   readonly inventory: InventoryState;
   readonly settings: GameSettings;
@@ -281,6 +282,25 @@ export interface DecisionMemory {
   /** Served triggers, newest last. Bounded by `BALANCE.DECISION_MEMORY_DEPTH`. */
   readonly recentTriggers: readonly DecisionTrigger[];
 }
+
+/** The career tally of one family of the player's live calls. */
+export interface DecisionTriggerTally {
+  /** Graded calls served, whatever the outcome. */
+  readonly served: number;
+  /** Calls graded WORKED by the post-match xG evaluation. */
+  readonly worked: number;
+  /** Matches in which this trigger appeared at least once. */
+  readonly matches: number;
+}
+
+/**
+ * How every family of the player's live decisions has turned out, career to
+ * date. Match results are not retained, so this cannot be derived after the
+ * fact — it is folded in wherever a result is applied (see
+ * `foldDecisionRecord`) and only graded calls count, because an ungraded call
+ * has no honest outcome to report.
+ */
+export type DecisionRecord = Readonly<Partial<Record<DecisionTrigger, DecisionTriggerTally>>>;
 
 export interface Objective {
   readonly id: string;
