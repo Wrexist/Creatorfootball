@@ -3,6 +3,7 @@ import type { GameState } from './state';
 import type { MatchSetup, MatchTeam, MatchConfig, ManagerMatchBonus } from '../matches/simulator';
 import type { Fixture } from '../league/types';
 import { squadOf, clubTotalReach } from './selectors';
+import { aiCounterLeanVsPlayer } from '../simulation/aiClub';
 import { rivalryFor } from '../rivalries/rivalries';
 import { attendanceFor } from '../fans/fans';
 import { Rng } from '../core/rng';
@@ -63,15 +64,26 @@ function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
   return rng.sample(pool, Math.min(count, pool.length));
 }
 
-const teamFor = (state: GameState, clubId: ClubId, isPlayerControlled: boolean): MatchTeam => {
+const teamFor = (
+  state: GameState,
+  clubId: ClubId,
+  isPlayerControlled: boolean,
+  involvesPlayer: boolean,
+): MatchTeam => {
   const club = state.clubs[clubId];
   if (!club) throw new Error(`Unknown club in match setup: ${clubId}`);
+  // An AI side meeting the player opens with a lean aimed at the shape the
+  // player has been playing all month. Pure derivation from state, so it is
+  // deterministic and costs no save data. AI-vs-AI keeps its own identity.
+  const counterLean = clubId !== state.playerClubId && involvesPlayer
+    ? aiCounterLeanVsPlayer(state) ?? {}
+    : {};
   return {
     clubId,
     name: club.name,
     shortName: club.shortName,
     players: squadOf(state, clubId),
-    tactics: club.tactics,
+    tactics: { ...club.tactics, ...counterLean },
     managerBonus: managerBonusFor(state, clubId),
     creatorPresence: creatorPresenceFor(state, clubId),
     // Both sides hold cards.
@@ -131,8 +143,8 @@ export function buildMatchSetup(
     // Seeding from the save seed plus the fixture id means replaying a match
     // reproduces it exactly, and re-simulating a season is bit-for-bit stable.
     seed: `${state.seed}:match:${fixture.id}`,
-    home: teamFor(state, fixture.homeClubId, live && fixture.homeClubId === playerClubId),
-    away: teamFor(state, fixture.awayClubId, live && fixture.awayClubId === playerClubId),
+    home: teamFor(state, fixture.homeClubId, live && fixture.homeClubId === playerClubId, involvesPlayer),
+    away: teamFor(state, fixture.awayClubId, live && fixture.awayClubId === playerClubId, involvesPlayer),
     config: matchConfig,
     importance: fixture.importance,
     isDerby: fixture.isDerby,

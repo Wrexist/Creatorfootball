@@ -345,6 +345,53 @@ export interface AiTurnContext {
 
 const DEFAULT_FACILITY_COST = (level: number): number => 250_000 * level ** 1.7;
 
+// ------------------------------------------------------------- countering ---
+
+/**
+ * The three-way shape map the counter system keys on.
+ *
+ * Match history records results, not formations — but a club's tactics persist
+ * between matches, so its current setup IS the shape it has been playing all
+ * month. Reading it keeps the counter honest without inventing data.
+ */
+export type PlayShape = 'LOW_BLOCK' | 'HIGH_PRESS' | 'BALANCED';
+
+/** Classify how a side sets up. The press slider is the primary signal; the line breaks ties of ambiguity. */
+export function playShapeOf(tactics: TacticSetup): PlayShape {
+  if (tactics.press === 'LOW_BLOCK' || tactics.line === 'DEEP') return 'LOW_BLOCK';
+  if (tactics.press === 'HIGH_PRESS' || tactics.line === 'HIGH') return 'HIGH_PRESS';
+  return 'BALANCED';
+}
+
+/**
+ * The lean that attacks the given shape. Rock-paper-scissors, restored:
+ * parking the bus gets pressed and stretched wide; pressing gets invited on
+ * and played straight over with counters into the space behind. Against a
+ * balanced shape there is nothing to attack — return null so the AI club
+ * keeps its own identity rather than drifting toward a league-wide average.
+ */
+export function counterLeanAgainst(shape: PlayShape): Partial<TacticSetup> | null {
+  switch (shape) {
+    case 'LOW_BLOCK':
+      return { press: 'HIGH_PRESS', line: 'HIGH', tempo: 'QUICK', width: 'WIDE', risk: 'BOLD' };
+    case 'HIGH_PRESS':
+      return { line: 'DEEP', passing: 'DIRECT', buildUp: 'BYPASS', counter: 'ALWAYS', tempo: 'QUICK' };
+    default:
+      return null;
+  }
+}
+
+/**
+ * The lean an AI club should start with against the player's club, read from
+ * what the player has set up. Pure derivation — no state is stored, so it
+ * cannot drift from the tactics the player actually controls.
+ */
+export function aiCounterLeanVsPlayer(state: GameState): Partial<TacticSetup> | null {
+  const playerClub = state.clubs[state.playerClubId];
+  if (!playerClub) return null;
+  return counterLeanAgainst(playShapeOf(playerClub.tactics));
+}
+
 const ageFit = (age: number, band: readonly [number, number]): number => {
   if (age >= band[0] && age <= band[1]) return 1;
   const distance = age < band[0] ? band[0] - age : age - band[1];
