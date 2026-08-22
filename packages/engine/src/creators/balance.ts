@@ -97,6 +97,20 @@ export const CREATOR_BALANCE = {
 
   /* --- the roster ------------------------------------------------------- */
 
+  lifecycle: {
+    /** Generated creators entering the world at each season rollover. */
+    spawnsMin: 2,
+    spawnsMax: 4,
+    /**
+     * Seasons a generated LOCAL-tier creator stays in the world past the
+     * summer they arrived. Small accounts burn bright, plateau and quietly
+     * stop posting; without a span, the scene only ever accumulates.
+     */
+    localSpanSeasons: 3,
+    /** Tier mix for arrivals: mostly small accounts, occasionally a name. */
+    spawnTierWeights: { LOCAL: 40, RISING: 28, ESTABLISHED: 18, MAJOR: 9, GLOBAL: 5 } as Readonly<Record<CreatorTier, number>>,
+  },
+
   roster: {
     /**
      * Followers the club needs before a creator of each tier will take the

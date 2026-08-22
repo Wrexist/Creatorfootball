@@ -200,6 +200,8 @@ const MILESTONE_PROSE: {
   CREATOR_MOMENT: (e) =>
     `Creator content about the club reached ${e.payload.reach.toLocaleString('en-GB')} people`,
   CREATOR_JOINED: (e, s) => `${creatorNameOf(s, e.payload.creatorId)} joined the club's content team`,
+  CREATOR_EMERGED: (e, s) => `${creatorNameOf(s, e.payload.creatorId)} started posting about the league`,
+  CREATOR_RETIRED: (e, s) => `${creatorNameOf(s, e.payload.creatorId)} quietly stopped posting`,
 
   /* --- progression / economy -------------------------------------------- */
   OBJECTIVE_COMPLETED: (e) => `"${e.payload.title}" delivered (${e.payload.rewardSummary})`,

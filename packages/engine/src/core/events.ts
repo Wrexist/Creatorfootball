@@ -77,6 +77,10 @@ export interface DomainEventPayloads {
   STORY_PUBLISHED: { storyId: StoryId; headline: string; importance: EventImportance };
   CREATOR_MOMENT: { creatorId: CreatorId; clubId: ClubId; kind: string; reach: number };
   CREATOR_JOINED: { creatorId: CreatorId; clubId: ClubId; role: string };
+  /** A new generated creator entered the world at season rollover. */
+  CREATOR_EMERGED: { creatorId: CreatorId; displayName: string; followers: number };
+  /** A spent LOCAL-tier generated creator left it. */
+  CREATOR_RETIRED: { creatorId: CreatorId; displayName: string; followers: number; seasonsActive: number };
 
   // --- progression / economy ---
   OBJECTIVE_COMPLETED: { objectiveId: ObjectiveId; title: string; rewardSummary: string };

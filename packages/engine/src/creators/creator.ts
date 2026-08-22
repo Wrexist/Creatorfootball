@@ -74,6 +74,11 @@ export interface Creator {
   readonly marketValue: number;
   /** Cycles remaining on their association with the club, if any. */
   readonly dealWeeksRemaining: number | null;
+  /**
+   * Season this creator entered the world, set only on life-cycle spawns.
+   * Authored roster members carry no stamp and are never aged out.
+   */
+  readonly spawnedSeason?: number;
   readonly avatarSeed: string;
   readonly bio: string;
 }
