@@ -89,6 +89,8 @@ export * from './simulation/worldTick';
 export * from './simulation/emergent';
 export * from './simulation/cascade';
 export * from './progression/objectives';
+export * from './progression/balance';
+export * from './progression/board';
 export * from './progression/legacy';
 export * from './analytics/analytics';
 

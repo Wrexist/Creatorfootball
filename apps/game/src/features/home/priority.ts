@@ -1,7 +1,8 @@
 import {
-  claimableObjectives, clubById, contractFor, expiringContracts, injuredPlayers, lastFixture,
+  activeBoardUltimatum, assessBoard, claimableObjectives, clubById, contractFor,
+  currentPositionOf, expectedPositionOf, expiringContracts, injuredPlayers, lastFixture,
   leaguePosition, nextFixture, playerById, playerClub, recentForm, rivalryFor, squadOf, standings,
-  starPlayer, suspendedPlayers, wageBudgetUsage,
+  starPlayer, suspendedPlayers, wageBudgetUsage, BOARD_BALANCE,
   type Club, type Fixture, type GameState, type Objective, type Player, type StandingRow,
 } from '@cf/engine';
 
@@ -126,6 +127,9 @@ const FLOOR = 0.26;
 const MAX_CARDS = 5;
 /** Two from any one part of the game — otherwise a bad week is six squad cards. */
 const MAX_PER_FAMILY = 2;
+
+/** The board's card is exempt from the per-family cap: a live crisis never waits its turn behind two other CLUB cards. */
+export const BOARD_CARD_ID = 'board:pressure';
 
 const clamp01 = (n: number): number => (n < 0 ? 0 : n > 1 ? 1 : n);
 
@@ -578,6 +582,57 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
     });
   }
 
+  /* --- the board ------------------------------------------------------ */
+  // The ladder is the engine's own (progression/board.ts): pressure derived
+  // from position-vs-expectation, fan sentiment and form. This only surfaces
+  // it — headline from the ladder where it has copy of its own, detail from
+  // the same three levers that move it, and nothing invented.
+  const ultimatum = activeBoardUltimatum(state);
+  const board = assessBoard(state);
+  const boardRow = standings(state).find((r) => r.clubId === club.id);
+  if ((ultimatum || board.mood !== 'CONTENT') && (ultimatum || (boardRow?.played ?? 0) > 0)) {
+    const gap = currentPositionOf(state) - expectedPositionOf(state);
+    const formWindow = recentForm(state, club.id, BOARD_BALANCE.formWindow);
+    const losses = formWindow.filter((r) => r === 'L').length;
+    const levers: string[] = [];
+    if (gap > 0) levers.push(`you sit ${gap} ${plural(gap, 'place', 'places')} below where your reputation says you should`);
+    if (club.fans.sentiment < BOARD_BALANCE.sentimentNeutral) {
+      levers.push(`the stands are at ${Math.round(club.fans.sentiment)} out of 100`);
+    }
+    if (losses > 0) levers.push(`${losses} of your last ${formWindow.length || BOARD_BALANCE.formWindow} went against you`);
+
+    const meaning = ultimatum
+      ? `${ultimatum.description} You have won ${Math.min(ultimatum.progress, ultimatum.target)} of ${ultimatum.target} so far.`
+      : levers.length > 0
+        ? `${sentence(levers.join('; '))}. ${
+          board.mood === 'ANGRY'
+            ? 'One more bad stretch and this stops being a mood and becomes an ultimatum.'
+            : 'Keep this up and restlessness becomes anger — wins are what cools it.'
+        }`
+        : 'The season is not going the way the board expected. Wins are what cools them down.';
+
+    out.push({
+      id: BOARD_CARD_ID,
+      family: 'CLUB',
+      tone: ultimatum || board.mood === 'ANGRY' ? 'danger' : 'warning',
+      glyph: 'warning',
+      headline: ultimatum ? `${ultimatum.title}.` : board.mood === 'ANGRY' ? 'The board is angry.' : 'The board is restless.',
+      meaning,
+      actionLabel: 'See objectives',
+      route: '/objectives',
+      metric: { value: String(Math.round(board.pressure)), caption: 'board pressure' },
+      ...(ultimatum
+        ? { progress: { value: ultimatum.progress, max: Math.max(1, ultimatum.target), label: `${Math.round(ultimatum.progress)} of ${ultimatum.target} wins` } }
+        : {}),
+      score: score(
+        ultimatum ? 0.95 : board.mood === 'ANGRY' ? 0.85 : 0.7,
+        ultimatum ? 0.85 : 0.7,
+        0.45,
+        ultimatum || board.mood === 'ANGRY' ? 0.65 : 0.55,
+      ),
+    });
+  }
+
   /* --- the table ------------------------------------------------------ */
   const context = leaguePosition(state);
   const table = standings(state);
@@ -828,7 +883,10 @@ function rank(all: readonly PriorityCard[]): PriorityCard[] {
     if (picked.length >= MAX_CARDS) break;
     if (card.score.total < FLOOR) continue;
     const used = perFamily.get(card.family) ?? 0;
-    if (used >= MAX_PER_FAMILY) continue;
+    // The board card alone may break the family cap: when the ladder is lit,
+    // burying it under two other CLUB cards would hide the thing most likely
+    // to end the season.
+    if (used >= MAX_PER_FAMILY && card.id !== BOARD_CARD_ID) continue;
     perFamily.set(card.family, used + 1);
     picked.push(card);
   }
