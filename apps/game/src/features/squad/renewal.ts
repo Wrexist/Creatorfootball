@@ -1,8 +1,9 @@
 import {
-  assessRenewal, buildValuationContext, clamp, contractFor, currentCompetition, patchPlayer,
-  renewContract, respondToRenewal, setContract,
+  assessRenewal, buildValuationContext, clamp, contractFor, currentCompetition,
+  patchPlayer, renewContract, respondToRenewal, setContract,
   type GameState, type NegotiationTerms, type PlayerId, type RenewalResponse,
 } from '@cf/engine';
+import { formatMoney, type useToast } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 
 /**
@@ -23,8 +24,26 @@ import { useGameStore } from '@/state/gameStore';
 /** Offers open well before the six-week panic; a renewal left this late is a crisis. */
 export const RENEWAL_OFFER_WINDOW_WEEKS = 30;
 
+/**
+ * A deliberate lowball pays half of what he asked for. Below the engine's
+ * 0.55 package-value ratio this lands as INSULTED, not merely REFUSED —
+ * which is the point: the cheap path has a price, and the engine sets it.
+ */
+export const LOWBALL_WAGE_SHARE = 0.5;
+
 export function canOfferRenewal(contractWeeksRemaining: number, isOwnSquad: boolean): boolean {
   return isOwnSquad && contractWeeksRemaining <= RENEWAL_OFFER_WINDOW_WEEKS;
+}
+
+/** Scale every money term, keep the shape — years and role are not negotiable here. */
+export function lowballOffer(terms: NegotiationTerms): NegotiationTerms {
+  return {
+    ...terms,
+    wage: Math.round(terms.wage * LOWBALL_WAGE_SHARE),
+    signingBonus: Math.round(terms.signingBonus * LOWBALL_WAGE_SHARE),
+    goalBonus: Math.round(terms.goalBonus * LOWBALL_WAGE_SHARE),
+    appearanceBonus: Math.round(terms.appearanceBonus * LOWBALL_WAGE_SHARE),
+  };
 }
 
 export interface RenewalOutcomeCopy {
@@ -79,11 +98,14 @@ export interface RenewalResult {
 }
 
 /**
- * Offer the player exactly what the engine says he currently deserves.
- * Deterministic end to end: no Rng anywhere in assess → respond → renew, so a
- * given save state always produces the same verdict.
+ * Offer the player a deal. Meeting what the engine says he currently deserves
+ * signs him on the spot — that is the honest price of certainty. The lowball
+ * path goes through the same engine verdict machinery, where refusing or
+ * insulting him costs morale now and loyalty later. Deterministic end to end:
+ * no Rng anywhere in assess → respond → renew, so a given save state always
+ * produces the same verdict.
  */
-export function offerRenewal(playerId: PlayerId): RenewalResult {
+export function offerRenewal(playerId: PlayerId, opts: { lowball?: boolean } = {}): RenewalResult {
   const store = useGameStore.getState();
   const s = store.state;
   if (!s) return { ok: false, reason: 'No game loaded.' };
@@ -99,7 +121,7 @@ export function offerRenewal(playerId: PlayerId): RenewalResult {
 
   const ctx = talksContextFor(s);
   const assessment = assessRenewal(player, contract, ctx);
-  const offer: NegotiationTerms = assessment.demand;
+  const offer: NegotiationTerms = opts.lowball ? lowballOffer(assessment.demand) : assessment.demand;
   const response = respondToRenewal(player, contract, offer, ctx);
 
   if (response.verdict === 'SIGNED') {
@@ -133,4 +155,25 @@ export function offerRenewal(playerId: PlayerId): RenewalResult {
     outcome: renewalOutcomeCopy(response),
     ...(response.verdict === 'SIGNED' ? { wage: Math.round(offer.wage), years: offer.years } : {}),
   };
+}
+
+type ToastApi = ReturnType<typeof useToast>;
+
+/**
+ * One presenter for both renewal surfaces, so a sheet and a full profile can
+ * never disagree about what a verdict sounded like.
+ */
+export function presentRenewal(result: RenewalResult, toast: ToastApi): void {
+  if (!result.ok || !result.outcome) {
+    toast.error('No talks', result.reason ?? 'That cannot be offered right now.');
+    return;
+  }
+  const { tone, title, detail } = result.outcome;
+  if (tone === 'success') {
+    toast.success(`${title} — ${formatMoney(result.wage ?? 0)} a week`, detail);
+  } else if (tone === 'error') {
+    toast.error(title, detail);
+  } else {
+    toast.show({ tone: 'neutral', title, description: detail });
+  }
 }

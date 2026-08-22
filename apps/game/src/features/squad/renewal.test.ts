@@ -1,12 +1,40 @@
 import { describe, expect, it } from 'vitest';
-import { canOfferRenewal, renewalOutcomeCopy } from './renewal';
-import type { RenewalResponse } from '@cf/engine';
+import type { NegotiationTerms, RenewalResponse } from '@cf/engine';
+import { canOfferRenewal, lowballOffer, renewalOutcomeCopy } from './renewal';
 
 describe('canOfferRenewal', () => {
   it('opens well before the warning threshold, for our own players only', () => {
     expect(canOfferRenewal(30, true)).toBe(true);
     expect(canOfferRenewal(31, true)).toBe(false);
     expect(canOfferRenewal(2, false)).toBe(false);
+  });
+});
+
+describe('lowballOffer', () => {
+  const terms: NegotiationTerms = {
+    fee: 0,
+    wage: 20_000,
+    years: 3,
+    role: 'FIRST_TEAM',
+    signingBonus: 60_000,
+    releaseClause: 4_000_000,
+    goalBonus: 2_000,
+    appearanceBonus: 1_000,
+  };
+
+  it('halves the money so the engine can actually refuse or take insult', () => {
+    const low = lowballOffer(terms);
+    expect(low.wage).toBe(10_000);
+    expect(low.signingBonus).toBe(30_000);
+    expect(low.goalBonus).toBe(1_000);
+    expect(low.appearanceBonus).toBe(500);
+  });
+
+  it('keeps the shape — years, role and clause are not what is being haggled', () => {
+    const low = lowballOffer(terms);
+    expect(low.years).toBe(terms.years);
+    expect(low.role).toBe(terms.role);
+    expect(low.releaseClause).toBe(terms.releaseClause);
   });
 });
 
