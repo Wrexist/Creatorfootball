@@ -30,3 +30,4 @@ artifacts/
 tools/sim/src/zz*.ts
 tools/sim/src/__*.ts
 tools/sim/src/_audit/
+.shots/
