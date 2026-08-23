@@ -6,8 +6,8 @@ import {
 } from '@cf/engine';
 import {
   ClubBadge, EmptyState, GlareHover, GlassButton, GlassPanel, GlassPill, KeyValueRow, NameText,
-  PlayerPortrait, Screen, SectionHeader, ShinyText, SpotlightCard, StatCard, StatGrid, TrophyMoment,
-  cn, IconStar, IconTrophy,
+  PlayerPortrait, Screen, SectionHeader, ShinyText, Silverware, SpotlightCard, StatCard, StatGrid,
+  TrophyMoment, cn, silverwareVariantFor, IconStar, IconTrophy,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -57,9 +57,13 @@ const TrophyPlinth = memo(function TrophyPlinth({
             className="absolute inset-x-0 bottom-0 h-24"
             style={{ background: `radial-gradient(60% 100% at 50% 100%, ${accent}2e 0%, transparent 100%)` }}
           />
-          <span className="relative flex size-14 items-center justify-center rounded-pill bg-hero-gold/14 text-hero-gold [&_svg]:size-8">
-            <IconTrophy />
-          </span>
+          {/* The real piece, not a glyph: a cabinet of identical gold pills is
+              a list, a cabinet of distinguishable silverware is a cabinet. */}
+          <Silverware
+            variant={silverwareVariantFor(entry.competition)}
+            size={72}
+            className="relative drop-shadow-[0_10px_20px_rgb(255_215_106/0.18)]"
+          />
           <span className="relative text-center">
             <span className="block text-[13px] font-semibold leading-tight text-ink text-balance">
               {entry.competition}
@@ -161,12 +165,18 @@ function TrophyRoomBody({ state }: { state: GameState }): ReactNode {
       {/* --- the cabinet ---------------------------------------------- */}
       <GlassPanel padding="lg" accent="volt">
         <div className="flex items-center gap-4">
-          <span
-            className="flex size-16 shrink-0 items-center justify-center rounded-pill bg-hero-gold/12 text-hero-gold [&_svg]:size-9"
-            aria-hidden="true"
-          >
-            <IconTrophy />
-          </span>
+          {data.trophies.length === 0 ? (
+            <span
+              className="flex size-16 shrink-0 items-center justify-center rounded-pill bg-hero-gold/12 text-hero-gold [&_svg]:size-9"
+              aria-hidden="true"
+            >
+              <IconTrophy />
+            </span>
+          ) : (
+            // Once there is a cabinet at all, the header carries the dynasty
+            // piece rather than a generic cup: it counts, the plinths don't.
+            <Silverware variant="legacy" size={72} className="shrink-0" />
+          )}
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-dim">The cabinet</p>
             <h2 className="mt-0.5 font-display text-[34px] font-bold leading-none tracking-[-0.045em]">
@@ -275,7 +285,8 @@ function TrophyRoomBody({ state }: { state: GameState }): ReactNode {
           competition={replaying.competition}
           season={`Season ${replaying.season}`}
           clubName={club.name}
-          visual={<ClubBadge visual={club.visual} size={96} label={club.name} />}
+          variant={silverwareVariantFor(replaying.competition)}
+          crest={<ClubBadge visual={club.visual} size={54} label={club.name} />}
           stats={[
             { label: 'Season', value: replaying.season },
             { label: 'Times won', value: seasonOf(replaying) },

@@ -6,8 +6,8 @@ import {
 } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassPanel, GlassPill, KeyValueRow, Screen,
-  SectionHeader, Sparkline, StatCard, StatGrid, Timeline, cn, formatMoney,
-  IconCalendar, IconStar, IconTrophy,
+  SectionHeader, Silverware, Sparkline, StatCard, StatGrid, Timeline, cn, formatMoney,
+  silverwareVariantFor, IconCalendar, IconStar, IconTrophy,
   type TimelineItem,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
@@ -40,6 +40,15 @@ const SeasonRow = memo(function SeasonRow({
           <span className="tnum font-display text-[28px] font-bold leading-none tracking-[-0.04em] text-ink">
             {summary.season}
           </span>
+          {/* A won season is visibly a different row from a nearly-won one,
+              before anyone reads a word of it. */}
+          {summary.trophies.length > 0 && (
+            <span className="mt-2 flex flex-wrap items-end justify-center gap-0.5" aria-hidden="true">
+              {summary.trophies.slice(0, 3).map((trophy) => (
+                <Silverware key={trophy} variant={silverwareVariantFor(trophy)} size={34} />
+              ))}
+            </span>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
