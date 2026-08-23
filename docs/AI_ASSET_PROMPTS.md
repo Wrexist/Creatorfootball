@@ -4,6 +4,10 @@
 > production input: copy-paste-ready generation prompts for every asset the game still needs, plus
 > the hand-made overrides that can upgrade something already rendering from code.
 >
+> **Generating with ChatGPT?** Use `docs/AI_ASSET_PROMPTS_CHATGPT.md` instead — the same assets,
+> same entry IDs, re-authored in ChatGPT idiom (no `--ar` flags, exclusions as prose, alpha
+> fallbacks, per-set thread primers). The prompts below are Midjourney/SDXL idiom.
+>
 > **Prime directive, unchanged:** every file here is an *override layer* over a working procedural
 > path. A file that is missing, corrupt or slow is never a bug — the component behind it draws.
 > Nothing in this pack may become load-bearing.
