@@ -29,7 +29,163 @@ const STORY_PALETTES: readonly (readonly [string, string])[] = [
   ['#34d399', '#0e1013'], ['#f4525a', '#14171b'], ['#fbbf24', '#0e1013'],
 ];
 
-function StoryArt({ seed, className }: { seed: string; className?: string }): ReactNode {
+/* --- editorial motifs -------------------------------------------------- */
+
+/**
+ * The five things the press actually write about.
+ *
+ * Bands alone are wallpaper: they tell a reader that a picture belongs here
+ * without ever telling them what the story is. These five motifs are the whole
+ * editorial vocabulary of the sport as this game models it — somebody moved
+ * club, somebody got hurt, two clubs hate each other, the supporters had their
+ * say, or a result happened — and every trigger the media engine can fire lands
+ * in one of them or in none, in which case the bands stay.
+ *
+ * They are drawn in the icon set's language deliberately: same round caps, same
+ * flat construction, no shading, just scaled up from the 24px grid to a 200×100
+ * plate. That is what keeps a key image reading as part of this product rather
+ * than as stock art dropped into it.
+ */
+export type StoryMotif = 'transfer' | 'injury' | 'rivalry' | 'fans' | 'result';
+
+export const STORY_MOTIFS: readonly StoryMotif[] = [
+  'transfer', 'injury', 'rivalry', 'fans', 'result',
+] as const;
+
+/** Human label, used by the gallery and by nothing in the product. */
+export const STORY_MOTIF_LABELS: Record<StoryMotif, string> = {
+  transfer: 'Transfer',
+  injury: 'Injury',
+  rivalry: 'Rivalry',
+  fans: 'Fan culture',
+  result: 'Result reaction',
+};
+
+/**
+ * Motif matchers, in priority order.
+ *
+ * A story carries `trigger:TRANSFER_COMPLETED`-style tags plus whatever the
+ * content hook attached, and packs are free to invent their own vocabulary — so
+ * this matches loosely across the joined tag text rather than switching on an
+ * enum that does not exist. Order matters: a derby win is a rivalry story
+ * before it is a result, and an injury inside a transfer saga is an injury.
+ */
+const MOTIF_PATTERNS: readonly (readonly [StoryMotif, RegExp])[] = [
+  ['injury', /injur|fitness|knock|surgery|recover|red_card|suspen|sidelined/],
+  ['rivalry', /rival|derby|dunk|feud|grudge|bad_blood|hostil/],
+  // The lookbehind keeps `SPONSOR_SIGNED` out: a shirt deal is a business
+  // story, and illustrating it with a player contract would be a small lie.
+  ['transfer', /transfer|marquee|(?<!sponsor_)sign(ing|ed)|\bbid\b|\bfee\b|contract|release|sold|loan|creator_joined|scout/],
+  ['fans', /fan|supporter|crowd|attendance|terrace|ticket|social|content_drop|club_posted|creator_moment|buzz|unrest/],
+  ['result', /win|won|defeat|draw|drawn|result|score|goal|reaction|record|trophy|title|match|streak|run\b/],
+];
+
+/**
+ * Choose the motif for a story's tags, or `null` when nothing matches — and
+ * `null` is a real answer, not a failure: the seeded bands are still the
+ * correct picture for a story about a facility upgrade or a sponsor.
+ */
+export function storyMotifFor(tags: readonly string[] | undefined): StoryMotif | null {
+  if (!tags || tags.length === 0) return null;
+  const text = tags.join(' ').toLowerCase();
+  for (const [motif, pattern] of MOTIF_PATTERNS) {
+    if (pattern.test(text)) return motif;
+  }
+  return null;
+}
+
+const INK = '#f4f6f8';
+
+/**
+ * The motif drawings.
+ *
+ * Each is a `<g>` placed by the caller, drawn inside a ±26 box around its own
+ * origin at the icon set's proportions (1.5px stroke on a 24px grid becomes 2px
+ * on this one, which is the same optical weight once the plate is scaled to the
+ * 28px-tall card header). `accent` is the story's own seeded palette colour, so
+ * the motif belongs to the image it sits on instead of introducing a sixth
+ * hue. Node counts are held to single figures each: a feed renders these by the
+ * dozen.
+ */
+const MOTIF_ART: Record<StoryMotif, (accent: string) => ReactNode> = {
+  // A contract and the pen over it. The signature line is the accent — the one
+  // stroke in the drawing that means "this actually happened".
+  transfer: (accent) => (
+    <g strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none">
+      <path d="M-22 -24h26l10 10v38h-36z" stroke={INK} opacity="0.9" />
+      <path d="M4 -24v10h10" stroke={INK} opacity="0.9" />
+      <path d="M-15 -6h16M-15 2h20M-15 10h11" stroke={INK} opacity="0.45" />
+      <path d="M-11 17c5-6 9 4 14-2s8 1 13-5" stroke={accent} strokeWidth="2.6" />
+      <path d="M22 -20 8 -6l-4 9 9-4 14-14z" stroke={INK} opacity="0.9" />
+      <path d="m17 -15 4 4" stroke={INK} opacity="0.9" />
+    </g>
+  ),
+  // A cross with the trace running straight through it. The flatline dip is
+  // what makes it read as an injury rather than as a pharmacy.
+  injury: (accent) => (
+    <g strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none">
+      <path d="M-8 -22h16v14h14v16H8v14H-8v-14h-14v-16h14z" stroke={INK} opacity="0.9" />
+      <path d="M-30 2h9l4-9 6 18 5-11 4 6h30" stroke={accent} strokeWidth="2.6" />
+    </g>
+  ),
+  // Two crests turned away from each other, split by the bolt. The gap is the
+  // point: the drawing is about the space between them.
+  rivalry: (accent) => (
+    <g strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none">
+      <g transform="rotate(-9)">
+        <path d="M-14 -22h-16v18c0 11 7 18 16 23" stroke={INK} opacity="0.9" />
+      </g>
+      <g transform="rotate(9)">
+        <path d="M14 -22h16v18c0 11-7 18-16 23" stroke={INK} opacity="0.9" />
+      </g>
+      <path d="M4 -27-7 2h6l-3 25 11-29h-6z" stroke={accent} strokeWidth="2.4" strokeLinejoin="round" />
+    </g>
+  ),
+  // Scarf held overhead, flag behind it. Supporters, drawn as the objects they
+  // hold rather than as a crowd of dots.
+  fans: (accent) => (
+    <g strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none">
+      <path d="M18 24v-46" stroke={INK} opacity="0.9" />
+      <path d="M18 -22c8 2 12 6 20 4-2 6-2 10 0 15-8 2-12-2-20-4z" stroke={accent} strokeWidth="2.2" />
+      <path d="M-32 -6c8-8 17-8 25 0s17 8 25 0" stroke={INK} opacity="0.9" />
+      <path d="M-32 -6v14c8-8 17-8 25 0" stroke={INK} opacity="0.9" />
+      <path d="M18 8c-8 8-17 8-25 0" stroke={INK} opacity="0.9" />
+      <path d="M-24 -2v13M-14 -5v13M2 -2v13M11 -5v13" stroke={INK} opacity="0.4" />
+    </g>
+  ),
+  // A scoreline on a board, and the burst it set off. Six rays, not twelve —
+  // a starburst with too many arms stops being a graphic and becomes a sun.
+  result: (accent) => (
+    <g strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none">
+      <rect x="-31" y="-15" width="62" height="30" rx="7" stroke={INK} opacity="0.9" />
+      {/* Two plates and a dash, not digits: a drawn numeral would be a
+          scoreline this story does not have. */}
+      <rect x="-22" y="-8" width="15" height="16" rx="3" stroke={INK} opacity="0.75" />
+      <path d="M-3 0h6" stroke={INK} opacity="0.55" />
+      <rect x="7" y="-8" width="15" height="16" rx="3" stroke={accent} strokeWidth="2.4" />
+      <path d="M-34 -24 -29 -19M0 -30v-7M34 -24 29 -19M-34 26l5-5M34 26l-5-5" stroke={accent} strokeWidth="2.4" opacity="0.85" />
+    </g>
+  ),
+};
+
+/**
+ * The key image on a lead story.
+ *
+ * Seeded bands are the base layer and remain the whole picture for anything the
+ * matcher does not recognise; a recognised story gets its motif stamped on top,
+ * inside a vignette that keeps the bands legible behind the drawing. Decorative
+ * either way, so the whole thing is `aria-hidden` — the headline underneath is
+ * the content.
+ */
+export function StoryArt({
+  seed,
+  motif = null,
+  className,
+}: {
+  seed: string;
+  motif?: StoryMotif | null;
+  className?: string;
+}): ReactNode {
   const fadeId = useSvgId('cf-story');
   const bands = useMemo(() => {
     const s = new SeedStream(seed);
@@ -59,6 +215,15 @@ function StoryArt({ seed, className }: { seed: string; className?: string }): Re
           />
         ))}
       </g>
+      {motif && (
+        // Right of centre, clear of the tag pill the card places top-left. The
+        // scrim is a flat ellipse rather than a blur: one paint, and it does
+        // the whole job of separating a line drawing from a striped ground.
+        <>
+          <ellipse cx="140" cy="46" rx="52" ry="42" fill={bands.base} opacity="0.62" />
+          <g transform="translate(140 46) scale(0.92)">{MOTIF_ART[motif](bands.accent)}</g>
+        </>
+      )}
       <rect width="200" height="100" fill={`url(#${fadeId})`} />
       <defs>
         <linearGradient id={fadeId} x1="0" y1="0" x2="0" y2="1">
@@ -140,7 +305,7 @@ export const NewsCard = memo(function NewsCard({
     >
       {lead && (
         <div className="relative h-28 w-full">
-          <StoryArt seed={story.imageSeed ?? story.id} />
+          <StoryArt seed={story.imageSeed ?? story.id} motif={storyMotifFor(story.tags)} />
           {story.tags[0] && (
             <div className="absolute left-3 top-3">
               <GlassPill tone={sentimentTone} size="xs" filled={sentimentTone !== 'neutral'}>

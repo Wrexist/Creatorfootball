@@ -19,7 +19,8 @@
     "audit:invariants": "pnpm --filter @cf/sim audit:invariants",
     "audit:all": "pnpm --filter @cf/sim audit:all",
     "lint:fix": "eslint . --fix",
-    "test:smoke": "pnpm --filter @cf/game test:smoke"
+    "test:smoke": "pnpm --filter @cf/game test:smoke",
+    "assets:ingest": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

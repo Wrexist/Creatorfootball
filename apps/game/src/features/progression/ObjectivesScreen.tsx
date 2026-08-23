@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { rewardSummary, type GameState, type Objective } from '@cf/engine';
 import {
   Divider, GlassButton, GlassPanel, GlassPill, HeroSurface, IconCheck, ListRow,
-  ProgressBar, Screen, SectionHeader, StatBlock, Text, useToast,
+  ProgressBar, Screen, SectionHeader, StatBlock, Text, sfx, useToast,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -173,8 +173,10 @@ function ObjectivesView({ state }: { state: GameState }): ReactNode {
     setClaimingId(objective.id);
     const report = claimReward(objective);
     setClaimingId(null);
-    if (report.ok) toast.success(report.title, report.detail);
-    else toast.error(report.title, report.detail);
+    if (report.ok) {
+      sfx.reward();
+      toast.success(report.title, report.detail);
+    } else toast.error(report.title, report.detail);
   };
 
   const anythingYet =

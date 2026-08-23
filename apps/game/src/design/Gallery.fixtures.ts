@@ -4,6 +4,11 @@ import type {
 } from '@cf/engine';
 import { asId, emptyAttributes, emptyForm, emptyMental, emptyRecord, overallFor } from '@cf/engine';
 import { SeedStream } from './seed';
+import { portraitFeatures, type PortraitFeatures, type PortraitVariant } from './domain/PlayerPortrait';
+import {
+  EXPRESSIONS, FACE_ACCESSORIES, FACE_SHAPES, FACIAL_HAIR_STYLES,
+  HAIR_STYLES as FACE_HAIR_STYLES,
+} from './domain/face';
 
 /**
  * Fixtures for the component gallery ONLY.
@@ -320,3 +325,57 @@ export const GALLERY_POSTS: readonly SocialPost[] = [
     entities: [], tags: [],
   },
 ];
+
+/* --- portrait catalogue ----------------------------------------------- */
+
+/**
+ * Seeds chosen by *searching* rather than by hand.
+ *
+ * A portrait is a pure function of its seed, so there is no way to write down a
+ * seed that produces an afro or a widow's peak — you have to look for one. The
+ * gallery needs one face per hair style, per face shape and per accessory to be
+ * useful as a review surface, so the search runs here, once, over a bounded
+ * candidate range. Deterministic: the same build always shows the same faces.
+ */
+const findFaceSeed = (
+  prefix: string,
+  match: (features: PortraitFeatures) => boolean,
+  variant: PortraitVariant = 'player',
+): string => {
+  for (let i = 0; i < 8_000; i += 1) {
+    const seed = `${prefix}-${i}`;
+    if (match(portraitFeatures(seed, variant))) return seed;
+  }
+  return `${prefix}-0`;
+};
+
+export const GALLERY_HAIR_SEEDS: readonly { style: string; seed: string }[] = FACE_HAIR_STYLES.map(
+  (style) => ({ style, seed: findFaceSeed('hair', (f) => f.hairStyle === style) }),
+);
+
+export const GALLERY_SHAPE_SEEDS: readonly { shape: string; seed: string }[] = FACE_SHAPES.map(
+  (shape) => ({ shape, seed: findFaceSeed('shape', (f) => f.faceShape === shape) }),
+);
+
+export const GALLERY_BEARD_SEEDS: readonly { style: string; seed: string }[] = FACIAL_HAIR_STYLES.map(
+  (style) => ({ style, seed: findFaceSeed('beard', (f) => f.facialHair === style) }),
+);
+
+export const GALLERY_EXPRESSION_SEEDS: readonly { expression: string; seed: string }[] = EXPRESSIONS.map(
+  (expression) => ({ expression, seed: findFaceSeed('mood', (f) => f.expression === expression) }),
+);
+
+/** Player accessories are rare; creators pull from the flashier pool. */
+export const GALLERY_ACCESSORY_SEEDS: readonly { accessory: string; seed: string; creator: boolean }[] =
+  FACE_ACCESSORIES.filter((a) => a !== 'none').map((accessory) => {
+    const creator = accessory === 'cap' || accessory === 'chain' || accessory === 'tinted';
+    return {
+      accessory,
+      creator,
+      seed: findFaceSeed(
+        `worn-${accessory}`,
+        (f) => f.accessory === accessory,
+        creator ? 'creator' : 'player',
+      ),
+    };
+  });

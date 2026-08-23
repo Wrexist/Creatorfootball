@@ -3,11 +3,12 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
+import { sfx } from '../audio';
 import { SeedStream } from '../seed';
 import { Portal } from '../glass/Portal';
 import { GlassButton } from '../glass/GlassButton';
 import { ShinyText } from './effects';
-import { IconTrophy } from '../icons';
+import { Silverware, type SilverwareVariant } from '../domain/silverware';
 
 /**
  * Hero moments: full-screen, interruptive, and rationed.
@@ -142,7 +143,9 @@ export function HeroReveal({
   const m = useDesignMotion();
 
   useEffect(() => {
-    if (overlay.open) haptics.celebrate();
+    if (!overlay.open) return;
+    haptics.celebrate();
+    sfx.reward();
   }, [overlay.open]);
 
   return (
@@ -270,24 +273,94 @@ export interface TrophyMomentProps extends Omit<HeroOverlayProps, 'children'> {
   competition: string;
   season: ReactNode;
   clubName: string;
-  /** Optional badge or crest node. */
+  /**
+   * Which piece of silverware is being lifted. Defaults to the champion cup;
+   * pass `silverwareVariantFor(competition)` to derive it from the name.
+   */
+  variant?: SilverwareVariant;
+  /**
+   * Replaces the trophy itself. Only pass this when the moment is *not* about
+   * a trophy — the cup is the point of this overlay.
+   */
   visual?: ReactNode;
+  /** Small club crest shown above the trophy. */
+  crest?: ReactNode;
   stats?: readonly { label: string; value: ReactNode }[];
+}
+
+/**
+ * Volt confetti, rationed.
+ *
+ * Fourteen flecks, two of them volt and the rest gold, falling once. Confetti
+ * is the easiest thing in this entire design system to overdo: a hundred
+ * particles turns the trophy into a background element and costs a frame
+ * budget the moment cannot spare on a mid-range phone.
+ */
+function Confetti({ seed }: { seed: string }): ReactNode {
+  const m = useDesignMotion();
+  const flecks = useMemo(() => {
+    const s = new SeedStream(`confetti:${seed}`);
+    return Array.from({ length: 14 }, (_, i) => ({
+      x: s.range(`x${i}`, 6, 94),
+      delay: s.range(`d${i}`, 0, 0.7),
+      drift: s.range(`dr${i}`, -26, 26),
+      spin: s.range(`s${i}`, -220, 220),
+      duration: s.range(`t${i}`, 1.5, 2.4),
+      volt: i % 7 === 3,
+      size: s.range(`w${i}`, 4, 8),
+    }));
+  }, [seed]);
+
+  if (m.reduced) return null;
+
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {flecks.map((fleck, i) => (
+        <motion.span
+          key={i}
+          className="absolute top-0 rounded-[1px]"
+          style={{
+            left: `${fleck.x}%`,
+            width: fleck.size,
+            height: fleck.size * 1.7,
+            background: fleck.volt ? '#c8ff2e' : '#ffd76a',
+          }}
+          initial={{ y: '-8vh', x: 0, rotate: 0, opacity: 0 }}
+          animate={{ y: '92vh', x: fleck.drift, rotate: fleck.spin, opacity: [0, 0.9, 0.9, 0] }}
+          transition={{ duration: fleck.duration, delay: fleck.delay, ease: 'linear' }}
+        />
+      ))}
+    </span>
+  );
 }
 
 /** The biggest moment the product has. Gold is used here and nowhere else. */
 export function TrophyMoment({
-  competition, season, clubName, visual, stats, ...overlay
+  competition, season, clubName, variant = 'league', visual, crest, stats, ...overlay
 }: TrophyMomentProps): ReactNode {
   const m = useDesignMotion();
 
   useEffect(() => {
-    if (overlay.open) haptics.celebrate();
+    if (!overlay.open) return;
+    haptics.celebrate();
+    sfx.trophy();
   }, [overlay.open]);
 
   return (
     <HeroOverlay {...overlay}>
       <Rays color="rgb(255 215 106 / 0.45)" count={20} seed={competition} />
+      <Confetti seed={competition} />
+
+      {crest !== undefined && (
+        <motion.div
+          initial={m.reduced ? { opacity: 0 } : { y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={m.transition.medium}
+          className="relative mb-4 opacity-90"
+        >
+          {crest}
+        </motion.div>
+      )}
 
       <motion.div
         initial={m.reduced ? { opacity: 0 } : { scale: 0.6, opacity: 0, rotate: -8 }}
@@ -295,7 +368,34 @@ export function TrophyMoment({
         transition={m.spring.bouncy}
         className="relative text-hero-gold drop-shadow-[0_18px_48px_rgb(255_215_106/0.35)]"
       >
-        {visual ?? <IconTrophy size={112} strokeWidth={1.2} />}
+        {/* The px size is the SSR/no-CSS truth; the class lets a small phone
+            keep the headline on screen underneath it. */}
+        {visual ?? (
+          <Silverware
+            variant={variant}
+            size={196}
+            glow
+            label={`${competition} trophy`}
+            className="h-[min(34vh,220px)] w-auto"
+          />
+        )}
+
+        {/* The lift: one soft specular pass across the metal, once. A radial
+            rather than a bar, because a rectangular sweep over a cup-shaped
+            silhouette reads as a rectangle. */}
+        {!m.reduced && (
+          <motion.span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 -inset-x-1/4"
+            style={{
+              background: 'radial-gradient(38% 60% at 50% 42%, rgb(255 255 255 / 0.5), transparent 72%)',
+              mixBlendMode: 'screen',
+            }}
+            initial={{ x: '-70%', opacity: 0 }}
+            animate={{ x: '70%', opacity: [0, 1, 0] }}
+            transition={{ duration: 1.15, delay: 0.42, ease: [0.4, 0, 0.2, 1] }}
+          />
+        )}
       </motion.div>
 
       <motion.div
@@ -360,7 +460,9 @@ export function SigningMoment({
   const m = useDesignMotion();
 
   useEffect(() => {
-    if (overlay.open) haptics.success();
+    if (!overlay.open) return;
+    haptics.success();
+    sfx.signing();
   }, [overlay.open]);
 
   return (

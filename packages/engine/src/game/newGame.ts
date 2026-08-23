@@ -426,6 +426,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
   const settings: GameSettings = {
     reducedMotion: false,
     haptics: true,
+    sound: true,
     matchSpeed: 'NORMAL',
     presentation: 'PITCH',
     commentary: true,

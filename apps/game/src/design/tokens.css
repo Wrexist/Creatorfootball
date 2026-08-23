@@ -326,6 +326,40 @@
   100% { opacity: 0; transform: translateY(-26px) scale(1.05); }
 }
 
+/*
+  Floodlight breath, for `design/hero/scenes.tsx`.
+
+  Opacity only, seven seconds, and nothing in the composition depends on where
+  in the cycle it is caught — so the global `prefers-reduced-motion` rule above
+  (which collapses every animation to 0.01ms) leaves a correct still frame
+  rather than a half-drawn one. That is why this is a CSS keyframe and not a
+  motion variant: the scene never has to know the preference.
+*/
+@keyframes cf-floodlight {
+  0%, 100% { opacity: 0.86; }
+  50%      { opacity: 1; }
+}
+
+.hero-scene-flood {
+  animation: cf-floodlight 7s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/*
+  The scene is atmosphere, and atmosphere is the first thing to go when
+  somebody has asked for less of it. Removing the drawing leaves the wrapper's
+  solid fill, which is already the exact colour the composition resolves to at
+  its darkest — so nothing shifts, nothing flashes, and the glass above it is
+  unaffected because it never depended on what was underneath.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .hero-scene-art { display: none; }
+  .hero-scene-flood { animation: none; }
+}
+
+[data-reduced-effects='true'] .hero-scene-art { display: none; }
+[data-reduced-effects='true'] .hero-scene-flood { animation: none; }
+
 @layer utilities {
   /* Hairline separator that survives on every glass level. */
   .hairline { border-color: rgb(255 255 255 / 0.08); }
@@ -832,3 +866,63 @@
 [data-reduced-effects='true'] .tex-stadium::after,
 [data-reduced-effects='true'] .tex-haze::after,
 [data-reduced-effects='true'] .glass-bleed::after { display: none; }
+
+/*
+  Legendary card foil, for `design/hero/effects.tsx` → `CardFoil`.
+
+  A printed foil is a diffraction grating, and a grating is two rulings at
+  slightly different pitches beating against each other. Two repeating linear
+  gradients — 128px at 115deg against 96px at -42deg — produce that interference
+  procedurally, and the single wide conic on top supplies the hue shift across
+  the sheet. Volt, gold and white only, every stop under 12% alpha, screen-blended
+  over the card's own club wash so it lifts the finish without tinting the art.
+
+  No animation lives here on purpose: the movement on a legendary card is the
+  hover glare (`GlareSweep`, transform-only, absent on touch) and the existing
+  conic edge. A permanently shimmering background would be the third continuous
+  animation on one object.
+
+  The mask keeps the layer off the foot of the card, where the name and the
+  attribute strip sit — a finish must never be something text has to survive.
+*/
+.cf-foil {
+  background-image:
+    repeating-linear-gradient(
+      115deg,
+      rgb(200 255 46 / 0.115) 0px,
+      rgb(200 255 46 / 0) 7px,
+      rgb(255 255 255 / 0.075) 12px,
+      rgb(255 255 255 / 0) 19px,
+      rgb(255 215 106 / 0.075) 25px,
+      rgb(255 215 106 / 0) 32px
+    ),
+    repeating-linear-gradient(
+      -42deg,
+      rgb(255 255 255 / 0.05) 0px,
+      rgb(255 255 255 / 0) 10px,
+      rgb(200 255 46 / 0.06) 16px,
+      rgb(200 255 46 / 0) 27px
+    ),
+    conic-gradient(
+      from 210deg at 30% 18%,
+      rgb(200 255 46 / 0.03),
+      rgb(124 140 255 / 0.02) 70deg,
+      rgb(255 215 106 / 0.035) 150deg,
+      rgb(200 255 46 / 0.016) 230deg,
+      rgb(255 215 106 / 0.028) 300deg,
+      rgb(200 255 46 / 0.03) 360deg
+    );
+  background-size: 128px 128px, 96px 96px, 100% 100%;
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(196deg, #000 0%, #000 34%, rgb(0 0 0 / 0.22) 60%, transparent 78%);
+  mask-image: linear-gradient(196deg, #000 0%, #000 34%, rgb(0 0 0 / 0.22) 60%, transparent 78%);
+}
+
+/*
+  Reduced transparency asks for fewer floating films, not a different card. The
+  foil is the film; removing it leaves the glass card the variant already is.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .cf-foil { display: none; }
+}
+[data-reduced-effects='true'] .cf-foil { display: none; }

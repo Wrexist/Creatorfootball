@@ -3,6 +3,13 @@ import { cn } from '../cn';
 import { SeedStream } from '../seed';
 import { darken, lighten, rgba } from '../color';
 import { useSvgId } from '../useSvgId';
+import {
+  Accessory, Brows, Ears, EYE_STYLES, Eyes, FACE_SHAPES, FaceGradients,
+  FaceShading, FacialHairLayer, Hair, HAIR_BACK_STYLES, HAIR_STYLES, HAIRLINES, headHalfWidth,
+  featureInk, headPath, Mouth, Neck, Nose,
+  type BrowStyle, type Expression, type FaceAccessory, type FaceShape, type EyeStyle,
+  type FacialHairStyle, type HairStyle, type Hairline, type HeadGeometry,
+} from './face';
 
 /**
  * Procedurally generated portraits.
@@ -12,233 +19,127 @@ import { useSvgId } from '../useSvgId';
  * costs zero bytes of download, portraits are stable across saves and devices,
  * and nothing ever 404s.
  *
- * The style is deliberately flat and graphic rather than photoreal: a stylised
- * vector face reads instantly at 28px in a squad list, which a rendered head
- * never does, and it sidesteps the uncanny mismatch between a photoreal face
- * and a procedurally invented name.
+ * The style is stylised rather than photoreal: a vector face reads instantly at
+ * 28px in a squad list, which a rendered head never does, and it sidesteps the
+ * uncanny mismatch between a photoreal face and a procedurally invented name.
+ * It is *not*, however, flat — a face is lit from the upper left with a
+ * cheekbone highlight, a jaw-side falloff, a neck shadow and one hair sheen,
+ * because flat fills at these sizes read as clip-art rather than as a
+ * broadcast graphics package.
  *
  * Determinism: every feature reads a *named* channel from the seed stream, so
- * adding a new feature later does not reshuffle every existing face.
+ * adding a new feature later does not reshuffle every existing face, and the
+ * same seed produces byte-identical SVG on every device forever.
+ *
+ * The geometry itself lives in `./face`, shared with the manager customiser so
+ * the player's own portrait belongs to the same world as the newgens.
  */
 
 const SKIN_TONES = [
-  '#f2d3bb', '#e9c19f', '#d9a77c', '#c68a5e', '#a9683f',
-  '#8a4f2d', '#6b3a20', '#f7e0cd', '#b9835b', '#5a2f1a',
+  '#f7e0cd', '#f2d3bb', '#e9c19f', '#dcb18f', '#d9a77c', '#c68a5e',
+  '#b9835b', '#a9683f', '#8a4f2d', '#6b3a20', '#5a2f1a', '#43220f',
 ] as const;
 
 const HAIR_COLORS = [
-  '#1b1613', '#2e2119', '#4a3121', '#6b4526', '#8d6034',
-  '#b4884a', '#d8b36a', '#7d7d7d', '#c9c9c9', '#3a2d5a',
+  '#1b1613', '#241c17', '#2e2119', '#4a3121', '#6b4526', '#8d6034',
+  '#b4884a', '#d8b36a', '#7d7d7d', '#c9c9c9', '#e3e3e3', '#3a2d5a',
 ] as const;
 
-const HAIR_STYLES = [
-  'bald', 'buzz', 'short', 'fade', 'curls', 'afro', 'long', 'bun', 'mohawk', 'waves',
-] as const;
-type HairStyle = (typeof HAIR_STYLES)[number];
+const BROW_STYLE_POOL = ['flat', 'arched', 'angled', 'thick', 'soft'] as const;
 
-const FACIAL_HAIR = ['none', 'none', 'none', 'stubble', 'moustache', 'goatee', 'beard', 'chinstrap'] as const;
-type FacialHair = (typeof FACIAL_HAIR)[number];
+/**
+ * Weighted by repetition rather than by a weights table: a third of a squad
+ * being clean-shaven is what a real team looks like, and a literal list keeps
+ * `SeedStream.pick` doing the only job it has.
+ */
+const FACIAL_HAIR_POOL = [
+  'none', 'none', 'none', 'none', 'none',
+  'stubble', 'stubble', 'stubble',
+  'moustache', 'goatee', 'soulpatch', 'sideburns',
+  'beard', 'beard', 'fullbeard', 'chinstrap',
+] as const;
+
+/**
+ * Expression is deliberately narrow. A grin on a squad-list face reads as a
+ * different *game*; what we want is the difference between a player who looks
+ * present and one who looks switched on.
+ */
+const EXPRESSION_POOL = ['neutral', 'neutral', 'neutral', 'focused', 'focused', 'smile'] as const;
+
+export type PortraitVariant = 'player' | 'creator';
+
+/**
+ * Accessories are rare on purpose: roughly one player in five wears anything,
+ * and only one in sixteen wears something you would describe out loud. Creators
+ * are the visible half of the game's world and pull from a flashier pool, so a
+ * feed of avatars is distinguishable from a team sheet at a glance.
+ */
+function rollAccessory(roll: number, variant: PortraitVariant): FaceAccessory {
+  if (variant === 'creator') {
+    if (roll < 0.09) return 'tinted';
+    if (roll < 0.19) return 'cap';
+    if (roll < 0.28) return 'chain';
+    if (roll < 0.36) return 'earring';
+    if (roll < 0.43) return 'glasses';
+    if (roll < 0.49) return 'headband';
+    if (roll < 0.54) return 'studs';
+    return 'none';
+  }
+  if (roll < 0.06) return 'earring';
+  if (roll < 0.11) return 'headband';
+  if (roll < 0.15) return 'glasses';
+  if (roll < 0.18) return 'studs';
+  return 'none';
+}
 
 export interface PortraitFeatures {
   readonly skin: string;
   readonly hair: string;
   readonly hairStyle: HairStyle;
-  readonly facialHair: FacialHair;
+  readonly hairline: Hairline;
+  readonly facialHair: FacialHairStyle;
+  readonly faceShape: FaceShape;
   readonly halfWidth: number;
   readonly jaw: number;
   readonly browThickness: number;
-  readonly eyeStyle: 0 | 1 | 2;
+  readonly browStyle: BrowStyle;
+  readonly eyeStyle: EyeStyle;
+  readonly eyeSpacing: number;
+  readonly expression: Expression;
   readonly earSize: number;
+  readonly noseWidth: number;
   readonly mouthCurve: number;
+  readonly accessory: FaceAccessory;
 }
 
-export function portraitFeatures(seed: string): PortraitFeatures {
+/**
+ * The whole face as data. Exported so tests, the gallery and any future
+ * override layer (hand-painted plates over the same features) can inspect a
+ * face without rendering one.
+ */
+export function portraitFeatures(seed: string, variant: PortraitVariant = 'player'): PortraitFeatures {
   const s = new SeedStream(seed || 'anonymous');
-  const hairStyle = s.pick('hairStyle', HAIR_STYLES);
   return {
     skin: s.pick('skin', SKIN_TONES),
     hair: s.pick('hairColor', HAIR_COLORS),
-    hairStyle,
+    hairStyle: s.pick('hairStyle', HAIR_STYLES),
+    hairline: s.pick('hairline', HAIRLINES),
     // A bald head with a full beard is a real look; a buzz cut with a chinstrap
     // is not worth the combinatorics, so facial hair is drawn independently.
-    facialHair: s.pick('facialHair', FACIAL_HAIR),
-    halfWidth: s.range('width', 22, 26),
-    jaw: s.range('jaw', 0.62, 0.94),
-    browThickness: s.range('brow', 2.2, 4),
-    eyeStyle: s.int('eye', 3) as 0 | 1 | 2,
-    earSize: s.range('ear', 3.4, 5),
-    mouthCurve: s.range('mouth', -1.6, 2.4),
+    facialHair: s.pick('facialHair', FACIAL_HAIR_POOL),
+    faceShape: s.pick('faceShape', FACE_SHAPES),
+    halfWidth: s.range('width', 21.5, 26),
+    jaw: s.range('jaw', 0.64, 0.96),
+    browThickness: s.range('brow', 1.9, 3),
+    browStyle: s.pick('browStyle', BROW_STYLE_POOL),
+    eyeStyle: s.pick('eye', EYE_STYLES),
+    eyeSpacing: s.range('eyeSpacing', 10.2, 12),
+    expression: s.pick('expression', EXPRESSION_POOL),
+    earSize: s.range('ear', 3.3, 4.5),
+    noseWidth: s.range('nose', 2.1, 3.2),
+    mouthCurve: s.range('mouth', -1.4, 2),
+    accessory: rollAccessory(s.channel('accessory'), variant),
   };
-}
-
-const CX = 60;
-const TOP = 20;
-const CHIN = 84;
-
-function headPath(halfWidth: number, jaw: number): string {
-  const w = halfWidth;
-  const j = w * jaw;
-  return [
-    `M${CX - w} ${TOP + 26}`,
-    `C${CX - w} ${TOP + 8} ${CX - w * 0.62} ${TOP} ${CX} ${TOP}`,
-    `C${CX + w * 0.62} ${TOP} ${CX + w} ${TOP + 8} ${CX + w} ${TOP + 26}`,
-    `L${CX + w} ${CHIN - 24}`,
-    `C${CX + w} ${CHIN - 8} ${CX + j * 0.78} ${CHIN} ${CX} ${CHIN}`,
-    `C${CX - j * 0.78} ${CHIN} ${CX - w} ${CHIN - 8} ${CX - w} ${CHIN - 24}`,
-    'Z',
-  ].join(' ');
-}
-
-function Hair({ style, color, w }: { style: HairStyle; color: string; w: number }): ReactNode {
-  const edge = darken(color, 0.25);
-  switch (style) {
-    case 'bald':
-      return null;
-    case 'buzz':
-      return (
-        <path
-          d={`M${CX - w - 0.5} ${TOP + 24} C${CX - w - 0.5} ${TOP + 4} ${CX - w * 0.6} ${TOP - 2} ${CX} ${TOP - 2} C${CX + w * 0.6} ${TOP - 2} ${CX + w + 0.5} ${TOP + 4} ${CX + w + 0.5} ${TOP + 24} C${CX + w * 0.5} ${TOP + 16} ${CX - w * 0.5} ${TOP + 16} ${CX - w - 0.5} ${TOP + 24} Z`}
-          fill={color}
-        />
-      );
-    case 'short':
-      return (
-        <path
-          d={`M${CX - w - 1} ${TOP + 28} C${CX - w - 1} ${TOP + 2} ${CX - w * 0.55} ${TOP - 5} ${CX} ${TOP - 5} C${CX + w * 0.55} ${TOP - 5} ${CX + w + 1} ${TOP + 2} ${CX + w + 1} ${TOP + 28} L${CX + w - 1} ${TOP + 20} C${CX + w * 0.3} ${TOP + 12} ${CX - w * 0.55} ${TOP + 11} ${CX - w + 1} ${TOP + 21} Z`}
-          fill={color}
-        />
-      );
-    case 'fade':
-      return (
-        <>
-          <path
-            d={`M${CX - w - 1} ${TOP + 22} C${CX - w - 1} ${TOP - 1} ${CX - w * 0.55} ${TOP - 7} ${CX} ${TOP - 7} C${CX + w * 0.55} ${TOP - 7} ${CX + w + 1} ${TOP - 1} ${CX + w + 1} ${TOP + 22} L${CX + w - 1} ${TOP + 12} L${CX - w + 1} ${TOP + 12} Z`}
-            fill={color}
-          />
-          <rect x={CX - w + 1} y={TOP + 11} width={2 * w - 2} height={3} fill={rgba(edge, 0.55)} />
-        </>
-      );
-    case 'curls':
-      return (
-        <g fill={color}>
-          {[-1, -0.55, 0, 0.55, 1].map((t, i) => (
-            <circle key={i} cx={CX + t * w * 0.92} cy={TOP + 6 + Math.abs(t) * 9} r={9.5} />
-          ))}
-          <circle cx={CX - w * 0.32} cy={TOP + 1} r={9} />
-          <circle cx={CX + w * 0.32} cy={TOP + 1} r={9} />
-        </g>
-      );
-    case 'afro':
-      return (
-        <>
-          <ellipse cx={CX} cy={TOP + 8} rx={w + 10} ry={w + 3} fill={color} />
-          <ellipse cx={CX - 5} cy={TOP + 4} rx={w * 0.5} ry={w * 0.34} fill={rgba(lighten(color, 0.3), 0.5)} />
-        </>
-      );
-    case 'long':
-      return (
-        <>
-          {/* Back layer sits behind the head; drawn first by the caller's order. */}
-          <path
-            d={`M${CX - w - 5} ${TOP + 18} C${CX - w - 5} ${TOP - 6} ${CX - w * 0.5} ${TOP - 8} ${CX} ${TOP - 8} C${CX + w * 0.5} ${TOP - 8} ${CX + w + 5} ${TOP - 6} ${CX + w + 5} ${TOP + 18} L${CX + w + 5} ${CHIN + 6} L${CX + w - 2} ${CHIN + 4} L${CX + w - 2} ${TOP + 22} L${CX - w + 2} ${TOP + 22} L${CX - w + 2} ${CHIN + 4} L${CX - w - 5} ${CHIN + 6} Z`}
-            fill={color}
-          />
-          <path
-            d={`M${CX - w - 1} ${TOP + 22} C${CX - w - 1} ${TOP + 1} ${CX - w * 0.5} ${TOP - 6} ${CX} ${TOP - 6} C${CX + w * 0.5} ${TOP - 6} ${CX + w + 1} ${TOP + 1} ${CX + w + 1} ${TOP + 22} L${CX + w * 0.2} ${TOP + 13} L${CX - w + 1} ${TOP + 20} Z`}
-            fill={color}
-          />
-        </>
-      );
-    case 'bun':
-      return (
-        <>
-          <circle cx={CX} cy={TOP - 7} r={7.5} fill={darken(color, 0.12)} />
-          <path
-            d={`M${CX - w - 1} ${TOP + 20} C${CX - w - 1} ${TOP} ${CX - w * 0.55} ${TOP - 6} ${CX} ${TOP - 6} C${CX + w * 0.55} ${TOP - 6} ${CX + w + 1} ${TOP} ${CX + w + 1} ${TOP + 20} L${CX + w - 1} ${TOP + 13} L${CX - w + 1} ${TOP + 13} Z`}
-            fill={color}
-          />
-        </>
-      );
-    case 'mohawk':
-      return (
-        <>
-          <path
-            d={`M${CX - w - 1} ${TOP + 22} C${CX - w - 1} ${TOP + 6} ${CX - w * 0.6} ${TOP + 1} ${CX} ${TOP + 1} C${CX + w * 0.6} ${TOP + 1} ${CX + w + 1} ${TOP + 6} ${CX + w + 1} ${TOP + 22} L${CX + w - 1} ${TOP + 16} L${CX - w + 1} ${TOP + 16} Z`}
-            fill={rgba(darken(color, 0.4), 0.8)}
-          />
-          <path
-            d={`M${CX - 7} ${TOP + 12} C${CX - 6} ${TOP - 10} ${CX + 6} ${TOP - 10} ${CX + 7} ${TOP + 12} Z`}
-            fill={color}
-          />
-        </>
-      );
-    case 'waves':
-    default:
-      return (
-        <path
-          d={`M${CX - w - 1} ${TOP + 26} C${CX - w - 1} ${TOP + 1} ${CX - w * 0.55} ${TOP - 6} ${CX} ${TOP - 6} C${CX + w * 0.55} ${TOP - 6} ${CX + w + 1} ${TOP + 1} ${CX + w + 1} ${TOP + 26} C${CX + w * 0.7} ${TOP + 14} ${CX + w * 0.35} ${TOP + 22} ${CX} ${TOP + 14} C${CX - w * 0.35} ${TOP + 22} ${CX - w * 0.7} ${TOP + 14} ${CX - w - 1} ${TOP + 26} Z`}
-          fill={color}
-        />
-      );
-  }
-}
-
-function FacialHairLayer({
-  kind, color, w, jaw,
-}: { kind: FacialHair; color: string; w: number; jaw: number }): ReactNode {
-  const j = w * jaw;
-  switch (kind) {
-    case 'none':
-      return null;
-    case 'stubble':
-      return (
-        <path
-          d={`M${CX - w} ${CHIN - 26} L${CX + w} ${CHIN - 26} L${CX + w} ${CHIN - 24} C${CX + w} ${CHIN - 8} ${CX + j * 0.78} ${CHIN} ${CX} ${CHIN} C${CX - j * 0.78} ${CHIN} ${CX - w} ${CHIN - 8} ${CX - w} ${CHIN - 24} Z`}
-          fill={rgba(color, 0.3)}
-        />
-      );
-    case 'moustache':
-      return (
-        <path
-          d={`M${CX - 8} ${CHIN - 17} C${CX - 4} ${CHIN - 20} ${CX + 4} ${CHIN - 20} ${CX + 8} ${CHIN - 17} C${CX + 4} ${CHIN - 14} ${CX - 4} ${CHIN - 14} ${CX - 8} ${CHIN - 17} Z`}
-          fill={color}
-        />
-      );
-    case 'goatee':
-      return (
-        <>
-          <path
-            d={`M${CX - 8} ${CHIN - 17} C${CX - 4} ${CHIN - 20} ${CX + 4} ${CHIN - 20} ${CX + 8} ${CHIN - 17} C${CX + 4} ${CHIN - 14} ${CX - 4} ${CHIN - 14} ${CX - 8} ${CHIN - 17} Z`}
-            fill={color}
-          />
-          <path
-            d={`M${CX - 6} ${CHIN - 9} C${CX - 3} ${CHIN - 11} ${CX + 3} ${CHIN - 11} ${CX + 6} ${CHIN - 9} C${CX + 5} ${CHIN - 1} ${CX - 5} ${CHIN - 1} ${CX - 6} ${CHIN - 9} Z`}
-            fill={color}
-          />
-        </>
-      );
-    case 'chinstrap':
-      return (
-        <path
-          d={`M${CX - w} ${CHIN - 26} L${CX - w} ${CHIN - 24} C${CX - w} ${CHIN - 8} ${CX - j * 0.78} ${CHIN} ${CX} ${CHIN} C${CX + j * 0.78} ${CHIN} ${CX + w} ${CHIN - 8} ${CX + w} ${CHIN - 24} L${CX + w} ${CHIN - 26} L${CX + w - 4} ${CHIN - 26} L${CX + w - 4} ${CHIN - 24} C${CX + w - 4} ${CHIN - 10} ${CX + j * 0.6} ${CHIN - 4} ${CX} ${CHIN - 4} C${CX - j * 0.6} ${CHIN - 4} ${CX - w + 4} ${CHIN - 10} ${CX - w + 4} ${CHIN - 24} L${CX - w + 4} ${CHIN - 26} Z`}
-          fill={color}
-        />
-      );
-    case 'beard':
-    default:
-      return (
-        <>
-          <path
-            d={`M${CX - w} ${CHIN - 30} L${CX - w} ${CHIN - 24} C${CX - w} ${CHIN - 6} ${CX - j * 0.78} ${CHIN + 3} ${CX} ${CHIN + 3} C${CX + j * 0.78} ${CHIN + 3} ${CX + w} ${CHIN - 6} ${CX + w} ${CHIN - 24} L${CX + w} ${CHIN - 30} L${CX + w - 3} ${CHIN - 22} C${CX + 8} ${CHIN - 18} ${CX - 8} ${CHIN - 18} ${CX - w + 3} ${CHIN - 22} Z`}
-            fill={color}
-          />
-          <path
-            d={`M${CX - 8} ${CHIN - 17} C${CX - 4} ${CHIN - 20} ${CX + 4} ${CHIN - 20} ${CX + 8} ${CHIN - 17} C${CX + 4} ${CHIN - 14} ${CX - 4} ${CHIN - 14} ${CX - 8} ${CHIN - 17} Z`}
-            fill={color}
-          />
-        </>
-      );
-  }
 }
 
 export type PortraitShape = 'circle' | 'squircle' | 'square' | 'bare';
@@ -257,6 +158,11 @@ export interface PlayerPortraitProps {
   className?: string;
   /** Announced name. Omit inside a card that already names the player. */
   label?: string;
+  /**
+   * Which accessory pool the face draws from. `creator` is flashier — caps,
+   * chains, tinted lenses. Set for you by `CreatorAvatar`.
+   */
+  variant?: PortraitVariant;
 }
 
 const SHAPE_CLASS: Record<PortraitShape, string> = {
@@ -264,6 +170,21 @@ const SHAPE_CLASS: Record<PortraitShape, string> = {
   squircle: 'rounded-[28%]',
   square: 'rounded-sm',
   bare: '',
+};
+
+/** Kit collars, so two players in the same shirt are not the same drawing. */
+const collarFor = (seedChar: number, secondary: string): ReactNode => {
+  const dark = darken(secondary, 0.35);
+  if (seedChar === 0) return <path d="M49 92 L60 104 L71 92 L66 91 L60 97 L54 91 Z" fill={dark} />;
+  if (seedChar === 1) {
+    return (
+      <>
+        <path d="M50 92 C54 102 66 102 70 92 L73 94 C68 106 52 106 47 94 Z" fill={dark} />
+        <rect x={59} y={93} width={2} height={14} fill={rgba(lighten(secondary, 0.4), 0.6)} />
+      </>
+    );
+  }
+  return <path d="M48 92 C53 103 67 103 72 92 L75 95 C69 108 51 108 45 95 Z" fill={dark} />;
 };
 
 function PortraitInner({
@@ -275,17 +196,29 @@ function PortraitInner({
   ring,
   className,
   label,
+  variant = 'player',
 }: PlayerPortraitProps): ReactNode {
   const bgId = useSvgId('cf-face-bg');
   const headClipId = useSvgId('cf-face-clip');
-  const f = useMemo(() => portraitFeatures(seed), [seed]);
+  const skinId = useSvgId('cf-face-skin');
+  const hairId = useSvgId('cf-face-hair');
+  const glossId = useSvgId('cf-face-gloss');
+  const f = useMemo(() => portraitFeatures(seed, variant), [seed, variant]);
+  const collar = useMemo(() => new SeedStream(seed || 'anonymous').int('collar', 3), [seed]);
+  // Volt is a state colour, not decoration, so it reaches an accessory only on
+  // a quarter of the faces that wear one at all — a couple per hundred.
+  const flair = useMemo(() => new SeedStream(seed || 'anonymous').chance('flair', 0.25), [seed]);
 
   const primary = colors?.primary ?? '#1c2026';
   const secondary = colors?.secondary ?? '#262b33';
-  const head = headPath(f.halfWidth, f.jaw);
-  const w = f.halfWidth;
-  const eyeY = TOP + 40;
-  const shade = darken(f.skin, 0.16);
+  const geometry: HeadGeometry = { halfWidth: f.halfWidth, jaw: f.jaw, shape: f.faceShape };
+  const head = headPath(geometry);
+  const w = headHalfWidth(geometry);
+  const hairFill = `url(#${hairId})`;
+  const accent = flair ? '#c8ff2e' : lighten(primary, 0.42);
+  const backHair = HAIR_BACK_STYLES.has(f.hairStyle);
+  // A cap covers the crown, so the hair under it is drawn as sides only.
+  const capped = f.accessory === 'cap';
 
   return (
     <svg
@@ -304,6 +237,7 @@ function PortraitInner({
           <stop offset="62%" stopColor={primary} />
           <stop offset="100%" stopColor={darken(primary, 0.55)} />
         </radialGradient>
+        <FaceGradients skinId={skinId} hairId={hairId} glossId={glossId} skin={f.skin} hair={f.hair} />
         <clipPath id={headClipId}>
           <path d={head} />
         </clipPath>
@@ -314,85 +248,47 @@ function PortraitInner({
           gradient pass — cheaper than a blur and reads as stadium light. */}
       <path d="M-10 96 C24 74 96 74 130 96 L130 130 L-10 130 Z" fill={rgba(darken(primary, 0.7), 0.55)} />
 
-      {/* Long hair renders behind the head. */}
-      {f.hairStyle === 'long' && <Hair style="long" color={f.hair} w={w} />}
-      {f.hairStyle === 'afro' && <Hair style="afro" color={f.hair} w={w} />}
+      {/* Volume that belongs behind the head: afro, long hair, dreads, tail. */}
+      {backHair && <Hair layer="back" style={f.hairStyle} color={f.hair} w={w} fill={hairFill} />}
 
       {kit && (
         <>
-          <path
-            d={`M14 120 C14 100 32 92 60 92 C88 92 106 100 106 120 Z`}
-            fill={secondary}
-          />
-          <path d={`M49 92 L60 104 L71 92 L66 91 L60 97 L54 91 Z`} fill={darken(secondary, 0.35)} />
+          <path d="M14 120 C14 100 32 92 60 92 C88 92 106 100 106 120 Z" fill={secondary} />
+          {collarFor(collar, secondary)}
         </>
       )}
 
-      {/* Neck */}
-      <path d={`M${CX - 8} ${CHIN - 14} h16 v18 h-16 Z`} fill={shade} />
+      <Neck skin={f.skin} g={geometry} />
+      <Ears skin={f.skin} g={geometry} size={f.earSize} />
 
-      {/* Ears */}
-      <ellipse cx={CX - w} cy={eyeY + 2} rx={f.earSize} ry={f.earSize * 1.35} fill={f.skin} />
-      <ellipse cx={CX + w} cy={eyeY + 2} rx={f.earSize} ry={f.earSize * 1.35} fill={f.skin} />
+      <path d={head} fill={`url(#${skinId})`} />
+      <FaceShading clipId={headClipId} glossId={glossId} skin={f.skin} g={geometry} />
 
-      <path d={head} fill={f.skin} />
-      {/* Form shading, clipped to the head so it never leaks onto the kit. */}
-      <g clipPath={`url(#${headClipId})`}>
-        {/* A soft form shadow down one side. Kept at 0.16 — anything stronger
-            reads as a hard mask rather than as light falling across a face. */}
-        <path d={`M${CX + 7} 0 L120 0 L120 120 L${CX + 15} 120 Z`} fill={rgba(shade, 0.16)} />
-      </g>
-
-      {/* Brows */}
-      <g fill={darken(f.hair, 0.1)}>
-        <rect x={CX - 17} y={eyeY - 9} width={12} height={f.browThickness} rx={f.browThickness / 2} />
-        <rect x={CX + 5} y={eyeY - 9} width={12} height={f.browThickness} rx={f.browThickness / 2} />
-      </g>
-
-      {/* Eyes */}
-      {/* Every eye variant is drawn as a light sclera with a dark iris. A bare
-          dark slit — the obvious simplification — reads as a closed eye at the
-          28px size used in squad lists, which makes every face look asleep. */}
-      {([-1, 1] as const).map((sideSign) => {
-        const ex = CX + sideSign * 11;
-        const rx = f.eyeStyle === 2 ? 4.4 : 3.9;
-        const ry = f.eyeStyle === 1 ? 2.6 : 3.1;
-        return (
-          <g key={sideSign}>
-            <ellipse cx={ex} cy={eyeY} rx={rx} ry={ry} fill="#f2efe9" />
-            <circle cx={ex + sideSign * 0.4} cy={eyeY} r={f.eyeStyle === 1 ? 1.7 : 2} fill="#241d1a" />
-          </g>
-        );
-      })}
-
-      {/* Nose and mouth */}
-      <path
-        d={`M${CX - 2.5} ${eyeY + 9} C${CX - 2.5} ${eyeY + 13} ${CX + 2.5} ${eyeY + 13} ${CX + 2.5} ${eyeY + 9}`}
-        fill="none"
-        stroke={rgba(shade, 0.9)}
-        strokeWidth="1.8"
-        strokeLinecap="round"
+      <Brows
+        style={f.browStyle}
+        color={featureInk(f.skin, darken(f.hair, 0.12))}
+        thickness={f.browThickness}
+        expression={f.expression}
+        spacing={f.eyeSpacing}
       />
-      <path
-        d={`M${CX - 7} ${CHIN - 16} Q${CX} ${CHIN - 16 + f.mouthCurve} ${CX + 7} ${CHIN - 16}`}
-        fill="none"
-        stroke={rgba(darken(f.skin, 0.45), 0.85)}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+      <Eyes style={f.eyeStyle} expression={f.expression} skin={f.skin} spacing={f.eyeSpacing} />
+      <Nose skin={f.skin} width={f.noseWidth} g={geometry} />
+      <Mouth skin={f.skin} expression={f.expression} curve={f.mouthCurve} g={geometry} />
 
-      <FacialHairLayer kind={f.facialHair} color={darken(f.hair, 0.08)} w={w} jaw={f.jaw} />
+      <FacialHairLayer kind={f.facialHair} color={featureInk(f.skin, darken(f.hair, 0.08))} g={geometry} />
 
-      {f.hairStyle !== 'long' && f.hairStyle !== 'afro' && (
-        <Hair style={f.hairStyle} color={f.hair} w={w} />
-      )}
+      {/* The front layer of every style except the afro, whose whole volume is
+          the back layer, and except under a cap. */}
+      {!capped && <Hair style={f.hairStyle} color={f.hair} w={w} hairline={f.hairline} fill={hairFill} />}
+
+      <Accessory kind={f.accessory} accent={accent} g={geometry} hair={f.hair} />
     </svg>
   );
 }
 
 /**
  * Memoised: squad lists render 18-40 of these at once and the feature
- * derivation plus ~25 SVG nodes per face is the most expensive thing on those
+ * derivation plus ~35 SVG nodes per face is the most expensive thing on those
  * screens. Props are all primitives except `colors`, so callers should hoist
  * that object rather than building it inline in a map.
  */
@@ -416,13 +312,16 @@ const TIER_RING: Record<NonNullable<CreatorAvatarProps['tier']>, string | undefi
 /**
  * Creators use the same face generator with the kit suppressed — a creator is
  * a person, not a squad member, and drawing them in a shirt would imply a
- * playing role many of them do not have.
+ * playing role many of them do not have. They do get the flashier accessory
+ * pool, which is the cheapest way to make a feed look like a different set of
+ * people from the squad screen.
  */
 export function CreatorAvatar({
   verified = false,
   tier,
   size = 44,
   ring,
+  variant = 'creator',
   ...rest
 }: CreatorAvatarProps): ReactNode {
   const ringColor = ring ?? (tier ? TIER_RING[tier] : undefined);
@@ -432,6 +331,7 @@ export function CreatorAvatar({
         {...rest}
         size={size}
         kit={false}
+        variant={variant}
         {...(ringColor ? { ring: ringColor } : {})}
       />
       {verified && (

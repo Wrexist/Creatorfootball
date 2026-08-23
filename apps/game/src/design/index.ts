@@ -26,6 +26,10 @@ export {
   haptics, useHaptics, setHapticDriver, setHapticsEnabled, hapticsEnabled,
   HAPTIC_KINDS, type HapticKind, type HapticDriver,
 } from './haptics';
+export {
+  sfx, useSfx, setAudioDriver, setSfxEnabled, sfxEnabled, installAudioUnlock,
+  createWebAudioDriver, SFX_CUES, type SfxCue, type SfxOptions, type AudioDriver,
+} from './audio';
 export { useMediaQuery, useReducedTransparency, useCoarsePointer, useCanHover } from './useMediaQuery';
 export { useSvgId } from './useSvgId';
 export { BREAKPOINTS, useBreakpoint, useIsMobile, useIsWide, type Breakpoint } from './useBreakpoint';
@@ -89,8 +93,27 @@ export { GlassToggle, type GlassToggleProps } from './glass/GlassToggle';
 export {
   PlayerPortrait, CreatorAvatar, portraitFeatures,
   type PlayerPortraitProps, type CreatorAvatarProps, type PortraitShape, type PortraitFeatures,
+  type PortraitVariant,
 } from './domain/PlayerPortrait';
+/**
+ * The shared face library. Exported because the manager customiser draws the
+ * same head from menu choices rather than from a seed, and the two must not
+ * drift apart again.
+ */
+export {
+  FACE_CX, FACE_TOP, FACE_CHIN, EYE_Y, FACE_SHAPES, HAIR_STYLES as FACE_HAIR_STYLES,
+  HAIR_BACK_STYLES, HAIRLINES, FACIAL_HAIR_STYLES, BROW_STYLES, EYE_STYLES, EXPRESSIONS,
+  FACE_ACCESSORIES, headPath, headHalfWidth, earAnchorX, featureInk, FaceGradients, FaceShading,
+  Neck, Ears, Hair,
+  FacialHairLayer, Brows, Eyes, Nose, Mouth, Accessory,
+  type FaceShape, type HairStyle, type Hairline, type FacialHairStyle, type BrowStyle,
+  type EyeStyle, type Expression, type FaceAccessory, type HeadGeometry,
+} from './domain/face';
 export { ClubBadge, type ClubBadgeProps } from './domain/ClubBadge';
+export {
+  Silverware, silverwareVariantFor, SILVERWARE_VARIANTS, SILVERWARE_LABELS,
+  type SilverwareProps, type SilverwareVariant,
+} from './domain/silverware';
 export {
   PlayerCard, PlayerFormPip,
   type PlayerCardProps, type PlayerCardVariant, type PlayerCardClub, type PlayerFormPipProps,
@@ -98,7 +121,10 @@ export {
 export { CreatorCard, type CreatorCardProps, type CreatorCardVariant } from './domain/CreatorCard';
 export { ClubCard, type ClubCardProps, type ClubCardVariant } from './domain/ClubCard';
 export { MatchCard, type MatchCardProps, type MatchCardSide, type MatchCardVariant } from './domain/MatchCard';
-export { NewsCard, SocialPost, type NewsCardProps, type SocialPostProps } from './domain/feed';
+export {
+  NewsCard, SocialPost, StoryArt, storyMotifFor, STORY_MOTIFS, STORY_MOTIF_LABELS,
+  type NewsCardProps, type SocialPostProps, type StoryMotif,
+} from './domain/feed';
 export { StatCard, type StatCardProps } from './domain/StatCard';
 export {
   RatingBadge, PositionChip, TraitChip, FormGuide,
@@ -145,10 +171,15 @@ export {
 
 /* --- hero moments ----------------------------------------------------- */
 export {
-  ShinyText, SpotlightCard, GlareHover, GradualBlur,
-  type ShinyTextProps, type SpotlightCardProps, type GlareHoverProps, type GradualBlurProps,
+  ShinyText, SpotlightCard, GlareHover, GlareSweep, CardFoil, GradualBlur,
+  type ShinyTextProps, type SpotlightCardProps, type GlareHoverProps, type CardFoilProps,
+  type GradualBlurProps,
 } from './hero/effects';
 export {
   HeroReveal, GoalBurst, TrophyMoment, SigningMoment,
   type HeroRevealProps, type GoalBurstProps, type TrophyMomentProps, type SigningMomentProps,
 } from './hero/moments';
+export {
+  HeroScene, heroBokeh, heroRain, rimAt,
+  type HeroSceneProps, type HeroSceneVariant, type BokehDot, type RainStreak,
+} from './hero/scenes';

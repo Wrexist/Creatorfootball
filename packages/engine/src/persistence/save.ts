@@ -14,7 +14,7 @@ import { err, ok, type Result } from '../core/result';
  *  - No progression lives only in component state.
  */
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 export const SAVE_KEY = 'cf.save.v1';
 export const BACKUP_KEY = 'cf.save.backup.v1';
 export const META_KEY = 'cf.save.meta.v1';
@@ -73,6 +73,13 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // into an older save, so the honest seed is an empty record, which the UI
   // reads as "no history yet" rather than a row of zeroes.
   3: (state) => ({ ...state, decisionRecord: {} }),
+  // 4 -> 5: the sound-effects setting. Audio arrived after these saves were
+  // written; the default is on, matching a new game, so an existing career
+  // gains the audio layer rather than silently opting out of it.
+  4: (state) => ({
+    ...state,
+    settings: { ...(state.settings as Record<string, unknown> | undefined), sound: true },
+  }),
 };
 
 export function migrate(raw: Record<string, unknown>, from: number): Result<GameState, LoadError> {

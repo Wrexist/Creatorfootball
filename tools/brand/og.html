@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>og</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: #08090b;
+    font-family: "Liberation Sans", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame { position: relative; width: 1200px; height: 630px; overflow: hidden; }
+  .scene { position: absolute; inset: 0; }
+  .vignette {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 90% at 50% 46%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.55) 100%),
+      linear-gradient(90deg, rgba(5,6,7,0.92) 0%, rgba(5,6,7,0.55) 44%, rgba(5,6,7,0) 72%);
+  }
+  .panel {
+    position: absolute; left: 76px; top: 118px; width: 668px;
+    padding: 46px 50px 48px;
+    border-radius: 34px;
+    background: rgba(14, 16, 19, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 40px 120px -40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+  }
+  .top { display: flex; align-items: center; gap: 18px; }
+  .kicker {
+    font-size: 17px; font-weight: 700; letter-spacing: 0.26em;
+    color: #c8ff2e;
+  }
+  .wordmark {
+    margin-top: 26px;
+    font-size: 88px; line-height: 0.94; font-weight: 700;
+    letter-spacing: 0.005em; color: #f4f6f8;
+  }
+  .rule {
+    margin-top: 30px; height: 2px; width: 132px; border-radius: 2px;
+    background: linear-gradient(90deg, #c8ff2e, rgba(200,255,46,0));
+  }
+  .lede {
+    margin-top: 24px; font-size: 26px; line-height: 1.45; color: #9aa3ad;
+    max-width: 30ch;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <svg class="scene" viewBox="0 0 1200 630" preserveAspectRatio="none" id="scene"></svg>
+  <div class="vignette"></div>
+
+  <div class="panel">
+    <div class="top">
+      <svg width="60" height="60" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="b" x1="0.18" y1="0.05" x2="0.82" y2="0.98">
+            <stop offset="0%" stop-color="#e6ff9b" />
+            <stop offset="38%" stop-color="#c8ff2e" />
+            <stop offset="100%" stop-color="#9ecc12" />
+          </linearGradient>
+          <radialGradient id="s" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.42" />
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="32" cy="32" r="21.5" fill="url(#b)" />
+        <ellipse cx="24.5" cy="22.5" rx="12" ry="8" transform="rotate(-32 24.5 22.5)" fill="url(#s)" />
+        <g fill="#0d1400" stroke="#0d1400" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32.00 24.60 L39.04 29.71 L36.35 37.99 L27.65 37.99 L24.96 29.71 Z" stroke-width="1.2" />
+          <path fill="none" stroke-width="2.9" d="M39.42 29.59 L49.16 26.42 M36.58 38.31 L42.60 46.60 M27.42 38.31 L21.40 46.60 M24.58 29.59 L14.84 26.42" />
+        </g>
+      </svg>
+      <span class="kicker">SEASON ONE&nbsp;&nbsp;·&nbsp;&nbsp;iOS</span>
+    </div>
+
+    <div class="wordmark">CREATOR<br />FOOTBALL</div>
+    <div class="rule"></div>
+    <div class="lede">Build a club. Rule the league.</div>
+  </div>
+</div>
+
+<script>
+/*
+  The stadium, drawn rather than photographed — same construction as the
+  in-app HeroScene: a parabolic bowl rim, four floodlights, seeded crowd bokeh
+  and a pitch glow. Seeded so the card is byte-identical on every re-render.
+*/
+const W = 1200, H = 630;
+const RIM_C = 208, RIM_E = 306, FOOT = 470;
+const LIGHT = '214, 232, 255';
+
+let s = 20260823 >>> 0;
+const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+const rimAt = (x) => {
+  const t = Math.min(1, Math.abs(x - W / 2) / 700);
+  return RIM_C + (RIM_E - RIM_C) * t * t;
+};
+
+const parts = [];
+parts.push(`<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#050607"/>
+    <stop offset="34%" stop-color="#080d14"/>
+    <stop offset="58%" stop-color="#0a1119"/>
+    <stop offset="100%" stop-color="#050607"/>
+  </linearGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="rgba(${LIGHT},0.30)"/>
+    <stop offset="55%" stop-color="rgba(${LIGHT},0.09)"/>
+    <stop offset="100%" stop-color="rgba(${LIGHT},0)"/>
+  </radialGradient>
+  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="rgba(${LIGHT},0.17)"/>
+    <stop offset="100%" stop-color="rgba(${LIGHT},0)"/>
+  </linearGradient>
+  <linearGradient id="stand" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="rgba(${LIGHT},0.03)"/>
+    <stop offset="12%" stop-color="rgba(9,13,19,0.94)"/>
+    <stop offset="100%" stop-color="rgba(5,7,10,1)"/>
+  </linearGradient>
+  <linearGradient id="pitch" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="rgba(120,180,130,0.14)"/>
+    <stop offset="44%" stop-color="rgba(120,180,130,0.04)"/>
+    <stop offset="100%" stop-color="rgba(120,180,130,0)"/>
+  </linearGradient>
+</defs>`);
+
+parts.push(`<rect width="${W}" height="${H}" fill="url(#sky)"/>`);
+
+// Floodlights: masts above the rim, each with a halo and a falling beam.
+const masts = [150, 470, 760, 1070];
+for (const x of masts) {
+  const y = rimAt(x) - 118;
+  parts.push(`<ellipse cx="${x}" cy="${y}" rx="210" ry="150" fill="url(#glow)"/>`);
+  parts.push(`<path d="M${x - 26} ${y} L${x + 26} ${y} L${x + 132} ${FOOT + 120} L${x - 132} ${FOOT + 120} Z" fill="url(#beam)"/>`);
+  parts.push(`<rect x="${x - 21}" y="${y - 13}" width="42" height="20" rx="4" fill="#0c1118"/>`);
+  parts.push(`<rect x="${x - 2}" y="${y + 5}" width="4" height="${rimAt(x) - y - 4}" fill="#0c1118"/>`);
+  for (let i = 0; i < 3; i++) {
+    parts.push(`<circle cx="${x - 13 + i * 13}" cy="${y - 3}" r="3.4" fill="rgba(${LIGHT},0.75)"/>`);
+  }
+}
+
+// The bowl.
+let rim = `M0 ${rimAt(0).toFixed(1)}`;
+for (let x = 20; x <= W; x += 20) rim += ` L${x} ${rimAt(x).toFixed(1)}`;
+parts.push(`<path d="${rim} L${W} ${FOOT} L0 ${FOOT} Z" fill="url(#stand)"/>`);
+parts.push(`<path d="${rim}" fill="none" stroke="rgba(${LIGHT},0.16)" stroke-width="1.5"/>`);
+
+// The second tier's fascia: one line inside the bowl. A stand with a single
+// mass reads as a slab; one horizontal break and it reads as architecture.
+let tier = `M0 ${(rimAt(0) + 62).toFixed(1)}`;
+for (let x = 20; x <= W; x += 20) tier += ` L${x} ${(rimAt(x) + 62).toFixed(1)}`;
+parts.push(`<path d="${tier}" fill="none" stroke="rgba(${LIGHT},0.07)" stroke-width="1.2"/>`);
+
+// Crowd. Bokeh, not people: a stand at this distance is light, and drawing
+// figures at 3px would only produce mush.
+const TINTS = ['#bed2eb', '#8fa3bc', '#c8ff2e'];
+for (let i = 0; i < 460; i++) {
+  const x = rnd() * W;
+  const top = rimAt(x) + 10;
+  const y = top + rnd() * (FOOT - top - 12);
+  const depth = (y - top) / Math.max(1, FOOT - top);
+  const tint = TINTS[rnd() < 0.055 ? 2 : rnd() < 0.5 ? 0 : 1];
+  const r = (1.1 + rnd() * 2.1) * (0.7 + depth * 0.6);
+  const o = (0.10 + rnd() * 0.34) * (0.55 + depth * 0.6);
+  parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill="${tint}" opacity="${o.toFixed(3)}"/>`);
+}
+
+// The one volt line in the drawing: the advertising rail at the foot of the stand.
+parts.push(`<rect x="0" y="${FOOT - 5}" width="${W}" height="5" fill="rgba(200,255,46,0.16)"/>`);
+parts.push(`<rect x="0" y="${FOOT - 5}" width="${W}" height="1.5" fill="rgba(200,255,46,0.38)"/>`);
+
+// Grass: a glow, a touchline and the far arc of the centre circle.
+parts.push(`<rect x="0" y="${FOOT}" width="${W}" height="${H - FOOT}" fill="url(#pitch)"/>`);
+parts.push(`<path d="M-40 ${FOOT + 46} L1240 ${FOOT + 46}" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>`);
+parts.push(`<path d="M330 ${FOOT + 46} Q600 ${H + 40} 870 ${FOOT + 46}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>`);
+parts.push(`<path d="M470 ${FOOT + 4} L410 ${H} M730 ${FOOT + 4} L790 ${H}" stroke="rgba(255,255,255,0.05)" stroke-width="2"/>`);
+
+document.getElementById('scene').innerHTML = parts.join('');
+</script>
+</body>
+</html>

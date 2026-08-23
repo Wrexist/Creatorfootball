@@ -479,6 +479,7 @@ Today this is enforced by review only. The mitigation is a CI lint rule
 | `ContentRegistryPort` | `simulation/ports.ts` | `ContentRegistry` (Workstream B) — structurally assignable without importing it | BUILT (port) / CONTRACTED |
 | Analytics sink | `analytics/analytics.ts` (`setAnalyticsSink`) | The host installs a network-backed sink; the engine ships a no-op | CONTRACTED |
 | Haptic driver | `apps/game/src/design/haptics.ts` | Capacitor Haptics in the native shell | BUILT |
+| Audio driver | `apps/game/src/design/audio.ts` | Built-in WebAudio synthesis; no-op without it | BUILT |
 | Invariant mode | `core/invariant.ts` (`setInvariantMode`) | Host sets `'throw'` in dev/test, `'collect'` in production | BUILT |
 | Clock | Parameters (`now`, `ctx.at`) | Host passes `Date.now()`; harness passes a fixed value | BUILT |
 

@@ -135,7 +135,7 @@ export default tseslint.config(
 
   // --- headless tools may use Node ---
   {
-    files: ['tools/**/*.ts'],
+    files: ['tools/**/*.ts', 'tools/**/*.mjs'],
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-restricted-syntax': 'off' },
   },

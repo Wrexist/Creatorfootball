@@ -7,9 +7,9 @@ import {
 } from '@cf/engine';
 import {
   ClubBadge, EmptyState, ErrorState, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
-  GlassTabs, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
+  GlassTabs, HeroScene, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
   RatingBadge, ScoreDisplay, SectionHeader, Skeleton, SocialPost, StatCard, StatGrid,
-  TrendIndicator, cn, useDesignMotion,
+  TrendIndicator, cn, sfx, useDesignMotion,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
@@ -79,6 +79,17 @@ export function MatchResultScreen(): ReactNode {
     }
     committed.add(result.matchId);
     void useGameStore.getState().advance(result);
+  }, [result]);
+
+  /**
+   * A win is the only result that gets a sound. A draw or a defeat arrives in
+   * silence on purpose: a chime over a 0-3 reads as the product not having
+   * noticed, and the full-time whistle has already been heard.
+   */
+  useEffect(() => {
+    if (!result) return;
+    const clubId = useGameStore.getState().state?.playerClubId;
+    if (clubId && resultFor(result, clubId) === 'W') sfx.reward();
   }, [result]);
 
   const advanceStage = useCallback(() => {
@@ -155,7 +166,23 @@ export function MatchResultScreen(): ReactNode {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-base">
+    <div className="relative flex h-full flex-col overflow-hidden bg-base">
+      {/*
+        The room the result was got in. A win warms the ground and lifts light
+        off it; a defeat cools it and puts rain through it; a draw gets the
+        neutral dusk, because a shared point is neither a celebration nor a
+        wake and inventing a mood for it would be the product telling the
+        player how to feel about something it does not know.
+
+        It sits behind everything and carries no information: every panel below
+        is glass, and the scene's own scrim is what keeps the type on them
+        clear of the brightest part of the drawing.
+      */}
+      <HeroScene
+        variant={outcome === 'W' ? 'triumph' : outcome === 'L' ? 'consolation' : 'title'}
+        seed={result.matchId}
+      />
+
       <header className="glass-3 relative z-20 shrink-0 pt-[var(--safe-top)]">
         <div className="mx-auto w-full max-w-[1180px] px-4 pb-2.5 pt-2 sm:px-6">
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-dim">
@@ -172,7 +199,7 @@ export function MatchResultScreen(): ReactNode {
         </div>
       </header>
 
-      <div className="scroll-y min-h-0 flex-1">
+      <div className="scroll-y relative z-10 min-h-0 flex-1">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-8 pt-4 sm:px-6">
           {tab === 'STORY' && storeError !== null && !busy && (
             <GlassPanel padding="md" accent="danger" className="border border-danger/40">

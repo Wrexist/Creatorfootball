@@ -167,7 +167,7 @@ export function makeState(over: Partial<GameState> = {}): GameState {
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 0, cosmeticIds: [], facilityCredits: 0 },
     settings: {
-      reducedMotion: false, haptics: true, matchSpeed: 'NORMAL', presentation: 'PITCH',
+      reducedMotion: false, haptics: true, sound: true, matchSpeed: 'NORMAL', presentation: 'PITCH',
       commentary: true, autoDecisionTimeout: false, region: 'GB', enabledPackIds: ['base'],
       difficulty: 'STANDARD',
     },
