@@ -1,7 +1,8 @@
 import {
-  BASE_PACK, ContentRegistry, Ledger,
+  Ledger,
   type FacilityDef, type GameState, type PostContext,
 } from '@cf/engine';
+import { contentRegistry } from '@/state/content';
 
 /**
  * The club screens' bridge to the engine.
@@ -12,20 +13,9 @@ import {
  * render would be absurd.
  *
  * Nothing here derives a game outcome. It hands screens the same objects the
- * engine's own systems read, so a screen can never disagree with the simulation
- * about what an upgrade costs or what it does.
+ * engine's own systems read, so a screen can never disagree with the
+ * simulation about what an upgrade costs or what it does.
  */
-
-let cached: ContentRegistry | null = null;
-
-export function contentRegistry(): ContentRegistry {
-  if (!cached) {
-    const registry = new ContentRegistry();
-    registry.load(BASE_PACK);
-    cached = registry;
-  }
-  return cached;
-}
 
 export const facilityDefs = (): readonly FacilityDef[] => contentRegistry().facilities();
 

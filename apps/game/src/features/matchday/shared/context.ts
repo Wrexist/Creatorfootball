@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import {
-  autoLineup, clubById, computeStandings, currentCompetition, formationById, injuredPlayers,
-  leaguePosition, positionContext, recentForm, rivalryFor, squadOf, standings, starPlayer,
-  suspendedPlayers, topScorer,
+  aiRuleCards, arenaSupportShare, autoLineup, clubById, computeStandings, currentCompetition,
+  formationById, injuredPlayers, leaguePosition, positionContext, recentForm, rivalryFor,
+  squadOf, specialRuleById, standings, starPlayer, suspendedPlayers, topScorer,
   type Club, type ClubId, type Fixture, type FixtureId, type Formation, type FormationSlot,
   type GameState, type Player, type Rivalry, type SpecialRuleDefinition, type SpecialRuleId,
   type StandingRow, type TacticSetup,
-  specialRuleById,
 } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
+import { ordinalWord } from '@/design/text';
 
 /**
  * Everything matchday needs to know about a fixture, in one derivation.
@@ -79,6 +79,11 @@ export interface MatchdayContext {
 
   readonly ruleWindows: readonly SpecialRuleDefinition[];
   readonly heldCards: readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[];
+  /** What the opposition is carrying — derived exactly as the simulation derives it. */
+  readonly theirHeldCards: readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[];
+
+  /** Share of the arena backing us, 0-1, from the engine's own selector. */
+  readonly arenaShare: number;
 
   readonly ourStar: Player | null;
   readonly theirStar: Player | null;
@@ -119,12 +124,11 @@ function projectPosition(
   return positionContext(projected, clubId)?.position ?? null;
 }
 
-const ORDINALS = [
-  '', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth',
-  'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth',
-] as const;
+/** Below this the arena split is not worth a line — nobody sings about 55%. */
+export const NOTABLE_ARENA_SHARE = 0.6;
 
-const ordinal = (n: number): string => ORDINALS[n] ?? `${n}th`;
+export const arenaShareLine = (share: number): string | null =>
+  share >= NOTABLE_ARENA_SHARE ? `${Math.round(share * 100)}% of the arena is in your colours.` : null;
 
 function stakesFor(state: GameState, fixture: Fixture, clubId: ClubId): StakesLine[] {
   const current = leaguePosition(state, clubId)?.position ?? null;
@@ -137,14 +141,14 @@ function stakesFor(state: GameState, fixture: Fixture, clubId: ClubId): StakesLi
       position: win,
       text:
         current !== null && win < current
-          ? `Win this and you go ${ordinal(win)}.`
-          : `Win this and you hold ${ordinal(win)}.`,
+          ? `Win this and you go ${ordinalWord(win)}.`
+          : `Win this and you hold ${ordinalWord(win)}.`,
     });
   }
 
   const draw = projectPosition(state, fixture, clubId, 'DRAW');
   if (draw !== null) {
-    lines.push({ kind: 'DRAW', position: draw, text: `A draw leaves you ${ordinal(draw)}.` });
+    lines.push({ kind: 'DRAW', position: draw, text: `A draw leaves you ${ordinalWord(draw)}.` });
   }
 
   const loss = projectPosition(state, fixture, clubId, 'LOSS');
@@ -154,8 +158,8 @@ function stakesFor(state: GameState, fixture: Fixture, clubId: ClubId): StakesLi
       position: loss,
       text:
         current !== null && loss > current
-          ? `Lose and you drop to ${ordinal(loss)}.`
-          : `Lose and you stay ${ordinal(loss)}.`,
+          ? `Lose and you drop to ${ordinalWord(loss)}.`
+          : `Lose and you stay ${ordinalWord(loss)}.`,
     });
   }
 
@@ -249,6 +253,16 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
     .filter((card) => card.quantity > 0)
     .map((card) => ({ definition: specialRuleById(card.ruleId), quantity: card.quantity }));
 
+  // The opposition's holdings are never stored — the simulation derives them
+  // deterministically at kick-off, so the preview derives them identically and
+  // both hands agree when the whistle goes.
+  const theirCounts = new Map<SpecialRuleId, number>();
+  for (const id of aiRuleCards(state, them.id)) {
+    theirCounts.set(id, (theirCounts.get(id) ?? 0) + 1);
+  }
+  const theirHeldCards = [...theirCounts]
+    .map(([id, quantity]) => ({ definition: specialRuleById(id), quantity }));
+
   return {
     fixture,
     home,
@@ -289,6 +303,11 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
 
     ruleWindows: (fixture.enabledSpecialRules as readonly SpecialRuleId[]).map(specialRuleById),
     heldCards,
+    theirHeldCards,
+
+    // The same figure the simulation feeds in as the crowd term, so the
+    // flavour line on the preview and the walk-out cannot drift from it.
+    arenaShare: arenaSupportShare(state, us.id, them.id),
 
     ourStar: starPlayer(state, us.id),
     theirStar: starPlayer(state, them.id),

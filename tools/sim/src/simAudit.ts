@@ -57,7 +57,9 @@ function setupFor(
       substitutions: 5, liveDecisions: false, maxDecisions: 0,
     },
     importance: 3, isDerby: false, rivalryIntensity: 0,
-    attendance: 6000, homeAdvantage: 0.5, neutralVenue: true,
+    // A silent crowd: the audit measures quality and shape effects, so the
+    // arena-support share stays out of every scenario here.
+    attendance: 6000, homeAdvantage: 0, neutralVenue: true,
     enabledSpecialRules: [],
     ...over,
   };

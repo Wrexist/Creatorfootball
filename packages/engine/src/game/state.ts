@@ -11,6 +11,7 @@ import type { Club } from '../clubs/club';
 import type { Contract } from '../contracts/contract';
 import type { Competition, Fixture, Season } from '../league/types';
 import type { RuleCard } from '../matches/specialRules';
+import type { DecisionTrigger } from '../matches/decisions';
 
 /**
  * The complete serialisable game state.
@@ -51,6 +52,9 @@ export interface GameState {
   readonly social: SocialState;
   readonly rivalries: Readonly<Record<string, Rivalry>>;
   readonly objectives: ObjectiveState;
+  readonly boardPressure: BoardPressure;
+  readonly decisionMemory: DecisionMemory;
+  readonly decisionRecord: DecisionRecord;
   readonly legacy: LegacyState;
   readonly inventory: InventoryState;
   readonly settings: GameSettings;
@@ -166,6 +170,8 @@ export interface SponsorOffer {
   readonly id: string;
   readonly sponsorId: string;
   readonly name: string;
+  /** Business sector of the brand, so world copy can speak in its voice. */
+  readonly sector?: string;
   readonly slot: 'SHIRT' | 'SLEEVE' | 'STADIUM' | 'TRAINING' | 'CREATOR';
   readonly valuePerCycle: number;
   readonly signingFee: number;
@@ -180,6 +186,8 @@ export interface SponsorDeal {
   readonly id: string;
   readonly sponsorId: string;
   readonly name: string;
+  /** Business sector of the brand, so world copy can speak in its voice. */
+  readonly sector?: string;
   readonly slot: SponsorOffer['slot'];
   readonly valuePerCycle: number;
   readonly weeksRemaining: number;
@@ -252,6 +260,47 @@ export interface ObjectiveState {
   readonly completed: readonly Objective[];
   readonly seasonTargets: readonly Objective[];
 }
+
+/**
+ * The one piece of board state that cannot be honestly derived: when the last
+ * ultimatum went out. Board mood itself is derived fresh every cycle by
+ * progression/board.ts — storing it would let two sources of truth drift.
+ */
+export interface BoardPressure {
+  /** Cycle the last board ultimatum was issued; null before any crisis. */
+  readonly lastUltimatumCycle: number | null;
+}
+
+/**
+ * Which live-decision recipes the player has answered lately. Nothing else in
+ * the save records which prompts a match served — match results keep outcomes,
+ * not triggers, and the event journal never sees them — so this cannot be
+ * derived and must be carried forward. The decision engine uses it to stop
+ * asking the same question week after week.
+ */
+export interface DecisionMemory {
+  /** Served triggers, newest last. Bounded by `BALANCE.DECISION_MEMORY_DEPTH`. */
+  readonly recentTriggers: readonly DecisionTrigger[];
+}
+
+/** The career tally of one family of the player's live calls. */
+export interface DecisionTriggerTally {
+  /** Graded calls served, whatever the outcome. */
+  readonly served: number;
+  /** Calls graded WORKED by the post-match xG evaluation. */
+  readonly worked: number;
+  /** Matches in which this trigger appeared at least once. */
+  readonly matches: number;
+}
+
+/**
+ * How every family of the player's live decisions has turned out, career to
+ * date. Match results are not retained, so this cannot be derived after the
+ * fact — it is folded in wherever a result is applied (see
+ * `foldDecisionRecord`) and only graded calls count, because an ungraded call
+ * has no honest outcome to report.
+ */
+export type DecisionRecord = Readonly<Partial<Record<DecisionTrigger, DecisionTriggerTally>>>;
 
 export interface Objective {
   readonly id: string;

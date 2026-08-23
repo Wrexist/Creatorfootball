@@ -15,6 +15,7 @@ import {
   type TransferListing,
 } from '@cf/engine';
 import { valuationContext } from './engine';
+import { formatMoney } from '@/design';
 
 /**
  * The story around a target.
@@ -59,12 +60,6 @@ export interface TargetStory {
   readonly cardLine: string;
 }
 
-const money = (value: number): string => {
-  if (value >= 1_000_000) return `£${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}m`;
-  if (value >= 1_000) return `£${Math.round(value / 1_000)}k`;
-  return `£${Math.round(value)}`;
-};
-
 export function buildTargetStory(
   state: GameState,
   player: Player,
@@ -87,12 +82,12 @@ export function buildTargetStory(
   const priceLine = sellingClub === null
     ? 'A free agent. No fee to anyone — only wages and the agent.'
     : ratio >= 1.35
-      ? `They want ${money(asking)}, well above the ${money(value)} the market says he is worth. This club does not need to sell.`
+      ? `They want ${formatMoney(asking)}, well above the ${formatMoney(value)} the market says he is worth. This club does not need to sell.`
       : ratio >= 1.1
-        ? `They want ${money(asking)} against a market value of ${money(value)} — a premium, but a negotiable one.`
+        ? `They want ${formatMoney(asking)} against a market value of ${formatMoney(value)} — a premium, but a negotiable one.`
         : ratio <= 0.9
-          ? `They will take ${money(asking)} for a player the market values at ${money(value)}. Somebody needs the money.`
-          : `They want ${money(asking)}, which is about what he is worth.`;
+          ? `They will take ${formatMoney(asking)} for a player the market values at ${formatMoney(value)}. Somebody needs the money.`
+          : `They want ${formatMoney(asking)}, which is about what he is worth.`;
 
   const roleLine = `He expects to be a ${SQUAD_ROLE_LABELS[deservedRole(player, ctx)].toLowerCase()}. Offer him less and the wage demand goes up.`;
 
@@ -135,10 +130,10 @@ export function buildTargetStory(
       : suitors >= 2
         ? `Every extra bidder puts the agent's cut up.`
         : ratio <= 0.9
-          ? `Below his ${money(value)} valuation — somebody needs the cash.`
+          ? `Below his ${formatMoney(value)} valuation — somebody needs the cash.`
           : ratio >= 1.35
-            ? `Well above his ${money(value)} valuation. They do not need to sell.`
-            : `About the ${money(value)} the market says he is worth.`;
+            ? `Well above his ${formatMoney(value)} valuation. They do not need to sell.`
+            : `About the ${formatMoney(value)} the market says he is worth.`;
 
   return {
     asking,
@@ -146,12 +141,12 @@ export function buildTargetStory(
     priceRatio: ratio,
     priceLine,
     wage,
-    wageLine: `He wants ${money(wage)} a week. That comes out of every week of the deal, not once.`,
+    wageLine: `He wants ${formatMoney(wage)} a week. That comes out of every week of the deal, not once.`,
     roleLine,
     suitors,
     suitorLine,
     agentFee,
-    agentLine: `His agent will want about ${money(agentFee)} on top of the fee.`,
+    agentLine: `His agent will want about ${formatMoney(agentFee)} on top of the fee.`,
     contractLine,
     abilityLine,
     scouted,

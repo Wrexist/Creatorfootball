@@ -12,6 +12,9 @@ import { summariseSeason } from '../progression/legacy';
 import { emptyRecord } from '../clubs/club';
 import { patchClub, patchPlayer, transferPlayer, setPlayer } from './mutations';
 import { generatePlayer } from '../content/generators/playerGenerator';
+import { generateCreator } from '../content/generators/creatorGenerator';
+import { CREATOR_TIERS } from '../creators/creator';
+import { CREATOR_BALANCE } from '../creators/balance';
 import { facilityEffect } from '../facilities/facilities';
 import type { ContentRegistry } from '../content';
 import type { GameEventFactory } from './eventFactory';
@@ -233,6 +236,59 @@ export function rolloverSeason(
       next = setPlayer(next, prospect);
       next = patchClub(next, club.id, (c) => ({ youthSquad: [...c.youthSquad, prospect.id] }));
     }
+  }
+
+  // --- 4c. the creator scene turns over ---------------------------------
+  // Players regenerate yearly; until now the pundits did not, so the pundit
+  // scene froze on day one while the world it commented on replaced itself.
+  // Every summer a handful of new voices arrive through the ordinary
+  // generator, and small local accounts whose moment has passed leave it.
+  // Both directions are real domain events, like everything else here.
+  const LC = CREATOR_BALANCE.lifecycle;
+  const lifeRng = rng.fork('creatorLifecycle');
+  const handles = new Set(Object.values(next.creators).map((c) => c.handle.toLowerCase()));
+
+  const spawnCount = lifeRng.int(LC.spawnsMin, LC.spawnsMax);
+  for (let i = 0; i < spawnCount; i++) {
+    const tier = lifeRng.weighted(CREATOR_TIERS, (_t, idx) => LC.spawnTierWeights[CREATOR_TIERS[idx]!]);
+    let creator = generateCreator(lifeRng.fork(`spawn:${i}`), {
+      tier,
+      idPrefix: `gc${nextNumber}_${i}`,
+      spawnedSeason: nextNumber,
+      ...(nameBank ? { nameBank } : {}),
+    });
+    // A player label without a player behind it is a UI lie; fresh voices are
+    // media faces, not squad members.
+    const roles = creator.roles.includes('PLAYER') ? (['INFLUENCER'] as const) : creator.roles;
+    if (handles.has(creator.handle.toLowerCase())) {
+      creator = { ...creator, handle: `${creator.handle}${nextNumber}` };
+    }
+    handles.add(creator.handle.toLowerCase());
+    creator = { ...creator, roles };
+    next = { ...next, creators: { ...next.creators, [creator.id]: creator } };
+    emitted.push(events.make('CREATOR_EMERGED', {
+      creatorId: creator.id,
+      displayName: creator.displayName,
+      followers: creator.followers,
+    }, { importance: 2, entities: [{ kind: 'creator', id: creator.id, name: creator.displayName }] }));
+  }
+
+  const retiring = Object.values(next.creators)
+    .filter((c) => c.tier === 'LOCAL'
+      && c.spawnedSeason !== undefined
+      && !c.playerId
+      && nextNumber - c.spawnedSeason >= LC.localSpanSeasons)
+    .sort((a, b) => a.followers - b.followers);
+  for (const spent of retiring) {
+    const remaining = { ...next.creators };
+    delete remaining[spent.id];
+    next = { ...next, creators: remaining };
+    emitted.push(events.make('CREATOR_RETIRED', {
+      creatorId: spent.id,
+      displayName: spent.displayName,
+      followers: spent.followers,
+      seasonsActive: nextNumber - (spent.spawnedSeason ?? nextNumber),
+    }, { importance: 1, entities: [{ kind: 'creator', id: spent.id, name: spent.displayName }] }));
   }
 
   // --- 5. clubs reset, and their standing follows what they achieved ----

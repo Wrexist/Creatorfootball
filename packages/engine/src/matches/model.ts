@@ -7,6 +7,7 @@ import { traitModifier, traitMultiplier } from '../players/traits';
 import type { TacticVector } from '../tactics/tactics';
 import type { Rng } from '../core/rng';
 import { clamp, clamp01, lerp } from '../core/math';
+import type { Side } from './events';
 import { BALANCE } from './balance';
 
 /**
@@ -396,6 +397,23 @@ export function gameManagement(leadMargin: number, goalsScored = 0): number {
   return 1 - Math.min(BALANCE.GAME_STATE_EASE_MAX, excess * BALANCE.GAME_STATE_EASE_PER_GOAL);
 }
 
+/**
+ * The crowd's hand on the shot rate.
+ *
+ * `support` is the share of the arena backing `side` (0-1; see
+ * `arenaSupportShare`). The supported end plays in front of its own noise and
+ * rises; the other end wears only part of the cost, because an arena roaring
+ * for someone else lifts the home team more than it suppresses the visitors.
+ * Zero support — nobody travelled — leaves both sides untouched.
+ */
+export function crowdFactor(side: Side, support: number): number {
+  const s = clamp01(support);
+  if (s <= 0) return 1;
+  return side === 'home'
+    ? 1 + BALANCE.SUPPORT_ADVANTAGE_MAX * s
+    : 1 - BALANCE.SUPPORT_ADVANTAGE_MAX * s * 0.5;
+}
+
 // --------------------------------------------------------------------------
 // The ball over the top
 // --------------------------------------------------------------------------
@@ -595,19 +613,6 @@ export const saveProbability = (xg: number, keeper: number): number =>
 // --------------------------------------------------------------------------
 // Duels, passes, fouls, cards
 // --------------------------------------------------------------------------
-
-/** Symmetric contest. Returns true when the first rating wins. */
-export function duelWin(rng: Rng, a: number, b: number, bias = 0): boolean {
-  const p = clamp01(0.5 + (a - b) / 90 + bias);
-  return rng.chance(p);
-}
-
-/** Pass completion given passer quality and the pressure he is under. */
-export function passSuccess(rng: Rng, passer: number, pressure: number, defenderQuality: number): boolean {
-  const base = 0.62 + 0.3 * ((passer - 50) / 60);
-  const p = clamp(base - 0.22 * clamp01(pressure) - 0.1 * ((defenderQuality - 55) / 55), 0.25, 0.96);
-  return rng.chance(p);
-}
 
 export interface FoulInput {
   readonly defenceVector: TacticVector;

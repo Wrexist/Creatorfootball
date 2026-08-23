@@ -112,7 +112,7 @@ export function tickSocialWorld(state: GameState, opts: SocialTickOptions): Soci
   const offers = generateCampaignOffers(next, rng.fork('offers'), cycle);
   if (offers.length > 0) {
     next = withSocialWorld(next, (w) => ({
-      creatorCampaigns: [...w.creatorCampaigns, ...offers].slice(-60),
+      creatorCampaigns: [...w.creatorCampaigns, ...offers].slice(-S.historyCap.creatorCampaigns),
     }));
   }
 
@@ -120,17 +120,17 @@ export function tickSocialWorld(state: GameState, opts: SocialTickOptions): Soci
   next = closePolls(next, rng.fork('polls'), cycle);
   const pollOffer = generatePollOffer(next, rng.fork('polloffer'), cycle);
   if (pollOffer) {
-    next = withSocialWorld(next, (w) => ({ polls: [...w.polls, pollOffer].slice(-40) }));
+    next = withSocialWorld(next, (w) => ({ polls: [...w.polls, pollOffer].slice(-S.historyCap.pollOffers) }));
   }
   next = fadeCampaigns(next, cycle, opts.at).state;
   const campaign = generateFanCampaign(next, rng.fork('fancampaign'), cycle);
   if (campaign) {
-    next = withSocialWorld(next, (w) => ({ campaigns: [...w.campaigns, campaign].slice(-24) }));
+    next = withSocialWorld(next, (w) => ({ campaigns: [...w.campaigns, campaign].slice(-S.historyCap.fanCampaigns) }));
     notes.push(`${campaign.title} — the supporters have started something.`);
   }
   const fan = chooseFanOfTheWeek(next, rng.fork('fanofweek'), cycle);
   if (fan) {
-    next = withSocialWorld(next, (w) => ({ fanOfTheWeek: [...w.fanOfTheWeek, fan].slice(-24) }));
+    next = withSocialWorld(next, (w) => ({ fanOfTheWeek: [...w.fanOfTheWeek, fan].slice(-S.historyCap.fanOfTheWeek) }));
   }
 
   // --- 4. the commentary -------------------------------------------------
@@ -269,7 +269,7 @@ function settleStakes(
       credibility: (won ? A.stake.credibilityWin : A.stake.credibilityLoss) * stake.stake,
       summary: won ? `Backed it up: ${stake.claim}` : `Did not back it up: ${stake.claim}`,
     };
-    next = withSocialWorld(next, (w) => ({ actions: [...w.actions, action].slice(-240) }));
+    next = withSocialWorld(next, (w) => ({ actions: [...w.actions, action].slice(-S.historyCap.actions) }));
 
     const post = stakePost(next, ctx, rng.forkSequential('stake', settled.length), stake, won);
     if (post) posts.push(post);
@@ -530,7 +530,7 @@ function applyVirality(
   };
 
   const next = withSocialWorld(boosted, (w) => ({
-    viral: [...w.viral, moment].slice(-30),
+    viral: [...w.viral, moment].slice(-S.historyCap.viralMoments),
   }));
 
   return {

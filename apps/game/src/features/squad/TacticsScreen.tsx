@@ -9,6 +9,7 @@ import {
 import {
   Divider, EmptyState, FitText, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
   KeyValueRow, NameText, PlayerPortrait, PositionChip, RatingBadge, Screen, SectionHeader, cn,
+  sidesWord,
   IconCheck, IconInjury, IconStar, IconSwap, IconTactics, IconWarning,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
@@ -432,8 +433,9 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
             Pick a side for {formation.name}
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-muted text-pretty">
-            Start from a sensible eleven and adjust it, or drag players onto the pitch yourself. Leave it empty and the
-            simulator picks for you — it will not pick badly, but it will not pick your way either.
+            Start from a sensible {sidesWord(formation.slots.length)} and adjust it, or drag players onto the pitch
+            yourself. Leave it empty and the simulator picks for you — it will not pick badly, but it will not pick your
+            way either.
           </p>
           <div className="mt-3">
             <GlassButton variant="primary" icon={<IconSwap size={18} />} onClick={autoPick}>

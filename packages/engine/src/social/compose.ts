@@ -453,7 +453,7 @@ export function publishClubPost(state: GameState, input: ComposeInput): ComposeR
     : undefined;
 
   next = withSocialWorld(next, (w) => ({
-    actions: [...w.actions, action].slice(-240),
+    actions: [...w.actions, action].slice(-S.historyCap.actions),
     ...(stake ? { stakes: [...w.stakes, stake] } : {}),
   }));
 

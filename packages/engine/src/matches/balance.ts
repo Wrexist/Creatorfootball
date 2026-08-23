@@ -428,6 +428,12 @@ export const BALANCE = {
   SUB_FATIGUE_THRESHOLD: 0.42,
   /** Earliest match fraction at which the AI will make a routine substitution. 0.2-0.8. */
   SUB_EARLIEST_FRACTION: 0.4,
+  /**
+   * Match fraction at which a TRAILING AI makes its one scripted call.
+   * Late enough that the scoreline means something, early enough that there
+   * is real match left for the change to act on. 0.5-0.8.
+   */
+  TRAILING_RESPONSE_FRACTION: 0.65,
 
   // -------------------------------------------------- effective attributes ---
   /** Weight of match fitness (0-100) on effective attributes. 0.05-0.3. */
@@ -479,15 +485,19 @@ export const BALANCE = {
   /**
    * There is NO home advantage in this competition: every match is played at
    * the same neutral venue on a shared matchday. This slot is reused as the
-   * audience/support modifier — whose fans filled the arena — and is capped so
-   * it can never move win probability by more than about six percentage points,
-   * the size of the measured real-world home effect.
+   * audience/support modifier — whose fans filled the arena — sized so the
+   * swing between a maximal and an empty arena lands inside the documented
+   * 2-4pp of win probability (ECONOMY.md §8.4 rule 4a allows up to 6).
+   * Measured at n=10,000 paired matches: ~2.7pp at full support, with the
+   * shot-rate edge visible in the box score (+4% for the supported end). The
+   * modifier only reaches the pitch through the setup's `homeAdvantage` share;
+   * a match wired with zero share feels nothing at all.
    *
    * COUNTS TOWARD THE AUDIENCE CAP together with ATMOSPHERE_WEIGHT; see the
    * note there. Neither may be raised without re-measuring the joint swing,
-   * and the cap is a product constraint, not a tuning knob. 0-0.04.
+   * and the cap is a product constraint, not a tuning knob. 0-0.09.
    */
-  SUPPORT_ADVANTAGE_MAX: 0.01,
+  SUPPORT_ADVANTAGE_MAX: 0.07,
   /** Attendance treated as "full house" for the atmosphere term. */
   ATTENDANCE_REFERENCE: 20000,
   /** How much rivalry intensity raises match volatility. 0-0.5. */
@@ -514,6 +524,13 @@ export const BALANCE = {
   DECISION_WORKED_THRESHOLD: 0.014,
   /** Seconds the UI gives the player before auto-applying the default option. */
   DECISION_TIMEOUT_SECONDS: 15,
+  /**
+   * How many recently served triggers the save carries for the recency
+   * dampener. At the observed ~3 prompts per match this spans roughly two to
+   * three fixtures — long enough that "you just answered this" bites, short
+   * enough that a recipe never disappears from the game. 4-16.
+   */
+  DECISION_MEMORY_DEPTH: 8,
 
   // ---------------------------------------------------------- special rules ---
   /**

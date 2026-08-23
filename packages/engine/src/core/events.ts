@@ -77,6 +77,10 @@ export interface DomainEventPayloads {
   STORY_PUBLISHED: { storyId: StoryId; headline: string; importance: EventImportance };
   CREATOR_MOMENT: { creatorId: CreatorId; clubId: ClubId; kind: string; reach: number };
   CREATOR_JOINED: { creatorId: CreatorId; clubId: ClubId; role: string };
+  /** A new generated creator entered the world at season rollover. */
+  CREATOR_EMERGED: { creatorId: CreatorId; displayName: string; followers: number };
+  /** A spent LOCAL-tier generated creator left it. */
+  CREATOR_RETIRED: { creatorId: CreatorId; displayName: string; followers: number; seasonsActive: number };
 
   // --- progression / economy ---
   OBJECTIVE_COMPLETED: { objectiveId: ObjectiveId; title: string; rewardSummary: string };
@@ -86,6 +90,17 @@ export interface DomainEventPayloads {
   PROMOTED: { clubId: ClubId; toTier: number };
   RELEGATED: { clubId: ClubId; toTier: number };
   BALANCE_LOW: { clubId: ClubId; balance: number };
+
+  // --- board ---
+  BOARD_MOOD_CHANGED: { clubId: ClubId; mood: string; pressure: number };
+  BOARD_ULTIMATUM_ISSUED: { clubId: ClubId; objectiveId: ObjectiveId; targetWins: number; windowCycles: number };
+  BOARD_ULTIMATUM_FAILED: {
+    clubId: ClubId;
+    objectiveId: ObjectiveId;
+    wageBudgetBefore: number;
+    wageBudgetAfter: number;
+    listedPlayerId?: PlayerId;
+  };
 }
 
 export type DomainEventType = keyof DomainEventPayloads;

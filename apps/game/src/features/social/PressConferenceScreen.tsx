@@ -11,7 +11,8 @@ import {
 } from '@/design';
 import { SOCIAL_ROUTES } from './routes';
 import { GateScreen, useGameStatus } from './gate';
-import { socialRegistry, useSocialAction, useSocialWorld } from './engine';
+import { useSocialAction, useSocialWorld } from './engine';
+import { contentRegistry } from '@/state/content';
 import { EffectLines } from './components/Effects';
 
 /**
@@ -117,7 +118,7 @@ function PressView({ state }: { state: GameState }): ReactNode {
       conferenceId: conference.id,
       answers: conference.questions.map((q) => ({ questionId: q.id, answerId: answers[q.id] as string })),
       at: Date.now(),
-      registry: socialRegistry(),
+      registry: contentRegistry(),
     }));
     setAnswers({});
     if (outcome.ok) toast.success('That is on the record', 'The room is already filing it.');

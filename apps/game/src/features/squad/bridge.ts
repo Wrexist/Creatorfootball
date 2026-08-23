@@ -1,4 +1,5 @@
-import { BASE_PACK, ContentRegistry, type FacilityDef } from '@cf/engine';
+import type { FacilityDef } from '@cf/engine';
+import { contentRegistry } from '@/state/content';
 
 /**
  * Facility data for the squad screens.
@@ -9,17 +10,6 @@ import { BASE_PACK, ContentRegistry, type FacilityDef } from '@cf/engine';
  * would promise growth the simulation will not deliver.
  */
 
-let cached: ContentRegistry | null = null;
-
-function registry(): ContentRegistry {
-  if (!cached) {
-    const loaded = new ContentRegistry();
-    loaded.load(BASE_PACK);
-    cached = loaded;
-  }
-  return cached;
-}
-
 export const facilityRegistry = (): { facilities: () => readonly FacilityDef[] } => ({
-  facilities: () => registry().facilities(),
+  facilities: () => contentRegistry().facilities(),
 });

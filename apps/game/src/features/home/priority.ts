@@ -1,9 +1,13 @@
 import {
-  claimableObjectives, clubById, contractFor, expiringContracts, injuredPlayers, lastFixture,
+  activeBoardUltimatum, assessBoard, claimableObjectives, clubById, contractFor,
+  currentPositionOf, expectedPositionOf, expiringContracts, injuredPlayers, lastFixture,
   leaguePosition, nextFixture, playerById, playerClub, recentForm, rivalryFor, squadOf, standings,
-  starPlayer, suspendedPlayers, wageBudgetUsage,
+  starPlayer, suspendedPlayers, wageBudgetUsage, BOARD_BALANCE,
   type Club, type Fixture, type GameState, type Objective, type Player, type StandingRow,
 } from '@cf/engine';
+import { HOME_BALANCE } from './balance';
+import { ordinal } from '@/design/domain/numbers';
+import { plural, sentenceCase } from '@/design/text';
 
 /**
  * The home screen's priority engine.
@@ -119,13 +123,11 @@ export interface HomeFeed {
 
 /* --- scoring ---------------------------------------------------------- */
 
-const W = { urgency: 0.32, importance: 0.30, novelty: 0.14, emotion: 0.24 };
-
 /** Below this a card is not worth a slot; the screen is better off shorter. */
-const FLOOR = 0.26;
-const MAX_CARDS = 5;
-/** Two from any one part of the game — otherwise a bad week is six squad cards. */
-const MAX_PER_FAMILY = 2;
+const { weight: W, floor: FLOOR, maxCards: MAX_CARDS, maxPerFamily: MAX_PER_FAMILY } = HOME_BALANCE;
+
+/** The board's card is exempt from the per-family cap: a live crisis never waits its turn behind two other CLUB cards. */
+export const BOARD_CARD_ID = 'board:pressure';
 
 const clamp01 = (n: number): number => (n < 0 ? 0 : n > 1 ? 1 : n);
 
@@ -142,28 +144,12 @@ const freshness = (cycle: number, since: number): number => clamp01(1 - (cycle -
 
 /* --- language --------------------------------------------------------- */
 
-const ordinal = (n: number): string => {
-  const rest = n % 100;
-  if (rest >= 11 && rest <= 13) return `${n}th`;
-  switch (n % 10) {
-    case 1: return `${n}st`;
-    case 2: return `${n}nd`;
-    case 3: return `${n}rd`;
-    default: return `${n}th`;
-  }
-};
-
 const ZONE_WORD: Record<StandingRow['zone'], string> = {
   CHAMPION: 'the title places',
   PLAYOFF: 'the playoff places',
   MID: 'mid-table',
   RELEGATION: 'the drop zone',
 };
-
-const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
-
-/** Engine copy is lower case; these strings open a sentence in the interface. */
-const sentence = (text: string): string => (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
 
 /**
  * How far into the season we are, and whether the table is evidence yet.
@@ -453,7 +439,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
         tone: 'danger',
         glyph: 'injury',
         headline: `${key.displayName} is injured.`,
-        meaning: `${sentence(key.injury?.description ?? 'Injured')} — out for about ${weeks} ${plural(weeks, 'week', 'weeks')}. He is rated ${key.overall}.`,
+        meaning: `${sentenceCase(key.injury?.description ?? 'Injured')} — out for about ${weeks} ${plural(weeks, 'week', 'weeks')}. He is rated ${key.overall}.`,
         actionLabel: 'Open his profile',
         route: `/squad/player/${key.id}`,
         playerId: key.id,
@@ -575,6 +561,57 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
       actionLabel: 'See the fans',
       route: '/club/fans',
       score: score(0.1, 0.2, 0.5, 0.55),
+    });
+  }
+
+  /* --- the board ------------------------------------------------------ */
+  // The ladder is the engine's own (progression/board.ts): pressure derived
+  // from position-vs-expectation, fan sentiment and form. This only surfaces
+  // it — headline from the ladder where it has copy of its own, detail from
+  // the same three levers that move it, and nothing invented.
+  const ultimatum = activeBoardUltimatum(state);
+  const board = assessBoard(state);
+  const boardRow = standings(state).find((r) => r.clubId === club.id);
+  if ((ultimatum || board.mood !== 'CONTENT') && (ultimatum || (boardRow?.played ?? 0) > 0)) {
+    const gap = currentPositionOf(state) - expectedPositionOf(state);
+    const formWindow = recentForm(state, club.id, BOARD_BALANCE.formWindow);
+    const losses = formWindow.filter((r) => r === 'L').length;
+    const levers: string[] = [];
+    if (gap > 0) levers.push(`you sit ${gap} ${plural(gap, 'place', 'places')} below where your reputation says you should`);
+    if (club.fans.sentiment < BOARD_BALANCE.sentimentNeutral) {
+      levers.push(`the stands are at ${Math.round(club.fans.sentiment)} out of 100`);
+    }
+    if (losses > 0) levers.push(`${losses} of your last ${formWindow.length || BOARD_BALANCE.formWindow} went against you`);
+
+    const meaning = ultimatum
+      ? `${ultimatum.description} You have won ${Math.min(ultimatum.progress, ultimatum.target)} of ${ultimatum.target} so far.`
+      : levers.length > 0
+        ? `${sentenceCase(levers.join('; '))}. ${
+          board.mood === 'ANGRY'
+            ? 'One more bad stretch and this stops being a mood and becomes an ultimatum.'
+            : 'Keep this up and restlessness becomes anger — wins are what cools it.'
+        }`
+        : 'The season is not going the way the board expected. Wins are what cools them down.';
+
+    out.push({
+      id: BOARD_CARD_ID,
+      family: 'CLUB',
+      tone: ultimatum || board.mood === 'ANGRY' ? 'danger' : 'warning',
+      glyph: 'warning',
+      headline: ultimatum ? `${ultimatum.title}.` : board.mood === 'ANGRY' ? 'The board is angry.' : 'The board is restless.',
+      meaning,
+      actionLabel: 'See objectives',
+      route: '/objectives',
+      metric: { value: String(Math.round(board.pressure)), caption: 'board pressure' },
+      ...(ultimatum
+        ? { progress: { value: ultimatum.progress, max: Math.max(1, ultimatum.target), label: `${Math.round(ultimatum.progress)} of ${ultimatum.target} wins` } }
+        : {}),
+      score: score(
+        ultimatum ? 0.95 : board.mood === 'ANGRY' ? 0.85 : 0.7,
+        ultimatum ? 0.85 : 0.7,
+        0.45,
+        ultimatum || board.mood === 'ANGRY' ? 0.65 : 0.55,
+      ),
     });
   }
 
@@ -828,7 +865,10 @@ function rank(all: readonly PriorityCard[]): PriorityCard[] {
     if (picked.length >= MAX_CARDS) break;
     if (card.score.total < FLOOR) continue;
     const used = perFamily.get(card.family) ?? 0;
-    if (used >= MAX_PER_FAMILY) continue;
+    // The board card alone may break the family cap: when the ladder is lit,
+    // burying it under two other CLUB cards would hide the thing most likely
+    // to end the season.
+    if (used >= MAX_PER_FAMILY && card.id !== BOARD_CARD_ID) continue;
     perFamily.set(card.family, used + 1);
     picked.push(card);
   }

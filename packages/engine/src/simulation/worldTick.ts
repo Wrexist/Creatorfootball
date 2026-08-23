@@ -20,8 +20,13 @@ import { generatePosts, socialReach } from '../social/socialEngine';
 import { SOCIAL_BALANCE } from '../social/balance';
 import { detectRecords, updateLegacy } from '../progression/legacy';
 import { applyObjectiveUpdates, updateObjectiveProgress, type ObjectiveUpdate } from '../progression/objectives';
+import {
+  ULTIMATUM_OBJECTIVE_PREFIX, applyUltimatumSanctions, assessBoard,
+  buildBoardUltimatum, shouldIssueUltimatum,
+} from '../progression/board';
 import { aiClubTurn, type AiActions } from './aiClub';
 import { CASCADE_BALANCE, WORLD_BALANCE as W } from './balance';
+import { BOARD_BALANCE } from '../progression/balance';
 import { expandCascade, managerPressure, type CascadeResult, type WorldDelta } from './cascade';
 import { detectEmergentStories, emergentHooks, type EmergentStory } from './emergent';
 import type { ContentRegistryPort } from './ports';
@@ -130,8 +135,11 @@ function topCreatorPost(
     .filter((c) => `@${c.handle.replace(/^@/, '')}` === best?.authorHandle)
     .sort((a, b) => (a.id < b.id ? -1 : 1))[0];
   if (!creator) return null;
-  const clubId = creator.clubId ?? state.playerClubId;
-  return { creatorId: creator.id, clubId, reach };
+  // A freelance account's clip is not news about your club. Without an
+  // attachment there is no club to credit, and inventing one made every
+  // unaffiliated voice's breakout moment silently move the player's fandom.
+  if (!creator.clubId) return null;
+  return { creatorId: creator.id, clubId: creator.clubId, reach };
 }
 
 /**
@@ -751,6 +759,63 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     }
   }
 
+  // --- phase 3d: the board -------------------------------------------------
+  //
+  // The player's club has no AI owner, and a one-tier league has no relegation
+  // destination to sack anybody into — so failure is policed here instead. The
+  // mood is derived fresh from the state this tick produced; the only stored
+  // fact is when the last ultimatum went out. Announcements are edge-triggered
+  // against the most recent mood event in the journal rather than against
+  // stored mood, so there is never a second source of truth to drift.
+  let objectivesNext = objectives;
+  let sponsorsNext = state.sponsors;
+  let boardPressureNext = state.boardPressure;
+  const boardInput: GameState = { ...preCascadeState, players, clubs };
+  const assessment = assessBoard(boardInput);
+
+  for (const update of objectiveUpdates) {
+    if (!update.justFailed || !update.objectiveId.startsWith(ULTIMATUM_OBJECTIVE_PREFIX)) continue;
+    const sanctions = applyUltimatumSanctions({ ...boardInput, sponsors: sponsorsNext });
+    clubs[state.playerClubId] = sanctions.club;
+    if (sanctions.listing) listings[sanctions.listing.playerId] = sanctions.listing;
+    sponsorsNext = sanctions.sponsors;
+    const budgetBefore = state.clubs[state.playerClubId]?.finance.wageBudgetPerCycle
+      ?? sanctions.club.finance.wageBudgetPerCycle;
+    emit('BOARD_ULTIMATUM_FAILED', {
+      clubId: state.playerClubId,
+      objectiveId: update.objectiveId as never,
+      wageBudgetBefore: budgetBefore,
+      wageBudgetAfter: sanctions.club.finance.wageBudgetPerCycle,
+      ...(sanctions.listing ? { listedPlayerId: sanctions.listing.playerId } : {}),
+    }, 5, [
+      ...playerRefOf(sanctions.listing ? players[sanctions.listing.playerId] : undefined),
+      ...clubRefOf(clubs[state.playerClubId]),
+    ]);
+  }
+
+  if (shouldIssueUltimatum(boardInput)) {
+    const ultimatum = buildBoardUltimatum(boardInput);
+    objectivesNext = { ...objectives, active: [...objectives.active, ultimatum] };
+    boardPressureNext = { lastUltimatumCycle: cycle };
+    emit('BOARD_ULTIMATUM_ISSUED', {
+      clubId: state.playerClubId,
+      objectiveId: ultimatum.id as never,
+      targetWins: ultimatum.target,
+      windowCycles: BOARD_BALANCE.ultimatumWindowCycles,
+    }, 5, clubRefOf(clubs[state.playerClubId]));
+  }
+
+  const previousMoodEvent = [...objectiveState.eventLog]
+    .reverse()
+    .find((e) => e.type === 'BOARD_MOOD_CHANGED');
+  const previousMood = previousMoodEvent ? previousMoodEvent.payload.mood : 'CONTENT';
+  if (assessment.mood !== previousMood) {
+    emit('BOARD_MOOD_CHANGED', {
+      clubId: state.playerClubId, mood: assessment.mood, pressure: assessment.pressure,
+    }, assessment.mood === 'ULTIMATUM' ? 5 : assessment.mood === 'ANGRY' ? 4 : 2,
+      clubRefOf(clubs[state.playerClubId]));
+  }
+
   // --- phase 4: cascade ----------------------------------------------------
   const batch = [...inputEvents, ...worldEvents];
   const worldEventsBeforeCascade = worldEvents.length;
@@ -935,13 +1000,15 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     contracts,
     rivalries,
     transfers: { ...state.transfers, listings, negotiations },
+    sponsors: sponsorsNext,
     media: { stories: [...state.media.stories, ...stories].slice(-W.retention.stories) },
     social: {
       posts: nextSocial.posts,
       clubFollowers: clubs[state.playerClubId]?.fans.onlineFollowers ?? state.social.clubFollowers,
       weeklyImpressions: reach.impressions,
     },
-    objectives,
+    objectives: objectivesNext,
+    boardPressure: boardPressureNext,
     legacy,
     eventLog: [...state.eventLog, ...inputEvents, ...finalEvents].slice(-W.retention.eventLog),
     ...(ctx.ledger ? { ledger: ctx.ledger.snapshot() } : {}),

@@ -2,12 +2,14 @@ import type { ClubId, FixtureId } from '../core/brand';
 import type { GameState } from './state';
 import type { MatchSetup, MatchTeam, MatchConfig, ManagerMatchBonus } from '../matches/simulator';
 import type { Fixture } from '../league/types';
-import { squadOf, clubTotalReach } from './selectors';
+import { squadOf, clubTotalReach, arenaSupportShare } from './selectors';
+import { aiCounterLeanVsPlayer } from '../simulation/aiClub';
 import { rivalryFor } from '../rivalries/rivalries';
 import { attendanceFor } from '../fans/fans';
 import { Rng } from '../core/rng';
 import { clamp } from '../core/math';
 import type { CreatorSeasonConfigDef } from '../content';
+import type { CommentaryLine } from '../content/schema';
 import type { SpecialRuleId } from '../matches/specialRules';
 
 /**
@@ -45,10 +47,14 @@ const creatorPresenceFor = (state: GameState, clubId: ClubId): number => {
 };
 
 /**
- * What an AI club brings to a match. Deterministic from the save seed, the club
- * and the season, so the same fixture always plays out the same way.
+ * What an AI club brings to a match. Deterministic from the save seed, the
+ * club and the season, so the same fixture always plays out the same way.
+ *
+ * Exported so the pre-match screen can show the same holdings the simulation
+ * will actually use at fire time — derived once, in one place, or the preview
+ * and the pitch quietly disagree.
  */
-function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
+export function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
   const club = state.clubs[clubId];
   if (!club) return [];
   const competition = state.competitions[state.currentCompetitionId];
@@ -62,15 +68,26 @@ function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
   return rng.sample(pool, Math.min(count, pool.length));
 }
 
-const teamFor = (state: GameState, clubId: ClubId, isPlayerControlled: boolean): MatchTeam => {
+const teamFor = (
+  state: GameState,
+  clubId: ClubId,
+  isPlayerControlled: boolean,
+  involvesPlayer: boolean,
+): MatchTeam => {
   const club = state.clubs[clubId];
   if (!club) throw new Error(`Unknown club in match setup: ${clubId}`);
+  // An AI side meeting the player opens with a lean aimed at the shape the
+  // player has been playing all month. Pure derivation from state, so it is
+  // deterministic and costs no save data. AI-vs-AI keeps its own identity.
+  const counterLean = clubId !== state.playerClubId && involvesPlayer
+    ? aiCounterLeanVsPlayer(state) ?? {}
+    : {};
   return {
     clubId,
     name: club.name,
     shortName: club.shortName,
     players: squadOf(state, clubId),
-    tactics: club.tactics,
+    tactics: { ...club.tactics, ...counterLean },
     managerBonus: managerBonusFor(state, clubId),
     creatorPresence: creatorPresenceFor(state, clubId),
     // Both sides hold cards.
@@ -92,6 +109,8 @@ export interface BuildMatchSetupOptions {
   /** Live, player-controlled matches get decision prompts; simulated ones do not. */
   readonly live?: boolean;
   readonly maxDecisions?: number;
+  /** Registry commentary for the live book; absent means the built-in bank. */
+  readonly commentaryLines?: readonly CommentaryLine[];
 }
 
 export function buildMatchSetup(
@@ -128,20 +147,25 @@ export function buildMatchSetup(
     // Seeding from the save seed plus the fixture id means replaying a match
     // reproduces it exactly, and re-simulating a season is bit-for-bit stable.
     seed: `${state.seed}:match:${fixture.id}`,
-    home: teamFor(state, fixture.homeClubId, live && fixture.homeClubId === playerClubId),
-    away: teamFor(state, fixture.awayClubId, live && fixture.awayClubId === playerClubId),
+    home: teamFor(state, fixture.homeClubId, live && fixture.homeClubId === playerClubId, involvesPlayer),
+    away: teamFor(state, fixture.awayClubId, live && fixture.awayClubId === playerClubId, involvesPlayer),
     config: matchConfig,
     importance: fixture.importance,
     isDerby: fixture.isDerby,
     rivalryIntensity: rivalry?.intensity ?? 0,
     attendance,
+    recentDecisionTriggers: state.decisionMemory.recentTriggers,
     // Every fixture is played at the league's single venue, so there is no home
     // advantage to model. The field carries the share of the arena backing the
-    // nominal home side, which the engine caps at a small swing.
-    homeAdvantage: 0.5,
+    // nominal home side — derived from both clubs' creators and fans — which
+    // the engine caps at a small swing.
+    homeAdvantage: arenaSupportShare(state, fixture.homeClubId, fixture.awayClubId),
     neutralVenue: true,
     enabledSpecialRules: fixture.enabledSpecialRules as readonly SpecialRuleId[],
     tieBreak: fixture.stageLabel ? 'SHOOTOUT' : 'NONE',
+    ...(opts.commentaryLines && opts.commentaryLines.length > 0
+      ? { commentaryLines: opts.commentaryLines }
+      : {}),
   };
 }
 

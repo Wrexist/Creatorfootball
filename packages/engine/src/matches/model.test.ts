@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
 import { BALANCE } from './balance';
 import {
-  buildChance, computeAggregates, defensivePressure, effectiveAttribute, fatigueDelta,
-  resolveShot, rollInjury,
+  buildChance, computeAggregates, crowdFactor, defensivePressure, effectiveAttribute,
+  fatigueDelta, resolveShot, rollInjury,
 } from './model';
 import type { ChanceInput, EffectiveContext, UnitView } from './model';
 import { makeTestPlayer } from './testSupport';
@@ -198,5 +198,28 @@ describe('injuries', () => {
       return t;
     };
     expect(weeks(prone)).toBeGreaterThan(weeks(keeper));
+  });
+});
+
+describe('crowd factor', () => {
+  it('lifts the supported side and quiets the other', () => {
+    expect(crowdFactor('home', 1)).toBeGreaterThan(1);
+    expect(crowdFactor('away', 1)).toBeLessThan(1);
+    // The away side only wears part of the cost: a roaring arena lifts its
+    // own team more than it drags the visitors.
+    expect(1 - crowdFactor('away', 1)).toBeLessThan(crowdFactor('home', 1) - 1);
+  });
+
+  it('is neutral when nobody turned up for either side', () => {
+    expect(crowdFactor('home', 0)).toBe(1);
+    expect(crowdFactor('away', 0)).toBe(1);
+  });
+
+  it('scales monotonically with support and tolerates out-of-range input', () => {
+    const half = crowdFactor('home', 0.5);
+    expect(half).toBeGreaterThan(1);
+    expect(half).toBeLessThan(crowdFactor('home', 1));
+    expect(crowdFactor('home', 2)).toBe(crowdFactor('home', 1));
+    expect(crowdFactor('home', -3)).toBe(1);
   });
 });

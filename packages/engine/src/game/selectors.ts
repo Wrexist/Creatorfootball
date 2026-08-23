@@ -151,6 +151,21 @@ export const clubTotalReach = (s: GameState, clubId: ClubId): number =>
   clubCreators(s, clubId).reduce((total, c) => total + c.followers, 0) +
   (s.clubs[clubId]?.fans.onlineFollowers ?? 0);
 
+/**
+ * Share of the arena backing `clubA` against `clubB`, 0-1.
+ *
+ * The arena is filled by both clubs' people: attached creators' reach plus the
+ * fans themselves (`clubTotalReach`). This is the number the match engine uses
+ * to size the crowd's effect on the pitch and the one the UI quotes —
+ * "78% of the arena is in your colours" is this selector, formatted.
+ */
+export function arenaSupportShare(s: GameState, clubAId: ClubId, clubBId: ClubId): number {
+  const a = Math.max(0, clubTotalReach(s, clubAId));
+  const b = Math.max(0, clubTotalReach(s, clubBId));
+  if (a + b <= 0) return 0.5;
+  return a / (a + b);
+}
+
 export const activeObjectives = (s: GameState) =>
   s.objectives.active.filter((o) => o.status === 'ACTIVE');
 

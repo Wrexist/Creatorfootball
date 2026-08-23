@@ -2,6 +2,7 @@ import type { ClubId, MatchId, PlayerId } from '../core/brand';
 import { Rng } from '../core/rng';
 import { clamp, clamp01, round } from '../core/math';
 import { invariant } from '../core/invariant';
+import type { CommentaryLine } from '../content/schema';
 import type { Player } from '../players/player';
 import type { Position } from '../players/positions';
 import type { TraitCondition } from '../players/traits';
@@ -10,14 +11,14 @@ import type { Formation, FormationSlot, TacticSetup, TacticVector } from '../tac
 import { formationById, formationsFor, autoLineup } from '../tactics/formations';
 import { applyVectorModifiers, toTacticVector } from '../tactics/vector';
 import type { MatchEvent, MatchEventType, PitchFrame, PitchPoint, PlayPhase, Side } from './events';
-import type { DecisionPrompt, DecisionOption, DecisionOutcome } from './decisions';
+import type { DecisionPrompt, DecisionOption, DecisionOutcome, DecisionTrigger } from './decisions';
 import type { ActiveSpecialRule, SpecialRuleId } from './specialRules';
 import type { MatchResult, PlayerMatchStats, TeamMatchStats } from './result';
 import { BALANCE } from './balance';
 import {
-  buildChance, computeAggregates, defensivePressure, effectiveAttribute, fatigueDelta,
-  foulChance, injuryChance, progressionChance, resolveCard, resolveShot, rollInjury,
-  shotChance, throughBallChance, turnoverChance,
+  buildChance, computeAggregates, crowdFactor, defensivePressure, effectiveAttribute,
+  fatigueDelta, foulChance, injuryChance, progressionChance, resolveCard, resolveShot,
+  rollInjury, shotChance, throughBallChance, turnoverChance,
 } from './model';
 import type { EffectiveContext, SlotRole, TeamAggregates, UnitView } from './model';
 import { MomentumTracker, momentumBoost } from './momentum';
@@ -69,16 +70,26 @@ export interface MatchSetup {
   readonly rivalryIntensity: number;
   readonly attendance: number;
   /**
-   * 0-1. This competition plays every match at one neutral venue, so there is
-   * no home advantage to model: the field is reused as the share of the arena
-   * supporting the home side, and is capped at a swing far smaller than a real
-   * home effect. Defaults to 0.
+   * 0-1. This competition plays every match at one shared venue, so this field
+   * is not a home advantage — it carries the share of the arena backing the
+   * nominal home side (`arenaSupportShare`), and the engine caps what it can
+   * do to the result. Defaults to 0.
    */
   readonly homeAdvantage: number;
   readonly enabledSpecialRules: readonly SpecialRuleId[];
   readonly neutralVenue?: boolean;
   /** Optional theatrical tie-break. Off by default; the league decides. */
   readonly tieBreak?: 'NONE' | 'SHOOTOUT';
+  /**
+   * Registry commentary to merge into the live book, passed in rather than
+   * reached for so the simulator stays runnable headless with no pack loaded.
+   */
+  readonly commentaryLines?: readonly CommentaryLine[];
+  /**
+   * Triggers served in the player's recent matches, newest last. Fed to the
+   * decision engine's recency dampener; absent means a fresh memory.
+   */
+  readonly recentDecisionTriggers?: readonly DecisionTrigger[];
 }
 
 export interface MatchTeam {
@@ -215,6 +226,20 @@ const CREATOR_WEIGHT: Record<SlotRole, number> = { GK: 0.12, DEF: 1, MID: 4, ATT
 const CARRIER_WEIGHT: Record<SlotRole, number> = { GK: 0.1, DEF: 1.4, MID: 3.5, ATT: 2.2 };
 const STOPPER_WEIGHT: Record<SlotRole, number> = { GK: 0.15, DEF: 4, MID: 2.6, ATT: 0.7 };
 
+/**
+ * The two stances a trailing AI can take for its one scripted call.
+ *
+ * These are discrete choices between engine enums rather than tuning scalars,
+ * so they live here and not in the balance table — there is no number to move,
+ * only a decision to make.
+ */
+const TRAILING_PUSH_UP: Partial<TacticSetup> = {
+  line: 'HIGH', press: 'HIGH_PRESS', tempo: 'QUICK', risk: 'BOLD',
+};
+const TRAILING_DROP_DEEPER: Partial<TacticSetup> = {
+  line: 'DEEP', press: 'LOW_BLOCK', counter: 'ALWAYS', risk: 'CAUTIOUS',
+};
+
 // -------------------------------------------------------------- simulator ---
 
 export class MatchSimulator {
@@ -262,6 +287,8 @@ export class MatchSimulator {
   private opponentChangedFor: Side | null = null;
   private creatorMomentFor: Side | null = null;
   private halfTimePrompt = false;
+  /** Sides that have already spent their one scripted trailing response. */
+  private readonly trailingResponseDone = new Set<Side>();
 
   /** Per-match openness. Shared by both sides, which is what overdisperses the scorelines. */
   private readonly openness: number;
@@ -274,15 +301,19 @@ export class MatchSimulator {
 
   constructor(setup: MatchSetup) {
     this.setup = setup;
-    this.rng = new Rng(`${setup.seed}|${setup.matchId as unknown as string}`);
-    this.commentary = new CommentaryBook(this.rng.fork('commentary'));
+    this.rng = new Rng(`${setup.seed}|${setup.matchId}`);
+    this.commentary = new CommentaryBook(this.rng.fork('commentary'), setup.commentaryLines);
 
     const tpm = BALANCE.TICKS_PER_MINUTE;
     this.totalPlannedTicks = setup.config.minutes * tpm;
     this.periodEndTick = Math.round(this.totalPlannedTicks / Math.max(1, setup.config.halves));
 
     this.rivalry = clamp01(setup.rivalryIntensity / 100);
-    this.support = setup.neutralVenue ? 0 : clamp01(setup.homeAdvantage)
+    // The crowd term is the arena-share channel, not a home advantage: every
+    // match is played at the league's single venue and `homeAdvantage` carries
+    // the share of supporters in the building (see `arenaSupportShare`). It is
+    // thinned by how full the ground actually ran against the reference crowd.
+    this.support = clamp01(setup.homeAdvantage)
       * clamp01(setup.attendance / BALANCE.ATTENDANCE_REFERENCE);
     this.pressure = clamp01(
       0.12
@@ -315,6 +346,7 @@ export class MatchSimulator {
       matchMinutes: setup.config.minutes,
       sides: decisionSides,
       adaptability: (setup.home.managerBonus.adaptability + setup.away.managerBonus.adaptability) / 2,
+      ...(setup.recentDecisionTriggers?.length ? { recentTriggers: setup.recentDecisionTriggers } : {}),
     });
 
     this.possession = this.rng.chance(0.5) ? 'home' : 'away';
@@ -380,7 +412,7 @@ export class MatchSimulator {
     this.pending = null;
   }
 
-  applyTacticalChange(side: Side, change: Partial<TacticSetup>): void {
+  applyTacticalChange(side: Side, change: Partial<TacticSetup>, detail?: Readonly<Record<string, string | number | boolean>>): void {
     const team = this.teamFor(side);
     team.tactics = { ...team.tactics, ...change };
     if (change.formationId) {
@@ -390,7 +422,7 @@ export class MatchSimulator {
     team.baseVector = this.vectorFor(team);
     team.shapeChangedTick = this.tick;
     this.opponentChangedFor = side === 'home' ? 'away' : 'home';
-    this.emit('TACTICAL_CHANGE', { side, importance: 2 });
+    this.emit('TACTICAL_CHANGE', { side, importance: 2, ...(detail ? { detail } : {}) });
   }
 
   /** Re-seat the players already on the pitch into a changed formation's slots. */
@@ -471,7 +503,7 @@ export class MatchSimulator {
       for (const rt of team.all) {
         if (rt.ticksOn === 0) continue;
         const minutes = Math.max(1, Math.round(rt.ticksOn / BALANCE.TICKS_PER_MINUTE));
-        out[rt.player.id as unknown as string] = ratePlayer({
+        out[rt.player.id] = ratePlayer({
           playerId: rt.player.id,
           role: rt.slot.role as SlotRole,
           minutes,
@@ -529,17 +561,17 @@ export class MatchSimulator {
       if (!tactics.setPieceTakerId) tactics = { ...tactics, setPieceTakerId: auto.setPieceTakerId };
     }
 
-    const byId = new Map<string, Player>(team.players.map((p) => [p.id as unknown as string, p]));
+    const byId = new Map<string, Player>(team.players.map((p) => [p.id, p]));
     const all: PlayerRuntime[] = [];
     const onPitch: PlayerRuntime[] = [];
     const taken = new Set<string>();
 
     for (const slot of formation.slots) {
       const id = tactics.lineup[slot.id];
-      const player = id ? byId.get(id as unknown as string) : undefined;
-      const chosen = player ?? team.players.find((p) => !taken.has(p.id as unknown as string));
+      const player = id ? byId.get(id) : undefined;
+      const chosen = player ?? team.players.find((p) => !taken.has(p.id));
       if (!chosen) continue;
-      taken.add(chosen.id as unknown as string);
+      taken.add(chosen.id);
       const rt = this.makeRuntime(chosen, side, slot, true);
       all.push(rt);
       onPitch.push(rt);
@@ -548,14 +580,14 @@ export class MatchSimulator {
     const benchIds = tactics.bench.length ? tactics.bench : [];
     const benchPlayers: Player[] = [];
     for (const id of benchIds) {
-      const p = byId.get(id as unknown as string);
-      if (p && !taken.has(p.id as unknown as string)) { benchPlayers.push(p); taken.add(p.id as unknown as string); }
+      const p = byId.get(id);
+      if (p && !taken.has(p.id)) { benchPlayers.push(p); taken.add(p.id); }
     }
     for (const p of team.players) {
       if (benchPlayers.length >= this.setup.config.benchSize) break;
-      if (taken.has(p.id as unknown as string)) continue;
+      if (taken.has(p.id)) continue;
       benchPlayers.push(p);
-      taken.add(p.id as unknown as string);
+      taken.add(p.id);
     }
 
     const bench = benchPlayers.map((p) => {
@@ -691,7 +723,35 @@ export class MatchSimulator {
     this.maybeInjury();
     this.maybeSubstitution(minute);
     this.maybeDecision(minute, false);
+    this.maybeScriptedResponse();
     this.checkPeriodBoundary(minute);
+  }
+
+  /**
+   * The one scripted call. A TRAILING AI gets exactly one response per match,
+   * from the threshold onward: push up if it set out bold, drop deeper and
+   * counter if it did not. The choice reads off the tactics the club walked
+   * out with — the profile itself does not travel into the match, so its risk
+   * setting is the honest proxy for how its manager thinks. Deterministic by
+   * construction: no rng is consumed, only the scoreline and the setup.
+   */
+  private maybeScriptedResponse(): void {
+    if (this.elapsedFraction() < BALANCE.TRAILING_RESPONSE_FRACTION) return;
+    for (const team of [this.home, this.away]) {
+      if (team.team.isPlayerControlled) continue;
+      if (this.trailingResponseDone.has(team.side)) continue;
+      const scoreFor = team.side === 'home' ? this.homeScore : this.awayScore;
+      const scoreAgainst = team.side === 'home' ? this.awayScore : this.homeScore;
+      if (scoreFor >= scoreAgainst) continue;
+
+      this.trailingResponseDone.add(team.side);
+      const pushUp = team.tactics.risk === 'BOLD' || team.tactics.risk === 'RECKLESS';
+      const change = pushUp ? TRAILING_PUSH_UP : TRAILING_DROP_DEEPER;
+      this.applyTacticalChange(team.side, change, {
+        trigger: 'AI_TRAILING_RESPONSE',
+        stance: pushUp ? 'PUSH_UP' : 'DROP_DEEPER',
+      });
+    }
   }
 
   private checkPeriodBoundary(minute: number): void {
@@ -1545,7 +1605,7 @@ export class MatchSimulator {
       modifiers: this.decisions.scaleModifiers(option.modifiers),
       untilTick: this.tick + option.durationMinutes * BALANCE.TICKS_PER_MINUTE,
     });
-    this.decisions.record(prompt.id, option.id, prompt.minute);
+    this.decisions.record(prompt.id, option.id, prompt.minute, prompt.trigger);
     team.shapeChangedTick = this.tick;
     this.opponentChangedFor = side === 'home' ? 'away' : 'home';
     this.emit('DECISION_RESOLVED', {
@@ -1610,10 +1670,7 @@ export class MatchSimulator {
   private opennessFactor(): number { return this.openness; }
 
   private supportFactor(side: Side): number {
-    if (this.support <= 0) return 1;
-    return side === 'home'
-      ? 1 + BALANCE.SUPPORT_ADVANTAGE_MAX * this.support
-      : 1 - BALANCE.SUPPORT_ADVANTAGE_MAX * this.support * 0.5;
+    return crowdFactor(side, this.support);
   }
 
   private stopClock(ticks: number): void {
@@ -1761,7 +1818,7 @@ export class MatchSimulator {
     const text = this.commentary.line(type, ctx, opts.tags ? { tags: opts.tags } : {});
 
     const event: MatchEvent = {
-      id: `${this.setup.matchId as unknown as string}:${this.eventSeq}`,
+      id: `${this.setup.matchId}:${this.eventSeq}`,
       type,
       minute: ctx.minute ?? 0,
       tick: this.tick,
@@ -1829,7 +1886,7 @@ export class MatchSimulator {
           matchMinutes: this.setup.config.minutes,
         });
 
-        playerStats[rt.player.id as unknown as string] = {
+        playerStats[rt.player.id] = {
           playerId: rt.player.id,
           minutes,
           goals: rt.stats.goals,

@@ -4,13 +4,13 @@ import type {
   FixtureId, MatchEvent, MatchSimulator, Player, PlayerId, SpecialRuleDefinition, SpecialRuleId,
   TacticSetup,
 } from '@cf/engine';
-import { ErrorState, Skeleton, cn, useIsWide } from '@/design';
+import { ErrorState, Skeleton, cn, useConfirm, useIsWide } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import { useMatchdayContext } from '../shared/context';
 import { Announcer } from '../shared/Announcer';
 import { kitColors, paletteFor, roleOfPosition, type PitchRole } from '../shared/kit';
-import { isGoalEvent, minuteLabel, stateOfPlay } from '../shared/format';
+import { isGoalEvent, minuteLabel, shouldConfirmMatchExit, stateOfPlay } from '../shared/format';
 import { MatchControlRail, MatchHeader } from './MatchChrome';
 import { PitchStage } from './PitchStage';
 import { StoryPanel } from './StoryPanel';
@@ -65,6 +65,7 @@ export function MatchLiveScreen(): ReactNode {
   const fixtureId = params.fixtureId as FixtureId | undefined;
   const navigate = useNavigate();
   const wide = useIsWide();
+  const confirm = useConfirm();
 
   const context = useMatchdayContext(fixtureId);
   const simRef = useRef<MatchSimulator | null>(null);
@@ -250,9 +251,26 @@ export function MatchLiveScreen(): ReactNode {
   }, []);
 
   const exit = useCallback(() => {
-    useMatchStore.getState().reset();
-    navigate('/matchday');
-  }, [navigate]);
+    void (async () => {
+      // An accidental tap on the header X must not throw away a match in
+      // motion — the fixture stays replayable, but everything the player sat
+      // through is gone.
+      const { playback: current, minute } = useMatchStore.getState();
+      if (shouldConfirmMatchExit(minute, current)) {
+        const ok = await confirm({
+          title: 'Leave the match?',
+          description:
+            'The clock stops and this viewing ends. You can replay the fixture, but not this one live.',
+          confirmLabel: 'Leave',
+          cancelLabel: 'Keep watching',
+          destructive: true,
+        });
+        if (!ok) return;
+      }
+      useMatchStore.getState().reset();
+      navigate('/matchday');
+    })();
+  }, [navigate, confirm]);
 
   /* --- announcements ---------------------------------------------------- */
 

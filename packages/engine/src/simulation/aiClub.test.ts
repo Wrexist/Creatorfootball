@@ -6,7 +6,8 @@ import type { Player } from '../players/player';
 import type { Position } from '../players/positions';
 import { positionGroup } from '../players/positions';
 import { emptyAttributes } from '../players/attributes';
-import { AI_PROFILES, aiClubTurn, profileFor, type AiActions } from './aiClub';
+import { DEFAULT_TACTICS, type TacticSetup } from '../tactics/tactics';
+import { AI_PROFILES, aiClubTurn, aiCounterLeanVsPlayer, counterLeanAgainst, playShapeOf, profileFor, type AiActions } from './aiClub';
 import { buildTestWorld, makeTestPlayer } from './fixtures';
 
 const MARKET_POSITIONS: readonly Position[] = ['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST'];
@@ -191,5 +192,77 @@ describe('profile resolution', () => {
     if (!club) return;
     const resolved = profileFor({ ...club, aiProfileId: 'not_a_profile' });
     expect(resolved.philosophy).toBe(club.philosophy);
+  });
+});
+
+/**
+ * The counter system. A player who parks the bus every week must find AI
+ * sides pressing; a presser must find bypass football aimed over the top.
+ */
+describe('reading and countering the player\u2019s shape', () => {
+  const tacticsWith = (over: Partial<TacticSetup>): TacticSetup => ({
+    ...DEFAULT_TACTICS,
+    formationId: '3-2-1',
+    lineup: {},
+    bench: [],
+    captainId: null,
+    setPieceTakerId: null,
+    penaltyTakerId: null,
+    ...over,
+  });
+
+  it('classifies setups into three shapes', () => {
+    expect(playShapeOf(tacticsWith({}))).toBe('BALANCED');
+    expect(playShapeOf(tacticsWith({ press: 'LOW_BLOCK' }))).toBe('LOW_BLOCK');
+    expect(playShapeOf(tacticsWith({ line: 'DEEP', counter: 'ALWAYS', risk: 'CAUTIOUS' }))).toBe('LOW_BLOCK');
+    expect(playShapeOf(tacticsWith({ press: 'HIGH_PRESS' }))).toBe('HIGH_PRESS');
+    expect(playShapeOf(tacticsWith({ line: 'HIGH' }))).toBe('HIGH_PRESS');
+  });
+
+  it('presses a parked bus and goes over the top of a press', () => {
+    const vsBus = counterLeanAgainst('LOW_BLOCK');
+    expect(vsBus).not.toBeNull();
+    expect(vsBus?.press).toBe('HIGH_PRESS');
+    expect(vsBus?.line).toBe('HIGH');
+
+    const vsPress = counterLeanAgainst('HIGH_PRESS');
+    expect(vsPress).not.toBeNull();
+    expect(vsPress?.passing).toBe('DIRECT');
+    expect(vsPress?.buildUp).toBe('BYPASS');
+    expect(vsPress?.line).toBe('DEEP');
+
+    expect(counterLeanAgainst('BALANCED')).toBeNull();
+  });
+
+  it('reads the lean from the PLAYER\u2019S setup, not the AI club\u2019s', () => {
+    const { state } = buildTestWorld({ clubCount: 4 });
+    const playerClub = state.clubs[state.playerClubId];
+    if (!playerClub) throw new Error('fixture club missing');
+    const parked: GameState = {
+      ...state,
+      clubs: {
+        ...state.clubs,
+        [state.playerClubId]: { ...playerClub, tactics: tacticsWith({ press: 'LOW_BLOCK', counter: 'ALWAYS', risk: 'CAUTIOUS' }) },
+      },
+    };
+    const lean = aiCounterLeanVsPlayer(parked);
+    expect(lean?.press).toBe('HIGH_PRESS');
+
+    // A balanced player gives the AI nothing to attack.
+    expect(aiCounterLeanVsPlayer(state)).toBeNull();
+  });
+
+  it('is deterministic for the same world', () => {
+    const { state } = buildTestWorld({ clubCount: 4 });
+    const a = JSON.stringify(aiCounterLeanVsPlayer(state));
+    const b = JSON.stringify(aiCounterLeanVsPlayer(state));
+    expect(a).toBe(b);
+  });
+
+  it('never mutates the state it reads', () => {
+    const { state } = buildTestWorld({ clubCount: 4 });
+    const before = JSON.stringify(state);
+    aiCounterLeanVsPlayer(state);
+    expect(JSON.stringify(state)).toBe(before);
   });
 });

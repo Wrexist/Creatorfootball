@@ -2,7 +2,7 @@ import {
   asId, emptyAttributes, emptyMental, emptyForm, emptyRecord, initialClock,
   Ledger, DEFAULT_TACTICS,
   type ClubId, type PlayerId, type ManagerId, type SeasonId, type CompetitionId,
-  type ContractId, type GameState, type Player, type Club, type Contract,
+  type GameState, type Player, type Club,
 } from '../src/index';
 
 /**
@@ -92,23 +92,6 @@ export const makeClub = (id: string, over: Partial<Club> = {}): Club => ({
   ...over,
 });
 
-export const makeContract = (id: string, playerId: string, clubId: string): Contract => ({
-  id: asId<ContractId>(id),
-  playerId: asId<PlayerId>(playerId),
-  clubId: asId<ClubId>(clubId),
-  wage: 10_000,
-  weeksRemaining: 40,
-  totalWeeks: 44,
-  signingBonus: 0,
-  bonuses: { appearance: 0, goal: 0, cleanSheet: 0, seasonPerformance: 0, trophy: 0, promotion: 0 },
-  role: 'STARTER',
-  releaseClause: null,
-  loyaltyBonus: 0,
-  signedCycle: 0,
-  minutesPlayed: 0,
-  minutesAvailable: 0,
-});
-
 export function makeGameState(over: Partial<GameState> = {}): GameState {
   const clubId = asId<ClubId>('club_a');
   const otherId = asId<ClubId>('club_b');
@@ -192,6 +175,9 @@ export function makeGameState(over: Partial<GameState> = {}): GameState {
     social: { posts: [], clubFollowers: 50_000, weeklyImpressions: 0 },
     rivalries: {},
     objectives: { active: [], completed: [], seasonTargets: [] },
+    boardPressure: { lastUltimatumCycle: null },
+    decisionMemory: { recentTriggers: [] },
+    decisionRecord: {},
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 2, cosmeticIds: [], facilityCredits: 0 },
     settings: {

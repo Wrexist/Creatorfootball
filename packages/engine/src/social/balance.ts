@@ -98,6 +98,37 @@ export const SOCIAL_BALANCE = {
   builtInWeightWithPack: 0.25,
 
   retention: 180,
+
+  /**
+   * Save-size retention caps. Each bounds how much history one surface of the
+   * social world keeps before the oldest record falls off the end. Together
+   * they decide what a long save weighs; change them with the save-size
+   * ceiling in mind, not one surface at a time.
+   */
+  historyCap: {
+    /** Player-action records kept after each cycle. */
+    actions: 240,
+    /** Provocations already answered, kept so they are never answered twice. */
+    handledReactions: 160,
+    /** Press-conference records. */
+    conferences: 40,
+    /** Poll offers retained. */
+    pollOffers: 40,
+    /** Fan campaigns retained. */
+    fanCampaigns: 24,
+    /** Supporters of the week remembered. */
+    fanOfTheWeek: 24,
+    /** Viral moments kept while the tail dividend runs. */
+    viralMoments: 30,
+    /** Creator campaign records kept after settlement. */
+    creatorCampaigns: 60,
+    /** Creator departures remembered. */
+    departures: 20,
+    /** Feud records kept. */
+    feuds: 12,
+  },
+  /** Recent fan-of-the-week winners considered when avoiding repeats. */
+  fanOfTheWeekRepeatWindow: 8,
 } as const;
 
 /** Fictional supporter personas; combined with a club tag to form a handle. */

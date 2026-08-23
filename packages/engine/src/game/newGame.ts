@@ -7,6 +7,7 @@ import { Rng } from '../core/rng';
 import { clamp } from '../core/math';
 import { Ledger } from '../economy/ledger';
 import type { GameState, GameSettings } from './state';
+import { initialDecisionRecord } from './decisionRecord';
 import type { Player } from '../players/player';
 import type { Club, ClubPhilosophy, ClubVisualIdentity, FanCulture } from '../clubs/club';
 import type { Contract, SquadRole } from '../contracts/contract';
@@ -466,6 +467,9 @@ export function createNewGame(opts: NewGameOptions): GameState {
     },
     rivalries: seededRivalries,
     objectives: { active: [], completed: [], seasonTargets: [] },
+    boardPressure: { lastUltimatumCycle: null },
+    decisionMemory: { recentTriggers: [] },
+    decisionRecord: initialDecisionRecord(),
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 3, cosmeticIds: [], facilityCredits: 0 },
     settings,

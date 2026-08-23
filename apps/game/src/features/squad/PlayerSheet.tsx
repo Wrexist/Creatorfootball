@@ -8,10 +8,12 @@ import {
 import {
   AttributeBar, DataCell, DataGrid, Divider, GlassButton, GlassPanel, GlassPill, GlassSheet,
   PlayerPortrait, PositionChip, ProgressBar, RatingBadge, Sparkline, Text, Timeline,
-  TraitChip, formatMoney,
+  TraitChip, formatMoney, useToast,
   IconBall, IconInjury, IconScout, IconStar,
 } from '@/design';
-import { playerArc, sentenceCase } from './arc';
+import { playerArc } from './arc';
+import { sentenceCase } from '@/design/text';
+import { canOfferRenewal, offerRenewal, presentRenewal } from './renewal';
 
 /**
  * The player sheet.
@@ -66,6 +68,8 @@ export function PlayerSheet({
 }
 
 function SheetBody({ state, player }: { state: GameState; player: Player }): ReactNode {
+  const toast = useToast();
+  const isOwnSquad = player.clubId === state.playerClubId;
   const data = useMemo(() => {
     const club = player.clubId ? clubById(state, player.clubId) : undefined;
     const contract = contractFor(state, player.id);
@@ -231,6 +235,24 @@ function SheetBody({ state, player }: { state: GameState; player: Player }): Rea
                 ? 'He is getting the minutes you promised him when he signed.'
                 : 'He is playing less than you promised him, and it is costing morale every week.'}
           </Text>
+          {canOfferRenewal(data.contract.weeksRemaining, isOwnSquad) && (
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              <GlassButton
+                variant={data.contract.weeksRemaining <= 6 ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => presentRenewal(offerRenewal(player.id), toast)}
+              >
+                Meet his demands
+              </GlassButton>
+              <GlassButton
+                variant="ghost"
+                size="sm"
+                onClick={() => presentRenewal(offerRenewal(player.id, { lowball: true }), toast)}
+              >
+                Lowball him
+              </GlassButton>
+            </div>
+          )}
         </div>
       )}
 

@@ -147,6 +147,36 @@ export function formatCount(value: number): string {
   return String(Math.round(value));
 }
 
+const SIDE_WORDS = new Map([
+  [5, 'five'], [6, 'six'], [7, 'seven'], [8, 'eight'], [9, 'nine'],
+  [10, 'ten'], [11, 'eleven'],
+]);
+
+/**
+ * The size of a side, as words, because "your predicted eleven" is copy while
+ * "your predicted 7" is a spreadsheet. This league fields seven; other packs
+ * may field eleven — the word follows the config rather than assuming either.
+ */
+export function sidesWord(count: number): string {
+  return SIDE_WORDS.get(count) ?? String(count);
+}
+
+/**
+ * A league position, as it is said aloud: "3rd", never "3th". The teen
+ * exceptions are why this is not a modulo one-liner.
+ */
+export function ordinal(position: number): string {
+  const n = Math.round(position);
+  const rem100 = ((n % 100) + 100) % 100;
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  switch (((n % 10) + 10) % 10) {
+    case 1: return `${n}st`;
+    case 2: return `${n}nd`;
+    case 3: return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
+
 export interface MoneyLabelProps {
   amount: number;
   compact?: boolean;

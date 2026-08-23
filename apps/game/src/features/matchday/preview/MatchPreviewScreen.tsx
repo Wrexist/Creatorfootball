@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { Club, FixtureId, Player } from '@cf/engine';
 import {
   ClubBadge, Divider, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill,
-  IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
+  IconFans, IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
   PositionChip, ProgressBar, RatingBadge, Screen, SectionHeader, Skeleton, StatCard, StatGrid,
-  cn, haptics,
+  cn, haptics, sidesWord, useToast,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
-import { useMatchdayContext, type KeyBattle, type MatchdayContext } from '../shared/context';
+import { useMatchdayContext, arenaShareLine, type KeyBattle, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitColors } from '../shared/kit';
 import { SPECIAL_RULE_TONE } from '../shared/format';
 import { LineupBoard } from './LineupBoard';
@@ -30,6 +30,7 @@ export function MatchPreviewScreen(): ReactNode {
   const navigate = useNavigate();
   const context = useMatchdayContext(fixtureId);
   const [simulating, setSimulating] = useState(false);
+  const toast = useToast();
 
   const ourKit = useMemo(
     () => (context ? kitColors(context.us.id, context.us.visual) : null),
@@ -53,16 +54,28 @@ export function MatchPreviewScreen(): ReactNode {
     // Yielding one frame lets the button paint its spinner before the whole
     // match runs synchronously on the main thread.
     requestAnimationFrame(() => {
+      const SIM_FAIL = {
+        title: 'That match cannot be simulated',
+        description: 'Kick it off live instead.',
+      } as const;
       const sim = useGameStore.getState().createSimulator(fixtureId);
-      if (!sim) { setSimulating(false); return; }
+      if (!sim) {
+        setSimulating(false);
+        // Silence here reads as a broken button: the tap must answer.
+        toast.error(SIM_FAIL.title, SIM_FAIL.description);
+        return;
+      }
       const store = useMatchStore.getState();
       store.attach(sim);
       store.skipToEnd();
       const result = useMatchStore.getState().result;
       if (result) navigate(`/matchday/result/${result.matchId}`);
-      else setSimulating(false);
+      else {
+        setSimulating(false);
+        toast.error(SIM_FAIL.title, SIM_FAIL.description);
+      }
     });
-  }, [fixtureId, simulating, navigate]);
+  }, [fixtureId, simulating, navigate, toast]);
 
   if (!context || !ourKit) {
     return (
@@ -124,6 +137,8 @@ export function MatchPreviewScreen(): ReactNode {
         isDerby={fixture.isDerby}
       />
 
+      <ArenaLine share={context.arenaShare} />
+
       {fixture.isDerby && <RivalryPanel context={context} />}
 
       <StakesPanel context={context} />
@@ -131,7 +146,7 @@ export function MatchPreviewScreen(): ReactNode {
       <OpponentPanel context={context} />
 
       <section>
-        <SectionHeader title="Your predicted eleven" subtitle={context.formation.name} />
+        <SectionHeader title={`Your predicted ${sidesWord(context.lineup.length)}`} subtitle={context.formation.name} />
         <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <LineupBoard slots={context.lineup} kit={ourKit} />
           <GlassPanel nested level={2} padding="md" title="Bench">
@@ -220,6 +235,20 @@ function FixtureSide({
       </div>
       <FormGuide results={form} size="sm" />
     </div>
+  );
+}
+
+function ArenaLine({ share }: { share: number }): ReactNode {
+  const line = arenaShareLine(share);
+  if (!line) return null;
+  // One row, no panel: flavour with stakes. The sentence carries the whole
+  // meaning on its own — the icon is decoration, and reduced-transparency
+  // themes lose nothing by dropping it.
+  return (
+    <p className="flex items-center gap-1.5 px-1 text-[13px] font-semibold text-volt">
+      <span aria-hidden="true" className="shrink-0 text-volt [&_svg]:size-4"><IconFans /></span>
+      {line}
+    </p>
   );
 }
 
@@ -412,8 +441,8 @@ function BattleFace({
 }
 
 function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode {
-  const { ruleWindows, heldCards } = context;
-  if (ruleWindows.length === 0 && heldCards.length === 0) return null;
+  const { ruleWindows, heldCards, theirHeldCards, them } = context;
+  if (ruleWindows.length === 0 && heldCards.length === 0 && theirHeldCards.length === 0) return null;
 
   return (
     <section>
@@ -448,6 +477,32 @@ function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode 
               ))}
             </div>
             <p className="mt-2 text-[12px] text-ink-dim">Playable once the match is under way.</p>
+          </GlassPanel>
+        )}
+
+        {/* Knowing what they hold is the point of the hand being visible at
+            all: every card names its own counterplay, and who a window ends up
+            serving is decided by whoever fires into it — never promised here. */}
+        {theirHeldCards.length > 0 && (
+          <GlassPanel nested level={2} padding="sm" title={`In their hand (${them.shortName})`}>
+            <ul className="flex flex-col gap-2.5">
+              {theirHeldCards.map(({ definition, quantity }) => (
+                <li key={definition.id} className="flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[14px] font-semibold text-ink">
+                      {definition.name}{quantity > 1 ? ` ×${quantity}` : ''}
+                    </span>
+                    <GlassPill tone={SPECIAL_RULE_TONE[definition.id]} size="xs">{definition.rarity}</GlassPill>
+                  </div>
+                  <p className="text-[12px] leading-snug text-ink-muted text-pretty">
+                    Counterplay: {definition.counterplay}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[12px] text-ink-dim">
+              They choose their moment. A swing window serves whoever fires into it.
+            </p>
           </GlassPanel>
         )}
       </div>

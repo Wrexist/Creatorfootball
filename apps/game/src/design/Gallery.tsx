@@ -1299,5 +1299,3 @@ export function Gallery(): ReactNode {
     </ToastProvider>
   );
 }
-
-export default Gallery;

@@ -13,7 +13,8 @@ import {
 } from '@/design';
 import { SOCIAL_ROUTES } from './routes';
 import { GateScreen, useGameStatus } from './gate';
-import { socialRegistry, useSocialAction, useSocialWorld } from './engine';
+import { useSocialAction, useSocialWorld } from './engine';
+import { contentRegistry } from '@/state/content';
 import { EffectLines } from './components/Effects';
 
 /**
@@ -188,7 +189,7 @@ function CommunityView({ state }: { state: GameState }): ReactNode {
   };
   const doSettle = (id: string, honour: boolean): void => {
     const outcome = run((current) => settlePoll(current, {
-      pollId: id, honour, at: Date.now(), registry: socialRegistry(),
+      pollId: id, honour, at: Date.now(), registry: contentRegistry(),
     }));
     if (!outcome.ok) { toast.error('Not possible', outcome.reason ?? 'That vote is closed.'); return; }
     if (honour) toast.success('Done', 'They asked, you listened, and they noticed.');
@@ -202,7 +203,7 @@ function CommunityView({ state }: { state: GameState }): ReactNode {
   };
   const doRespond = (id: string, response: 'BACK' | 'REFUSE'): void => {
     const outcome = run((current) => respondToCampaign(current, {
-      campaignId: id, response, at: Date.now(), registry: socialRegistry(),
+      campaignId: id, response, at: Date.now(), registry: contentRegistry(),
     }));
     if (outcome.ok) {
       if (response === 'BACK') toast.success('Behind them', 'The club put its name to it.');

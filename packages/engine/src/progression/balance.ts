@@ -50,3 +50,48 @@ export const PROGRESSION_BALANCE = {
   /** Milestones retained. */
   maxMilestones: 120,
 } as const;
+
+/**
+ * The board.
+ *
+ * A one-tier league has no relegation destination, so the classic punishment
+ * for failure does not exist here — which is why the ladder has to have teeth
+ * of its own. Pressure is *derived*, never accumulated: each cycle it is read
+ * straight off position-vs-expectation, sentiment and form, so a good month
+ * genuinely cools a bad board. The ultimatum numbers are the documented
+ * promise to the player: two wins from four, or else.
+ */
+export const BOARD_BALANCE = {
+  /** Pressure points per league place below the reputation-implied position. */
+  positionGapPerPlace: 8,
+  /** Fan sentiment the board treats as neutral (matches the fans' resting point). */
+  sentimentNeutral: 55,
+  /** Maximum pressure contribution from sentiment, at sentiment zero. */
+  sentimentDeficitWeight: 24,
+  /** Extra pressure per net sentiment point lost recently, over this window. */
+  sentimentTrendWeight: 0.4,
+  sentimentTrendClamp: 12,
+  sentimentTrendWindowCycles: 6,
+  /** Recent-form window in matches, and its weights. */
+  formWindow: 5,
+  formLossWeight: 5,
+  formWinRelief: 3,
+
+  /** Ladder thresholds on derived pressure, 0-100. */
+  thresholds: { RESTLESS: 20, ANGRY: 45, ULTIMATUM: 70 } as const,
+
+  /** The public promise: survive the next N matches with at least M wins. */
+  ultimatumWindowCycles: 4,
+  ultimatumTargetWins: 2,
+  /** Cycles before the board will issue another ultimatum after issuing one. */
+  reissueCooldownCycles: 10,
+
+  /** Failing an ultimatum: the wage budget takes this proportional cut... */
+  wageBudgetCutFraction: 0.18,
+  /** ...but never below this, because squads must stay payable. */
+  wageBudgetFloor: 50_000,
+  /** Forced sale price as a fraction of market value: listed to move. */
+  forcedListingPriceFactor: 0.9,
+  /** Satisfaction hit per active sponsor deal, pushing renewal below threshold. */
+  sponsorSatisfactionPenalty: 45,
+} as const;

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Club, Player } from '@cf/engine';
-import { ClubBadge, GlassButton, PlayerPortrait, ShinyText, cn, haptics, useDesignMotion } from '@/design';
-import type { MatchdayContext } from '../shared/context';
+import { ClubBadge, GlassButton, IconFans, PlayerPortrait, ShinyText, cn, haptics, useDesignMotion } from '@/design';
+import { arenaShareLine, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitPalette } from '../shared/kit';
 
 /**
@@ -86,6 +86,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
 
   const { home, away, us, them, competitionName, fixture } = context;
   const stake = context.stakes.find((line) => line.kind === 'WIN') ?? context.stakes[0] ?? null;
+  const arena = arenaShareLine(context.arenaShare);
 
   return (
     <div
@@ -132,6 +133,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
             homePalette={homePalette}
             awayPalette={awayPalette}
             stake={stake?.text ?? null}
+            arena={arena}
           />
         ) : (
           <AnimatePresence mode="wait">
@@ -199,6 +201,19 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
                     className="mt-4 max-w-[26ch] text-balance text-[17px] font-semibold leading-snug text-volt"
                   >
                     {stake.text}
+                  </motion.p>
+                )}
+                {/* The crowd is part of the occasion the same way the stake
+                    is: said once, plainly, only when it is worth saying. */}
+                {arena && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.44, duration: 0.42 }}
+                    className="mt-2 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-ink-muted"
+                  >
+                    <span aria-hidden="true" className="shrink-0 text-volt [&_svg]:size-4"><IconFans /></span>
+                    {arena}
                   </motion.p>
                 )}
               </Beat>
@@ -332,12 +347,13 @@ function ShapeStrip({ context, accent }: { context: MatchdayContext; accent: str
 
 /** Everything the sequence says, said at once, for reduced motion. */
 function StaticIntro({
-  context, homePalette, awayPalette, stake,
+  context, homePalette, awayPalette, stake, arena,
 }: {
   context: MatchdayContext;
   homePalette: KitPalette;
   awayPalette: KitPalette;
   stake: string | null;
+  arena: string | null;
 }): ReactNode {
   const { home, away, competitionName, fixture } = context;
   return (
@@ -366,6 +382,7 @@ function StaticIntro({
           swatch={context.playerIsHome ? awayPalette.primary : homePalette.primary}
         />
         <Row label="Your shape" value={context.formation.name} />
+        {arena && <Row label="The arena" value={arena} />}
       </dl>
     </div>
   );

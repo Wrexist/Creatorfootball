@@ -3,6 +3,7 @@ import {
   type GameState, type Player,
 } from '@cf/engine';
 import { formatMoney } from '@/design';
+import { plural } from '@/design/text';
 
 /**
  * The player arc.
@@ -38,15 +39,6 @@ export interface PlayerArc {
   /** Change in market value since that fee, as a percentage. */
   readonly valueChange: number | null;
 }
-
-const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
-
-/**
- * Engine copy ("minor injury", "hamstring strain") is written lower case for
- * use mid-sentence. Screens that open a sentence with it need this.
- */
-export const sentenceCase = (text: string): string =>
-  (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
 
 const when = (season: number, week: number): string =>
   (week > 0 ? `S${season} · wk ${week}` : `Season ${season}`);

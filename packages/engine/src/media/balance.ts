@@ -71,7 +71,6 @@ export const MEDIA_BALANCE = {
   retention: 90,
 } as const;
 
-/** Fictional outlets. Reach drives how far a story travels into social. */
 export interface Outlet {
   readonly name: string;
   readonly kind: 'BROADSHEET' | 'TABLOID' | 'ANALYTICAL' | 'FAN' | 'CREATOR' | 'WIRE';
@@ -81,6 +80,18 @@ export interface Outlet {
   readonly handle: string;
 }
 
+/**
+ * Fictional outlets. Reach drives how far a story travels into social.
+ *
+ * This registry is the single source of truth for the press universe. Every
+ * outlet an authored template cites has an entry here, so a story is never
+ * silently re-attributed to whichever outlet the fallback pool happens to
+ * produce. Where two drafted names described the same publication ("The
+ * Terrace" and "The Terrace Post", "The Touchline" and "Touchline Daily",
+ * "Bootroom Digest" and "Boot & Ball Weekly"), one title was kept and every
+ * citation rewritten to it — deliberately, so the near-collisions could not
+ * quietly become two indistinguishable papers.
+ */
 export const OUTLETS: readonly Outlet[] = [
   { name: 'The Touchline', kind: 'BROADSHEET', reach: 900_000, bias: 0.9, handle: '@thetouchline' },
   { name: 'Matchday Wire', kind: 'WIRE', reach: 1_400_000, bias: 0.85, handle: '@matchdaywire' },
@@ -90,7 +101,22 @@ export const OUTLETS: readonly Outlet[] = [
   { name: 'Bootroom Digest', kind: 'BROADSHEET', reach: 640_000, bias: 0.95, handle: '@bootroom' },
   { name: 'ClipCity', kind: 'CREATOR', reach: 3_200_000, bias: 1.15, handle: '@clipcity' },
   { name: 'Pitchside Weekly', kind: 'ANALYTICAL', reach: 380_000, bias: 0.8, handle: '@pitchsidewk' },
+  { name: 'Standing Room', kind: 'FAN', reach: 300_000, bias: 1.05, handle: '@standingroom' },
+  { name: 'The Chalkboard', kind: 'ANALYTICAL', reach: 350_000, bias: 0.75, handle: '@chalkboardfc' },
+  { name: 'The Away End', kind: 'FAN', reach: 220_000, bias: 1.15, handle: '@theawayend' },
+  { name: 'Frontline Football', kind: 'TABLOID', reach: 1_100_000, bias: 1.25, handle: '@frontlinefc' },
+  { name: 'The Long Ball', kind: 'BROADSHEET', reach: 520_000, bias: 0.9, handle: '@thelongball' },
+  { name: 'Pressbox', kind: 'WIRE', reach: 900_000, bias: 0.95, handle: '@pressboxwire' },
+  { name: 'The Signal Box Review', kind: 'ANALYTICAL', reach: 150_000, bias: 0.8, handle: '@signalboxreview' },
+  { name: 'Common Ground Quarterly', kind: 'FAN', reach: 90_000, bias: 0.85, handle: '@commongroundq' },
 ] as const;
+
+/** Retired working titles and the registry entry that absorbed each one. */
+export const OUTLET_MERGES: Readonly<Record<string, string>> = {
+  'Touchline Daily': 'The Touchline',
+  'The Terrace Post': 'The Terrace',
+  'Boot & Ball Weekly': 'Bootroom Digest',
+};
 
 export const outletByName = (name: string): Outlet | null =>
   OUTLETS.find((o) => o.name === name) ?? null;

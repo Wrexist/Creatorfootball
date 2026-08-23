@@ -106,6 +106,12 @@ interface AnswerDef {
   readonly id: string;
   readonly label: string;
   readonly line: (c: PressContext) => string;
+  /**
+   * Alternate readings of the same answer. When present, one is chosen at
+   * random per conference, so a manager who gives the same instruction two
+   * weeks running does not verbatim repeat himself to the same room.
+   */
+  readonly variants?: readonly ((c: PressContext) => string)[];
   /** Raw weights, scaled by importance and softened by media handling. */
   readonly effect: (c: PressContext) => SocialEffect;
   readonly warmth: number;
@@ -128,6 +134,35 @@ const name = (p: Player | null): string => p?.displayName ?? 'him';
 const opp = (c: PressContext): string => c.opponent?.shortName ?? 'them';
 
 /**
+ * Home form, read from completed fixtures rather than asserted. Questions about
+ * a fortress or a leaky ground are only askable when the record actually
+ * exists — inventing either is how a press room loses a manager's trust.
+ */
+const homeRecord = (c: PressContext): { played: number; wins: number; winlessRun: number; unbeatenRun: number } => {
+  const played = Object.values(c.state.fixtures)
+    .filter((f) => f.status === 'COMPLETED' && f.homeScore !== null && f.awayScore !== null && f.homeClubId === c.club.id)
+    .sort((a, b) => a.week - b.week);
+  const resultOf = (f: (typeof played)[number]): 'W' | 'D' | 'L' => {
+    const us = f.homeScore as number;
+    const them = f.awayScore as number;
+    return us > them ? 'W' : us < them ? 'L' : 'D';
+  };
+  let winlessRun = 0;
+  for (let i = played.length - 1; i >= 0 && resultOf(played[i]!) !== 'W'; i--) winlessRun += 1;
+  let unbeatenRun = 0;
+  for (let i = played.length - 1; i >= 0 && resultOf(played[i]!) !== 'L'; i--) unbeatenRun += 1;
+  return { played: played.length, wins: played.filter((f) => resultOf(f) === 'W').length, winlessRun, unbeatenRun };
+};
+
+/** The player's club's live sponsorship deals. Empty for AI clubs by design. */
+const activeDeals = (c: PressContext) =>
+  c.state.sponsors.active.filter((d) => d.sponsorId);
+
+/** Season week, for questions that only make sense at a particular time. */
+const seasonWeek = (c: PressContext): number =>
+  c.state.seasons[c.state.currentSeasonId]?.currentWeek ?? c.state.clock.week;
+
+/**
  * Answer weights, read as a design table.
  *
  * `squadMorale` is what the dressing room hears, `mediaGoodwill` is what the
@@ -147,6 +182,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_own_it', label: 'Take it on yourself',
         line: () => 'It is on me. The players have been asked to do something and I have not made it clear enough. That is my job and I am not going to hide behind them.',
+        variants: [
+          () => 'They will hear it from me in the morning before they hear it from anybody else, and it will not be about effort. The plan is mine.',
+        ],
         effect: () => ({ squadMorale: 2.4, mediaGoodwill: 2.6, fanSentiment: -0.8 }),
         warmth: 0.7, credibility: 0.6,
       },
@@ -169,6 +207,10 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_stonewall', label: 'Give them nothing',
         line: () => 'Next question.',
+        variants: [
+          () => 'You have asked four people that question today and printed four versions of the same nothing. Here is a fifth.',
+          () => 'There are days when saying less is the entire job. Today is one of them.',
+        ],
         effect: () => ({ mediaGoodwill: -3.4, squadMorale: 0.8, fanSentiment: -0.4 }),
         warmth: -0.2, credibility: 0.1,
       },
@@ -191,6 +233,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_credit_them', label: 'Credit the players',
         line: () => 'They have been outstanding. Not one of them has asked me for anything except more work, and you can print that.',
+        variants: [
+          () => 'Every drill, every recovery day, every meeting. If there is a better group in this division I have not coached it.',
+        ],
         effect: () => ({ squadMorale: 3, fanSentiment: 1.6, mediaGoodwill: 1 }),
         warmth: 0.8, credibility: 0.4,
       },
@@ -228,6 +273,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_honest', label: 'Be honest about the level',
         line: () => `He is below where he should be and he knows it. He is working. That is all I will say about it here.`,
+        variants: [
+          () => 'His standards have dropped and he is the first to admit it. That conversation happened on Monday, between us, where it belongs.',
+        ],
         effect: (c) => ({
           ...(c.worstMorale ? { playerMorale: { playerId: c.worstMorale.id, delta: -3 } } : {}),
           mediaGoodwill: 2.6, fanSentiment: 0.8, squadMorale: -0.4,
@@ -334,6 +382,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_truth', label: 'Say they were beaten',
         line: (c) => `We were second to everything for an hour. ${opp(c)} were better. There is no version of that where I stand here and pretend otherwise.`,
+        variants: [
+          () => 'The better team won, comfortably, and any other answer would insult everybody who watched it.',
+        ],
         effect: () => ({ mediaGoodwill: 3.4, fanSentiment: -1, squadMorale: -1.4 }),
         warmth: 0, credibility: 0.9,
       },
@@ -368,6 +419,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_more', label: 'Say there is more to come',
         line: () => 'No. Not close. There were twenty minutes in there where we forgot how we got in front, and they know about it already.',
+        variants: [
+          () => 'I enjoyed it for about four minutes. Then I started listing the things that will cost us against anyone better.',
+        ],
         effect: () => ({ squadMorale: -0.8, mediaGoodwill: 2.8, fanSentiment: 0.6 }),
         warmth: -0.1, credibility: 0.8,
       },
@@ -402,6 +456,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_neither', label: 'Refuse the framing',
         line: () => 'It is a point in November. It will be worth something or it will be worth nothing and neither of us knows which yet.',
+        variants: [
+          () => 'You want a headline and I have a table that moves one place either way. Ask me in the spring which of us was right.',
+        ],
         effect: () => ({ mediaGoodwill: 1.2, fanExcitement: -1 }),
         warmth: 0.1, credibility: 0.6,
       },
@@ -418,6 +475,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_luck', label: 'Call it luck',
         line: () => 'Bad luck. I have been doing this long enough to know the difference between a run of injuries and a problem, and this is a run.',
+        variants: [
+          () => 'Three of them in tackles nobody would have flagged a decade ago. That is not our medical department, that is the sport getting heavier.',
+        ],
         effect: () => ({ mediaGoodwill: 0.4, squadMorale: 0.8 }),
         warmth: 0.2, credibility: 0.1,
       },
@@ -480,6 +540,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_results', label: 'Say results decide it',
         line: () => 'That is not mine to answer. I work, they decide. If it is not good enough, it is not good enough.',
+        variants: [
+          () => 'Boards answer that question with statements and supporters answer it with turnstiles. Both are more accurate than I am.',
+        ],
         effect: () => ({ mediaGoodwill: 2.4, squadMorale: -1.6, fanSentiment: -0.8 }),
         warmth: 0, credibility: 0.7,
       },
@@ -551,6 +614,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_no_comment', label: 'Keep it inside',
         line: () => 'Contracts are done in an office, not in here. When there is something, you will get it.',
+        variants: [
+          () => 'The moment there is a signature, you will have it before his agent does. Until then, nothing from me serves anybody.',
+        ],
         effect: () => ({ mediaGoodwill: -1, squadMorale: 1.2 }),
         warmth: 0.2, credibility: 0.4,
       },
@@ -631,6 +697,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_conviction', label: 'Conviction',
         line: () => 'Conviction. If I change it every time somebody asks me a question in here, the players will never know what we are.',
+        variants: [
+          () => 'The system is not the problem and I will defend that position with results rather than adjectives.',
+        ],
         effect: () => ({ squadMorale: 1.8, mediaGoodwill: -0.8 }),
         warmth: 0.2, credibility: 0.5,
       },
@@ -743,6 +812,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_temper', label: 'Lower the temperature',
         line: () => 'He is a footballer, not a solution. He will need a month like every other player who has ever moved clubs.',
+        variants: [
+          () => 'Give him six weeks before deciding what he is. That advice is free and it applies to everybody writing about him too.',
+        ],
         effect: () => ({ mediaGoodwill: 1.8, fanExcitement: -1.6, squadMorale: 0.8 }),
         warmth: 0.2, credibility: 0.7,
       },
@@ -766,6 +838,9 @@ const QUESTIONS: readonly QuestionDef[] = [
       {
         id: 'a_process', label: 'Talk about the process',
         line: () => 'A good season is one where we are better in May than we were in August. I know that is a boring answer. It is also the true one.',
+        variants: [
+          () => 'A good season is one where nobody in this room can work out which of our players we can afford to lose. That is how you know it worked.',
+        ],
         effect: () => ({ mediaGoodwill: 1.6, squadMorale: 1.2, fanExcitement: -1.4 }),
         warmth: 0.3, credibility: 0.8,
       },
@@ -802,6 +877,562 @@ const QUESTIONS: readonly QuestionDef[] = [
         line: () => 'The bigger one. That is not romantic but it is how this club exists at all, and I would rather say it than have somebody find it in the accounts.',
         effect: () => ({ supportersTrust: -4, fanSentiment: -1.8, reputation: 1.2, mediaGoodwill: 2 }),
         warmth: -0.3, credibility: 0.8,
+      },
+    ],
+  },
+
+  /* -----------------------------------------------------------------------
+   * The wider bank.
+   *
+   * Every question below is earned the same way the originals are: the gate
+   * reads real facts off the save, and a reporter never asks about a fortress
+   * that does not exist or an injury crisis nobody has. Cups are not modelled
+   * in this league, so nothing here references one — a question about a
+   * competition the engine cannot see would be invented news.
+   * -------------------------------------------------------------------- */
+  {
+    id: 'q_home_fortress',
+    topic: 'At home',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => homeRecord(c).played >= 4 && homeRecord(c).unbeatenRun === homeRecord(c).played,
+    text: () => 'You have not lost at your own ground all season. Is that the foundation everything else sits on?',
+    answers: [
+      {
+        id: 'a_own_fortress', label: 'Own it',
+        line: () => 'The ground has won us more points than any player has. Teams arrive careful and leave beaten, and that is not an accident, that is weeks of work.',
+        effect: () => ({ fanSentiment: 2.6, supportersTrust: 3, mediaGoodwill: 0.8 }),
+        warmth: 0.7, credibility: 0.5,
+      },
+      {
+        id: 'a_table_math', label: 'Call it table maths',
+        line: () => 'It is three points at a time, same as away from home. I would rather we were boring about it than precious.',
+        effect: () => ({ mediaGoodwill: 2.4, fanExcitement: -1, squadMorale: 0.4 }),
+        warmth: -0.1, credibility: 0.8,
+      },
+      {
+        id: 'a_louder', label: 'Ask for even more',
+        line: () => 'It can be better. The day that place is full and ugly for ninety minutes, somebody will get beaten by the noise before they are beaten by us.',
+        variants: [
+          () => 'Fill it. Every week. The players hear the difference before kick-off and so do the opposition.',
+        ],
+        effect: () => ({ fanExcitement: 3.6, supportersTrust: 2.4, mediaGoodwill: -1 }),
+        warmth: 0.5, credibility: -0.2,
+      },
+    ],
+  },
+  {
+    id: 'q_home_leaks',
+    topic: 'At home',
+    slots: ['PRE', 'POST'],
+    weight: 4,
+    applies: (c) => homeRecord(c).winlessRun >= 4,
+    text: () => 'Four home games without a win, in front of your own support every time. What do you say to the people who paid for that?',
+    answers: [
+      {
+        id: 'a_face_them', label: 'Face them directly',
+        line: () => 'They have been let down and they know it better than anybody, because they watched all of it. All I can offer is that nobody here enjoys collecting money for this.',
+        effect: () => ({ fanSentiment: 3, supportersTrust: 4, squadMorale: -1, mediaGoodwill: 1.2 }),
+        warmth: 0.85, credibility: 0.55,
+      },
+      {
+        id: 'a_blame_anything', label: 'Blame everything but football',
+        line: () => 'You have all seen the pitch, the schedule, the turnaround times. Anybody who thinks none of that matters has never prepared a team for Wednesday after Sunday.',
+        effect: () => ({ mediaGoodwill: -2.8, fanSentiment: 0.8, credibility: 0, reputation: -0.2 }),
+        warmth: -0.3, credibility: -0.5,
+      },
+      {
+        id: 'a_promise_home_win', label: 'Promise the next one',
+        line: () => 'The next home game, we win. Write whatever you like around that sentence.',
+        effect: () => ({ fanSentiment: 2.8, fanExcitement: 2.4, mediaGoodwill: -2 }),
+        warmth: 0.1, credibility: -0.4,
+        stake: { kind: 'GUARANTEE', weight: 0.8, claim: () => 'You guaranteed a home win with the whole room listening.' },
+      },
+    ],
+  },
+  {
+    id: 'q_sponsor_unhappy',
+    topic: 'Commercial',
+    slots: ['PRE', 'POST'],
+    weight: 4,
+    applies: (c) => activeDeals(c).some((d) => d.satisfaction < 40),
+    text: () => 'Your principal partner is understood to be unhappy with how their investment currently looks. Does that pressure reach you?',
+    answers: [
+      {
+        id: 'a_business_answer', label: 'Keep it as business',
+        line: () => 'Partnerships have good quarters and bad quarters, exactly like form. The conversations are professional and they stay professional.',
+        effect: () => ({ mediaGoodwill: 2, fanSentiment: -1, squadMorale: -0.6 }),
+        warmth: -0.1, credibility: 0.7,
+      },
+      {
+        id: 'a_shield_room', label: 'Keep it out of the dressing room',
+        line: () => 'Nothing from the commercial department reaches my players through me. They have a job; the accountants have theirs.',
+        variants: [
+          () => 'My players will not be reading a sponsor\'s mood anywhere near a training pitch. That is a promise, not a policy.',
+        ],
+        effect: () => ({ squadMorale: 2.6, mediaGoodwill: 1.4, fanSentiment: -0.6 }),
+        warmth: 0.5, credibility: 0.6,
+      },
+      {
+        id: 'a_results_are_the_advert', label: 'Results are the advert',
+        line: () => 'Nobody buys a shirt because the chief executive is comfortable. We fix the football, the rest of it follows us around.',
+        effect: () => ({ fanSentiment: 1.8, mediaGoodwill: -1.4, fanExcitement: 1.2 }),
+        warmth: 0, credibility: 0.3,
+      },
+    ],
+  },
+  {
+    id: 'q_sponsor_delight',
+    topic: 'Commercial',
+    slots: ['PRE', 'POST'],
+    weight: 2,
+    applies: (c) => activeDeals(c).some((d) => d.satisfaction > 75) && c.unbeaten >= 3,
+    text: () => 'Your partner could not have bought better exposure this month. Are you allowed to enjoy that?',
+    answers: [
+      {
+        id: 'a_enjoy_it', label: 'Enjoy it briefly',
+        line: () => 'I will enjoy it until Thursday morning, which is when the next session decides what we actually are.',
+        effect: () => ({ fanExcitement: 2.4, mediaGoodwill: 1.6 }),
+        warmth: 0.6, credibility: -0.2,
+      },
+      {
+        id: 'a_points_pay_wages', label: 'Points pay wages',
+        line: () => 'Reach numbers are lovely and I am glad everybody is happy. Points are what pay for this building.',
+        effect: () => ({ mediaGoodwill: 2.2, supportersTrust: 1.6, fanExcitement: -0.6 }),
+        warmth: 0.2, credibility: 0.7,
+      },
+      {
+        id: 'a_supporters_are_the_product', label: 'Credit the support',
+        line: () => 'What they are actually buying is our supporters. Those people film, sing and travel better than any campaign we could commission.',
+        effect: () => ({ fanSentiment: 2.6, supportersTrust: 3 }),
+        warmth: 0.8, credibility: 0.3,
+      },
+    ],
+  },
+  {
+    id: 'q_academy_intake',
+    topic: 'The academy',
+    slots: ['PRE'],
+    weight: 3,
+    applies: (c) => seasonWeek(c) <= 2 && c.club.youthSquad.length > 0,
+    text: () => 'The new intake reported this week. Realistically, how many of them will ever play here?',
+    answers: [
+      {
+        id: 'a_honest_odds', label: 'Give the honest odds',
+        line: () => 'If two of this group ever start a league match for us, the academy has had a very good decade. People call that bleak. I call it the actual job.',
+        effect: () => ({ mediaGoodwill: 2.8, supportersTrust: 2, fanExcitement: -0.8 }),
+        warmth: 0.5, credibility: 0.9,
+      },
+      {
+        id: 'a_back_my_judgement', label: 'Back your judgement',
+        line: () => 'One of them. I would not like to name him yet, but there is one in this group the coaches already talk about in the wrong tenses.',
+        effect: () => ({ fanExcitement: 2.6, mediaGoodwill: -0.8 }),
+        warmth: 0.6, credibility: 0,
+      },
+      {
+        id: 'a_point_pathway', label: 'Point to the last graduate',
+        line: () => 'We promoted one into the squad within living memory of this question being asked last year. The pathway is not a poster on a wall here.',
+        effect: () => ({ supportersTrust: 2.6, mediaGoodwill: 1.4 }),
+        warmth: 0.4, credibility: 0.5,
+      },
+    ],
+  },
+  {
+    id: 'q_heavy_win',
+    topic: 'The result',
+    slots: ['POST'],
+    weight: 4,
+    applies: (c) => c.lastResult === 'W' && c.lastMargin >= 3,
+    text: (c) => `Winning by ${c.lastMargin} sends a message nobody has to interpret. Did you mean it as one?`,
+    answers: [
+      {
+        id: 'a_message_meant', label: 'Admit it was meant',
+        line: () => 'Yes. There were people outside this ground who decided how our season would go months ago. That was for them.',
+        effect: (c) => ({
+          fanExcitement: 4, mediaGoodwill: -1.8,
+          ...(c.opponentId ? { rivalryHeat: { opponentClubId: c.opponentId, delta: 4 } } : {}),
+        }),
+        warmth: -0.3, credibility: -0.3,
+        stake: { kind: 'CALL_OUT', weight: 0.6, claim: () => 'You dedicated a scoreline to the club\'s doubters. Loudly.' },
+      },
+      {
+        id: 'a_no_messages', label: 'Refuse the framing',
+        line: () => 'Messages are for phones. We were good at football for ninety minutes, which is the entire story I recognise.',
+        variants: [
+          () => 'I have never worked out what a statement win is. We scored more goals than they did. Next question.',
+        ],
+        effect: () => ({ mediaGoodwill: 2.6, squadMorale: 1 }),
+        warmth: 0.2, credibility: 0.7,
+      },
+      {
+        id: 'a_spread_credit', label: 'Spread the credit',
+        line: () => 'The ones who ran themselves into the ground on Tuesday when nobody was watching did that today. It always starts somewhere quieter.',
+        effect: () => ({ squadMorale: 3, fanSentiment: 1.8 }),
+        warmth: 0.8, credibility: 0.4,
+      },
+    ],
+  },
+  {
+    id: 'q_heavy_loss',
+    topic: 'The result',
+    slots: ['POST'],
+    weight: 5,
+    applies: (c) => c.lastResult === 'L' && c.lastMargin >= 3,
+    text: () => 'Beaten heavily, again by a margin everyone in the ground could see coming. At what point does that become worse than a bad result?',
+    answers: [
+      {
+        id: 'a_outlier', label: 'Insist it is an outlier',
+        line: () => 'Strip that one out and look at the rest of the run. One afternoon where everything went wrong does not delete eleven other performances.',
+        variants: [
+          () => 'You will write that it is a pattern. I have looked at the data and I am telling you it is one afternoon that went catastrophically.',
+        ],
+        effect: () => ({ mediaGoodwill: -2.2, squadMorale: 1.4, fanSentiment: -1.6 }),
+        warmth: 0.1, credibility: -0.4,
+      },
+      {
+        id: 'a_structural', label: 'Admit the structure failed',
+        line: () => 'It was structural. We were opened up the way we have been opened up before, which means the plan is failing rather than the personnel, and that is mine to fix.',
+        effect: () => ({ mediaGoodwill: 3.2, fanSentiment: -0.8, squadMorale: -1.8 }),
+        warmth: 0, credibility: 0.9,
+      },
+      {
+        id: 'a_response_guarantee', label: 'Promise fury in response',
+        line: () => 'There will be a reaction. I cannot tell you the result of it, but I can tell you nobody in that dressing room enjoyed today and nobody will enjoy Thursday either.',
+        effect: () => ({ fanSentiment: 2.6, fanExcitement: 2, squadMorale: -2, mediaGoodwill: 1.6 }),
+        warmth: -0.2, credibility: 0.2,
+        stake: { kind: 'GUARANTEE', weight: 0.85, claim: () => 'You promised a response in public. The next result now measures it.' },
+      },
+    ],
+  },
+  {
+    id: 'q_crisis_deep',
+    topic: 'Your job',
+    slots: ['PRE', 'POST'],
+    weight: 6,
+    applies: (c) => c.winless >= 6,
+    text: () => 'Six matches without a win and the board have stopped repeating their statement of support. What is actually happening at this club?',
+    answers: [
+      {
+        id: 'a_tell_truth', label: 'Tell the room the truth',
+        line: () => 'A group that has stopped believing a plan that was working in training and nowhere else. That is the honest answer, and honestly is the only currency I have left.',
+        effect: () => ({ mediaGoodwill: 3.6, fanSentiment: 1, squadMorale: -2.4 }),
+        warmth: 0, credibility: 0.9,
+      },
+      {
+        id: 'a_defend_record', label: 'Defend the record',
+        line: () => 'I have heard six games described as a verdict. My body of work is considerably longer than six games and I will stand on all of it.',
+        effect: () => ({ mediaGoodwill: -2.6, squadMorale: 2.4, fanSentiment: -1.4 }),
+        warmth: -0.4, credibility: -0.2,
+      },
+      {
+        id: 'a_hint_door', label: 'Hint you might walk',
+        line: () => 'If the people who employ me decide a change helps, nobody here should pretend I would chain myself to the desk. I care about this place more than the job title.',
+        variants: [
+          () => 'Managers do not resign in press conferences, but I am not going to insult you by pretending the thought has not crossed my mind.',
+        ],
+        effect: () => ({ fanSentiment: -2.6, mediaGoodwill: 2.4, squadMorale: -3.4 }),
+        warmth: -0.2, credibility: 0.2,
+      },
+    ],
+  },
+  {
+    id: 'q_run_long',
+    topic: 'Form',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => c.unbeaten >= 6,
+    text: (c) => `${c.unbeaten} unbeaten. When are you allowed to say out loud that this is a genuinely good side?`,
+    answers: [
+      {
+        id: 'a_say_now', label: 'Say it now',
+        line: () => 'Now, apparently, since you have asked me nine times. This is a genuinely good side. If that ages badly, print that too.',
+        variants: [
+          () => 'Fine: we are good. I have been waiting six weeks to stop pretending otherwise and the table says I can stop.',
+        ],
+        effect: () => ({ fanExcitement: 4.4, fanSentiment: 2, mediaGoodwill: -1.6 }),
+        warmth: 0.3, credibility: -0.3,
+        stake: { kind: 'PRE_MATCH_TALK', weight: 0.65, claim: () => 'You called your own side good in public. Everyone wrote it down.' },
+      },
+      {
+        id: 'a_ask_in_may', label: 'Ask again in spring',
+        line: () => 'Ask me when the fixtures run out. Unbeaten runs are judged at the end of things, not in the middle of them.',
+        effect: () => ({ mediaGoodwill: 2.6, fanExcitement: -1 }),
+        warmth: 0, credibility: 0.8,
+      },
+      {
+        id: 'a_quote_record', label: 'Quote the numbers',
+        line: () => 'Clean sheets travel further than opinions. Look at what we have conceded since August and then ask me about luck.',
+        effect: () => ({ mediaGoodwill: 1.8, fanSentiment: 1.2 }),
+        warmth: 0.1, credibility: 0.6,
+      },
+    ],
+  },
+  {
+    id: 'q_fans_euphoric',
+    topic: 'The supporters',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => c.fanSentiment >= 78,
+    text: () => 'Your support currently believes this is the best thing to happen to this club in its history. Do you correct them?',
+    answers: [
+      {
+        id: 'a_stoke_it', label: 'Stoke it',
+        line: () => 'Why would I talk them out of happiness? They have earned the right to feel ten feet tall on a Saturday.',
+        effect: () => ({ fanSentiment: 3.4, fanExcitement: 3, mediaGoodwill: -2 }),
+        warmth: 0.5, credibility: -0.3,
+      },
+      {
+        id: 'a_channel_it', label: 'Channel it carefully',
+        line: () => 'Belief is fuel and fuel burns. My job is making sure it lasts until April instead of peaking in September.',
+        effect: () => ({ mediaGoodwill: 2.2, fanExcitement: -1.2, supportersTrust: 1.6 }),
+        warmth: 0.1, credibility: 0.7,
+      },
+      {
+        id: 'a_fill_the_ground', label: 'Ask them to fill the ground',
+        line: () => 'Then prove it with bodies. Nothing protects a squad midwinter like a home end that refuses to go quiet.',
+        effect: () => ({ supportersTrust: 3.4, fanSentiment: 1.6 }),
+        warmth: 0.7, credibility: 0.4,
+      },
+    ],
+  },
+  {
+    id: 'q_room_cold',
+    topic: 'Your image',
+    slots: ['PRE', 'POST'],
+    weight: 4,
+    applies: (c) => c.goodwill <= 35,
+    text: () => 'This room has turned. Three weeks of hostile briefings and cold open questions. What happened between you and the press?',
+    answers: [
+      {
+        id: 'a_own_coldness', label: 'Own your share',
+        line: () => 'I stopped giving you access and started managing headlines, and you noticed. That one is fair. I would still make most of the same calls again.',
+        effect: () => ({ mediaGoodwill: 2.8, fanSentiment: 1.4 }),
+        warmth: 0.2, credibility: 0.6,
+      },
+      {
+        id: 'a_go_at_press', label: 'Go at the press corps',
+        line: () => 'What happened is that you discovered conflict travels further than context. I have read this week\'s coverage. Nobody in this room believes it was your finest work either.',
+        effect: () => ({ mediaGoodwill: -4, fanSentiment: 2.8, fanExcitement: 1.6 }),
+        warmth: -0.7, credibility: -0.4,
+      },
+      {
+        id: 'a_freeze_politely', label: 'Freeze them out politely',
+        line: () => 'I will answer every question put to me, as always, and I will continue to say precisely nothing worth printing.',
+        effect: () => ({ mediaGoodwill: -1.8, squadMorale: 1 }),
+        warmth: -0.2, credibility: 0.2,
+      },
+    ],
+  },
+  {
+    id: 'q_pals_accusation',
+    topic: 'Your image',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => c.goodwill >= 72,
+    text: () => 'Some supporters think you are too comfortable in this room — friendly interviews, soft rides. Is that criticism fair?',
+    answers: [
+      {
+        id: 'a_laugh_off', label: 'Laugh it off',
+        line: () => 'If I were as charming as all that, we would have conceded fewer late goals. Ask the harder questions whenever you like; I will still give you the same face.',
+        effect: () => ({ fanSentiment: -1.2, mediaGoodwill: -1.4, fanExcitement: 1 }),
+        warmth: 0.4, credibility: -0.2,
+      },
+      {
+        id: 'a_defend_access', label: 'Defend access',
+        line: () => 'This club opens its doors more than most, and I will not apologise for a manager answering questions honestly. You are describing trust as if it were a scandal.',
+        effect: () => ({ mediaGoodwill: 2.4, supportersTrust: -0.6 }),
+        warmth: 0.3, credibility: 0.6,
+      },
+      {
+        id: 'a_show_edge', label: 'Show a harder edge',
+        line: () => 'Alright. From today, expect shorter answers and longer memories. Was that unfriendly enough for the highlight clip?',
+        effect: () => ({ mediaGoodwill: -2, fanSentiment: 2 }),
+        warmth: -0.4, credibility: 0.3,
+      },
+    ],
+  },
+  {
+    id: 'q_standing_feared',
+    topic: 'Your image',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => c.standing === 'FEARED',
+    text: () => 'Opposition supporters dread playing you and rival managers prepare differently for you. Is being feared better than being liked?',
+    answers: [
+      {
+        id: 'a_feared_compliment', label: 'Take it as the compliment',
+        line: () => 'Being liked gets you nice messages. Being feared gets you results nobody fancies contesting. I know which one pays the bills.',
+        effect: () => ({ fanExcitement: 3.2, fanSentiment: 2, mediaGoodwill: -1.4 }),
+        warmth: -0.2, credibility: 0,
+      },
+      {
+        id: 'a_want_both', label: 'Want both',
+        line: () => 'They are not opposites. Fear gets you the first tackle; respect gets you the second ball. We work on both.',
+        effect: () => ({ mediaGoodwill: 1.6, fanSentiment: 1.4 }),
+        warmth: 0.2, credibility: 0.3,
+      },
+      {
+        id: 'a_respect_first', label: 'Respect first, fear later',
+        line: () => 'Fear fades by February. Respect survives bad results, and respect is what I am actually building here.',
+        effect: () => ({ mediaGoodwill: 2.6, supportersTrust: 1.4 }),
+        warmth: 0.5, credibility: 0.6,
+      },
+    ],
+  },
+  {
+    id: 'q_standing_beloved',
+    topic: 'Your image',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => c.standing === 'BELOVED',
+    text: () => 'Neutrals adopt your club, pundits protect it, and rivals complain nobody lets them dislike you. Ideal, or a problem?',
+    answers: [
+      {
+        id: 'a_ideal_obviously', label: 'Ideal, obviously',
+        line: () => 'Every away trip feels like a home fixture with cheaper pies. Long may it annoy everybody else.',
+        effect: () => ({ fanSentiment: 2.4, mediaGoodwill: 1.4 }),
+        warmth: 0.7, credibility: 0.3,
+      },
+      {
+        id: 'a_lose_the_edge', label: 'Worry about the edge',
+        line: () => 'Slightly a problem. Lovable sides get kicked out of cups by teams who have decided niceness is a weakness. We will not be that team.',
+        variants: [
+          () => 'The affection is welcome and the softness would not be. Somebody remind me to keep training horrible.',
+        ],
+        effect: () => ({ fanExcitement: 1.6, mediaGoodwill: -1, squadMorale: 0.8 }),
+        warmth: 0, credibility: 0.2,
+      },
+      {
+        id: 'a_guard_it', label: 'Say it must be guarded',
+        line: () => 'Reputations like that take years and one stupid evening to lose. Everybody in this building knows the standard we protect.',
+        effect: () => ({ supportersTrust: 2.8, mediaGoodwill: 2 }),
+        warmth: 0.6, credibility: 0.6,
+      },
+    ],
+  },
+  {
+    id: 'q_rivalry_boiling',
+    topic: 'The feud',
+    slots: ['PRE', 'POST'],
+    weight: 5,
+    applies: (c) => c.rivalryHeat >= 60 && c.opponent !== null,
+    text: (c) => `Feelings around ${opp(c)} have reached the point where authorities take notice. Do you have a duty to cool it down?`,
+    answers: [
+      {
+        id: 'a_call_for_calm', label: 'Make the calm call',
+        line: (c) => `Everybody follows the football on Saturday and goes home safe. That includes the people who have been winding each other up all fortnight, me included. ${opp(c)} want to beat us; that should be enough.`,
+        effect: (c) => ({
+          supportersTrust: 2, mediaGoodwill: 2.8, fanExcitement: -1.4,
+          ...(c.opponentId ? { rivalryHeat: { opponentClubId: c.opponentId, delta: -6 } } : {}),
+        }),
+        warmth: 0.5, credibility: 0.7,
+      },
+      {
+        id: 'a_feed_it', label: 'Feed it instead',
+        line: () => 'I am not going to pretend this is just another fixture, because nobody in this city believes that. Bring everything. Both ends.',
+        effect: (c) => ({
+          fanExcitement: 4.6, mediaGoodwill: -2.6,
+          ...(c.opponentId ? { rivalryHeat: { opponentClubId: c.opponentId, delta: 7 } } : {}),
+        }),
+        warmth: -0.6, credibility: -0.3,
+        stake: { kind: 'CALL_OUT', weight: 0.9, claim: () => 'You poured petrol on the biggest fixture in the league, on the record.' },
+      },
+      {
+        id: 'a_only_football', label: 'Talk only football',
+        line: () => 'Selection, shape, set pieces — those are the subjects I am qualified for. Everything else is for people paid to manage it.',
+        effect: (c) => ({
+          mediaGoodwill: 1.2,
+          ...(c.opponentId ? { rivalryHeat: { opponentClubId: c.opponentId, delta: -2 } } : {}),
+        }),
+        warmth: 0, credibility: 0.4,
+      },
+    ],
+  },
+  {
+    id: 'q_window_money',
+    topic: 'Transfers',
+    slots: ['PRE'],
+    weight: 3,
+    applies: (c) => Boolean(c.state.transfers.windowOpen) && c.club.finance.transferBudget > 400_000,
+    text: () => 'There is genuine money sitting unspent in this window. Spend it, or hold it?',
+    answers: [
+      {
+        id: 'a_spend_now', label: 'Spend it now',
+        line: () => 'Money does not defend anything from a bench. If the right player is available this month, we move, and I will happily explain the fee afterwards.',
+        effect: () => ({ fanExcitement: 3.4, fanSentiment: 2.2, mediaGoodwill: -0.8 }),
+        warmth: 0.4, credibility: -0.1,
+        stake: { kind: 'GUARANTEE', weight: 0.5, claim: () => 'You promised incoming business while the window is open.' },
+      },
+      {
+        id: 'a_hold_for_value', label: 'Hold for value',
+        line: () => 'Panic spending is how clubs like ours fund bigger clubs for a decade. The budget exists; the price has to exist too.',
+        variants: [
+          () => 'There is no prize for using the whole envelope. If January prices stay silly, the bravest thing I can do is nothing loudly.',
+        ],
+        effect: () => ({ mediaGoodwill: 2.4, fanSentiment: -1.4 }),
+        warmth: 0, credibility: 0.7,
+      },
+      {
+        id: 'a_refuse_numbers', label: 'Refuse to discuss numbers',
+        line: () => 'Budgets are discussed in buildings without cameras. Anything else becomes the asking price by lunchtime.',
+        effect: () => ({ mediaGoodwill: -1.4 }),
+        warmth: -0.1, credibility: 0.2,
+      },
+    ],
+  },
+  {
+    id: 'q_injury_crisis',
+    topic: 'Injuries',
+    slots: ['PRE', 'POST'],
+    weight: 4,
+    applies: (c) => c.injured.length >= 4,
+    text: (c) => `${c.injured.length} players in the treatment room and the calendar does not care. How do you field a team this weekend?`,
+    answers: [
+      {
+        id: 'a_promote_kids', label: 'Promote the youngsters',
+        line: () => 'Somebody gets a shirt who did not expect one on Monday. That is either a crisis or an audition, and history says some of our best stories started as emergencies.',
+        effect: () => ({ fanExcitement: 2.2, mediaGoodwill: 1.2, squadMorale: 1.4 }),
+        warmth: 0.5, credibility: 0.3,
+      },
+      {
+        id: 'a_reshape_system', label: 'Reshape the system',
+        line: () => 'We stop trying to replace individuals and change how the whole thing works instead. Fewer heroes required, more discipline demanded.',
+        effect: () => ({ mediaGoodwill: 2.6 }),
+        warmth: 0.2, credibility: 0.7,
+      },
+      {
+        id: 'a_fury_at_schedule', label: 'Fury at the schedule',
+        line: () => 'Ask the people who built a calendar with no slack in it why four of my squad broke at once. I am finished pretending this is misfortune.',
+        effect: () => ({ mediaGoodwill: -2.4, fanSentiment: 2.2, supportersTrust: 1.6 }),
+        warmth: -0.4, credibility: -0.2,
+      },
+    ],
+  },
+  {
+    id: 'q_expiring_mass',
+    topic: 'Contracts',
+    slots: ['PRE', 'POST'],
+    weight: 3,
+    applies: (c) => c.expiring.length >= 3,
+    text: () => 'Half a dressing room is inside the final months of its deal. Whose mess is this — yours or the club\'s?',
+    answers: [
+      {
+        id: 'a_mine_to_fix', label: 'Take ownership',
+        line: () => 'Mine. I know exactly who wants to stay and who is waiting, and I know which conversations I should have had sooner.',
+        effect: () => ({ mediaGoodwill: 2, squadMorale: 1.6 }),
+        warmth: 0.4, credibility: 0.3,
+      },
+      {
+        id: 'a_clubs_desk', label: 'Point at the club',
+        line: () => 'Contract strategy is decided well above my office. I coach whoever is under contract on Saturday, which at current speed may be a different list every week.',
+        effect: () => ({ mediaGoodwill: 1.4, fanSentiment: -1.2 }),
+        warmth: 0, credibility: 0.6,
+      },
+      {
+        id: 'a_admit_messy', label: 'Admit it is messy',
+        line: () => 'It is messy. Deals, agents, wage structure — pick one and I will give you an honest answer that will not fit in a headline.',
+        effect: () => ({ mediaGoodwill: 2.8, fanSentiment: -2 }),
+        warmth: 0.1, credibility: 0.8,
       },
     ],
   },
@@ -1010,13 +1641,18 @@ function chooseQuestions(ctx: PressContext, rng: Rng): PressQuestion[] {
       avatarSeed: seedFrom('reporter', reporter, outlet.name),
       text: def.text(ctx),
       ...(subject ? { subjectPlayerId: subject } : {}),
-      answers: def.answers.map((answer) => {
+      answers: def.answers.map((answer, ai) => {
         const raw = scaleEffect(answer.effect(ctx), 1);
         const effect = splitEffect(raw, ctx);
+        // One reading per conference, chosen before anything else reads the rng.
+        const readings = [answer.line, ...(answer.variants ?? [])];
+        const said = readings.length > 1
+          ? rng.forkSequential('line', index * 8 + ai).pick(readings)(ctx)
+          : answer.line(ctx);
         return {
           id: answer.id,
           label: answer.label,
-          line: answer.line(ctx),
+          line: said,
           effect,
           lines: describeEffect(effect, ctx.state),
           stake: answer.stake
@@ -1250,8 +1886,8 @@ export function answerPressConference(state: GameState, input: PressAnswerInput)
   };
 
   next = withSocialWorld(next, (w) => ({
-    conferences: [...w.conferences, record].slice(-40),
-    actions: [...w.actions, action].slice(-240),
+    conferences: [...w.conferences, record].slice(-S.historyCap.conferences),
+    actions: [...w.actions, action].slice(-S.historyCap.actions),
     stakes: [...w.stakes, ...stakes],
   }));
 
@@ -1293,7 +1929,7 @@ export function skipPressConference(state: GameState, input: { at: number }): Pr
     goodwillDelta: Math.round(A.press.skipGoodwill * multiplier * 10) / 10,
   };
   const next = withSocialWorld(applied.state, (w) => ({
-    conferences: [...w.conferences, record].slice(-40),
+    conferences: [...w.conferences, record].slice(-S.historyCap.conferences),
     actions: [...w.actions, {
       id: `pa_skip_${conference.id}`,
       kind: 'PRESS_ANSWER' as const,
@@ -1303,7 +1939,7 @@ export function skipPressConference(state: GameState, input: { at: number }): Pr
       warmth: -0.3,
       credibility: -0.2,
       summary: 'Walked past the press',
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
 
   return {

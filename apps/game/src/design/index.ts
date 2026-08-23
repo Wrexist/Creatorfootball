@@ -112,7 +112,7 @@ export {
 } from './domain/bars';
 export {
   Counter, MoneyLabel, TrendIndicator, ScoreDisplay,
-  formatMoney, formatCount, formatDelta, formatWeeks, setCurrencySymbol,
+  formatMoney, formatCount, formatDelta, formatWeeks, ordinal, setCurrencySymbol, sidesWord,
   type CounterProps, type MoneyLabelProps, type TrendIndicatorProps, type ScoreDisplayProps,
 } from './domain/numbers';
 export {

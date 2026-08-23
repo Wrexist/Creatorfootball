@@ -161,6 +161,9 @@ export function makeState(over: Partial<GameState> = {}): GameState {
     social: { posts: [], clubFollowers: 0, weeklyImpressions: 0 },
     rivalries: {},
     objectives: { active: [], completed: [], seasonTargets: [] },
+    boardPressure: { lastUltimatumCycle: null },
+    decisionMemory: { recentTriggers: [] },
+    decisionRecord: {},
     legacy: { trophies: [], records: {}, seasonSummaries: [], legends: [], milestones: [] },
     inventory: { ruleCards: [], scoutCredits: 0, cosmeticIds: [], facilityCredits: 0 },
     settings: {

@@ -402,12 +402,15 @@ export const LONG_RANGE_DISTANCE = 0.22;
  * player can be told what is coming before it arrives.
  */
 export function scheduleSwingWindows(rng: Rng, opts: RuleEngineOptions): SwingWindow[] {
-  // Only symmetric, state-based rules are drawn for a window. The asymmetric
-  // ones are cards a team holds and chooses to play: a league-level rule that
-  // arbitrarily favoured one side would not be a rule, it would be a gift.
-  const pool = opts.enabled.filter(
-    (id) => id in SPECIAL_RULE_DEFINITIONS && SPECIAL_RULE_DEFINITIONS[id].beneficiary === 'BOTH',
-  );
+  // The window draws from the FULL competition pool, not just the symmetric
+  // rules. Asymmetric cards are resolved at fire time by resolveTarget(): a
+  // TRAILING rule takes the side that is actually behind, and a holder rule in
+  // a league window has no holder — nobody played it — so its modifiers land on
+  // both ends. Restricting the draw to beneficiary==='BOTH' collapsed most
+  // fixtures to a single card, which made the windows predictable rather than
+  // scarce: the competition's choice of rules has to decide WHICH rule fires,
+  // never WHETHER one does.
+  const pool = opts.enabled.filter((id) => id in SPECIAL_RULE_DEFINITIONS);
   if (opts.halves < 1) return [];
   // The swing window is a property of the COMPETITION FORMAT, not of the rule
   // set: every half of this format ends with one, announced in advance. The
@@ -454,8 +457,13 @@ function resolveTarget(d: SpecialRuleDefinition, ctx: RuleTickContext): Side | '
   if (d.beneficiary === 'TRAILING') {
     if (ctx.homeScore < ctx.awayScore) return 'home';
     if (ctx.awayScore < ctx.homeScore) return 'away';
+    // Level game: nobody is behind, so there is no side to favour.
     return 'both';
   }
+  // A HOLDER rule reaching here comes from a swing window, where nobody played
+  // a card — so it applies to both ends rather than gifting one side an edge.
+  // Cards played from a bench name their holder in playCard() and never hit
+  // this branch.
   return 'both';
 }
 

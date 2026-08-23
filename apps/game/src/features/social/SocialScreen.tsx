@@ -16,7 +16,8 @@ import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { SOCIAL_ROUTES } from './routes';
 import { assignTiers, describeEvent, useEventIndex, useFeed, type FeedFilter } from './data';
-import { socialRegistry, useSocialAction, useSocialWorld } from './engine';
+import { useSocialAction, useSocialWorld } from './engine';
+import { contentRegistry } from '@/state/content';
 import { FeedItem } from './components/FeedItem';
 import { QuietWorld } from './components/QuietWorld';
 import { Composer, ComposerPrompt } from './components/Composer';
@@ -115,7 +116,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
 
   const publish = (input: { momentId: string; tone: PostTone; voice: PostVoice }): void => {
     const outcome = run((current) => publishClubPost(current, {
-      ...input, at: Date.now(), registry: socialRegistry(),
+      ...input, at: Date.now(), registry: contentRegistry(),
     }));
     if (outcome.ok) toast.success('Posted', 'The world is reading it now.');
     else toast.error('Not posted', outcome.reason ?? 'That did not land.');
@@ -123,7 +124,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
 
   const react = (post: PostData, kind: ReactionKind): void => {
     const outcome = run((current) => reactToPost(current, {
-      postId: post.id, kind, at: Date.now(), registry: socialRegistry(),
+      postId: post.id, kind, at: Date.now(), registry: contentRegistry(),
     }));
     if (!outcome.ok) { toast.error('Not possible', outcome.reason ?? 'That has already been handled.'); return; }
     if (kind === 'SILENCE') {
@@ -140,7 +141,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
   const reply = (stance: ReplyStance): void => {
     if (!voice) return;
     const outcome = run((current) => replyToPlayer(current, {
-      postId: voice.post.id, stance, at: Date.now(), registry: socialRegistry(),
+      postId: voice.post.id, stance, at: Date.now(), registry: contentRegistry(),
     }));
     setReplyTo(null);
     if (outcome.ok) toast.success('Handled', `${voice.name} has heard it.`);

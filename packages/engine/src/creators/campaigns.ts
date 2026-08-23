@@ -9,7 +9,7 @@ import { clubToken, personToken } from '../simulation/ports';
 import { recentForm } from '../game/selectors';
 import { CREATOR_BALANCE as CB } from './balance';
 import { creatorReach, type Creator, type CreatorTier } from './creator';
-import { BRAND_PARTNERS } from '../social/balance';
+import { BRAND_PARTNERS, SOCIAL_BALANCE as S } from '../social/balance';
 import {
   socialWorld, withSocialWorld,
   type CampaignFormat, type CreatorCampaign, type CreatorDeparture, type CreatorFeud,
@@ -64,35 +64,130 @@ function formatsForMoment(moment: SocialMoment, creator: Creator): CampaignForma
   return [...new Set(out)];
 }
 
-const BRIEFS: Readonly<Record<CampaignFormat, (m: SocialMoment, c: Creator) => string>> = {
-  MATCHDAY_VLOG: (m) => `A full day with the club around it. "${m.headline}" is the spine of the edit.`,
-  FAN_CAM: (m) => `Cameras in the concourse and nothing else. Whatever the supporters say about "${m.headline}" is the video.`,
-  TACTICS_BREAKDOWN: (m) => `Twenty minutes of pause-and-rewind explaining exactly how "${m.headline}" happened.`,
-  TRAINING_DAY: () => 'A week inside the training ground. No press officer, no second takes.',
-  MIC_UP: () => 'One player wired for sound for ninety minutes. Nobody knows what comes back.',
-  COLLAB: (m, c) => `${c.displayName} brings another creator in. Two audiences, one argument about "${m.headline}".`,
-  SPONSORED_DROP: (m) => `A brand wants their name on the reaction to "${m.headline}". They are paying for the privilege.`,
-  DOCUMENTARY: (m) => `A long-form piece built around "${m.headline}". Four weeks of work and it changes how the sport talks about this club — or it does not.`,
-  TRANSFER_REACTION: (m) => `A same-day reaction to "${m.headline}", filmed before anybody has calmed down.`,
-  STADIUM_TOUR: () => 'A walk round the ground with somebody who has been coming since before the roof.',
-  CHARITY_STREAM: () => 'A long stream for a cause the supporters chose themselves.',
-  DERBY_BUILD_UP: (m) => `Build-up for the derby, framed entirely around "${m.headline}". It will be replayed at you either way.`,
+/**
+ * Brief and title copy pools.
+ *
+ * One line per format meant every matchday vlog carried the same title for a
+ * whole save, which reads as a template within three offers. Each format now
+ * holds several variants; the pick happens once per offer at generation time
+ * through the offer's own rng stream, so the save stays deterministic while
+ * consecutive weeks stop reading like reprints. The first entry of every pool
+ * is the original line â€” the voices that tested well stay in rotation.
+ */
+export const TITLES: Readonly<Record<CampaignFormat, readonly string[]>> = {
+  MATCHDAY_VLOG: [
+    'Matchday, all of it',
+    'The whole day, uncut',
+    'From breakfast to full time',
+    'The matchday you did not see',
+  ],
+  FAN_CAM: [
+    'The concourse',
+    'Voices from the concourse',
+    'What the away end actually said',
+    'One camera, all of you',
+  ],
+  TACTICS_BREAKDOWN: [
+    'How it actually happened',
+    'Frame by frame',
+    'The shape behind the result',
+    'Pause it right there',
+  ],
+  TRAINING_DAY: [
+    'Inside the week',
+    'The week nobody films',
+    'Boots, cones and opinions',
+    'Where the work actually happens',
+  ],
+  MIC_UP: ['Wired up', 'Mic up and pray', 'Everything he said, unedited', 'Ninety minutes of sound'],
+  COLLAB: ['Two audiences, one take', 'Invite the rival fan', 'Two creators, one argument', 'The crossover episode'],
+  SPONSORED_DROP: ['Presented by somebody', 'The paid-for drop', 'Money in, content out', 'The ad read, kept tasteful'],
+  DOCUMENTARY: ['The long version', 'Four weeks in forty minutes', 'The club, examined', 'Bigger than a highlight'],
+  TRANSFER_REACTION: ['First reaction', 'Filmed before the calm', 'Straight after the news', 'Hot take, cold studio'],
+  STADIUM_TOUR: ['A walk round the ground', 'The seats nobody wants', 'Behind the turnstiles', 'Slow laps of home'],
+  CHARITY_STREAM: ['The long stream', 'Twelve hours for a cause', 'Playing for something real', 'Targets on screen'],
+  DERBY_BUILD_UP: ['Derby week', 'Six days to kick-off', 'The city picks a side', 'Counting down to the derby'],
 };
 
-const TITLES: Readonly<Record<CampaignFormat, string>> = {
-  MATCHDAY_VLOG: 'Matchday, all of it',
-  FAN_CAM: 'The concourse',
-  TACTICS_BREAKDOWN: 'How it actually happened',
-  TRAINING_DAY: 'Inside the week',
-  MIC_UP: 'Wired up',
-  COLLAB: 'Two audiences, one take',
-  SPONSORED_DROP: 'Presented by somebody',
-  DOCUMENTARY: 'The long version',
-  TRANSFER_REACTION: 'First reaction',
-  STADIUM_TOUR: 'A walk round the ground',
-  CHARITY_STREAM: 'The long stream',
-  DERBY_BUILD_UP: 'Derby week',
+export const BRIEFS: Readonly<
+  Record<CampaignFormat, readonly ((m: SocialMoment, c: Creator) => string)[]>
+> = {
+  MATCHDAY_VLOG: [
+    (m) => `A full day with the club around it. "${m.headline}" is the spine of the edit.`,
+    (m) => `Wake-up to final whistle in one continuous edit. "${m.headline}" lands somewhere near the middle, where it belongs.`,
+    (m) => `Travel, team sheet, touchline. The day is the story and "${m.headline}" is just where it peaks.`,
+    (m) => `No script and no second takes â€” just the club on a matchday with "${m.headline}" hanging over everything.`,
+  ],
+  FAN_CAM: [
+    (m) => `Cameras in the concourse and nothing else. Whatever the supporters say about "${m.headline}" is the video.`,
+    (m) => `Handheld, unhyped. One hour of supporters working out what "${m.headline}" means to them.`,
+    (m) => `Point the lens at the stands and let them argue about "${m.headline}". Nobody gets a script.`,
+  ],
+  TACTICS_BREAKDOWN: [
+    (m) => `Twenty minutes of pause-and-rewind explaining exactly how "${m.headline}" happened.`,
+    (m) => `A whiteboard, a cursor and no mercy. "${m.headline}" gets taken apart phase by phase.`,
+    (m) => `The whole move rebuilt from nothing until "${m.headline}" finally makes sense on the third watch.`,
+  ],
+  TRAINING_DAY: [
+    () => 'A week inside the training ground. No press officer, no second takes.',
+    () => 'Seven days with the squad while they prepare. What gets said at the cones stays at the cones â€” mostly.',
+    () => 'Drills, diet and dressing-room chatter, exactly as the week went.',
+  ],
+  MIC_UP: [
+    () => 'One player wired for sound for ninety minutes. Nobody knows what comes back.',
+    () => 'A microphone on the loudest player in the squad. Legal will review it. Eventually.',
+    () => 'Wire him up, roll tape, apologise later.',
+  ],
+  COLLAB: [
+    (m, c) => `${c.displayName} brings another creator in. Two audiences, one argument about "${m.headline}".`,
+    (m, c) => `${c.displayName} and a rival channel in the same room, both reacting to "${m.headline}" live.`,
+    (m, c) => `A crossover episode: ${c.displayName} hands the camera to somebody who disagrees about "${m.headline}".`,
+  ],
+  SPONSORED_DROP: [
+    (m) => `A brand wants their name on the reaction to "${m.headline}". They are paying for the privilege.`,
+    (m) => `"${m.headline}" with a sponsor's name on the intro. The deal pays for the edit, not the opinion.`,
+    (m) => `The money is real and the brief is loose: make "${m.headline}" sellable without making it hollow.`,
+  ],
+  DOCUMENTARY: [
+    (m) => `A long-form piece built around "${m.headline}". Four weeks of work and it changes how the sport talks about this club â€” or it does not.`,
+    (m) => `Archive, interviews and access. "${m.headline}" is the hook; the club is the subject.`,
+    (m) => `The kind of film that gets entered into festivals or quietly buried. It starts with "${m.headline}".`,
+  ],
+  TRANSFER_REACTION: [
+    (m) => `A same-day reaction to "${m.headline}", filmed before anybody has calmed down.`,
+    (m, c) => `News breaks, camera rolls. "${m.headline}" gets the fastest turnaround ${c.displayName} has ever attempted.`,
+    (m) => `Signings, leaks and denials, all filtered through "${m.headline}" within hours of the story landing.`,
+  ],
+  STADIUM_TOUR: [
+    () => 'A walk round the ground with somebody who has been coming since before the roof.',
+    () => 'Every stand, every story, one tour guide who refuses to hurry.',
+    () => 'The parts of the ground nobody photographs, shown slowly.',
+  ],
+  CHARITY_STREAM: [
+    () => 'A long stream for a cause the supporters chose themselves.',
+    () => 'Hours on air, targets on screen, and every penny going where the fans voted.',
+    () => 'The squad turns up, the chat keeps count, the cause gets the money.',
+  ],
+  DERBY_BUILD_UP: [
+    (m) => `Build-up for the derby, framed entirely around "${m.headline}". It will be replayed at you either way.`,
+    (m) => `Six days of countdown content, and "${m.headline}" is the spark everyone keeps returning to.`,
+    (m, c) => `The city splits in half by Sunday. ${c.displayName} spends the week filming both sides of it.`,
+  ],
 };
+
+/**
+ * Who can be offered paid work.
+ *
+ * Life-cycle arrivals are scene texture until they matter: signed by a club,
+ * or arriving with an established audience. Without this gate, a rolling crowd
+ * of freelance locals diluted the brief economy â€” offers spread thin across
+ * voices whose reach converts to almost nothing, and every club's commercial
+ * engine quietly deflated.
+ */
+export const eligibleForBriefs = (creator: Creator): boolean =>
+  !(creator.spawnedSeason !== undefined
+    && creator.clubId === null
+    && (creator.tier === 'LOCAL' || creator.tier === 'RISING'));
 
 /**
  * New briefs from the creators who are willing to work with you.
@@ -127,6 +222,7 @@ export function generateCampaignOffers(
 
   const pool = Object.values(state.creators)
     .filter((c) => c.clubSentiment > -50 && c.style.postingFrequency > 0)
+    .filter(eligibleForBriefs)
     .sort((a, b) => (a.id < b.id ? -1 : 1));
   if (pool.length === 0) return [];
 
@@ -163,8 +259,10 @@ export function generateCampaignOffers(
       id: `cc_${creator.id}_${moment.eventId}_${format}`.toLowerCase(),
       creatorId: creator.id,
       format,
-      title: TITLES[format],
-      brief: BRIEFS[format](moment, creator),
+      // Title and brief variant come from the offer's own stream: deterministic
+      // for a given seed, varied across the weeks of a save.
+      title: local.fork('title').pick(TITLES[format]),
+      brief: local.fork('brief').pick(BRIEFS[format])(moment, creator),
       eventId: moment.eventId,
       cost: brand ? Math.round(cost * 0.4) : cost,
       sponsorFee: brand ? Math.round(brand.fee * (0.6 + creator.attributes.commercialAppeal / 140)) : 0,
@@ -207,7 +305,7 @@ export interface CampaignActionResult {
  *
  * The money moves through the ledger with an idempotency key derived from the
  * campaign id, so a double-tap on the button cannot pay for the same video
- * twice — the second post is rejected as a duplicate rather than silently
+ * twice â€” the second post is rejected as a duplicate rather than silently
  * doubling the bill.
  */
 export function greenlightCampaign(
@@ -263,7 +361,7 @@ export function greenlightCampaign(
       warmth: 0.5,
       credibility: 0.2,
       summary: `Commissioned ${campaign.title}`,
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
 
   // Being given work is the single thing every creator in this game wants.
@@ -298,7 +396,7 @@ export function declineCampaign(
       warmth: -0.3,
       credibility: 0.1,
       summary: `Passed on ${campaign.title}`,
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
   const creator = next.creators[campaign.creatorId];
   if (creator) {
@@ -410,7 +508,7 @@ export function advanceCampaigns(
           amount: paid,
           from: worldAccount('brand-partner'),
           to: clubAccount(state.playerClubId),
-          memo: `${campaign.sponsorName ?? 'Brand partner'} — ${campaign.title}`,
+          memo: `${campaign.sponsorName ?? 'Brand partner'} â€” ${campaign.title}`,
           metadata: { campaignId: campaign.id, flopped },
           idempotencyKey: `campaign-fee:${campaign.id}`,
         }, { cycle, season: state.clock.season, at });
@@ -443,7 +541,7 @@ export function advanceCampaigns(
     );
   }
 
-  next = withSocialWorld(next, { creatorCampaigns: updates.slice(-60) });
+  next = withSocialWorld(next, { creatorCampaigns: updates.slice(-S.historyCap.creatorCampaigns) });
   if (ledgerTouched) next = { ...next, ledger: ledger.snapshot() };
   return { state: next, posts, events, notes };
 }
@@ -690,7 +788,7 @@ export function releaseCreator(
       cycle: state.clock.cycle,
       reason: 'Released by the club.',
       eventId: latestClubEvent(state) ?? (`ev_creator_${creator.id}` as EventId),
-    }].slice(-20),
+    }].slice(-S.historyCap.departures),
     actions: [...w.actions, {
       id: `pa_drop_${creator.id}_${state.clock.cycle}`,
       kind: 'CREATOR_DROPPED' as const,
@@ -700,7 +798,7 @@ export function releaseCreator(
       warmth: -0.7,
       credibility: 0.2,
       summary: `Released ${creator.displayName}`,
-    }].slice(-240),
+    }].slice(-S.historyCap.actions),
   }));
   return { state: next, ok: true, events: [] };
 }
@@ -821,7 +919,7 @@ export function advanceCreatorRelations(
 
   if (departures.length > 0) {
     next = withSocialWorld(next, (w) => ({
-      departures: [...w.departures, ...departures].slice(-20),
+      departures: [...w.departures, ...departures].slice(-S.historyCap.departures),
     }));
     // Everybody left behind takes it personally.
     for (const other of Object.values(next.creators)) {
@@ -915,7 +1013,7 @@ export function advanceFeuds(
     }
   }
 
-  return { state: withSocialWorld(state, { feuds: feuds.slice(-12) }), notes };
+  return { state: withSocialWorld(state, { feuds: feuds.slice(-S.historyCap.feuds) }), notes };
 }
 
 function findFeudPair(

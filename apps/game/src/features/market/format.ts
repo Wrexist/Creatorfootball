@@ -18,7 +18,5 @@ export function cyclesLeft(now: number, deadline: number): string {
   return `${delta} weeks left`;
 }
 
-export const percent = (value: number): string => `${Math.round(value * 100)}%`;
-
 /** Money as a plain integer with grouping — used inside sentences, not headlines. */
 export const plainMoney = (value: number): string => Math.round(value).toLocaleString('en-GB');

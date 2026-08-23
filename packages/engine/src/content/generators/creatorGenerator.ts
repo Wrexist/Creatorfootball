@@ -44,6 +44,8 @@ export interface GenerateCreatorOptions {
   readonly id?: CreatorId;
   readonly idPrefix?: string;
   readonly dealWeeksRemaining?: number | null;
+  /** Season the creator enters the world; stamps life-cycle spawns. */
+  readonly spawnedSeason?: number;
 }
 
 const TONES: readonly CreatorTone[] = ['HYPE', 'ANALYTICAL', 'COMEDIC', 'PROVOCATIVE', 'WHOLESOME', 'DRAMATIC'];
@@ -233,6 +235,7 @@ export function generateCreator(rng: Rng, opts: GenerateCreatorOptions = {}): Cr
       ?? clamp(Math.round(rng.normal(20, 40) - attributes.controversy * 0.25), -100, 100),
     marketValue,
     dealWeeksRemaining: opts.dealWeeksRemaining ?? null,
+    ...(opts.spawnedSeason !== undefined ? { spawnedSeason: opts.spawnedSeason } : {}),
     avatarSeed: template?.avatarSeed ?? `${id}:${tone.toLowerCase()}`,
     bio,
   };

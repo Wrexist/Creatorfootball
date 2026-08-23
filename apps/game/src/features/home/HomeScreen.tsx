@@ -461,7 +461,14 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
             <ScorePanel home={sides.home} away={sides.away} status="Kick off" context={`${competition} · ${feed.upcoming.home ? 'At home' : 'Away'}`} />
           </div>
           <div className="mt-3">
-            <GlassButton variant="primary" size="lg" block loading={busy} icon={<IconBall size={20} />}>
+            <GlassButton
+              variant="primary"
+              size="lg"
+              block
+              loading={busy}
+              icon={<IconBall size={20} />}
+              onClick={() => navigate(buildPath(ROUTES.matchPreview, { fixtureId: feed.upcoming?.fixture.id ?? '' }))}
+            >
               Take charge
             </GlassButton>
           </div>

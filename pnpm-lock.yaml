@@ -23,18 +23,12 @@ importers:
       playwright:
         specifier: ^1.62.1
         version: 1.62.1
-      tsx:
-        specifier: ^4.20.3
-        version: 4.23.12
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
       typescript-eslint:
         specifier: ^8.67.0
         version: 8.67.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.12)
 
   apps/game:
     dependencies:

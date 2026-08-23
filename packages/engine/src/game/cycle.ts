@@ -116,7 +116,11 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
 
     const result = involvesPlayer && opts.playerResult
       ? opts.playerResult
-      : simulateMatch(buildMatchSetup(next, fixture, config));
+      : simulateMatch(buildMatchSetup(next, fixture, config, {
+        // The registry's authored bank finally reaches a runtime reader: the
+        // live book merges it with its built-in table for every simulated match.
+        commentaryLines: registry.commentary(),
+      }));
 
     results.push(result);
     const applied = applyMatchResult(next, fixture, result, events);

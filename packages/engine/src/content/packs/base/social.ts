@@ -799,6 +799,406 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['fans']),
 ];
 
+/**
+ * Depth on the quiet corners of the feed.
+ *
+ * An audit found eighteen triggers carrying one or two variants each — the
+ * scouting line, the reward confirmation, the wildcard-week aside — so those
+ * moments read identically every time they fire. Everything below brings each
+ * of them to four or better, written inside the audience each hook actually
+ * publishes, because a template addressed to a voice the hook never summons is
+ * not depth, it is shelfware.
+ */
+const TRIGGER_TOPUP_TEMPLATES: readonly SocialTemplate[] = [
+  /* --------------------------------------------------- SCOUT_REPORT_READY */
+  ...post('SCOUT_REPORT_READY', 'LEAK', -0.05, 2, [
+    'Understand the report on {player} is filed and the recommendation is not the name anybody outside {club} expected.',
+    'Told {club} have watched {player} four times live this season alone. That is not curiosity, that is intent.',
+    'Hearing confidence inside the {club} recruitment room went up a notch this week. Somebody senior has read the file.',
+  ], ['scouting', 'rumour']),
+
+  /* ------------------------------------------------------ PLAYER_DEVELOPED */
+  ...post('PLAYER_DEVELOPED', 'CREATOR', 0.55, 3, [
+    '{player} has come on further in twelve months than anyone else in this league can show. Whatever the coaching staff are doing, it is working.',
+    'Everyone queuing up to praise how far {player} has come. Nobody mentioning that improved players attract improved offers.',
+  ], ['development']),
+  ...post('PLAYER_DEVELOPED', 'FAN', 0.6, 2, [
+    'The improvement in {player} is not a hot run of form. You can see the coaching in it now.',
+    'However they are doing it, {player} came back from pre-season a different footballer. Long may it continue.',
+  ], ['development']),
+
+  /* ----------------------------------------------------- TRANSFER_COMPLETED */
+  ...post('TRANSFER_COMPLETED', 'MEDIA', 0.15, 3, [
+    '{player} has completed his move to {club}. The fee is the story today; whether he displaces anybody already here is the story for months.',
+  ], ['transfer']),
+  ...post('TRANSFER_COMPLETED', 'LEAK', -0.05, 2, [
+    'Paperwork on {player} finally went through this evening, hours after everybody involved insisted it had never been in doubt.',
+    'Deal sheet signed, medical passed, announcement timed for the evening rush. This one at least was finished properly.',
+  ], ['transfer', 'rumour']),
+
+  /* -------------------------------------------------------- REWARD_CLAIMED */
+  ...post('REWARD_CLAIMED', 'CLUB', 0.35, 1, [
+    'Banked. Straight into the club, not the drawer.',
+  ], ['reward']),
+  ...post('REWARD_CLAIMED', 'FAN', 0.25, 1, [
+    'A reward claimed and actually reinvested. More of this, please.',
+  ], ['reward']),
+  ...post('REWARD_CLAIMED', 'MEDIA', 0.1, 2, [
+    'Small print worth reading: another reward banked this week. Nothing on its own. Together, a transfer window.',
+  ], ['reward']),
+
+  /* ---------------------------------------------------------- CLUB_CREATED */
+  ...post('CLUB_CREATED', 'MEDIA', 0.2, 2, [
+    'A second application, an inspection, and a vote. Somewhere a new club is about to learn what this league does to newcomers.',
+  ], ['league']),
+  ...post('CLUB_CREATED', 'FAN', -0.1, 2, [
+    'A new club. New badge, new songs, no scars yet. We had none of that once either, apparently.',
+  ], ['league']),
+  ...post('CLUB_CREATED', 'RIVAL', -0.45, 2, [
+    'Another club, another set of supporters who think arriving loudly counts as tradition. Welcome, I suppose.',
+  ], ['league', 'rivalry']),
+
+  /* ------------------------------------------------------- RIVALRY_CREATED */
+  ...post('RIVALRY_CREATED', 'FAN', -0.25, 3, [
+    'Could not have picked {opponent} out of a lineup in August. Now the fixture gets circled twice. Nobody planned this, which is why it works.',
+  ], ['rivalry']),
+  ...post('RIVALRY_CREATED', 'RIVAL', -0.5, 3, [
+    'We are assured this is not a rivalry. Somebody should tell the tackles that.',
+  ], ['rivalry']),
+  ...post('RIVALRY_CREATED', 'MEDIA', -0.1, 3, [
+    '{club} and {opponent} have met a handful of times and already need separating. The fixture list owes nobody an apology.',
+  ], ['rivalry']),
+
+  /* ------------------------------------------------------- CYCLE_ADVANCED */
+  ...post('CYCLE_ADVANCED', 'CREATOR', 0.3, 1, [
+    'Wildcard deadline day. Changed my mind four times today and the final version is worse than the first. See you all in the replies.',
+  ], ['squad']),
+  ...post('CYCLE_ADVANCED', 'FAN', 0.15, 1, [
+    'Wildcard week and the group chat has become unbearable. Everybody is a director of football until Thursday.',
+  ], ['squad']),
+  ...post('CYCLE_ADVANCED', 'MEDIA', 0, 1, [
+    'The wildcard window closes on its usual mixture of masterstrokes and panic. The table will spend a month deciding which was which.',
+  ], ['squad']),
+
+  /* ------------------------------------------------------ STORY_PUBLISHED */
+  ...post('STORY_PUBLISHED', 'FAN', -0.35, 2, [
+    'Read past the headline before reacting. It is not as bad as the screenshot suggests. It is worse.',
+  ], ['media']),
+  ...post('STORY_PUBLISHED', 'MEDIA', -0.25, 3, [
+    'The piece is live. It is fair, which is not the same as kind, and both halves of it will be quoted selectively by Friday.',
+  ], ['media']),
+  ...post('STORY_PUBLISHED', 'CREATOR', -0.1, 3, [
+    'Good article about our lot going round today. Read the whole thing before you argue with it. I know that is asking a lot.',
+  ], ['media']),
+
+  /* --------------------------------------------------------- SPONSOR_LOST */
+  ...post('SPONSOR_LOST', 'FAN', -0.45, 2, [
+    '{sponsor} off next season. The statement will be polite and the real reason will not be money.',
+  ], ['commercial']),
+  ...post('SPONSOR_LOST', 'MEDIA', -0.4, 3, [
+    'The {sponsor} exit was decided weeks ago and announced around fixtures, which tells you how little either side wanted the noise.',
+  ], ['commercial']),
+
+  /* ------------------------------------------------------------ PROMOTED */
+  ...post('PROMOTED', 'MEDIA', 0.7, 4, [
+    'Promotion, sealed early and celebrated properly. At this level a season like that is the whole point of having seasons.',
+  ], ['season']),
+  ...post('PROMOTED', 'RIVAL', -0.7, 3, [
+    'Congratulations on going up. Genuinely. Now enjoy being everybody else’s biggest fixture at a higher standard.',
+  ], ['season', 'rivalry']),
+
+  /* -------------------------------------------------- OBJECTIVE_COMPLETED */
+  ...post('OBJECTIVE_COMPLETED', 'CLUB', 0.55, 2, [
+    'Target hit. Credit to the squad and the staff. Nobody here mentions it again until it happens twice.',
+  ], ['objective']),
+  ...post('OBJECTIVE_COMPLETED', 'FAN', 0.6, 1, [
+    'Remember being told the objective was unrealistic? Quite. Next.',
+  ], ['objective']),
+
+  /* ---------------------------------------------------- OBJECTIVE_FAILED */
+  ...post('OBJECTIVE_FAILED', 'MEDIA', -0.45, 3, [
+    '{club} set a target in public and missed it in public. The order of those two events is the entire problem.',
+  ], ['objective']),
+  ...post('OBJECTIVE_FAILED', 'FAN', -0.5, 2, [
+    'Missed it. And nobody connected with the club looked surprised, which tells you what the dressing room knew in October.',
+  ], ['objective']),
+
+  /* -------------------------------------------------- REPUTATION_CHANGED */
+  ...post('REPUTATION_CHANGED', 'MEDIA', 0.35, 3, [
+    'Quietly, without a statement or a launch event, {club} have become a club other clubs study. Reputation moves like that: slowly, then obviously.',
+  ], ['reputation']),
+  ...post('REPUTATION_CHANGED', 'CREATOR', -0.35, 3, [
+    'Whatever reason was given, {club}’s standing took the hit. You can hear it in who stops returning calls first.',
+  ], ['reputation']),
+
+  /* ----------------------------------------------------- PLAYER_RELEASED */
+  ...post('PLAYER_RELEASED', 'FAN', -0.25, 2, [
+    'Released, and it never quite happened for him here. He never hid, though. That counts for more than people think.',
+  ], ['transfer']),
+  ...post('PLAYER_RELEASED', 'PLAYER', 0.15, 2, [
+    'My time at {club} is over. No hard feelings, plenty of good people, onto whatever comes next.',
+  ], ['transfer']),
+
+  /* -------------------------------------------------------- MATCH_STARTED */
+  ...post('MATCH_STARTED', 'CLUB', 0.3, 1, [
+    'Under way against {opponent}. Stay loud.',
+  ], ['matchday']),
+  ...post('MATCH_STARTED', 'FAN', 0.35, 2, [
+    'Kick-off. Ninety minutes of irrational confidence ahead of us.',
+  ], ['matchday']),
+
+  /* -------------------------------------------------- LIVE_DECISION_MADE */
+  ...post('LIVE_DECISION_MADE', 'CREATOR', 0.35, 3, [
+    'He has actually made the call everybody wanted and nobody expected. If that comes off, it is the moment of the season.',
+  ], ['tactics']),
+  ...post('LIVE_DECISION_MADE', 'FAN', -0.3, 2, [
+    'That change makes no sense to me and I have watched every minute of this season.',
+  ], ['tactics']),
+
+  /* ------------------------------------------------------ MANAGER_CRISIS */
+  ...post('MANAGER_CRISIS', 'FAN', -0.7, 4, [
+    'It has stopped being about results and started being about whether anybody still believes the plan. That is a worse place than the table suggests.',
+  ], ['manager']),
+  ...post('MANAGER_CRISIS', 'RIVAL', -0.6, 3, [
+    'A crisis across the city is meant to be funny and mostly it is just familiar. We have all sat where their supporters are sitting.',
+  ], ['manager', 'rivalry']),
+
+  /* ------------------------------------------------------------ FAN_BUZZ */
+  ...post('FAN_BUZZ', 'CREATOR', 0.65, 3, [
+    'There is a genuinely strange energy around {club} right now and I am here for every minute of it.',
+  ], ['fans']),
+  ...post('FAN_BUZZ', 'FAN', 0.75, 2, [
+    'Cannot remember the last time I looked forward to a Saturday this much.',
+    '{reason} and suddenly the whole ground believes again. Dangerous. Wonderful. Both.',
+  ], ['fans']),
+];
+
+/**
+ * The sponsor's own voice, written per business sector rather than per brand,
+ * because the feed should sound like an industry, not like a logo. These lines
+ * are gated on a `sector` fact that the composer publishes only when the club
+ * actually holds a live deal, so tier-3 and tier-4 partners flood ordinary good
+ * weeks with their own tone of voice — and nothing here can ever be spoken by
+ * a brand that does not exist.
+ */
+const SPONSOR_SECTOR_TEMPLATES: readonly SocialTemplate[] = [
+  /* ------------------------------------------------------------ FINANCE */
+  ...post('WIN', 'SPONSOR', 0.55, 2, [
+    'A disciplined performance. We recognise one when we see one, {club}.',
+    'Three points, compounded weekly. Our favourite kind of return.',
+    'Strong quarter for the club, stronger case for the partnership. Well managed.',
+  ], ['commercial'], { sector: 'FINANCE' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.6, 3, [
+    'We underwrote this project because we liked the numbers. Afternoons like that are why.',
+    'Risk, meet reward. Outstanding from everyone at {club}.',
+  ], ['commercial'], { sector: 'FINANCE' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.85, 4, [
+    'Champions. Some investments you simply make at the right time. Proud partners of {club}.',
+    'The safest bet in the league turned out to be belief. Congratulations, {club}.',
+  ], ['commercial'], { sector: 'FINANCE' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.6, 3, [
+    'Delighted to partner with {club}. Solid institution, ambitious people — our kind of portfolio.',
+    'Proud to back {club}. Long-term partnerships are our entire business model.',
+  ], ['commercial'], { sector: 'FINANCE' }),
+
+  /* ------------------------------------------------------------- ENERGY */
+  ...post('WIN', 'SPONSOR', 0.65, 2, [
+    'FULL VOLTAGE. That is how you finish a game, {club}.',
+    'Ninety minutes at maximum output. Charged right through, just like we said.',
+    'High performance has a look. We just watched it.',
+  ], ['commercial'], { sector: 'ENERGY' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.7, 3, [
+    'Overloaded. Completely overloaded. {club}, you absolute machines.',
+    'That was not a result, that was a power surge. More of this please.',
+  ], ['commercial'], { sector: 'ENERGY' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.9, 4, [
+    'CHAMPIONS AND CHARGED. Nobody in this league ran harder for longer. Proud to power {club}.',
+    '{competition} winners. Sustained energy wins things — told you.',
+  ], ['commercial'], { sector: 'ENERGY' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.65, 3, [
+    'New partnership loaded. {club}, let us go fast.',
+    'Energy drinks and football were always going to end up together. Delighted it is with {club}.',
+  ], ['commercial'], { sector: 'ENERGY' }),
+
+  /* ------------------------------------------------------------ APPAREL */
+  ...post('WIN', 'SPONSOR', 0.55, 2, [
+    'That away kit has still not lost. Just saying. {club}',
+    'Winning looks good. Literally — have you seen the fit on this squad?',
+    'Clean sheet, clean colours, clean sweep of the weekend.',
+  ], ['commercial'], { sector: 'APPAREL' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.65, 3, [
+    'Statement performance in statement colours. The design team called it months ago.',
+    'They said the third kit was unlucky. {club} keep disproving folklore every week.',
+  ], ['commercial'], { sector: 'APPAREL' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.85, 4, [
+    'Champions, and they did it in our colours. The commemorative range designs itself.',
+    'Tailored a title run for {club}. The best fabric we have ever worked with is belief.',
+  ], ['commercial'], { sector: 'APPAREL' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.6, 3, [
+    'Official apparel partner of {club}. Fitting, since they wear ambition so well.',
+    'Kit deal done. Wait until you see what we have designed for the spring.',
+  ], ['commercial'], { sector: 'APPAREL' }),
+
+  /* --------------------------------------------------------- AUTOMOTIVE */
+  ...post('WIN', 'SPONSOR', 0.55, 2, [
+    'Smooth handling, powerful finish. A performance after our own engineering. {club}',
+    'Zero to three points, no hesitation in between. Well driven, {club}.',
+    'Built for exactly that kind of afternoon.',
+  ], ['commercial'], { sector: 'AUTOMOTIVE' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.65, 3, [
+    'Top gear from the first whistle. {club} never needed to change gears once.',
+    'Precision at speed. Every department of this club is performing.',
+  ], ['commercial'], { sector: 'AUTOMOTIVE' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.85, 4, [
+    'Champions. Performance engineered over a full season — proud to have our badge on that journey, {club}.',
+    'The title run, serviced perfectly from August to May. Take a bow, {club}.',
+  ], ['commercial'], { sector: 'AUTOMOTIVE' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.6, 3, [
+    'Official vehicle partner of {club}. They move fast on the pitch; we match it on the road.',
+    'Proud to partner with {club}. Two institutions that believe in reliability and horsepower.',
+  ], ['commercial'], { sector: 'AUTOMOTIVE' }),
+
+  /* ------------------------------------------------------------ TELECOM */
+  ...post('WIN', 'SPONSOR', 0.55, 2, [
+    'Signal was strong all afternoon. So was everything else. {club}',
+    'You called, the team answered. Excellent connection today.',
+    'Full coverage, zero dropouts, three points. Our kind of performance.',
+  ], ['commercial'], { sector: 'TELECOM' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.65, 3, [
+    'Every pass streamed perfectly today. What a thing to broadcast, {club}.',
+    'Bandwidth, tempo, throughput — whatever you call it, {club} maxed it out.',
+  ], ['commercial'], { sector: 'TELECOM' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.85, 4, [
+    'Champions, and the whole network celebrated at once. Proud to connect {club} to this moment.',
+    '{competition} winners. Some signals travel further than others. This one reached everybody.',
+  ], ['commercial'], { sector: 'TELECOM' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.6, 3, [
+    'Official connectivity partner of {club}. The support deserves the fastest coverage in the league — now they have it.',
+    'Deal signed. {club} and us, connected long-term.',
+  ], ['commercial'], { sector: 'TELECOM' }),
+
+  /* ------------------------------------------------------------- LUXURY */
+  ...post('WIN', 'SPONSOR', 0.5, 2, [
+    'Understated, precise, inevitable. A very {club} way to win.',
+    'Some victories are loud and some are simply certain. Today was the second kind.',
+    'Composure is the rarest quality in sport. This squad has it in quantity.',
+  ], ['commercial'], { sector: 'LUXURY' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.6, 3, [
+    'Excellence, repeated until it looked effortless. Congratulations to {club}.',
+    'Craft shows. That second half was as finely made as anything we have ever seen.',
+  ], ['commercial'], { sector: 'LUXURY' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.8, 4, [
+    'A championship, properly earned and beautifully finished. Honoured to mark the moment with {club}.',
+    'Legacies are built slowly and worn lightly. Congratulations, champions of the {competition}.',
+  ], ['commercial'], { sector: 'LUXURY' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.55, 3, [
+    'A partnership of two houses that value patience. Proud to stand with {club}.',
+    'We do not associate ourselves often. When we do, it is with winners in waiting.',
+  ], ['commercial'], { sector: 'LUXURY' }),
+
+  /* -------------------------------------------------------- CONGLOMERATE */
+  ...post('WIN', 'SPONSOR', 0.5, 2, [
+    'Across every division of this company, people just enjoyed that. {club}',
+    'Solid results across the board today. The group approves.',
+    'Teamwork, structure, delivery. Sound familiar, {club}?',
+  ], ['commercial'], { sector: 'CONGLOMERATE' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.6, 3, [
+    'Our subsidiaries build things, move things and publish things — only one part of the group produced today\'s highlights. Superb, {club}.',
+    'Quarterly report, one line: more of that, please.',
+  ], ['commercial'], { sector: 'CONGLOMERATE' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.8, 4, [
+    'From everyone across the group: congratulations, champions. Partnerships like this are the good part of our year.',
+    '{competition} winners. A project worth every line of investment. Proud of you, {club}.',
+  ], ['commercial'], { sector: 'CONGLOMERATE' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.55, 3, [
+    'The group is proud to welcome {club} into the family of partners.',
+    'Long-term partners wanted. Long-term winners found. Welcome to the portfolio, {club}.',
+  ], ['commercial'], { sector: 'CONGLOMERATE' }),
+
+  /* --------------------------------------------------------------- MEDIA */
+  ...post('WIN', 'SPONSOR', 0.6, 2, [
+    'Rewatch button getting heavy use tonight. What a finish, {club}.',
+    'That is going straight into next week\'s programming. Sensational stuff.',
+    'Spoiler alert: the last ten minutes were unmissable. We checked twice.',
+  ], ['commercial'], { sector: 'MEDIA' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.65, 3, [
+    'We have seen a lot of football. Very little of it looked like that second half. {club}',
+    'Renewed for another season of this, obviously. Who would cancel?',
+  ], ['commercial'], { sector: 'MEDIA' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.85, 4, [
+    'The documentary writes itself. Champions of the {competition} — and we filmed every step, {club}.',
+    'Season finale delivered the highest ratings we have ever had. Congratulations, champions.',
+  ], ['commercial'], { sector: 'MEDIA' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.6, 3, [
+    'Streaming partner of {club}. Every match, every story, everywhere. Let us make some television.',
+    'Official media partner signed. {club}, your highlight reel is about to get expensive.',
+  ], ['commercial'], { sector: 'MEDIA' }),
+
+  /* -------------------------------------------------------------- TRAVEL */
+  ...post('WIN', 'SPONSOR', 0.55, 2, [
+    'Another away trip, another arrival worth the journey. {club}',
+    'Great sides travel well. Better ones come home with the points.',
+    'Wherever this squad goes, results follow. Book early.',
+  ], ['commercial'], { sector: 'TRAVEL' }),
+  ...post('STATEMENT_WIN', 'SPONSOR', 0.65, 3, [
+    'Longest away day of the season, shortest post-match debrief. Magnificent, {club}.',
+    'First class from kickoff to final whistle. The return coach will be loud.',
+  ], ['commercial'], { sector: 'TRAVEL' }),
+  ...post('TROPHY_WON', 'SPONSOR', 0.85, 4, [
+    'Every journey this season led somewhere. Today it led all the way. Champions.',
+    'Congratulations, {club}. One more open-top bus route to plan.',
+  ], ['commercial'], { sector: 'TRAVEL' }),
+  ...post('SPONSOR_SIGNED', 'SPONSOR', 0.6, 3, [
+    'Official travel partner of {club}. Away days just got considerably more comfortable.',
+    'Proud to carry {club} and their support everywhere this project goes.',
+  ], ['commercial'], { sector: 'TRAVEL' }),
+];
+
+/**
+ * The leak account, deepened.
+ *
+ * A rumour feed lives on volume and variety: the same thirteen hedges repeated
+ * across a season read not as gossip but as a bot. These double the bank, kept
+ * inside the triggers whose hooks actually summon a LEAK author.
+ */
+const LEAK_DEPTH_TEMPLATES: readonly SocialTemplate[] = [
+  /* ---------------------------------------------------- TRANSFER_HIJACKED */
+  ...post('TRANSFER_HIJACKED', 'LEAK', -0.3, 3, [
+    'Understand {opponent} moved the moment terms were agreed and made the whole thing done inside a day. Ruthlessly efficient business.',
+    'Told the {club} hierarchy found out about the rival offer from a journalist. That detail will outlast the transfer itself.',
+  ], ['transfer', 'rumour']),
+
+  /* -------------------------------------------------- PLAYER_MORALE_CHANGED */
+  ...post('PLAYER_MORALE_CHANGED', 'LEAK', -0.35, 3, [
+    'Understand the conversation between {player} and the {club} staff was short and did not end well.',
+    'Hearing the reason behind {player}\'s mood is playing time, and that nobody has disputed it internally.',
+  ], ['squad', 'rumour']),
+
+  /* ------------------------------------------------------------ BALANCE_LOW */
+  ...post('BALANCE_LOW', 'LEAK', -0.45, 3, [
+    'Understand wages went out at {club} this week later than usual. Club say it was a processing issue. It is never a processing issue.',
+    'Told the next set of accounts at {club} will show a balance around {balance}, and that plans are being drawn up accordingly.',
+  ], ['finance', 'rumour']),
+
+  /* ------------------------------------------------------- TRANSFER_BID_MADE */
+  ...post('TRANSFER_BID_MADE', 'LEAK', 0, 2, [
+    'Bid in. Structure heavily incentivised, which usually means one club thinks it is buying value and the other knows it is selling risk.',
+    'Understand talks are further along than either side wants public, and that the player has already agreed personal terms in principle.',
+  ], ['transfer', 'rumour']),
+
+  /* ------------------------------------------------------ TRANSFER_BID_REJECTED */
+  ...post('TRANSFER_BID_REJECTED', 'LEAK', -0.1, 2, [
+    'Rejection confirmed, and told the message back was shorter than the bid was low.',
+    'Understand the selling club named their number privately and dared them to meet it. Somebody will.',
+  ], ['transfer', 'rumour']),
+
+  /* ------------------------------------------------------- CONTRACT_EXPIRING */
+  ...post('CONTRACT_EXPIRING', 'LEAK', -0.25, 3, [
+    'Understand there have been no talks between {club} and {player} for weeks. Not stalled talks. No talks.',
+    'Told {weeks} weeks from expiry and the two sides remain further apart than either will say publicly.',
+  ], ['contract', 'rumour']),
+];
+
 
 /**
  * The second half of the interactive library.
@@ -1753,6 +2153,9 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ...INTERACTIVE_REACTION_TEMPLATES,
   ...STANDING_SOCIAL_TEMPLATES,
   ...DEPTH_SOCIAL_TEMPLATES,
+  ...TRIGGER_TOPUP_TEMPLATES,
+  ...SPONSOR_SECTOR_TEMPLATES,
+  ...LEAK_DEPTH_TEMPLATES,
 ];
 
 export const BASE_SOCIAL_TEMPLATE_COUNT = BASE_SOCIAL_TEMPLATES.length;

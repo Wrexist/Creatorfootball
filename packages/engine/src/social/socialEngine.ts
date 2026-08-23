@@ -73,8 +73,18 @@ function toneStance(sentiment: number, tone: Tone): number {
   }
 }
 
-function stanceFor(author: Author, hook: ContentHook, state: GameState): number {
-  switch (author.kind) {
+/**
+ * The business sector of the club's live deal, published as a fact so
+ * sponsor-authored copy can speak in its own industry's voice. A bank and an
+ * energy drink do not post alike, and a sector-gated line that cannot resolve
+ * simply never runs — never misattributed.
+ */
+function activeSponsorSector(state: GameState): string | undefined {
+  const deal = state.sponsors.active[0];
+  return deal?.sector;
+}
+
+function stanceFor(author: Author, hook: ContentHook, state: GameState): number {  switch (author.kind) {
     case 'FAN': return clamp(hook.sentiment * 1.1, -1, 1);
     // Rivals are hostile whatever happened: gloating at your misery, bitter at
     // your success. Their sentiment is always negative toward the subject club.
@@ -312,6 +322,7 @@ export function generatePosts(
         authorKind: author.kind,
         ...(author.tone ? { tone: author.tone } : {}),
         ...(author.tier ? { tier: author.tier } : {}),
+        ...(author.kind === 'SPONSOR' ? { sector: activeSponsorSector(state) } : {}),
       };
       const pool = templatesForTrigger((key) => byKey.get(key), hook.trigger, `|${author.kind}`).filter(
         (template) => matchesConditions(template.conditions, facts) && renderTemplate(template.text, hook.tokens) !== null,

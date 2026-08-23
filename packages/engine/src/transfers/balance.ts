@@ -277,6 +277,14 @@ export const MARKET_BALANCE = {
   /** Rumours generated per refresh. Noise, but grounded in real interest. */
   RUMOURS_PER_REFRESH: 3,
   RUMOUR_MIN_CREDIBILITY: 0.15,
+  /** Credibility at or above which a rumour is written as reporting, not gossip. */
+  RUMOUR_SOLID_AT: 0.6,
+  /**
+   * Fee (asking price or market value, whichever is larger) above which a
+   * rumour is about a marquee move and reads differently from a squad-filler
+   * link. The rumour copy is keyed by this band alongside `RUMOUR_SOLID_AT`.
+   */
+  RUMOUR_BIG_FEE: 25_000_000,
   /** Cycles a rumour survives before it is dropped from the feed. */
   RUMOUR_LIFETIME_CYCLES: 4,
   /** Value drift applied each refresh toward the freshly computed valuation. */

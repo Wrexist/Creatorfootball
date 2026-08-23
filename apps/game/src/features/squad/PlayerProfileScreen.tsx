@@ -12,12 +12,15 @@ import {
   Accordion, AttributeBar, ClubBadge, DataCell, DataGrid, Divider, EmptyState, GlassButton,
   GlassPanel, GlassPill, GlassSheet, ListRow, PlayerPortrait, PositionChip, ProgressBar,
   RatingBadge, Screen, Sparkline, StatBlock, Text, Timeline, TraitChip, cn, formatMoney, rgba,
+  useToast,
   IconBall, IconCard, IconInjury, IconScout, IconSocial, IconStar, IconWarning,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
-import { playerArc, sentenceCase } from './arc';
+import { playerArc } from './arc';
+import { sentenceCase } from '@/design/text';
+import { canOfferRenewal, offerRenewal, presentRenewal } from './renewal';
 
 /**
  * Player profile — a signature screen.
@@ -126,6 +129,16 @@ export function PlayerProfileScreen(): ReactNode {
 function ProfileBody({ state, player }: { state: GameState; player: Player }): ReactNode {
   const navigate = useNavigate();
   const [trait, setTrait] = useState<TraitDefinition | null>(null);
+  const toast = useToast();
+
+  /**
+   * The renewal action the contract warning always demanded and the interface
+   * never had. Meet what he deserves and he signs; lowball him through the
+   * same engine verdict machinery and the engine prices the insult.
+   */
+  const handleRenew = (lowball: boolean): void => {
+    presentRenewal(offerRenewal(player.id, { lowball }), toast);
+  };
 
   const data = useMemo(() => {
     const club: Club | undefined = player.clubId ? clubById(state, player.clubId) : undefined;
@@ -479,6 +492,16 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
                   <Text role="caption" as="p" className="mt-1 text-pretty">
                     Renew it or he leaves for nothing. Rival clubs can already talk to him.
                   </Text>
+                </div>
+              )}
+              {data.ownClub && canOfferRenewal(data.contract.weeksRemaining, true) && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <GlassButton variant="primary" size="sm" onClick={() => handleRenew(false)}>
+                    Meet his demands
+                  </GlassButton>
+                  <GlassButton variant="ghost" size="sm" onClick={() => handleRenew(true)}>
+                    Lowball him
+                  </GlassButton>
                 </div>
               )}
             </>
