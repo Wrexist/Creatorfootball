@@ -175,3 +175,7 @@ export {
   HeroReveal, GoalBurst, TrophyMoment, SigningMoment,
   type HeroRevealProps, type GoalBurstProps, type TrophyMomentProps, type SigningMomentProps,
 } from './hero/moments';
+export {
+  HeroScene, heroBokeh, heroRain, rimAt,
+  type HeroSceneProps, type HeroSceneVariant, type BokehDot, type RainStreak,
+} from './hero/scenes';

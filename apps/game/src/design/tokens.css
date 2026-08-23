@@ -326,6 +326,40 @@
   100% { opacity: 0; transform: translateY(-26px) scale(1.05); }
 }
 
+/*
+  Floodlight breath, for `design/hero/scenes.tsx`.
+
+  Opacity only, seven seconds, and nothing in the composition depends on where
+  in the cycle it is caught — so the global `prefers-reduced-motion` rule above
+  (which collapses every animation to 0.01ms) leaves a correct still frame
+  rather than a half-drawn one. That is why this is a CSS keyframe and not a
+  motion variant: the scene never has to know the preference.
+*/
+@keyframes cf-floodlight {
+  0%, 100% { opacity: 0.86; }
+  50%      { opacity: 1; }
+}
+
+.hero-scene-flood {
+  animation: cf-floodlight 7s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/*
+  The scene is atmosphere, and atmosphere is the first thing to go when
+  somebody has asked for less of it. Removing the drawing leaves the wrapper's
+  solid fill, which is already the exact colour the composition resolves to at
+  its darkest — so nothing shifts, nothing flashes, and the glass above it is
+  unaffected because it never depended on what was underneath.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .hero-scene-art { display: none; }
+  .hero-scene-flood { animation: none; }
+}
+
+[data-reduced-effects='true'] .hero-scene-art { display: none; }
+[data-reduced-effects='true'] .hero-scene-flood { animation: none; }
+
 @layer utilities {
   /* Hairline separator that survives on every glass level. */
   .hairline { border-color: rgb(255 255 255 / 0.08); }

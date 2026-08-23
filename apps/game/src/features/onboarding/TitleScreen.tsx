@@ -3,12 +3,11 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@cf/engine';
 import {
-  GlassButton, GlassCard, GlassPill, IconChevronRight, useConfirm, useDesignMotion,
+  GlassButton, GlassCard, GlassPill, HeroScene, IconChevronRight, useConfirm, useDesignMotion,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { BrandMark } from './BrandMark';
-import { StadiumNight } from './StadiumNight';
 
 /**
  * The title screen.
@@ -64,7 +63,7 @@ export function TitleScreen(): ReactNode {
       {/* Beat 0:00-0:25. The hero is the screen, not a band across the top of
           it — the copy and the CTA sit *on* the ground rather than above and
           below a hole where a picture should be. */}
-      <StadiumNight />
+      <HeroScene variant="title" seed="creator-football" />
 
       <div
         className="scroll-y relative flex flex-1 flex-col justify-between px-6 pb-[calc(var(--safe-bottom)+28px)] pt-[calc(var(--safe-top)+40px)]"
