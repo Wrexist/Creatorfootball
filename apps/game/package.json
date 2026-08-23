@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "cap:sync": "cap sync",
     "test": "vitest run",
-    "test:smoke": "vite build && vite preview --port 4173 --strictPort & sleep 4 && node e2e/smoke.mjs http://127.0.0.1:4173"
+    "test:smoke": "vite build && node e2e/run.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.0",
