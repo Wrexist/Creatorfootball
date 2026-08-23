@@ -111,6 +111,10 @@ export {
 } from './domain/face';
 export { ClubBadge, type ClubBadgeProps } from './domain/ClubBadge';
 export {
+  Silverware, silverwareVariantFor, SILVERWARE_VARIANTS, SILVERWARE_LABELS,
+  type SilverwareProps, type SilverwareVariant,
+} from './domain/silverware';
+export {
   PlayerCard, PlayerFormPip,
   type PlayerCardProps, type PlayerCardVariant, type PlayerCardClub, type PlayerFormPipProps,
 } from './domain/PlayerCard';
