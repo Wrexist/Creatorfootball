@@ -121,7 +121,10 @@ export {
 export { CreatorCard, type CreatorCardProps, type CreatorCardVariant } from './domain/CreatorCard';
 export { ClubCard, type ClubCardProps, type ClubCardVariant } from './domain/ClubCard';
 export { MatchCard, type MatchCardProps, type MatchCardSide, type MatchCardVariant } from './domain/MatchCard';
-export { NewsCard, SocialPost, type NewsCardProps, type SocialPostProps } from './domain/feed';
+export {
+  NewsCard, SocialPost, StoryArt, storyMotifFor, STORY_MOTIFS, STORY_MOTIF_LABELS,
+  type NewsCardProps, type SocialPostProps, type StoryMotif,
+} from './domain/feed';
 export { StatCard, type StatCardProps } from './domain/StatCard';
 export {
   RatingBadge, PositionChip, TraitChip, FormGuide,
@@ -168,8 +171,9 @@ export {
 
 /* --- hero moments ----------------------------------------------------- */
 export {
-  ShinyText, SpotlightCard, GlareHover, GradualBlur,
-  type ShinyTextProps, type SpotlightCardProps, type GlareHoverProps, type GradualBlurProps,
+  ShinyText, SpotlightCard, GlareHover, GlareSweep, CardFoil, GradualBlur,
+  type ShinyTextProps, type SpotlightCardProps, type GlareHoverProps, type CardFoilProps,
+  type GradualBlurProps,
 } from './hero/effects';
 export {
   HeroReveal, GoalBurst, TrophyMoment, SigningMoment,

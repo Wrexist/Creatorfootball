@@ -12,6 +12,7 @@ import { ClubBadge } from './ClubBadge';
 import { PositionChip, RatingBadge, TraitChip } from './chips';
 import { MoneyLabel, formatWeeks } from './numbers';
 import { IconCard, IconFlame, IconInjury, IconTrendDown, IconTrendUp } from '../icons';
+import { CardFoil, GlareSweep } from '../hero/effects';
 import { NameText } from '../typography/Text';
 import { TYPE_CLASS } from '../typography/type';
 
@@ -371,16 +372,41 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
 
       {legendary && (
         <>
-          {/* Conic sheen: the one place in the whole kit where a continuous
-              animation is allowed, and only while visible. */}
+          {/* The foil finish. Procedural interference pattern rather than a
+              512² tile: no file, no decode, no 404, and it stays sharp from a
+              148px rail card up to the signing-reveal size. It sits above the
+              club wash and below nothing that carries text — the layer masks
+              itself off the foot of the card — and disappears entirely under
+              reduced transparency, which leaves plain glass. */}
+          <CardFoil />
+          {/* One pass of light across the finish on hover. Transform-only, and
+              `GlareSweep` returns nothing on touch or under reduced motion, so
+              the card is a still object where a moving one would be wrong. */}
+          <GlareSweep />
+          {/* Conic sheen travelling the *edge*: the one place in the whole kit
+              where a continuous animation is allowed, and only while visible.
+
+              The two-layer mask that cuts the conic down to a 1px ring is
+              written as inline style rather than as arbitrary Tailwind
+              properties, with the `-webkit-` pair alongside it. The class-based
+              version silently lost its composite on some engines, and the
+              failure mode is not subtle — the whole conic paints across the
+              card and the "foil" becomes a green searchlight. A ring this thin
+              is worth two extra declarations to be certain of. */}
           <span
             aria-hidden="true"
             className={cn(
-              'pointer-events-none absolute -inset-px rounded-[inherit] opacity-70',
-              '[background:conic-gradient(from_0deg,transparent_0deg,rgb(200_255_46/0.9)_28deg,transparent_78deg,transparent_180deg,rgb(200_255_46/0.5)_212deg,transparent_260deg)]',
-              '[mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] [mask-composite:exclude] p-px',
+              'pointer-events-none absolute -inset-px rounded-[inherit] p-px opacity-70',
               inView && !m.reduced && 'animate-crest',
             )}
+            style={{
+              background:
+                'conic-gradient(from 0deg,transparent 0deg,rgb(200 255 46/0.9) 28deg,transparent 78deg,transparent 180deg,rgb(200 255 46/0.5) 212deg,transparent 260deg)',
+              WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+              WebkitMaskComposite: 'xor',
+              mask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+              maskComposite: 'exclude',
+            }}
           />
           <span
             aria-hidden="true"
@@ -395,6 +421,10 @@ function VerticalCard(props: PlayerCardProps): ReactNode {
     'relative flex w-full flex-col overflow-hidden text-left',
     featured ? 'aspect-[3/4.15] rounded-xl' : 'aspect-[3/4] rounded-lg',
     'glass-2 glass-sheen',
+    // The shell is the glare's hover group: the card is already positioned and
+    // overflow-clipped, so wrapping it in GlareHover would only add a box
+    // between the rounded clip and the absolutely positioned layers inside it.
+    legendary && 'group',
     selected && 'ring-2 ring-volt',
     dimmed && 'opacity-55',
     className,

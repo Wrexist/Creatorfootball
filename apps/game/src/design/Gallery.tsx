@@ -17,6 +17,10 @@ import {
   SigningMoment, useToast, type TabId,
 } from './index';
 import {
+  HeroScene, Silverware, StoryArt, SILVERWARE_LABELS, SILVERWARE_VARIANTS,
+  STORY_MOTIFS, STORY_MOTIF_LABELS, type HeroSceneVariant,
+} from './index';
+import {
   DataCell, DataGrid, FitText, HeroSurface, ListRow, MediaCard, NameText, Numeric,
   ScorePanel, StatBlock, Text, FitBox, type TypeRole,
 } from './index';
@@ -58,6 +62,9 @@ const SECTIONS = [
   ['portraits', 'Portraits'],
   ['playercards', 'Player cards'],
   ['cards', 'Domain cards'],
+  ['storyart', 'Story art'],
+  ['silverware', 'Silverware'],
+  ['scenes', 'Hero scenes'],
   ['data', 'Data display'],
   ['feedback', 'Feedback'],
   ['structure', 'Layout'],
@@ -1013,6 +1020,21 @@ function GalleryBody(): ReactNode {
                 </>
               )}
             </Row>
+            <Row label="Legendary foil — hover it. Procedural interference pattern, no tile file; plain glass under reduced transparency">
+              {player && club && (
+                <>
+                  <div className="w-[240px]"><PlayerCard player={player} club={club} variant="legendary" onPress={() => undefined} /></div>
+                  <div className="w-[148px]"><PlayerCard player={GALLERY_PLAYERS[1]!} club={GALLERY_CLUBS[1]} variant="legendary" /></div>
+                  <div className="w-[148px]"><PlayerCard player={GALLERY_PLAYERS[3]!} club={GALLERY_CLUBS[2]} variant="legendary" /></div>
+                  <p className="max-w-[30ch] self-center text-caption leading-relaxed text-ink-muted">
+                    Two gratings at different pitches and angles beat into the drifting bands a
+                    printed foil makes; one wide conic supplies the hue shift. The movement is the
+                    hover glare only — transform-only, absent on touch and under reduced motion —
+                    so this is the third continuous animation on the object and not the fourth.
+                  </p>
+                </>
+              )}
+            </Row>
             <Row label="States — injured, suspended, dimmed, selected">
               {club && (
                 <>
@@ -1108,6 +1130,104 @@ function GalleryBody(): ReactNode {
                   ))}
                 </CardRail>
               </div>
+            </Row>
+          </Section>
+
+          {/* --- story art --- */}
+          <Section
+            id="storyart"
+            title="Story art"
+            note="The key image on a lead news story. Seeded colour bands are the base and stay the whole picture for anything unrecognised; a story whose tags name one of the five editorial subjects gets that motif stamped over them, drawn in the icon set's stroke language at plate scale. The motif is chosen from the story's own tags at render time — nothing is authored per story, and nothing is loaded."
+          >
+            <Row label="Five motifs — matched from the engine's story tags">
+              {STORY_MOTIFS.map((motif) => (
+                <figure key={motif} className="w-[168px]">
+                  <div className="h-[84px] w-full overflow-hidden rounded-md">
+                    <StoryArt seed={`gallery-${motif}`} motif={motif} />
+                  </div>
+                  <figcaption className="mt-1.5 text-label text-ink-dim">{STORY_MOTIF_LABELS[motif]}</figcaption>
+                </figure>
+              ))}
+              <figure className="w-[168px]">
+                <div className="h-[84px] w-full overflow-hidden rounded-md">
+                  <StoryArt seed="gallery-bands" />
+                </div>
+                <figcaption className="mt-1.5 text-label text-ink-dim">Unmatched — bands only</figcaption>
+              </figure>
+            </Row>
+            <Row label="Same motif, four seeds — the palette and the bands move, the subject does not">
+              {['a', 'b', 'c', 'd'].map((s) => (
+                <div key={s} className="h-[84px] w-[168px] overflow-hidden rounded-md">
+                  <StoryArt seed={`rivalry-${s}`} motif="rivalry" />
+                </div>
+              ))}
+            </Row>
+            <Row label="In place, on a lead card">
+              <div className="w-[320px]">
+                <NewsCard
+                  story={{ ...GALLERY_STORIES[0]!, tags: ['trigger:TRANSFER_COMPLETED'] }}
+                  variant="lead"
+                  timeLabel="2h"
+                  onPress={() => undefined}
+                />
+              </div>
+              <div className="w-[320px]">
+                <NewsCard
+                  story={{ ...GALLERY_STORIES[2]!, tags: ['trigger:DERBY_DEFEAT'] }}
+                  variant="lead"
+                  timeLabel="1d"
+                  onPress={() => undefined}
+                />
+              </div>
+            </Row>
+          </Section>
+
+          {/* --- silverware --- */}
+          <Section
+            id="silverware"
+            title="Silverware"
+            note="Five trophies, drawn rather than seeded: there are five of them in the universe and they should be recognisable, not random. Layered gold, a plinth, an engraving band and exactly one specular sheen. Under 34px the detail pass drops out — fluting and engraving turn to mud at list-glyph size and cost fill-rate for nothing."
+          >
+            <Row label="All five at 72px, hero staging (glow on)">
+              {SILVERWARE_VARIANTS.map((variant) => (
+                <figure key={variant} className="flex w-[120px] flex-col items-center gap-2">
+                  <Silverware variant={variant} size={72} glow label={SILVERWARE_LABELS[variant]} />
+                  <figcaption className="text-center text-label text-ink-dim">{SILVERWARE_LABELS[variant]}</figcaption>
+                </figure>
+              ))}
+            </Row>
+            <Row label="20px — the honours-list glyph, detail pass off">
+              <div className="flex w-full max-w-md flex-col">
+                {SILVERWARE_VARIANTS.map((variant) => (
+                  <div key={variant} className="flex items-center gap-2.5 border-b border-white/[0.06] py-2">
+                    <Silverware variant={variant} size={20} />
+                    <span className="flex-1 text-body text-ink">{SILVERWARE_LABELS[variant]}</span>
+                    <span className="tnum text-caption text-ink-dim">Season {2 + SILVERWARE_VARIANTS.indexOf(variant)}</span>
+                  </div>
+                ))}
+              </div>
+            </Row>
+          </Section>
+
+          {/* --- hero scenes --- */}
+          <Section
+            id="scenes"
+            title="Hero scenes"
+            note="Full-bleed stadium backdrops for the title screen and the two result moods. One paint, no blur, no filter, no per-frame work: the only animation is an opacity breath on the floodlight glow, written as a CSS keyframe so reduced motion flattens it without the component knowing. Under reduced transparency the drawing is removed and the wrapper's solid fill — already the colour the composition resolves to — is what remains."
+          >
+            <Row label="title / triumph / consolation">
+              {(['title', 'triumph', 'consolation'] as readonly HeroSceneVariant[]).map((variant) => (
+                <figure key={variant} className="w-[204px]">
+                  <div className="relative h-[272px] w-full overflow-hidden rounded-lg ring-1 ring-white/[0.08]">
+                    <HeroScene variant={variant} seed={`gallery-${variant}`} />
+                    <div className="absolute inset-x-0 bottom-0 p-3">
+                      <p className="text-micro uppercase tracking-[0.2em] text-ink-dim">Season one</p>
+                      <p className="font-display text-section font-bold text-ink">Ashvale Phoenix</p>
+                    </div>
+                  </div>
+                  <figcaption className="mt-1.5 text-label capitalize text-ink-dim">{variant}</figcaption>
+                </figure>
+              ))}
             </Row>
           </Section>
 

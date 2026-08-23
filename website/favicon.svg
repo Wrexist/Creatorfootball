@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Creator Football">
+  <!--
+    The Creator Football mark: the same volt ball as the iOS app icon, redrawn
+    as vector so it stays sharp in a tab, a bookmark bar and a pinned tile.
+    Graphite ground, one volt sphere, one specular sheen — no second highlight,
+    per the style guide. Fully self-contained: no external references, no text,
+    nothing that needs a font to be installed.
+  -->
+  <defs>
+    <linearGradient id="cf-ball" x1="0.18" y1="0.05" x2="0.82" y2="0.98">
+      <stop offset="0%" stop-color="#e6ff9b" />
+      <stop offset="38%" stop-color="#c8ff2e" />
+      <stop offset="100%" stop-color="#9ecc12" />
+    </linearGradient>
+    <radialGradient id="cf-sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.42" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="#08090b" />
+  <circle cx="32" cy="32" r="21.5" fill="url(#cf-ball)" />
+  <ellipse cx="24.5" cy="22.5" rx="12" ry="8" transform="rotate(-32 24.5 22.5)" fill="url(#cf-sheen)" />
+
+  <g fill="#0d1400" stroke="#0d1400" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32.00 24.60 L39.04 29.71 L36.35 37.99 L27.65 37.99 L24.96 29.71 Z" stroke-width="1.2" />
+    <path fill="none" d="M39.42 29.59 L49.16 26.42 M36.58 38.31 L42.60 46.60 M27.42 38.31 L21.40 46.60 M24.58 29.59 L14.84 26.42" />
+  </g>
+</svg>

@@ -148,28 +148,84 @@ export interface GlareHoverProps {
 }
 
 /**
+ * The moving band itself, split out of `GlareHover`.
+ *
+ * A surface that is already its own positioned, overflow-clipped `group` — the
+ * legendary player card is the case that forced this — must not be wrapped in a
+ * second element just to get a glare, because the wrapper would sit between the
+ * card's rounded clip and its own absolutely positioned children. Drop this
+ * inside such a surface instead; it needs an ancestor carrying `group` and
+ * `relative overflow-hidden`, which `GlareHover` supplies for everyone else.
+ */
+export function GlareSweep({ className }: { className?: string }): ReactNode {
+  const canHover = useCanHover();
+  const m = useDesignMotion();
+  if (!canHover || m.reduced) return null;
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'pointer-events-none absolute -inset-y-8 -left-1/3 z-10 w-1/3 -translate-x-full rotate-[18deg]',
+        'bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.18),transparent)]',
+        'transition-transform duration-[var(--duration-slow)] ease-out-quint group-hover:translate-x-[420%]',
+        className,
+      )}
+    />
+  );
+}
+
+/**
  * A single diagonal glare that crosses the surface on hover. Used on
  * collectible surfaces (a legendary card, a trophy tile) to suggest a physical
  * finish. Transform-only, so it composites on the GPU.
  */
 export function GlareHover({ children, className }: GlareHoverProps): ReactNode {
-  const canHover = useCanHover();
-  const m = useDesignMotion();
-
   return (
     <div className={cn('group relative overflow-hidden', className)}>
       {children}
-      {canHover && !m.reduced && (
-        <span
-          aria-hidden="true"
-          className={cn(
-            'pointer-events-none absolute -inset-y-8 -left-1/3 w-1/3 -translate-x-full rotate-[18deg]',
-            'bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.18),transparent)]',
-            'transition-transform duration-[var(--duration-slow)] ease-out-quint group-hover:translate-x-[420%]',
-          )}
-        />
-      )}
+      <GlareSweep />
     </div>
+  );
+}
+
+/* --- CardFoil --------------------------------------------------------- */
+
+export interface CardFoilProps {
+  /**
+   * How strongly the finish reads, 0..1. The default is tuned against the
+   * warmest club palette in the pack, because that is where a screen-blended
+   * volt reads loudest — on a cool club it is barely there, which is correct.
+   */
+  strength?: number;
+  className?: string;
+}
+
+/**
+ * The foil finish on a legendary collectible.
+ *
+ * A real foil card is a printed diffraction grating: two rulings at slightly
+ * different pitches and angles, which interfere into the drifting bands you see
+ * when the card tilts. That is exactly what two `repeating-linear-gradient`s
+ * make for free — 128px against 96px, 115° against −42° — with one wide conic
+ * over the top for the hue shift across the sheet. No tile file, no decode, no
+ * 404, and it stays sharp at any card size because it is resolution-free.
+ *
+ * It is deliberately quiet: every stop is under 12% alpha and the whole layer
+ * is masked away from the foot of the card, where the name and the attribute
+ * strip live — text never competes with a finish. There is no animation here at
+ * all; the movement comes from `GlareSweep` on hover, which is transform-only
+ * and absent on touch and under reduced motion. The `.cf-foil` rule in
+ * tokens.css removes the layer entirely under reduced transparency, leaving the
+ * plain glass card the variant already is underneath.
+ */
+export function CardFoil({ strength = 0.85, className }: CardFoilProps): ReactNode {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn('cf-foil pointer-events-none absolute inset-0 rounded-[inherit]', className)}
+      style={{ opacity: Math.max(0, Math.min(1, strength)) }}
+    />
   );
 }
 
