@@ -29,7 +29,7 @@ describe('save migrations', () => {
   });
 
   it('migrates a pre-board save forward with the fields defaulted in', () => {
-    expect(SAVE_VERSION).toBe(4);
+    expect(SAVE_VERSION).toBe(5);
     const { state } = buildTestWorld({ clubCount: 4 });
     const raw = stripToV1(state);
     expect('boardPressure' in raw).toBe(false);

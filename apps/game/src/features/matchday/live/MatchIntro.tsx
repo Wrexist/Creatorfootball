@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Club, Player } from '@cf/engine';
-import { ClubBadge, GlassButton, IconFans, PlayerPortrait, ShinyText, cn, haptics, useDesignMotion } from '@/design';
+import { ClubBadge, GlassButton, IconFans, PlayerPortrait, ShinyText, cn, haptics, sfx, useDesignMotion } from '@/design';
 import { arenaShareLine, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitPalette } from '../shared/kit';
 
@@ -56,6 +56,10 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
   const finish = useCallback(() => {
     if (done.current) return;
     done.current = true;
+    // The whistle is the handover: it plays whether the sequence ran to the end
+    // or the player skipped it, because it marks the match starting, not the
+    // animation finishing.
+    sfx.kickOff();
     onDone();
   }, [onDone]);
 

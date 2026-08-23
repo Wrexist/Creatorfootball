@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
+import { sfx } from '../audio';
 import { FOCUS_RING } from '../glass/glassLevel';
 import {
   IconClub, IconHome, IconLeague, IconMatchday, IconSquad,
@@ -107,6 +108,7 @@ export function TabBar({
                   onClick={() => {
                     if (active) return;
                     haptics.selection();
+                    sfx.tick();
                     onChange(tab.id);
                   }}
                   className={cn(
@@ -219,6 +221,7 @@ export function SideNav({ value, onChange, badges, header, footer, className }: 
                 onClick={() => {
                   if (active) return;
                   haptics.selection();
+                  sfx.tick();
                   onChange(tab.id);
                 }}
                 className={cn(

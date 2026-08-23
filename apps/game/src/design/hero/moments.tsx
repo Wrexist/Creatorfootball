@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
+import { sfx } from '../audio';
 import { SeedStream } from '../seed';
 import { Portal } from '../glass/Portal';
 import { GlassButton } from '../glass/GlassButton';
@@ -142,7 +143,9 @@ export function HeroReveal({
   const m = useDesignMotion();
 
   useEffect(() => {
-    if (overlay.open) haptics.celebrate();
+    if (!overlay.open) return;
+    haptics.celebrate();
+    sfx.reward();
   }, [overlay.open]);
 
   return (
@@ -282,7 +285,9 @@ export function TrophyMoment({
   const m = useDesignMotion();
 
   useEffect(() => {
-    if (overlay.open) haptics.celebrate();
+    if (!overlay.open) return;
+    haptics.celebrate();
+    sfx.trophy();
   }, [overlay.open]);
 
   return (
@@ -360,7 +365,9 @@ export function SigningMoment({
   const m = useDesignMotion();
 
   useEffect(() => {
-    if (overlay.open) haptics.success();
+    if (!overlay.open) return;
+    haptics.success();
+    sfx.signing();
   }, [overlay.open]);
 
   return (

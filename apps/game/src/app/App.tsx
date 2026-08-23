@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { trackEvent } from '@cf/engine';
 import {
   ConfirmProvider, ReducedMotionOverrideContext, ToastProvider,
-  setHapticsEnabled, useToast,
+  installAudioUnlock, setHapticsEnabled, setSfxEnabled, useToast,
 } from '@/design';
 import { detectCapabilities, shouldReduceEffects } from '@/platform/capabilities';
 import { hideNativeSplash, installNativeBridge } from '@/platform/native';
@@ -62,6 +62,13 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     void boot();
   }, [boot, setReducedEffects]);
 
+  /**
+   * Audio hardware may only be started from inside a user gesture, and a
+   * backgrounded tab must fall silent. Both facts are browser-level rather
+   * than screen-level, so they are wired once, here.
+   */
+  useEffect(() => installAudioUnlock(), []);
+
   /** Idempotent: safe to tear down and set up again. */
   useEffect(() => {
     const timer = setTimeout(() => setSplashHeld(false), SPLASH_MINIMUM_MS);
@@ -110,10 +117,15 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
 function Preferences({ children }: { children: ReactNode }): ReactNode {
   const reducedMotion = useGameStore((s) => s.state?.settings.reducedMotion ?? false);
   const hapticsEnabled = useGameStore((s) => s.state?.settings.haptics ?? true);
+  const soundEnabled = useGameStore((s) => s.state?.settings.sound ?? true);
 
   useEffect(() => {
     setHapticsEnabled(hapticsEnabled);
   }, [hapticsEnabled]);
+
+  useEffect(() => {
+    setSfxEnabled(soundEnabled);
+  }, [soundEnabled]);
 
   return (
     // `null` defers to the operating system; `true` is the in-game override

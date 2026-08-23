@@ -9,7 +9,7 @@ import {
   ClubBadge, EmptyState, ErrorState, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
   GlassTabs, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
   RatingBadge, ScoreDisplay, SectionHeader, Skeleton, SocialPost, StatCard, StatGrid,
-  TrendIndicator, cn, useDesignMotion,
+  TrendIndicator, cn, sfx, useDesignMotion,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
@@ -79,6 +79,17 @@ export function MatchResultScreen(): ReactNode {
     }
     committed.add(result.matchId);
     void useGameStore.getState().advance(result);
+  }, [result]);
+
+  /**
+   * A win is the only result that gets a sound. A draw or a defeat arrives in
+   * silence on purpose: a chime over a 0-3 reads as the product not having
+   * noticed, and the full-time whistle has already been heard.
+   */
+  useEffect(() => {
+    if (!result) return;
+    const clubId = useGameStore.getState().state?.playerClubId;
+    if (clubId && resultFor(result, clubId) === 'W') sfx.reward();
   }, [result]);
 
   const advanceStage = useCallback(() => {

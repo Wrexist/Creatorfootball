@@ -4,6 +4,7 @@ import type { HTMLMotionProps } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
+import { sfx } from '../audio';
 import { controlSurface, FOCUS_RING } from './glassLevel';
 
 export type GlassButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -122,6 +123,10 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(funct
       onClick={(event) => {
         if (inert) return;
         haptics.impact();
+        // Sound only for the one button on the screen that commits something.
+        // Every ghost and secondary press making a noise is how a product ends
+        // up muted inside a minute.
+        if (variant === 'primary') sfx.select();
         onClick?.(event);
       }}
       {...rest}

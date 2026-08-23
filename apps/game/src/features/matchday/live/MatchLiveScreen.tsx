@@ -4,7 +4,7 @@ import type {
   FixtureId, MatchEvent, MatchSimulator, Player, PlayerId, SpecialRuleDefinition, SpecialRuleId,
   TacticSetup,
 } from '@cf/engine';
-import { ErrorState, Skeleton, cn, useConfirm, useIsWide } from '@/design';
+import { ErrorState, Skeleton, cn, sfx, useConfirm, useIsWide } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import { useMatchdayContext } from '../shared/context';
@@ -155,11 +155,32 @@ export function MatchLiveScreen(): ReactNode {
 
   const goalFinished = useCallback(() => setCelebrating(null), []);
 
+  /* --- the crowd ------------------------------------------------------- */
+
+  /**
+   * The bed runs for exactly as long as there is a match to watch: it starts
+   * when the walk-out hands over and stops on the final whistle, on the way
+   * out, and whenever the tab is hidden (the audio module's own doing). A menu
+   * that hums is a menu the player mutes.
+   */
+  useEffect(() => {
+    if (!ready || intro || playback === 'COMPLETE') return;
+    sfx.ambience(true);
+    return () => sfx.ambience(false);
+  }, [ready, intro, playback]);
+
   /* --- the dramatic beat ------------------------------------------------ */
 
   const drama = useDrama(speed, ready && !intro && celebrating === null);
 
   /* --- completion ------------------------------------------------------- */
+
+  // Three peeps, the moment the clock says so — not when the result screen
+  // eventually mounts, which is a second and a celebration later.
+  useEffect(() => {
+    if (playback !== 'COMPLETE') return;
+    sfx.fullTime();
+  }, [playback]);
 
   useEffect(() => {
     // A last-minute winner must be allowed to finish celebrating before the

@@ -5,7 +5,7 @@ import type {
 } from '@cf/engine';
 import {
   GlassButton, GlassPill, GlassSegmented, GlassSheet, IconCheck, IconFastForward, PlayerPortrait,
-  PositionChip, ProgressBar, RatingBadge, SheetCloseRow, cn, haptics,
+  PositionChip, ProgressBar, RatingBadge, SheetCloseRow, cn, haptics, sfx,
 } from '@/design';
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import type { KitColors } from '../shared/kit';
@@ -65,6 +65,7 @@ export function SubstitutionSheet({
     const ok = onSubstitute(outId, inId);
     if (ok) {
       haptics.success();
+      sfx.select();
       setOutId(null);
       setError(null);
       onClose();
@@ -337,6 +338,7 @@ export function RuleCardSheet({ open, onClose, cards, onPlay }: RuleCardSheetPro
   const play = (id: SpecialRuleId): void => {
     if (onPlay(id)) {
       haptics.success();
+      sfx.select();
       setError(null);
       onClose();
     } else {

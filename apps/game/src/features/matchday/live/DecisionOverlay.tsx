@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import type { DecisionOption, DecisionPrompt } from '@cf/engine';
-import { GlassPill, GlassSheet, cn, haptics, useDesignMotion } from '@/design';
+import { GlassPill, GlassSheet, cn, haptics, sfx, useDesignMotion } from '@/design';
 import { useMatchStore } from '@/state/matchStore';
 import { RISK_LABEL, RISK_TONE, TRIGGER_LABEL } from '../shared/format';
 
@@ -24,6 +24,7 @@ import { RISK_LABEL, RISK_TONE, TRIGGER_LABEL } from '../shared/format';
  */
 
 const RING_RADIUS = 20;
+const COUNTDOWN_AUDIBLE_SECONDS = 5;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 export function DecisionOverlay(): ReactNode {
@@ -35,10 +36,13 @@ export function DecisionOverlay(): ReactNode {
   const secondsRef = useRef<HTMLSpanElement>(null);
   const firedRef = useRef<string | null>(null);
   const startedAtRef = useRef<number>(Date.now());
+  /** The last whole second the countdown has already sounded. */
+  const tickedRef = useRef<number>(0);
 
   const pick = useCallback(
     (optionId: string) => {
       haptics.impact();
+      sfx.select();
       choose(optionId);
     },
     [choose],
@@ -52,6 +56,7 @@ export function DecisionOverlay(): ReactNode {
     if (!decision || deadline === null) return;
     firedRef.current = null;
     startedAtRef.current = Date.now();
+    tickedRef.current = 0;
     // Measure the ring against the window the store actually set, not against
     // the prompt's declared timeout. A prompt that declares none still gets a
     // generous deadline so an abandoned match can reach a result; the ring is
@@ -68,8 +73,17 @@ export function DecisionOverlay(): ReactNode {
         ringRef.current.style.stroke =
           fraction > 0.4 ? 'var(--color-volt)' : fraction > 0.18 ? 'var(--color-warning)' : 'var(--color-danger)';
       }
+      const seconds = Math.ceil(remaining / 1000);
       if (secondsRef.current) {
-        secondsRef.current.textContent = String(Math.ceil(remaining / 1000));
+        secondsRef.current.textContent = String(seconds);
+      }
+
+      // The countdown is only audible over its last five seconds, and it
+      // escalates by pitch rather than volume. A clock that ticks for the whole
+      // window is a clock the player learns to ignore — and then turns off.
+      if (seconds <= COUNTDOWN_AUDIBLE_SECONDS && seconds >= 1 && seconds !== tickedRef.current) {
+        tickedRef.current = seconds;
+        sfx.decisionTick((COUNTDOWN_AUDIBLE_SECONDS + 1 - seconds) / COUNTDOWN_AUDIBLE_SECONDS);
       }
 
       if (remaining <= 0) {

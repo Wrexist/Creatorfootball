@@ -190,6 +190,13 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
           checked={settings.haptics}
           onChange={(haptics) => updateSettings({ haptics })}
         />
+        <GlassToggle
+          asRow
+          label="Sound effects"
+          description="Whistles, the crowd, and the moments worth hearing. Nothing plays until you touch the screen."
+          checked={settings.sound}
+          onChange={(sound) => updateSettings({ sound })}
+        />
       </GlassPanel>
 
       <GlassPanel title="Difficulty" padding="md">

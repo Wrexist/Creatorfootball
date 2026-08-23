@@ -358,6 +358,8 @@ export interface InventoryState {
 export interface GameSettings {
   readonly reducedMotion: boolean;
   readonly haptics: boolean;
+  /** Synthesised sound effects. See `apps/game/src/design/audio.ts`. */
+  readonly sound: boolean;
   readonly matchSpeed: 'SLOW' | 'NORMAL' | 'FAST' | 'INSTANT';
   readonly presentation: 'PITCH' | 'BROADCAST';
   readonly commentary: boolean;

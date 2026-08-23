@@ -24,10 +24,12 @@
 | Effects | `design/hero/effects.tsx` | ShinyText, SpotlightCard, GlareHover, GradualBlur |
 | Textures | `design/surfaces/material.ts` + tokens.css | CSS-only pitch/stadium/haze textures |
 | Icons | `design/icons.tsx` | ~60 hand-drawn 24px stroke icons |
+| Audio | `design/audio.ts` | WebAudio-synthesised cue set (whistles, goal roar, crowd bed, UI, fanfares) — no files, no network |
 
 Static assets that exist: iOS `AppIcon-1024.png` + three identical splash copies; website favicon
-data-URI SVG. **No og:image despite declaring `summary_large_image`. No audio anywhere** — haptics
-are the only feedback channel.
+data-URI SVG. **No og:image despite declaring `summary_large_image`.** Audio is no longer empty:
+Audio pack v1 shipped as synthesis rather than files (§3), so haptics and sound now run side by
+side off the same call sites.
 
 ---
 
@@ -50,7 +52,7 @@ are the only feedback channel.
 | Portrait upgrade | Artist-expanded feature library inside the seeded generator (textured hair types, accessories, expressions) OR ~10 hand-painted style plates WebP 240² | Must keep seeded generation for 20k+ players/newgens — plates are overlays, not replacements |
 | Title hero scene | Stadium-at-dusk full-bleed backdrop (crowd bokeh, floodlights, volt accents); layered WebP/SVG ≈1179×2556 → `public/art/heroes/title-stadium.webp` | TitleScreen/onboarding; typographic-only layout must survive reduced-transparency |
 | Result backdrops ×2 | Triumph + consolation, WebP 1179×2556 | MatchResultScreen, season summary |
-| **Audio pack v1** (entire dimension empty today) | crowd ambience loop, goal roar swell, kick-off/full-time whistles, UI tick/select, decision-timer tick, trophy fanfare, signing sting, reward chime — AAC `.m4a` + webm/ogg, ≤300KB total → `public/audio/{ambience,moments,ui}/` | New audio port mirroring `haptics.ts` driver pattern; silent no-op fallback; gate behind settings toggle |
+| ~~**Audio pack v1**~~ **DONE — synthesised, not recorded** | crowd ambience bed, goal roar swell, kick-off/full-time whistles, UI tick/select, escalating decision-timer tick, trophy fanfare, signing sting, reward chime → `apps/game/src/design/audio.ts` | Built with oscillators + seeded noise buffers + filters instead of `.m4a`, per the prime directive: zero bytes on disk means zero 404s and no licensing. Mirrors the `haptics.ts` driver pattern (`setAudioDriver`), silent no-op without WebAudio, gated on the `Sound effects` setting (`GameSettings.sound`, default on) and on page visibility. A recorded pack can still land later as an `AudioDriver` override |
 | Legendary card foil | Seamless tile WebP 512² → `public/art/cards/foil.webp` | PlayerCard legendary variant + GlareHover; plain glass fallback |
 | Editorial illustrations ×5 | transfer/injury/rivalry/fan-culture/result-reaction; SVG 400×200 → `public/art/news/` | StoryArt override; seeded bands remain default |
 | Club-reveal celebration kit | Crest-assemble choreography (Lottie/motion) + 1 SFX | HeroReveal on creation; rays+crossfade fallback |
@@ -83,7 +85,8 @@ ships) · ambient audio v2: crowd intensity loops ×3 + rain variant.
 ## 6. Where to spend first
 
 1. **P0 store screenshots + icon/splash polish** — unblockable presence gap, cheapest conversion win.
-2. **Audio pack v1** — the entire dimension is empty; one crowd swell transforms match feel.
+2. ~~**Audio pack v1**~~ — shipped as synthesis (`design/audio.ts`). A recorded pack is now an
+   optional override, not a gap.
 3. **Trophy set** — the product's biggest moment deserves real art.
 4. **Title hero scene** — audit-flagged cheapest perceived-production-value win.
 

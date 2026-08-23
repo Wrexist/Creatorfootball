@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { MatchEvent, Side } from '@cf/engine';
-import { GoalBurst, cn, haptics, useDesignMotion } from '@/design';
+import { GoalBurst, cn, haptics, sfx, useDesignMotion } from '@/design';
 import type { KitPalette } from '../shared/kit';
 
 /**
@@ -110,9 +110,11 @@ export function GoalMoment({
         lastCelebrationAt = now;
         haptics.celebrate();
       }
+      sfx.goal(1);
     } else {
-      // A knock, not a fanfare.
+      // A knock, not a fanfare. The away end is heard, but from further off.
       haptics.impact();
+      sfx.goal(0.35);
     }
 
     const wait = ours
