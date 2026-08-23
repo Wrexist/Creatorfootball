@@ -31,3 +31,8 @@ tools/sim/src/zz*.ts
 tools/sim/src/__*.ts
 tools/sim/src/_audit/
 .shots/
+
+# Downloaded generations waiting to be ingested by `tools/brand/ingest.mjs`.
+# They are working files — the pipeline's *output* is what the repo carries.
+tools/brand/inbox/*
+!tools/brand/inbox/.gitkeep
