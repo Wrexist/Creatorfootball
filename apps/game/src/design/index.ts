@@ -103,7 +103,8 @@ export {
 export {
   FACE_CX, FACE_TOP, FACE_CHIN, EYE_Y, FACE_SHAPES, HAIR_STYLES as FACE_HAIR_STYLES,
   HAIR_BACK_STYLES, HAIRLINES, FACIAL_HAIR_STYLES, BROW_STYLES, EYE_STYLES, EXPRESSIONS,
-  FACE_ACCESSORIES, headPath, headHalfWidth, FaceGradients, FaceShading, Neck, Ears, Hair,
+  FACE_ACCESSORIES, headPath, headHalfWidth, earAnchorX, featureInk, FaceGradients, FaceShading,
+  Neck, Ears, Hair,
   FacialHairLayer, Brows, Eyes, Nose, Mouth, Accessory,
   type FaceShape, type HairStyle, type Hairline, type FacialHairStyle, type BrowStyle,
   type EyeStyle, type Expression, type FaceAccessory, type HeadGeometry,

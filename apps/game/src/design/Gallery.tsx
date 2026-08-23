@@ -21,8 +21,9 @@ import {
   ScorePanel, StatBlock, Text, FitBox, type TypeRole,
 } from './index';
 import {
-  GALLERY_CLUBS, GALLERY_CREATORS, GALLERY_EVENTS, GALLERY_IDENTITIES, GALLERY_PLAYERS,
-  GALLERY_POSTS, GALLERY_STANDINGS, GALLERY_STORIES,
+  GALLERY_ACCESSORY_SEEDS, GALLERY_BEARD_SEEDS, GALLERY_CLUBS, GALLERY_CREATORS, GALLERY_EVENTS,
+  GALLERY_EXPRESSION_SEEDS, GALLERY_HAIR_SEEDS, GALLERY_IDENTITIES, GALLERY_PLAYERS,
+  GALLERY_POSTS, GALLERY_SHAPE_SEEDS, GALLERY_STANDINGS, GALLERY_STORIES,
 } from './Gallery.fixtures';
 import { IconBell, IconChevronRight, IconPlus, IconSearch, IconStar, IconTrophy } from './icons';
 import { formatCount, formatDelta, formatMoney, formatWeeks } from './index';
@@ -922,7 +923,7 @@ function GalleryBody(): ReactNode {
           </Section>
 
           {/* --- portraits --- */}
-          <Section id="portraits" title="Portraits" note="Deterministic from a seed string. Skin tone, hair style and colour, facial hair, head geometry, eye shape and the club-coloured backdrop are all derived from named channels of the seed, so a face is stable forever and adding a new feature never reshuffles existing ones.">
+          <Section id="portraits" title="Portraits" note="Deterministic from a seed string, and lit rather than flat: skin carries a forehead and cheekbone highlight with a jaw-side falloff, hair carries one sheen, and the jaw casts a shadow on the neck. Seven face shapes, sixteen hair styles, four hairlines, nine facial-hair styles, five brow and eye shapes, three expressions and a rare accessory are each drawn from their own named channel of the seed, so a face is stable forever and adding a feature never reshuffles existing ones.">
             <Row label="Same generator, twelve seeds">
               {Array.from({ length: 12 }, (_, i) => (
                 <PlayerPortrait
@@ -939,6 +940,56 @@ function GalleryBody(): ReactNode {
               <PlayerPortrait seed="shape-b" size={56} shape="squircle" />
               <PlayerPortrait seed="shape-c" size={72} shape="square" />
               <PlayerPortrait seed="shape-d" size={96} shape="circle" ring="#c8ff2e" />
+            </Row>
+            <Row label="Sixteen hair styles — one seed found per style">
+              {GALLERY_HAIR_SEEDS.map(({ style, seed }) => (
+                <div key={style} className="flex flex-col items-center gap-1.5">
+                  <PlayerPortrait seed={seed} size={64} shape="squircle" kit={false} />
+                  <span className="font-mono text-micro text-ink-dim">{style}</span>
+                </div>
+              ))}
+            </Row>
+            <Row label="Face shapes — jaw, cheekbone and crown">
+              {GALLERY_SHAPE_SEEDS.map(({ shape, seed }) => (
+                <div key={shape} className="flex flex-col items-center gap-1.5">
+                  <PlayerPortrait seed={seed} size={64} shape="squircle" kit={false} />
+                  <span className="font-mono text-micro text-ink-dim">{shape}</span>
+                </div>
+              ))}
+            </Row>
+            <Row label="Facial hair">
+              {GALLERY_BEARD_SEEDS.map(({ style, seed }) => (
+                <div key={style} className="flex flex-col items-center gap-1.5">
+                  <PlayerPortrait seed={seed} size={64} shape="squircle" kit={false} />
+                  <span className="font-mono text-micro text-ink-dim">{style}</span>
+                </div>
+              ))}
+            </Row>
+            <Row label="Expression — neutral, focused, a suggestion of a smile">
+              {GALLERY_EXPRESSION_SEEDS.map(({ expression, seed }) => (
+                <div key={expression} className="flex flex-col items-center gap-1.5">
+                  <PlayerPortrait seed={seed} size={80} shape="squircle" kit={false} />
+                  <span className="font-mono text-micro text-ink-dim">{expression}</span>
+                </div>
+              ))}
+            </Row>
+            <Row label="Accessories — rare, and flashier for creators">
+              {GALLERY_ACCESSORY_SEEDS.map(({ accessory, seed, creator }) => (
+                <div key={accessory} className="flex flex-col items-center gap-1.5">
+                  {creator
+                    ? <CreatorAvatar seed={seed} size={64} />
+                    : <PlayerPortrait seed={seed} size={64} shape="squircle" kit={false} />}
+                  <span className="font-mono text-micro text-ink-dim">
+                    {accessory}
+                    {creator ? ' ·c' : ''}
+                  </span>
+                </div>
+              ))}
+            </Row>
+            <Row label="List size — the same faces at 28px">
+              {GALLERY_HAIR_SEEDS.slice(0, 12).map(({ seed }) => (
+                <PlayerPortrait key={seed} seed={seed} size={28} shape="circle" />
+              ))}
             </Row>
             <Row label="Creator avatars — tier ring and verification">
               {(['LOCAL', 'RISING', 'ESTABLISHED', 'MAJOR', 'GLOBAL'] as const).map((tier) => (
