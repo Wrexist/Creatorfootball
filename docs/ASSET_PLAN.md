@@ -3,6 +3,9 @@
 > Companion to `docs/MASTER_PROMPT.md`. Answers: *"what assets do I need to create that fit the
 > game?"* Derived from a full inventory of every procedural art system in the codebase (August 2026).
 >
+> **Producing the assets:** `docs/AI_ASSET_PROMPTS.md` holds copy-paste-ready generation prompts,
+> destinations, budgets and acceptance checks for every item below that is still open.
+>
 > **Prime directive:** every hand-made asset is an *override layer* over a working procedural path —
 > never a replacement, never load-bearing if the file fails to load. This preserves the repo's
 > "no 404s" guarantee and the licensing fallback architecture.
