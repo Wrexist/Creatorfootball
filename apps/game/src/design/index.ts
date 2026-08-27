@@ -31,6 +31,12 @@ export {
   createWebAudioDriver, SFX_CUES, type SfxCue, type SfxOptions, type AudioDriver,
 } from './audio';
 export { useMediaQuery, useReducedTransparency, useCoarsePointer, useCanHover } from './useMediaQuery';
+
+/* --- generated art ----------------------------------------------------
+   Optional plates over procedural paths that already draw. Every export here
+   degrades to nothing when the file is absent — see `design/art/assets.ts`. */
+export { ArtLayer, useArtAsset, type ArtLayerProps, type ArtStatus } from './art/ArtLayer';
+export { ART_ASSETS, type ArtAssetName } from './art/assets';
 export { useSvgId } from './useSvgId';
 export { BREAKPOINTS, useBreakpoint, useIsMobile, useIsWide, type Breakpoint } from './useBreakpoint';
 

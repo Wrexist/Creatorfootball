@@ -926,3 +926,19 @@
   .cf-foil { display: none; }
 }
 [data-reduced-effects='true'] .cf-foil { display: none; }
+
+/*
+  Generated-art fade-in, for `design/art/ArtLayer.tsx`.
+
+  Deliberately a `from`-only keyframe: the implicit end state is the element's
+  own opacity, so a plate mixed at 18% fades 0 → 18% and never to 1. With a
+  `to { opacity: 1 }` the animation's fill would fight the inline opacity and
+  every plate would land at full strength, which is exactly the mistake the
+  weight budgets and the "under 3% volt" rule exist to prevent.
+
+  `backwards` fill applies the 0 before the first frame, so a decoded image
+  never flashes at full opacity for one frame before the fade starts.
+*/
+@keyframes cf-art-in {
+  from { opacity: 0; }
+}
