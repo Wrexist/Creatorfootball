@@ -3,6 +3,8 @@ import { cn } from '../cn';
 import { glassClass, RADIUS_CLASS, type GlassLevel, type RadiusToken } from '../glass/glassLevel';
 import { TYPE_CLASS } from '../typography/type';
 import { bleedStyle, TEXTURE_CLASS, type SurfaceTexture } from './material';
+import { ArtLayer } from '../art/ArtLayer';
+import { ART_ASSETS } from '../art/assets';
 
 export interface HeroSurfaceProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
   /** Volt kicker above the title. Short, ours, uppercase. */
@@ -80,7 +82,16 @@ export const HeroSurface = forwardRef<HTMLElement, HeroSurfaceProps>(function He
       {/* Texture rides on its own layer: the root already spends ::before on the
           specular sheen and ::after on the club bleed. */}
       {texture !== 'none' && (
-        <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0 -z-1', TEXTURE_CLASS[texture])} />
+        <span aria-hidden="true" className={cn('pointer-events-none absolute inset-0 -z-1', TEXTURE_CLASS[texture])}>
+          {/* C1 is an override on top of the CSS haze, never a replacement for
+              it: the class above still paints when the plate is absent, so the
+              two atmosphere textures degrade to exactly what shipped before.
+              18% is the ceiling the entry sets - above it the plate stops
+              lifting the field and starts washing it. */}
+          {(texture === 'haze' || texture === 'stadium') && (
+            <ArtLayer src={ART_ASSETS.stadiumHaze} opacity={0.18} blend="screen" fade={0.6} />
+          )}
+        </span>
       )}
 
       <div className="relative z-1">

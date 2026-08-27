@@ -9,6 +9,8 @@ import { Portal } from '../glass/Portal';
 import { GlassButton } from '../glass/GlassButton';
 import { ShinyText } from './effects';
 import { Silverware, type SilverwareVariant } from '../domain/silverware';
+import { ArtLayer, useArtAsset } from '../art/ArtLayer';
+import { ART_ASSETS } from '../art/assets';
 
 /**
  * Hero moments: full-screen, interruptive, and rationed.
@@ -148,9 +150,26 @@ export function HeroReveal({
     sfx.reward();
   }, [overlay.open]);
 
+  // B6a/B6b are optional plates. `Rays` is the floor and always draws: when
+  // the plates are absent this is exactly the reveal that shipped, and when
+  // they load the rays step back to a support role rather than vanishing, so
+  // the moment reads the same either way and neither file is load-bearing.
+  const burst = useArtAsset(ART_ASSETS.revealBurst);
+
   return (
     <HeroOverlay {...overlay}>
-      <Rays color={tone === 'gold' ? 'rgb(255 215 106 / 0.5)' : 'rgb(200 255 46 / 0.35)'} seed={String(title)} />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ opacity: burst === 'ready' ? 0.42 : 1 }}
+      >
+        <Rays color={tone === 'gold' ? 'rgb(255 215 106 / 0.5)' : 'rgb(200 255 46 / 0.35)'} seed={String(title)} />
+      </span>
+
+      {/* Motes are ambient: a full-frame layer over the whole moment. */}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <ArtLayer src={ART_ASSETS.revealMotes} opacity={0.26} blend="screen" fade={0.9} />
+      </span>
 
       {visual !== undefined && (
         <motion.div
@@ -159,7 +178,19 @@ export function HeroReveal({
           animate="visible"
           className="relative mb-7"
         >
-          {visual}
+          {/* The burst is centred on the crest, not on the screen: its empty
+              middle exists so the badge sits inside it and the light appears to
+              come from behind the thing being revealed. Centred on the overlay
+              instead, the hole lands behind the headline and the composition
+              reads as a blurred ring around the text. Sized in vmin because a
+              vmax square renders ~1400px on a 430px-wide phone. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(132vmin,820px)] -translate-x-1/2 -translate-y-1/2"
+          >
+            <ArtLayer src={ART_ASSETS.revealBurst} opacity={0.55} blend="screen" fade={0.5} />
+          </span>
+          <span className="relative block">{visual}</span>
         </motion.div>
       )}
 
