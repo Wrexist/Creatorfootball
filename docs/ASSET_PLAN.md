@@ -115,11 +115,11 @@ path behind it is untouched. Deleting all eight returns the app to exactly what 
 | B6a | `art/heroes/reveal-burst.webp` | 89.0 KB / 90 | procedural plate | `HeroReveal`, behind the crest |
 | B6b | `art/heroes/reveal-motes.webp` | 55.6 KB / 60 | procedural plate | `HeroReveal`, ambient layer |
 | C1 | `art/textures/stadium-haze.webp` | 77.1 KB / 80 | procedural plate | `HeroSurface` `haze`/`stadium` |
-| C2 | `art/sprites/ball.webp` | 5.6 KB / 20 | procedural plate | not yet — see below |
+| C2 | `art/sprites/ball.webp` | 5.6 KB / 20 | procedural plate | `pitchRenderer.drawBall` |
 | C4 | `art/sprites/reward-tokens.webp` | 16.7 KB / 40 | procedural plate | not yet — see below |
-| C5 | `art/textures/rule-sweep.webp` | 44.1 KB / 48 | plate + SDXL img2img @0.22 | not yet — see below |
-| B5 | `art/textures/foil-legendary.webp` | 18.1 KB / 48 | procedural, seamless | not yet — see below |
-| C3 | `art/textures/kit-fabric.webp` | 14.7 KB / 16 | procedural, seamless | not yet — see below |
+| C5 | `art/textures/rule-sweep.webp` | 44.1 KB / 48 | plate + SDXL img2img @0.22 | `RuleSweep` on the pitch (H6) |
+| B5 | `art/textures/foil-legendary.webp` | 6.1 KB / 48 | procedural, seamless | `.cf-foil` background layer |
+| C3 | `art/textures/kit-fabric.webp` | 14.7 KB / 16 | procedural, seamless | `KitPreview` shirt swatch |
 
 **On method.** Text-to-image was tried first and rejected for every one of these. SDXL renders
 *matter*, and these entries specify *fields*: eight straight generations produced pleated paper,
@@ -133,10 +133,17 @@ budget than it bought quality.
 **Seams.** B5 and C3 are built from integer-frequency sine gratings, so they are periodic by
 construction rather than by a tiling sampler. Both pass the 3×3 offset test.
 
-**Not wired yet.** C2, C4 and C5 belong to `features/matchday/live/pitchRenderer.ts`, a canvas
-renderer that sprite-caches its own drawing, and B5/C3 belong to the card foil and kit swatches.
-Those are real integrations, not one-line additions, and doing them properly is a separate change.
-The files are correct, ingested and verified; nothing loads them yet.
+**Not wired yet: C4 only.** The reward-token strip is for H8 "objective claimed" — tokens flying
+to the balance chip along a path. That flight animation does not exist in the app at all, so
+wiring C4 means building the moment, not loading a file. The strip is correct, ingested and
+verified, and it is waiting on that feature rather than on anything about the asset.
+
+**In situ beat the eye twice.** The burst was sized in `vmax` (about 1400px on a 430px phone, so
+its empty centre swallowed the screen) and centred on the overlay rather than the crest. The foil
+tile, at the amplitude that looked right on its own, smeared a diagonal marble across the
+legendary card. None of that was visible in the plates themselves; all of it was obvious the
+moment the asset was composited into the screen that uses it. `apps/game/e2e/insitu.mjs` is that
+check, and it is worth running after any change to these files.
 
 **Kept procedural.** B1–B3 hero backdrops and B4a–e trophies were not replaced. The shipped
 `design/hero/scenes.tsx` and `design/domain/silverware.tsx` are better than anything this pass
