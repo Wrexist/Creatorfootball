@@ -1,5 +1,5 @@
 import type { PitchFrame, PlayPhase, Side } from '@cf/engine';
-import { SeedStream } from '@/design';
+import { ART_ASSETS, artImage, SeedStream } from '@/design';
 import type { PitchRole } from '../shared/kit';
 
 /**
@@ -944,19 +944,31 @@ export class PitchRenderer {
     const r = Math.max(3.2, this.radius * 0.36) * this.camScale;
 
     ctx.save();
+    // The contact shadow is drawn here either way: the C2 sprite is authored
+    // with no cast shadow precisely so the renderer keeps owning it, which is
+    // what lets the ball sit on the pitch at any camera scale.
     ctx.globalAlpha = 0.3;
     ctx.fillStyle = '#000000';
     ctx.beginPath();
     ctx.ellipse(x, y + r * 1.5, r * 1.1, r * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+
+    // C2 is an override. `artImage` answers immediately and returns null until
+    // the plate is decoded — and forever if it is missing — so the gradient
+    // ball below is what actually runs on the first frames and on any failure.
+    const art = artImage(ART_ASSETS.ball);
+    if (art !== null) {
+      ctx.drawImage(art, x - r, y - r, r * 2, r * 2);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
     ctx.restore();
   }
 

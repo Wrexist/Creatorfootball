@@ -28,6 +28,15 @@ export const ART_ASSETS = {
   ball: `${ART}/sprites/ball.webp`,
   /** C4 — 8-frame reward-token strip, blitted along the flight path. */
   rewardTokens: `${ART}/sprites/reward-tokens.webp`,
+  /** C3 — neutral grey weave over flat club colour, `overlay` at <=8%. */
+  kitFabric: `${ART}/textures/kit-fabric.webp`,
+  /**
+   * B5 — legendary card foil. Consumed by the `.cf-foil` rule in `tokens.css`
+   * as a background layer rather than through this registry, because a CSS
+   * URL that 404s drops its layer silently and needs no JS to stay optional.
+   * The path is duplicated there; keep the two in step.
+   */
+  foilLegendary: `${ART}/textures/foil-legendary.webp`,
 } as const;
 
 export type ArtAssetName = keyof typeof ART_ASSETS;

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 // the thing that actually writes the bytes, which is the bug being guarded.
 import { ASSETS } from '../../../../../tools/brand/assets.manifest.mjs';
 import { ART_ASSETS } from './assets';
+import { artImage, resetArtImages } from './loadArt';
 
 /**
  * The registry and the ingest manifest are two halves of one contract.
@@ -44,5 +45,21 @@ describe('generated-art registry', () => {
   it('has no duplicate destinations', () => {
     const urls = Object.values(ART_ASSETS);
     expect(new Set(urls).size).toBe(urls.length);
+  });
+});
+
+describe('artImage in an environment with no image decoder', () => {
+  // The pitch renderer calls this every frame from inside requestAnimationFrame.
+  // If it can throw, it takes the whole match render down with it - which is the
+  // precise failure the override layer exists to make impossible.
+  it('returns null rather than throwing', () => {
+    resetArtImages();
+    expect(() => artImage(ART_ASSETS.ball)).not.toThrow();
+    expect(artImage(ART_ASSETS.ball)).toBeNull();
+  });
+
+  it('stays null across repeated calls, as a render loop would make', () => {
+    resetArtImages();
+    for (let i = 0; i < 120; i += 1) expect(artImage(ART_ASSETS.ball)).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ClubVisualIdentity } from '@cf/engine';
-import { useSvgId } from '@/design';
+import { ART_ASSETS, useSvgId } from '@/design';
 
 /**
  * The kit, drawn from the same three colours and the same pattern field that
@@ -59,6 +59,24 @@ export function KitPreview({
         )}
 
         {kitPattern === 'HALVES' && <rect x="48" y="0" width="48" height="96" fill={secondary} />}
+
+        {/* C3 breaks up the flat club colour. Inside the clip so it stops at
+            the shirt, and last so it sits over the pattern. An <image> whose
+            href 404s renders nothing at all, which is the whole fallback: the
+            kit is the flat fill it has always been. 8% is the ceiling the
+            entry sets, and the tile is authored neutral grey so `overlay`
+            changes value without tinting the club's colour. */}
+        <image
+          href={ART_ASSETS.kitFabric}
+          x="0"
+          y="0"
+          width="96"
+          height="96"
+          preserveAspectRatio="xMidYMid slice"
+          opacity="0.08"
+          style={{ mixBlendMode: 'overlay' }}
+          aria-hidden="true"
+        />
       </g>
 
       <path d={shirt} fill="none" stroke={accent} strokeWidth="2.5" strokeLinejoin="round" opacity="0.9" />
