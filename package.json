@@ -22,7 +22,9 @@
     "test:smoke": "pnpm --filter @cf/game test:smoke",
     "assets:ingest": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs",
     "shots:store": "pnpm build && node tools/release/store-shots.mjs",
-    "release:build-number": "node tools/release/next-build-number.mjs --ask"
+    "release:build-number": "node tools/release/next-build-number.mjs --ask",
+    "shots:marketing": "node tools/release/marketing/render.mjs",
+    "shots:all": "pnpm shots:store && pnpm shots:marketing"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

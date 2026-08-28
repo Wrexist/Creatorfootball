@@ -7,9 +7,14 @@ is the source of truth for *why*, plus everything fastlane files can't carry.
 The **How to ship** — workflows, secrets, signing, build numbers — lives in
 [`RELEASE_IOS.md`](RELEASE_IOS.md): the binary ships via the *iOS TestFlight*
 workflow and this listing ships via the *App Store metadata* workflow, so
-none of the copy below is ever retyped into a web form.
+none of the copy below is ever retyped into a web form. The click-by-click
+list of what a human still has to do in Apple's UI is
+[`GO_LIVE_GUIDE.md`](GO_LIVE_GUIDE.md).
 
-All character counts were measured, not estimated.
+All character counts were measured, not estimated — and they are *character*
+counts of the trimmed text, which is what Apple counts and what the metadata
+workflow's limit gate re-measures on every run. (Byte counts run higher:
+`description.txt` is 2,796 bytes because of its em dashes.)
 
 ---
 
@@ -20,9 +25,9 @@ All character counts were measured, not estimated.
 | **Name** | 30 | `Creator Football: Club Manager` | 30/30 |
 | **Subtitle** | 30 | `Build a Club. Rule the League.` | 30/30 |
 | **Keywords** | 100 | see below | 97/100 |
-| **Promotional Text** | 170 | see `promotional_text.txt` | 137/170 |
-| **Description** | 4,000 | see `description.txt` | 2,796/4,000 |
-| **What's New (1.0)** | 4,000 | see `release_notes.txt` | 316/4,000 |
+| **Promotional Text** | 170 | see `promotional_text.txt` | 136/170 |
+| **Description** | 4,000 | see `description.txt` | 2,761/4,000 |
+| **What's New (1.0)** | 4,000 | see `release_notes.txt` | 315/4,000 |
 
 ### Keywords field
 
@@ -110,14 +115,30 @@ against the policy, and a mismatch triggers a 5.1.1 rejection.
 
 ## 5. Screenshots
 
-Required set: **6.9" iPhone (1290×2796)** — App Store Connect derives the
-6.5"/6.1" sets. Optional but recommended: **13" iPad (2064×2752)** since the
-build targets device family 1,2.
+Sizes App Store Connect accepts, per its own upload error text. **The boxes do
+not accept each other's images** — a 1290×2796 file dropped into the 6.5" box
+fails the whole upload:
 
-`pnpm shots:store` renders drafts from the real bundle at exactly 1290×2796;
-the in-match moments below still want a played save behind them. Finals go in
-`apps/game/fastlane/screenshots/en-US/` (numbered in the order below) and
-upload via the metadata workflow. Order is conversion-ranked:
+| Box | Use | Also accepted |
+|---|---|---|
+| iPhone 6.9" | **1290×2796** | 1260×2736, 1320×2868 |
+| iPhone 6.5" | **1284×2778** | 1242×2688 |
+| iPad 13" | **2064×2752** | 2048×2732 |
+
+`pnpm shots:marketing` writes all three sets into folders named after their
+pixel size and verifies each file's dimensions before finishing.
+
+`pnpm shots:all` produces the finished listing images in two stages.
+`shots:store` captures the eight app screens from the real bundle on a *played*
+save — it takes over Marrowgate Athletic, simulates 16 of 22 fixtures and plays
+one match live, so the table, the feed and the two in-match frames are real
+rather than a fresh save's empty state. `shots:marketing` then frames each one
+as a captioned marketing image (headline, subhead, three angled devices,
+badges) at all three sizes above; see
+[`tools/release/marketing/README.md`](../tools/release/marketing/README.md).
+
+Finals go in `apps/game/fastlane/screenshots/en-US/` (numbered in the order
+below) and upload via the metadata workflow. Order is conversion-ranked:
 
 | # | Screen | Caption |
 |---|---|---|
@@ -134,6 +155,10 @@ Rules Apple enforces: screenshots must show the actual product (guideline
 2.3.1), no pricing/ranking claims in the artwork, and status bar content must
 be real. The smoke test already guarantees nothing overflows at 375px, so full-
 bleed captures are safe.
+
+Screens inside the frames are real captures of the running build, which is
+what guideline 2.3.1 requires; only the background, type and badges around the
+device are marketing.
 
 ---
 
@@ -171,6 +196,8 @@ Build side (this repo):
 - [x] `ITSAppUsesNonExemptEncryption=false`; `arm64` device capability
 - [x] Native haptics/status-bar/splash wired behind capability detection
 - [x] Shared Xcode scheme committed so CI can archive headlessly
+- [x] Store screenshots captured at 1290×2796 from a played save
+      (`pnpm shots:store`) — drafts ready to curate
 - [x] Archive + TestFlight upload automated: *iOS TestFlight* workflow
       (versions stamped per run, build number resolved against App Store
       Connect — nothing to bump by hand; see `RELEASE_IOS.md`)
@@ -179,14 +206,14 @@ Build side (this repo):
 
 Store side (App Store Connect):
 
-- [ ] Secrets added + API key created per `RELEASE_IOS.md` §1–3
+- [ ] Secrets added + API key created — see `GO_LIVE_GUIDE.md` steps 2–4
 - [ ] App record created with bundle ID above; SKU set
 - [ ] All en-US fields, categories, copyright and review notes pushed by the
       *App Store metadata* workflow (replaces pasting from
       `fastlane/metadata/en-US/`)
 - [ ] Age rating questionnaire submitted (section 3 answers)
 - [ ] App Privacy: Data Not Collected
-- [ ] URLs reachable (after first Pages deploy)
+- [x] URLs reachable — Pages is live; all three return 200
 - [ ] Screenshots uploaded per section 5
 - [ ] Review notes pushed by the metadata workflow; review contact
       name/email/phone filled in App Store Connect (deliberately not
