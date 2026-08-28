@@ -188,7 +188,9 @@ Store side (App Store Connect):
 - [ ] App Privacy: Data Not Collected
 - [ ] URLs reachable (after first Pages deploy)
 - [ ] Screenshots uploaded per section 5
-- [ ] Review notes pasted; contact email confirmed monitored
+- [ ] Review notes pushed by the metadata workflow; review contact
+      name/email/phone filled in App Store Connect (deliberately not
+      committed to the repo) and the email confirmed monitored
 - [ ] Pricing: free, no IAP in v1.0; availability: all 175 regions default
 
 Post-launch ASO cadence: refresh Promotional Text freely (no review); revisit
