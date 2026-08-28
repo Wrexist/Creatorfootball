@@ -244,6 +244,11 @@ try {
   await page.waitForTimeout(1800);
   await createCareer();
 
+  // The transfer window shuts later in the season, and the Market screen then
+  // reads "Nothing can be signed" — true, and the worst possible frame to sit
+  // under a headline about signing players. Capture it now, while it is open.
+  await captureRoute('/market', '03_market');
+
   process.stdout.write('  simulating season');
   for (let w = 0; w < WEEKS; w++) {
     if (!(await simulateOneWeek())) { console.log(`\n  ! season ended early at week ${w}`); break; }
@@ -257,7 +262,6 @@ try {
   // Then everything that reads better with a season behind it. Names follow
   // the conversion ranking in docs/APP_STORE.md §5.
   await captureRoute('/home', '02_home');
-  await captureRoute('/market', '03_market');
   await captureRoute('/social', '05_social');
   await captureRoute('/league', '06_league');
   await captureRoute('/squad/training', '07_training');

@@ -57,6 +57,14 @@ export function GlassSegmented<T extends string = string>({
       aria-label={ariaLabel}
       className={cn(
         'inline-flex items-stretch gap-0.5 rounded-pill p-1',
+        // Labels are never broken mid-word. Five options ("Creators", "Rivals",
+        // …) do not fit across a 430pt phone, and without this the longest one
+        // wrapped to two lines — visible enough that it showed up in an App
+        // Store screenshot. Segments still share the row equally whenever they
+        // fit (flex-1); when they genuinely cannot, the row scrolls instead.
+        // Scrollbars are globally zero-height, and the p-1 here leaves exactly
+        // the room the focus ring's offset needs, so nothing is clipped.
+        'overflow-x-auto',
         controlSurface(level),
         block && 'flex w-full',
         className,
@@ -77,7 +85,7 @@ export function GlassSegmented<T extends string = string>({
               onChange(option.value);
             }}
             className={cn(
-              'relative inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill',
+              'relative inline-flex min-w-fit flex-1 items-center justify-center gap-1.5 rounded-pill whitespace-nowrap',
               'font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
               size === 'sm' ? 'min-h-9 px-3 text-label' : 'min-h-11 px-4 text-body',
               selected ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',

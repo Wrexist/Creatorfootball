@@ -31,7 +31,7 @@ It is a starting point, not an auto-publisher — pick the best frame of each
 moment, order them per §5, and copy the keepers here. Nothing it writes is
 uploaded until you run the metadata workflow with *include screenshots*.
 
-**Known issue affecting shot 5:** the Social screen's filter row
-(`GlassSegmented`) wraps "Creators" mid-word at 430 pt — five labels do not fit
-across. Cosmetic, but visible in a store screenshot; see the note in
-`docs/APP_STORE.md` §5.
+For the **finished, captioned** listing images (headline + framed devices at
+all three required sizes), run `pnpm shots:all` and see
+`tools/release/marketing/README.md` — including which folder goes in which
+App Store Connect box, since the 6.9" and 6.5" boxes reject each other's files.

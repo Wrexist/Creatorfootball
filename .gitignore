@@ -40,3 +40,9 @@ tools/release/store-shots/
 # They are working files — the pipeline's *output* is what the repo carries.
 tools/brand/inbox/*
 !tools/brand/inbox/.gitkeep
+
+# Framed App Store marketing screenshots rendered by tools/release/marketing.
+# Regenerate with `pnpm shots:marketing`; only curated finals are committed.
+tools/release/marketing/out/
+# Zipped screenshot sets handed to the user; regenerate from out/ when needed.
+creator-football-screenshots-*.zip

@@ -115,16 +115,30 @@ against the policy, and a mismatch triggers a 5.1.1 rejection.
 
 ## 5. Screenshots
 
-Required set: **6.9" iPhone (1290×2796)** — App Store Connect derives the
-6.5"/6.1" sets. Optional but recommended: **13" iPad (2064×2752)** since the
-build targets device family 1,2.
+Sizes App Store Connect accepts, per its own upload error text. **The boxes do
+not accept each other's images** — a 1290×2796 file dropped into the 6.5" box
+fails the whole upload:
 
-`pnpm shots:store` captures all eight from the real bundle at exactly
-1290×2796, on a *played* save — it takes over Marrowgate Athletic, simulates 16
-of 22 fixtures and plays one match live, so the table, the feed and the two
-in-match frames are real rather than a fresh save's empty state. Finals go in
-`apps/game/fastlane/screenshots/en-US/` (numbered in the order below) and
-upload via the metadata workflow. Order is conversion-ranked:
+| Box | Use | Also accepted |
+|---|---|---|
+| iPhone 6.9" | **1290×2796** | 1260×2736, 1320×2868 |
+| iPhone 6.5" | **1284×2778** | 1242×2688 |
+| iPad 13" | **2064×2752** | 2048×2732 |
+
+`pnpm shots:marketing` writes all three sets into folders named after their
+pixel size and verifies each file's dimensions before finishing.
+
+`pnpm shots:all` produces the finished listing images in two stages.
+`shots:store` captures the eight app screens from the real bundle on a *played*
+save — it takes over Marrowgate Athletic, simulates 16 of 22 fixtures and plays
+one match live, so the table, the feed and the two in-match frames are real
+rather than a fresh save's empty state. `shots:marketing` then frames each one
+as a captioned marketing image (headline, subhead, three angled devices,
+badges) at all three sizes above; see
+[`tools/release/marketing/README.md`](../tools/release/marketing/README.md).
+
+Finals go in `apps/game/fastlane/screenshots/en-US/` (numbered in the order
+below) and upload via the metadata workflow. Order is conversion-ranked:
 
 | # | Screen | Caption |
 |---|---|---|
@@ -142,14 +156,9 @@ Rules Apple enforces: screenshots must show the actual product (guideline
 be real. The smoke test already guarantees nothing overflows at 375px, so full-
 bleed captures are safe.
 
-**Open issue, shot 5.** On the Social screen the filter row (`GlassSegmented`)
-breaks "Creators" mid-word at 430 pt: five labels do not fit across, and the
-primitive sets `min-w-0 flex-1` with no wrap handling, so the longest label
-wraps rather than the row scrolling. It is cosmetic and affects any segmented
-control with this many options, not just here — but it is visible in a shot
-we would otherwise ship. Fixing it is a design-system decision (nowrap plus a
-scrolling row, a smaller size at this width, or fewer filters), so it is
-recorded here rather than patched in passing.
+Screens inside the frames are real captures of the running build, which is
+what guideline 2.3.1 requires; only the background, type and badges around the
+device are marketing.
 
 ---
 
