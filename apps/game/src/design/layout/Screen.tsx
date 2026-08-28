@@ -114,7 +114,14 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           'relative z-20 shrink-0 pt-[var(--safe-top)]',
           // Wide layouts sit on a static background: no scrolling content
           // passes beneath the header, so the blur would be pure cost.
-          wide ? 'bg-base/95' : 'glass-3',
+          //
+          // On mobile this is `chrome-surface`, not `glass-3`. The header is
+          // chrome — it has a scrolling list passing underneath it all day —
+          // and `glass-3` is a *content* surface, tuned to sit on a known
+          // background rather than to hide an unknown one. With it, the team
+          // sheet's tokens stayed legible through the header and the screen
+          // title had player names printed across it.
+          wide ? 'bg-base/95' : 'chrome-surface',
           scrolled ? 'border-b border-white/[0.07]' : 'border-b border-transparent',
           'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         )}

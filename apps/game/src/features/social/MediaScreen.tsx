@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { storyReach, type GameState, type NewsStory } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
-  IconBell, KeyValueRow, NewsCard, Screen, SectionHeader, formatCount,
+  IconBell, KeyValueRow, NewsCard, Screen, SectionHeader, displayTags, formatCount,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -194,7 +194,10 @@ function MediaView({ state }: { state: GameState }): ReactNode {
                 </GlassPill>
               )}
               <GlassPill size="xs">Importance {opened.importance}/5</GlassPill>
-              {opened.tags.map((tag) => (
+              {/* Topic only. The rest of a story's tag list is the generator's
+                  bookkeeping — template ids, trigger names, the mood the copy
+                  was written in — and it was being printed here as chips. */}
+              {displayTags(opened.tags).map((tag) => (
                 <GlassPill key={tag} size="xs">{tag}</GlassPill>
               ))}
             </div>

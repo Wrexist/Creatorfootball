@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { STORY_MOTIFS, StoryArt, storyMotifFor, type StoryMotif } from './feed';
+import { STORY_MOTIFS, StoryArt, displayTags, storyMotifFor, type StoryMotif } from './feed';
 
 /**
  * Editorial art is the only picture in the news feed, and it is chosen from the
@@ -79,5 +79,43 @@ describe('StoryArt', () => {
   it('draws a different motif for each kind', () => {
     const drawn = new Set(STORY_MOTIFS.map((motif) => markup({ seed: 'abc', motif })));
     expect(drawn.size).toBe(STORY_MOTIFS.length);
+  });
+});
+
+describe('displayTags', () => {
+  /**
+   * A story's tags are two vocabularies sharing one array: topic words meant
+   * for the reader, and namespaced keys meant for the engine. The second kind
+   * shipped to players as chips on the story sheet — a match report captioned
+   * `tpl:md_k_match_lost`, `trigger:SHOCK_DEFEAT`, `mood:NEGATIVE`.
+   */
+  it('drops every namespaced tag', () => {
+    expect(displayTags(['tpl:md_k_match_lost', 'trigger:SHOCK_DEFEAT', 'mood:NEGATIVE']))
+      .toEqual([]);
+  });
+
+  it('keeps the topic tags and presents them as words', () => {
+    expect(displayTags(['match', 'result'])).toEqual(['Match', 'Result']);
+    expect(displayTags(['fan_unrest'])).toEqual(['Fan unrest']);
+  });
+
+  it('keeps the reader tags out of a list that mixes both', () => {
+    expect(displayTags(['match', 'tpl:md_k_match_lost', 'result', 'mood:NEGATIVE']))
+      .toEqual(['Match', 'Result']);
+  });
+
+  it('hides a prefix nobody has invented yet', () => {
+    // Content packs may invent their own vocabulary, so the rule is the
+    // separator rather than a list of known prefixes to keep in step with.
+    expect(displayTags(['source:community_pack', 'transfer'])).toEqual(['Transfer']);
+  });
+
+  it('does not repeat a tag that differs only in case', () => {
+    expect(displayTags(['result', 'Result'])).toEqual(['Result']);
+  });
+
+  it('answers with an empty list rather than throwing on nothing', () => {
+    expect(displayTags(undefined)).toEqual([]);
+    expect(displayTags([])).toEqual([]);
   });
 });

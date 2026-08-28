@@ -45,6 +45,10 @@
   --glass-3-border: rgb(255 255 255 / 0.14);
   --glass-4-bg: rgb(255 255 255 / 0.11);
   --glass-4-border: rgb(255 255 255 / 0.18);
+  /* The ground under the level-4 film. Opaque enough that nothing behind a
+     modal competes with its own content, translucent enough to still read as
+     glass rather than as a second screen. */
+  --glass-4-ground: rgb(14 16 19 / 0.82);
 
   --blur-glass-1: 12px;
   --blur-glass-2: 20px;
@@ -181,8 +185,21 @@
     -webkit-backdrop-filter: blur(var(--blur-glass-3)) saturate(160%);
     box-shadow: var(--shadow-lift);
   }
+  /*
+   * Level 4 is modal: only `GlassSheet` and `GlassModal` use it, and both sit
+   * over a whole screen of arbitrary content rather than over a known surface.
+   *
+   * That is why it carries a ground of its own rather than only a white film.
+   * An 11% film over a 48px blur is a beautiful material over a calm
+   * background and an unreadable one over a busy card — the league table read
+   * straight through the section menu, and a menu you have to squint past is
+   * not a menu. The film is unchanged and sits on top; the ground underneath
+   * it is what guarantees the contrast no matter what is behind.
+   */
   .glass-4 {
-    background: var(--glass-4-bg);
+    background:
+      linear-gradient(var(--glass-4-bg), var(--glass-4-bg)),
+      var(--glass-4-ground);
     border: 1px solid var(--glass-4-border);
     backdrop-filter: blur(var(--blur-glass-4)) saturate(170%);
     -webkit-backdrop-filter: blur(var(--blur-glass-4)) saturate(170%);
@@ -386,8 +403,11 @@
     the material's depth and reflection while making whatever passes beneath it
     unambiguously background.
   */
+  /* 96%, for the same reason `.chrome-float` is 97%: a sticky footer carries
+     the screen's primary action, and the list scrolling underneath it must not
+     be readable through the button. */
   .chrome-surface {
-    background: color-mix(in srgb, var(--color-base) 88%, transparent);
+    background: color-mix(in srgb, var(--color-base) 96%, transparent);
     backdrop-filter: blur(var(--blur-glass-3)) saturate(160%);
     -webkit-backdrop-filter: blur(var(--blur-glass-3)) saturate(160%);
   }
@@ -601,7 +621,12 @@
     background:
       radial-gradient(140% 120% at 26% -18%, var(--glass-4-pool) 0%, transparent 68%),
       linear-gradient(180deg, rgb(255 255 255 / 0.07) 0%, transparent 42%, rgb(0 0 0 / 0.1) 100%),
-      var(--glass-4-bg);
+      var(--glass-4-bg),
+      /* The ground, restated. This block overrides the base `.glass-4` in the
+         same layer, so a modal's contrast guarantee has to be repeated here or
+         it is silently lost — which is exactly how the section menu ended up
+         with the league table legible through it. */
+      var(--glass-4-ground);
     border: 1px solid var(--glass-4-border);
     backdrop-filter: var(--glass-4-filter);
     -webkit-backdrop-filter: var(--glass-4-filter);
@@ -778,19 +803,30 @@
      object sitting above the app. */
   /*
     The floating navigation island.
+
     The scrim is the non-negotiable part. Chrome is chrome: whatever scrolls
     beneath it has to become background, not a second column of text competing
-    with the navigation labels. 91% of the base leaves content behind the bar at
-    roughly 1.2:1 against it - present as a suggestion of movement, not as
-    words - while the blur, the saturation boost, the specular top edge and the
-    cast shadow still read as a solid object floating above the app.
+    with the navigation labels.
+
+    This was 91%, on the reasoning that it left content behind the bar at about
+    1.2:1. It did not. Two things were wrong with the estimate. Body text on
+    this ground is near-white, not mid-grey, so 9% of it still lands well clear
+    of the base — and `brightness(1.1)` in the backdrop filter was *amplifying*
+    exactly the thing the scrim was there to suppress, so the brighter the
+    content the more of it came through. On the community screen you could read
+    "5M followers" and a sponsor fee straight through the word "Match".
+
+    97% with no brightness lift leaves the movement and not the words: you can
+    see that something passed under the bar, and you cannot read it. The blur,
+    the saturation, the specular top edge and the cast shadow all still do their
+    job on the 3% that remains.
   */
   .chrome-float {
     background:
       radial-gradient(120% 140% at 30% -30%, rgb(255 255 255 / 0.07) 0%, transparent 60%),
-      color-mix(in srgb, var(--color-base) 91%, transparent);
-    backdrop-filter: blur(var(--blur-glass-4)) saturate(200%) brightness(1.1);
-    -webkit-backdrop-filter: blur(var(--blur-glass-4)) saturate(200%) brightness(1.1);
+      color-mix(in srgb, var(--color-base) 97%, transparent);
+    backdrop-filter: blur(var(--blur-glass-4)) saturate(200%);
+    -webkit-backdrop-filter: blur(var(--blur-glass-4)) saturate(200%);
     border: 1px solid rgb(255 255 255 / 0.1);
     box-shadow:
       inset 0 1px 0 0 rgb(255 255 255 / 0.2),

@@ -39,30 +39,40 @@ export function ClubReveal({
 
   const visual = (
     <div className="relative flex flex-col items-center">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-16 rounded-pill"
-        style={{
-          background: `radial-gradient(50% 50% at 50% 50%, ${club.visual.primary}, transparent 70%)`,
-          opacity: 0.55,
-        }}
-      />
-      <ClubBadge visual={club.visual} size={172} label={`${club.name} badge`} />
+      {/* The glow belongs to the crest, so it is anchored to the crest.
+          Wrapping it around the whole column instead put its centre halfway
+          down the kit row, which reads as a dark disc sliding out from behind
+          the badge — the composition looking broken rather than lit. */}
+      <span className="relative flex items-center justify-center">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute aspect-square w-[340px] rounded-pill"
+          style={{
+            background: `radial-gradient(50% 50% at 50% 50%, ${club.visual.primary}, transparent 70%)`,
+            opacity: 0.55,
+          }}
+        />
+        <ClubBadge visual={club.visual} size={172} label={`${club.name} badge`} />
+      </span>
       <motion.div
         initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...m.transition.medium, delay: m.reduced ? 0 : 0.55 }}
-        className="relative mt-5 flex items-center gap-3"
+        className="relative mt-5 flex flex-col items-center gap-2.5"
       >
         <KitPreview visual={club.visual} size={52} label={`${club.name} home kit`} />
-        <span className="flex flex-col items-start">
+        {/* Stacked and centred, not set beside the kit. Side by side, the
+            three-letter abbreviation sat left-aligned in a block as wide as the
+            city name under it, so the one word the player is meant to read was
+            the one word visibly off its own axis. */}
+        <span className="flex flex-col items-center">
           <span
             className="font-display text-[26px] font-bold leading-none tracking-[0.06em]"
             style={{ color: club.visual.secondary }}
           >
             {club.abbreviation}
           </span>
-          <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-dim">
+          <span className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-dim">
             {club.city}
           </span>
         </span>

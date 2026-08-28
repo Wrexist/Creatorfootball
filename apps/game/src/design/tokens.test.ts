@@ -61,6 +61,28 @@ describe('glass fallbacks', () => {
     ]);
   });
 
+  /**
+   * Level 4 is the modal level: `GlassSheet` and `GlassModal` and nothing else.
+   * Unlike every other surface it sits over content it cannot know anything
+   * about, so a white film and a blur are not enough on their own — over a
+   * league table the section menu was legible straight through.
+   *
+   * The trap this guards is the file's own shape: `.glass-4` is declared twice
+   * in the same layer, and the later declaration wins. Grounding only the first
+   * one changes nothing at all and looks completely correct in the diff.
+   */
+  it('gives every declaration of the modal surface a ground of its own', () => {
+    const declarations = [...TOKENS.matchAll(/\.glass-4\s*\{[^}]*\}/g)].map((m) => m[0]);
+    // The reduced-transparency and reduced-effects variants swap the whole
+    // background for an opaque colour, which is a stronger guarantee.
+    const translucent = declarations.filter((d) => d.includes('backdrop-filter: blur') || d.includes('backdrop-filter: var'));
+    expect(translucent.length, 'no translucent .glass-4 declaration found').toBeGreaterThan(0);
+    for (const declaration of translucent) {
+      expect(declaration, 'a translucent .glass-4 declaration has no ground under its film')
+        .toContain('--glass-4-ground');
+    }
+  });
+
   it('degrades every surface class under prefers-reduced-transparency', () => {
     const block = allBlocks(/@media \(prefers-reduced-transparency: reduce\)/g);
     for (const cls of declared) {

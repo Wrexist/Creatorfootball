@@ -129,9 +129,13 @@ export { CreatorCard, type CreatorCardProps, type CreatorCardVariant } from './d
 export { ClubCard, type ClubCardProps, type ClubCardVariant } from './domain/ClubCard';
 export { MatchCard, type MatchCardProps, type MatchCardSide, type MatchCardVariant } from './domain/MatchCard';
 export {
-  NewsCard, SocialPost, StoryArt, storyMotifFor, STORY_MOTIFS, STORY_MOTIF_LABELS,
+  NewsCard, SocialPost, StoryArt, displayTags, storyMotifFor, STORY_MOTIFS, STORY_MOTIF_LABELS,
   type NewsCardProps, type SocialPostProps, type StoryMotif,
 } from './domain/feed';
+export {
+  ConditionRing, conditionLabel, conditionToneFor,
+  type ConditionRingProps, type ConditionTone,
+} from './domain/ConditionRing';
 export { StatCard, type StatCardProps } from './domain/StatCard';
 export {
   RatingBadge, PositionChip, TraitChip, FormGuide,
