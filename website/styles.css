@@ -249,3 +249,100 @@ h1 .accent { color: var(--volt); }
 @media (max-width: 560px) {
   .nav-links a:not(.cta) { display: none; }
 }
+
+/* ---------- creator entry ---------- */
+
+.nav-links a.cta-outline {
+  background: transparent;
+  color: var(--volt);
+  border: 1px solid rgba(200, 255, 46, 0.45);
+}
+.nav-links a.cta-outline:hover { background: rgba(200, 255, 46, 0.12); color: var(--volt); }
+
+.banner {
+  background:
+    radial-gradient(120% 140% at 15% 0%, rgba(200, 255, 46, 0.14) 0%, transparent 60%),
+    linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid rgba(200, 255, 46, 0.28);
+  border-radius: var(--radius);
+  padding: clamp(24px, 4vw, 40px);
+  text-align: center;
+}
+.banner .kicker { margin-bottom: 16px; }
+.banner h2 { margin-bottom: 10px; }
+.banner .accent { color: var(--volt); }
+.banner .sub { margin: 0 auto; }
+.banner .hero-actions { margin-top: 24px; }
+
+/* ---------- creator application form ---------- */
+
+.apply-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(20px, 3vw, 28px);
+}
+
+.field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.field-wide, .form-actions, .form-note { grid-column: 1 / -1; }
+
+.field label { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+.field input[type="text"],
+.field input[type="email"],
+.field textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 14px;
+  resize: vertical;
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--ink-faint); }
+.field input:focus, .field textarea:focus {
+  outline: none;
+  border-color: rgba(200, 255, 46, 0.55);
+  box-shadow: 0 0 0 3px rgba(200, 255, 46, 0.12);
+}
+
+.field .check {
+  flex-direction: row;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.field .check input { margin-top: 3px; accent-color: var(--volt); width: 16px; height: 16px; flex: none; }
+
+.form-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.form-actions .btn { border: 0; cursor: pointer; font-family: inherit; }
+.form-actions .btn-ghost { border: 1px solid var(--line); }
+
+.form-note { font-size: 14px; color: var(--ink-muted); min-height: 1.2em; }
+.form-note.is-error { color: #ff8f7a; }
+
+@media (max-width: 560px) {
+  /* Two pills plus the wordmark is tight on a phone: shrink everything so both
+     calls to action stay on one line rather than wrapping into stacked text. */
+  .nav { gap: 10px; padding-left: 16px; padding-right: 16px; }
+  .brand { font-size: 15px; white-space: nowrap; }
+  .brand .dot { width: 18px; height: 18px; }
+  .nav-links { gap: 8px; }
+  .nav-links a.cta { padding: 7px 11px; font-size: 13px; white-space: nowrap; }
+}
+
+@media (max-width: 400px) {
+  /* Narrowest phones: let the pills drop to a second row rather than
+     pushing the page into a horizontal scroll. */
+  .nav { flex-wrap: wrap; justify-content: center; }
+  .nav-links { justify-content: center; }
+}
