@@ -156,7 +156,15 @@ const SLOTS = [
   {
     group: 'ios', from: 'app-icon.png',
     dest: 'apps/game/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
-    format: 'png', size: 1024, fit: 'cover', flatten: GRAPHITE, palette: true, budgetKB: 600,
+    // Truecolour with **no alpha channel**, which nothing else here needs and
+    // which the browser cannot produce: `canvas.toDataURL('image/png')` always
+    // emits RGBA, transparent pixels or not. An app icon that carries an alpha
+    // channel is an automatic rejection, discovered at upload after everything
+    // else is finished — so this slot writes its own colour-type-2 bytes. See
+    // `encodeRgbPng`. The palette encoder would also satisfy Apple (indexed
+    // PNGs have no alpha either) but this is the format Apple's own
+    // documentation asks for, and this is not the file to be clever on.
+    format: 'png', size: 1024, fit: 'cover', flatten: GRAPHITE, noAlpha: true, budgetKB: 1400,
     note: 'No alpha and no rounded corners of our own — the catalogue rejects the first and iOS draws the second.',
   },
   ...['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png'].map((file) => ({
@@ -231,6 +239,78 @@ async function deflate(bytes) {
  * No dithering: these are smooth studio gradients, and the noise a diffusion
  * dither adds costs more bytes than the banding it removes.
  */
+/**
+ * Encode as truecolour PNG with **no alpha channel at all** (colour type 2).
+ *
+ * Not an optimisation — a correctness requirement, and the only reason it
+ * exists. Apple rejects an app icon that carries an alpha channel, and
+ * \`canvas.toDataURL('image/png')\` always emits RGBA whether or not anything
+ * in the image is transparent. So the browser cannot produce a legal app icon,
+ * and the choice is between an indexed PNG (no alpha, but a palette) and
+ * writing the truecolour bytes ourselves. This writes them.
+ *
+ * Paeth filtering, unlike the palette encoder's none-filtering: this is a lit
+ * 3D render rather than a flat graphic, and unfiltered photographic RGB
+ * deflates badly enough to triple the file.
+ */
+async function encodeRgbPng(rgba, width, height) {
+  const stride = width * 3;
+  const raw = new Uint8Array(height * (stride + 1));
+  const line = new Uint8Array(stride);
+  const previous = new Uint8Array(stride);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const from = (y * width + x) * 4;
+      const to = x * 3;
+      line[to] = rgba[from];
+      line[to + 1] = rgba[from + 1];
+      line[to + 2] = rgba[from + 2];
+    }
+    const out = y * (stride + 1);
+    raw[out] = 4; // Paeth
+    for (let i = 0; i < stride; i += 1) {
+      const a = i >= 3 ? line[i - 3] : 0;      // left
+      const b = previous[i];                    // above
+      const c = i >= 3 ? previous[i - 3] : 0;   // above-left
+      const p = a + b - c;
+      const pa = Math.abs(p - a);
+      const pb = Math.abs(p - b);
+      const pc = Math.abs(p - c);
+      const predictor = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      raw[out + 1 + i] = (line[i] - predictor) & 0xff;
+    }
+    previous.set(line);
+  }
+
+  const ihdr = new Uint8Array(13);
+  const view = new DataView(ihdr.buffer);
+  view.setUint32(0, width);
+  view.setUint32(4, height);
+  ihdr[8] = 8;   // bit depth
+  ihdr[9] = 2;   // colour type 2 — truecolour, no alpha
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
+
+  const parts = [
+    new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', await deflate(raw)),
+    pngChunk('IEND', new Uint8Array(0)),
+  ];
+  const size = parts.reduce((n, p) => n + p.length, 0);
+  const png = new Uint8Array(size);
+  let at = 0;
+  for (const p of parts) { png.set(p, at); at += p.length; }
+
+  let binary = '';
+  for (let i = 0; i < png.length; i += 0x8000) {
+    binary += String.fromCharCode.apply(null, png.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
 async function encodeIndexedPng(rgba, width, height, maxColors) {
   const counts = new Map();
   for (let i = 0; i < rgba.length; i += 4) {
@@ -397,7 +477,7 @@ function buildIco(entries) {
  * too, rather than sending pixels back for Node to compress — see
  * `PALETTE_PNG_SOURCE` for why that direction is the only one that finishes.
  */
-async function rasterise(page, { source, width, height, fit, inset, ground, flatten, format, quality, palette, paletteColors }) {
+async function rasterise(page, { source, width, height, fit, inset, ground, flatten, format, quality, palette, paletteColors, noAlpha }) {
   /* eslint-disable no-undef -- the callback below runs in the page, where
      `document`, `Image` and the injected `encodeIndexedPng` all exist */
   return page.evaluate(async (spec) => {
@@ -425,6 +505,10 @@ async function rasterise(page, { source, width, height, fit, inset, ground, flat
     const drawH = img.naturalHeight * scale;
     ctx.drawImage(img, (spec.width - drawW) / 2, (spec.height - drawH) / 2, drawW, drawH);
 
+    if (spec.noAlpha) {
+      const { data } = ctx.getImageData(0, 0, spec.width, spec.height);
+      return { rgb: await encodeRgbPng(data, spec.width, spec.height) };
+    }
     if (spec.palette) {
       const { data } = ctx.getImageData(0, 0, spec.width, spec.height);
       const indexed = await encodeIndexedPng(data, spec.width, spec.height, spec.paletteColors ?? 256);
@@ -432,7 +516,7 @@ async function rasterise(page, { source, width, height, fit, inset, ground, flat
     }
     const mime = spec.format === 'jpeg' ? 'image/jpeg' : 'image/png';
     return { dataUrl: canvas.toDataURL(mime, spec.quality) };
-  }, { source, width, height, fit: fit ?? 'cover', inset, ground, flatten, format, quality, palette, paletteColors });
+  }, { source, width, height, fit: fit ?? 'cover', inset, ground, flatten, format, quality, palette, paletteColors, noAlpha });
   /* eslint-enable no-undef */
 }
 
@@ -496,7 +580,11 @@ for (const slot of slots) {
       const height = slot.height ?? slot.size;
       const spec = { source: sourceFor(slot), width, height, fit: slot.fit, inset: slot.inset, ground: slot.ground, flatten: slot.flatten, format: slot.format };
 
-      if (slot.palette) {
+      if (slot.noAlpha) {
+        const { rgb } = await rasterise(page, { ...spec, noAlpha: true });
+        bytes = Buffer.from(rgb, 'base64');
+        detail = `${width}x${height} rgb`;
+      } else if (slot.palette) {
         const { indexed, dataUrl } = await rasterise(page, { ...spec, palette: true, paletteColors: slot.paletteColors });
         const truecolour = Buffer.from(dataUrl.split(',')[1], 'base64');
         const palette = indexed ? Buffer.from(indexed, 'base64') : null;
