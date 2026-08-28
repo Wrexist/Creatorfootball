@@ -1,7 +1,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '../cn';
-import { useDesignMotion } from '../motion';
+import { EASE, useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { sfx } from '../audio';
 import { SeedStream } from '../seed';
@@ -114,7 +114,7 @@ function Rays({ count = 14, color, seed }: { count?: number; color: string; seed
           }}
           initial={{ scaleY: 0, opacity: 0 }}
           animate={{ scaleY: 1, opacity: [0, 0.85, 0] }}
-          transition={{ duration: 1.1, delay: ray.delay, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1.1, delay: ray.delay, ease: EASE.outQuint }}
         />
       ))}
     </span>
