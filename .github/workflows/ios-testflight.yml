@@ -1,0 +1,368 @@
+name: iOS TestFlight
+
+# Archives the Capacitor iOS app with xcodebuild on a GitHub macOS runner and
+# (optionally) uploads it to TestFlight. Ported 2026-08-28 from
+# Wrexist/WorldQuest's eas-build-local-ios.yml: the architecture — cheap gates
+# on ubuntu before any 10x-billed macOS minute, an App Store Connect
+# build-number resolver so uploads are never rejected as duplicates, tolerant
+# base64/PEM secret decoding, an .ipa artifact kept even when upload is
+# skipped — is generic; everything below is adapted to Creator Football:
+#   - This is a CAPACITOR app (Vite web build + committed Xcode project under
+#     apps/game/ios/), not Expo. There is no EAS, no EXPO_TOKEN, no eas.json:
+#     the compile is a plain `xcodebuild archive` and signing goes through
+#     Xcode cloud signing with an App Store Connect API key
+#     (-allowProvisioningUpdates + -authenticationKey*), so no certificate or
+#     provisioning profile ever has to be exported and pasted into secrets.
+#   - The verify gate is this repo's own CI surface (lint, typecheck, test,
+#     build, browser smoke) — matching .github/workflows/ci.yml — so "the code
+#     is good" means the same thing here as everywhere else.
+#   - Upload uses `xcodebuild -exportArchive` with destination=upload. NOT
+#     altool: Apple stopped accepting App Store uploads through altool in
+#     November 2023, and the runner's fastlane version drifts — the
+#     xcodebuild path ships with the same Xcode that built the archive.
+#   - Versions: the pbxproj pins MARKETING_VERSION=1.0 and
+#     CURRENT_PROJECT_VERSION=1, and Info.plist reads both via $(…), so this
+#     workflow overrides them per-run as xcodebuild build settings — nothing
+#     is committed, the working tree is untouched.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions) —
+# all four are needed to BUILD, not just to upload, because cloud signing
+# authenticates the archive itself. Full walkthrough: docs/RELEASE_IOS.md.
+#   APPLE_TEAM_ID                     10-char Apple Developer Team ID
+#                                      (developer.apple.com → Membership).
+#   APP_STORE_CONNECT_KEY_ID          App Store Connect API key ID (e.g. ABC123XYZ9).
+#                                      Admin role recommended: cloud signing may
+#                                      need to create the distribution
+#                                      certificate on first run; App Manager is
+#                                      enough once one exists.
+#   APP_STORE_CONNECT_ISSUER_ID       API key issuer ID (a UUID).
+#   APP_STORE_CONNECT_API_KEY_BASE64  base64 of the .p8 key file. Any of:
+#                                        macOS/Linux:  base64 -i AuthKey_XXXX.p8 | pbcopy
+#                                        Windows PS:   [Convert]::ToBase64String([IO.File]::ReadAllBytes('AuthKey_XXXX.p8')) | Set-Clipboard
+#                                      (The decode steps below also accept the
+#                                      raw .p8 text pasted directly.)
+#
+# Runner note, inherited the hard way from WorldQuest: Apple REJECTS uploads
+# not built with the iOS 26 SDK ("All iOS and iPadOS apps must be built with
+# the iOS 26 SDK or later, included in Xcode 26"), and that rejection lands at
+# validation — after the 10x-billed compile is already paid for. So this runs
+# on macos-26 (Xcode 26). Do not move it to an older image to "fix" a compile
+# error; fix the compile error.
+#
+# Cost note (measured on DeepLifeSimulator, inherited via WorldQuest): macOS
+# runner minutes bill ~10x, which is why every check that can fail on ubuntu
+# does fail on ubuntu, first. Unlike the EAS workflows this one keeps upload
+# on the macOS job: `-exportArchive destination=upload` talks straight to
+# Apple and finishes in minutes — there is no hour-long third-party build
+# queue to idle on, which was the entire reason WorldQuest split submission
+# onto ubuntu.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Marketing version to ship (e.g. 1.0.1). Apple rejects a version that was already released — bump it for every store release.'
+        type: string
+        # Required with no default: forces an explicit choice on every run, so
+        # the pbxproj's stale MARKETING_VERSION can never be submitted by
+        # accident ("You've already submitted this version of the app").
+        required: true
+      submit:
+        description: 'Upload the build to TestFlight after archiving'
+        type: boolean
+        # Safe by default: a TestFlight upload is outward-facing and hard to
+        # reverse, so it is opt-in — tick this when you actually want to ship.
+        default: false
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+# Least privilege: these jobs only read code, compile, and pass an artifact
+# between themselves.
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  # ---- Cheap gates on ubuntu, before any macOS (10x-billed) minutes --------
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Fail fast if the requested marketing version isn't a full
+      # MAJOR.MINOR.PATCH string — the archive step writes it straight into
+      # the build with no further validation, and Apple's own
+      # version-already-used rejection surfaces far later (after a 10x-billed
+      # compile) if this is wrong.
+      - name: Validate marketing version input
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version '$VERSION' must be a full MAJOR.MINOR.PATCH string (e.g. 1.0.1)."
+            exit 1
+          fi
+          CURRENT=$(sed -n 's/.*MARKETING_VERSION = \(.*\);/\1/p' apps/game/ios/App/App.xcodeproj/project.pbxproj | head -1)
+          echo "::notice::Building marketing version $VERSION (pbxproj currently: $CURRENT)"
+
+      # All four secrets gate the BUILD, not just the upload: cloud signing
+      # authenticates `xcodebuild archive` itself with the API key. Checked
+      # here at 1x rather than discovered on the macOS runner after install
+      # and web build have already run.
+      - name: Require signing secrets
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        run: |
+          missing=()
+          [ -z "$APPLE_TEAM_ID" ] && missing+=("APPLE_TEAM_ID")
+          [ -z "$APP_STORE_CONNECT_KEY_ID" ] && missing+=("APP_STORE_CONNECT_KEY_ID")
+          [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] && missing+=("APP_STORE_CONNECT_ISSUER_ID")
+          [ -z "$APP_STORE_CONNECT_API_KEY_BASE64" ] && missing+=("APP_STORE_CONNECT_API_KEY_BASE64")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing required secret(s): ${missing[*]}. See the header of this file and docs/RELEASE_IOS.md."
+            exit 1
+          fi
+          echo "All required secrets are present."
+
+      # No `version:` here on purpose: pnpm/action-setup reads the single
+      # source of truth from package.json's "packageManager" field.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The same gates ci.yml runs on every push, so a release build can never
+      # pass on code that CI would have failed.
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+      # A green build and a green unit suite are not evidence the app runs —
+      # this repo has shipped a bundle that failed to boot while both were
+      # passing. Same reasoning as ci.yml; it matters MORE here, because this
+      # exact bundle is what `cap sync` copies into the .ipa.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser smoke test
+        run: pnpm test:smoke
+
+  # ---- Expensive COMPILE (and optional upload) on macOS --------------------
+  build-ios:
+    needs: verify
+    # Xcode 26 / iOS 26 SDK — an Apple validation requirement, not a
+    # preference. See the header before changing this.
+    runs-on: macos-26
+    # A hung compile must not sit on a 10x runner until the 6h default. A
+    # comparable Capacitor archive takes well under 30 minutes; 60 covers a
+    # cold SPM cache and a slow queue with real headroom.
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/game
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      # The web bundle is the app. Build engine + game exactly as CI does,
+      # then let Capacitor copy dist/ into the native shell and regenerate its
+      # SPM manifest. The regeneration matters: the committed
+      # ios/App/CapApp-SPM/Package.swift was generated on Windows and carries
+      # backslash paths into the pnpm store — `cap sync` rewrites it for THIS
+      # machine, which is the file the archive actually resolves.
+      - name: Build web bundle
+        working-directory: .
+        run: pnpm build
+
+      - name: Capacitor sync (ios)
+        run: pnpm exec cap sync ios
+
+      # Tolerant decode: accepts APP_STORE_CONNECT_API_KEY_BASE64 as a raw
+      # PEM, a Windows-CRLF-mangled base64 paste, or clean base64 — different
+      # OSes produce different shapes and a release should not fail on a
+      # whitespace difference. The key lands outside the workspace and is
+      # removed in the always() cleanup step.
+      - name: Install App Store Connect API key
+        env:
+          API_KEY_B64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        run: |
+          set -euo pipefail
+          KEY_DIR="$RUNNER_TEMP/asc"
+          mkdir -p "$KEY_DIR"
+          KEY_PATH="$KEY_DIR/AuthKey_${KEY_ID}.p8"
+          if printf '%s' "$API_KEY_B64" | grep -q 'BEGIN PRIVATE KEY'; then
+            printf '%s' "$API_KEY_B64" | tr -d '\r' > "$KEY_PATH"
+          else
+            printf '%s' "$API_KEY_B64" | tr -d '[:space:]' | openssl base64 -d -A > "$KEY_PATH"
+          fi
+          chmod 600 "$KEY_PATH"
+          if ! grep -q 'BEGIN PRIVATE KEY' "$KEY_PATH"; then
+            echo "::error::APP_STORE_CONNECT_API_KEY_BASE64 did not decode to a valid .p8 private key."
+            exit 1
+          fi
+          echo "ASC_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      # CFBundleVersion must be UNIQUE for every App Store upload — Apple
+      # rejects a resubmission of a build number it has already seen. The
+      # pbxproj pins CURRENT_PROJECT_VERSION=1, so resolve a real one here:
+      # tools/release/next-build-number.mjs returns one HIGHER than App Store
+      # Connect's current highest build (when the app record exists), else a
+      # monotonic epoch-seconds fallback that is always unique.
+      - name: Compute unique build number (CFBundleVersion)
+        working-directory: .
+        run: echo "BUILD_NUMBER=$(node tools/release/next-build-number.mjs)" >> "$GITHUB_ENV"
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+
+      # Cloud signing: -allowProvisioningUpdates with the API key lets Xcode
+      # register the bundle ID, mint/refresh the App Store provisioning
+      # profile, and use a cloud-managed distribution certificate — no p12 in
+      # secrets, nothing to expire silently in a repo setting. First run may
+      # need the key to have the Admin role (certificate creation); see
+      # docs/RELEASE_IOS.md if this step fails on signing.
+      #
+      # MARKETING_VERSION / CURRENT_PROJECT_VERSION are overridden as build
+      # settings — Info.plist reads both via $(…), so the working tree is
+      # never modified and nothing needs committing.
+      - name: Archive (xcodebuild)
+        env:
+          VERSION: ${{ inputs.version }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/CreatorFootball.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            | tail -200
+          echo "::notice::Archived version $VERSION build $BUILD_NUMBER"
+
+      # manageAppVersionAndBuildNumber=false everywhere: the build number was
+      # already resolved against App Store Connect above, and letting Xcode
+      # "helpfully" rewrite it would split the truth across two systems.
+      - name: Export .ipa
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions-export.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/CreatorFootball.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions-export.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            | tail -100
+          mkdir -p "$GITHUB_WORKSPACE/build"
+          cp "$RUNNER_TEMP"/export/*.ipa "$GITHUB_WORKSPACE/build/creator-football.ipa"
+
+      # Always keep the .ipa, even if upload is skipped or later fails — lets
+      # you upload it manually via the Transporter app as a fallback.
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: creator-football-ios-ipa
+          path: build/creator-football.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      # destination=upload validates and hands the archive to App Store
+      # Connect directly from xcodebuild — Apple's supported non-interactive
+      # path since altool uploads were switched off in November 2023. The
+      # export above already produced the artifact, so a failure here still
+      # leaves a downloadable .ipa.
+      - name: Upload to TestFlight
+        if: ${{ inputs.submit }}
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions-upload.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/CreatorFootball.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions-upload.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            | tail -100
+          echo "::notice::Uploaded to App Store Connect — the build appears in TestFlight after Apple finishes processing (typically 5–30 minutes)."
+
+      - name: Clean up API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"
