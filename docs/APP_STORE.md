@@ -7,7 +7,9 @@ is the source of truth for *why*, plus everything fastlane files can't carry.
 The **How to ship** — workflows, secrets, signing, build numbers — lives in
 [`RELEASE_IOS.md`](RELEASE_IOS.md): the binary ships via the *iOS TestFlight*
 workflow and this listing ships via the *App Store metadata* workflow, so
-none of the copy below is ever retyped into a web form.
+none of the copy below is ever retyped into a web form. The click-by-click
+list of what a human still has to do in Apple's UI is
+[`GO_LIVE_GUIDE.md`](GO_LIVE_GUIDE.md).
 
 All character counts were measured, not estimated — and they are *character*
 counts of the trimmed text, which is what Apple counts and what the metadata
@@ -117,8 +119,10 @@ Required set: **6.9" iPhone (1290×2796)** — App Store Connect derives the
 6.5"/6.1" sets. Optional but recommended: **13" iPad (2064×2752)** since the
 build targets device family 1,2.
 
-`pnpm shots:store` renders drafts from the real bundle at exactly 1290×2796;
-the in-match moments below still want a played save behind them. Finals go in
+`pnpm shots:store` captures all eight from the real bundle at exactly
+1290×2796, on a *played* save — it takes over Marrowgate Athletic, simulates 16
+of 22 fixtures and plays one match live, so the table, the feed and the two
+in-match frames are real rather than a fresh save's empty state. Finals go in
 `apps/game/fastlane/screenshots/en-US/` (numbered in the order below) and
 upload via the metadata workflow. Order is conversion-ranked:
 
@@ -137,6 +141,15 @@ Rules Apple enforces: screenshots must show the actual product (guideline
 2.3.1), no pricing/ranking claims in the artwork, and status bar content must
 be real. The smoke test already guarantees nothing overflows at 375px, so full-
 bleed captures are safe.
+
+**Open issue, shot 5.** On the Social screen the filter row (`GlassSegmented`)
+breaks "Creators" mid-word at 430 pt: five labels do not fit across, and the
+primitive sets `min-w-0 flex-1` with no wrap handling, so the longest label
+wraps rather than the row scrolling. It is cosmetic and affects any segmented
+control with this many options, not just here — but it is visible in a shot
+we would otherwise ship. Fixing it is a design-system decision (nowrap plus a
+scrolling row, a smaller size at this width, or fewer filters), so it is
+recorded here rather than patched in passing.
 
 ---
 
@@ -174,6 +187,8 @@ Build side (this repo):
 - [x] `ITSAppUsesNonExemptEncryption=false`; `arm64` device capability
 - [x] Native haptics/status-bar/splash wired behind capability detection
 - [x] Shared Xcode scheme committed so CI can archive headlessly
+- [x] Store screenshots captured at 1290×2796 from a played save
+      (`pnpm shots:store`) — drafts ready to curate
 - [x] Archive + TestFlight upload automated: *iOS TestFlight* workflow
       (versions stamped per run, build number resolved against App Store
       Connect — nothing to bump by hand; see `RELEASE_IOS.md`)
@@ -182,14 +197,14 @@ Build side (this repo):
 
 Store side (App Store Connect):
 
-- [ ] Secrets added + API key created per `RELEASE_IOS.md` §1–3
+- [ ] Secrets added + API key created — see `GO_LIVE_GUIDE.md` steps 2–4
 - [ ] App record created with bundle ID above; SKU set
 - [ ] All en-US fields, categories, copyright and review notes pushed by the
       *App Store metadata* workflow (replaces pasting from
       `fastlane/metadata/en-US/`)
 - [ ] Age rating questionnaire submitted (section 3 answers)
 - [ ] App Privacy: Data Not Collected
-- [ ] URLs reachable (after first Pages deploy)
+- [x] URLs reachable — Pages is live; all three return 200
 - [ ] Screenshots uploaded per section 5
 - [ ] Review notes pushed by the metadata workflow; review contact
       name/email/phone filled in App Store Connect (deliberately not
