@@ -206,8 +206,8 @@ both axes. ☐ Crops safely to 19.5:9 and to 4:3 without touching the emblem. �
 ### A3 — Social share card / OG banner refresh
 
 **Purpose / where.** `og:image` and `twitter:image` on all four website pages. **Optional** — a card
-already ships, rasterised from `tools/brand/og.html` (ASSET_PLAN §2 has this ticked DONE). This is a
-painted upgrade, and `og.html` stays the fallback master either way.
+already ships, painted, from `tools/brand/masters/share-card.png` via `pnpm assets:icons`
+(ASSET_PLAN §2 has this ticked DONE). This entry remains the spec for a replacement.
 **Canvas to request.** **Landscape.**
 **Final file.** `website/og-image.jpg` (1200×630, JPEG q78, **≤60 KB** — crawlers fetch it cold).
 **Alpha path.** None.
@@ -1492,12 +1492,14 @@ with a seamless LoRA, Substance, or a noise generator) using the prompts already
 
 ### 6.2 Already shipped and good — optional at best
 
-`ASSET_PLAN` ticks these DONE with a procedural or rasterised-from-source version that is already
-correct. Generating over them is a taste upgrade, not a gap. **A3** (og-image, rasterised from
-`tools/brand/og.html`), **B1–B3** (`HeroScene`, three moods), **B4a–B4e** (`silverware.tsx`) and
-**B7a–B7e** (`StoryArt` motifs) are all in this category. Do them if you want the painted look; skip
-them without guilt. The genuinely absent items are the **B6** reveal kit, the P0 icon/splash polish
-pass, the store screenshots (which are not generated at all — see below) and most of P2.
+`ASSET_PLAN` ticks these DONE with a procedural or derived-from-master version that is already
+correct. Generating over them is a taste upgrade, not a gap. **A3** (og-image, painted, derived
+from `masters/share-card.png`), **B1–B3** (`HeroScene`, three moods), **B4a–B4e**
+(`silverware.tsx`) and **B7a–B7e** (`StoryArt` motifs) are all in this category. Do them if you
+want the painted look; skip them without guilt. The P0 icon and splash polish pass is likewise
+done — the whole identity now derives from `tools/brand/masters/` via `pnpm assets:icons`. The
+genuinely absent items are the store screenshots (which are not generated at all — see below) and
+most of P2.
 
 ### 6.3 Never generate — carried over from source pack §7
 
@@ -1505,7 +1507,7 @@ pass, the store screenshots (which are not generated at all — see below) and m
 |---|---|---|
 | **App Store screenshots ×8 (+3 iPad)** | Apple guideline 2.3.1 requires screenshots to show the actual product. A generated or mocked-up screen is a rejection. | Capture the real build at 1290×2796 (and 2064×2752), staged per `APP_STORE.md` §5. |
 | **Anything containing the wordmark, a caption or any typography** | The type stack is system SF Pro; a generator cannot set it and generated glyphs are always subtly wrong. Every prompt above forbids lettering for this reason. | Generate the plate, then set type in a design tool — on glass, never directly on imagery. |
-| **`favicon.ico`** | A multi-resolution container derived from the existing `favicon.svg`, not artwork. | Re-run `tools/brand/render.mjs` against `icon.html` and pack 16/32/48 px into the `.ico`. |
+| **`favicon.ico`** | A multi-resolution container derived from the mark, not artwork. | Already handled: `pnpm assets:icons` packs 16/32/48 px PNGs into the `.ico` for both the game and the website. |
 | **Club crests, kits and player portraits** | `ClubBadge`, `kit.ts` and `face.tsx` are seeded generators that must scale to newgens forever. A file cannot cover an unbounded set, and `LICENSING_ARCHITECTURE.md` G7 requires generated identities to come from an original component set. | Extend the generator. Hand-painted plates are only ever an *overlay* on top of it. |
 | **Real creator or footballer likenesses** | `LICENSING_ARCHITECTURE.md` §6.1: no real person, no photo, no caricature, **and no "legally distinct" near-miss**. | Nothing. Base content is 100% fictional. |
 | **Real stadiums, league marks, sponsor boards, broadcast overlays** | Same section: no recognisable stadium architecture, no real crest, no sponsor mark, no reproduction of a real broadcast graphics package. | Every prompt above rules these out in prose; keep those sentences in when you edit a prompt. |

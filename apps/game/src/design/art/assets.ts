@@ -16,6 +16,18 @@
 const ART = '/art';
 
 export const ART_ASSETS = {
+  /** E1 — the club crest, isolated on alpha. Sits over `revealBurst`. */
+  crest: `${ART}/emblems/crest.webp`,
+  /** E2 — the crest lit in an arena. A landscape backdrop for hero surfaces. */
+  crestArena: `${ART}/heroes/crest-arena.webp`,
+  /**
+   * E3 — crest and wordmark locked up together, on black rather than on alpha.
+   * Composite it with `screen`: black is the identity there, so the plate's
+   * ground disappears into the product's graphite and the glow around the
+   * lockup survives, which a background key would have eaten. See the entry's
+   * note in `assets.manifest.mjs`.
+   */
+  wordmark: `${ART}/brand/wordmark.webp`,
   /** B6a — radial ray plate behind the crest in `HeroReveal`. */
   revealBurst: `${ART}/heroes/reveal-burst.webp`,
   /** B6b — drifting light-mote layer, parallaxed over the burst. */

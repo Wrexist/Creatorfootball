@@ -9,8 +9,27 @@
     <meta name="theme-color" content="#08090B" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Creator Football" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="Build your club. Recruit your creators. Own the league." />
+
+    <!--
+      The icon set. Every file here is derived from the brand masters by
+      `tools/brand/icons.mjs` — never hand-exported — so the mark in a tab, on a
+      home screen and in the App Store is the same mark. Re-derive with:
+
+        PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/icons.mjs
+
+      Order matters for the two `rel="icon"` entries: browsers that understand
+      SVG take the first and ignore the rest, and the PNG is there for the ones
+      that do not. `favicon.ico` is not listed at all — it lives at the root and
+      is found by name, which is the only thing still asking for it.
+    -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/favicon-96.png" type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
     <title>Creator Football</title>
   </head>
   <body>

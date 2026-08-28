@@ -1,17 +1,34 @@
 import type { ReactNode } from 'react';
 
 /**
- * The wordmark, drawn rather than typeset.
+ * The CF crest, drawn rather than loaded.
  *
- * No image assets ship with this product, so the one piece of branding the
- * player sees before any content has loaded has to be vector. It is two circles
- * and a bolt, which renders identically at 28px in a header and 96px on the
- * splash.
+ * This is the one piece of branding the player sees before any content has
+ * downloaded, so it cannot be an image: at the moment it renders there is no
+ * guarantee a request for one would come back, and a hole where the logo goes
+ * is a worse first frame than no logo at all. It is geometry instead — the
+ * same silhouette as the app icon, the favicon and the launch image, traced
+ * from `tools/brand/masters/mark-mono.png` by `tools/brand/trace-mark.mjs`
+ * and pasted here. `BrandMark.test.ts` fails if the two fall out of step.
  *
  * Deliberately dependency-free — not even `cn` — because it renders inside the
  * first chunk, and everything imported from the design system's barrel drags
  * the engine along with it. See `app/Entry.tsx`.
  */
+
+/**
+ * The traced mark, in a 64-unit box.
+ *
+ * One path holding both the outer contours and the counters of the C and the
+ * F, so it needs `evenodd` for those counters to stay open rather than filling
+ * solid. Regenerate with:
+ *
+ *   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers \
+ *     node tools/brand/trace-mark.mjs --tolerance 0.2 --out tools/brand/mark.path.txt
+ */
+const MARK_PATH =
+  'M59.59 10.13L34.2 19.66L25.74 59.95L30.15 64L30.63 62.93L31.7 57.56L33.13 56.49L37.3 36.71L54.94 30.03L56.61 23.12L39.09 29.91L40.16 24.07L57.92 17.4ZM27.65 7.63L24.79 8.1L21.57 9.18L18.95 10.49L16.09 12.51L13.71 14.9L11.56 18L9.89 22.05L9.3 25.74L9.42 28.36L10.37 32.18L12.16 35.75L14.06 38.26L16.21 40.28L19.43 42.43L23 43.98L25.74 44.69L26.34 44.57L27.53 38.5L24.67 38.02L21.81 36.83L19.9 35.52L18.12 33.73L17.04 32.18L15.73 29.08L15.37 25.15L15.73 23L17.16 19.66L18.59 17.76L20.86 15.73L25.03 13.71L28.13 13.11L31.23 13.11L32.3 7.75ZM28.48 0.12L22.64 1.07L16.09 3.34L10.25 6.44L4.53 10.37L4.41 18.83L5.48 26.93L6.2 26.7L6.67 23L7.63 20.14L9.18 17.16L10.49 15.61L9.77 13.35L14.78 9.65L20.38 6.91L25.62 5.48L30.99 5.12L29.68 0.48L29.44 0.12ZM6.2 31.94L6.08 32.42L6.79 35.28L8.34 39.81L10.13 43.38L12.39 46.96L17.52 52.92L20.86 55.9L23.6 57.8L25.27 49.94L19.66 47.08L14.54 43.26L9.77 38.02ZM32.89 0L32.89 0.83L34.2 5.12L36.83 5.48L41.47 6.91L45.41 8.94L47.79 10.73L54.23 8.46L49.82 5.12L43.98 2.26L38.85 0.72ZM54.11 35.4L52.8 36.23L52.08 38.14L50.18 41.47L45.65 47.31L40.64 52.44L35.28 56.61L34.44 60.31L37.3 58.64L41.59 55.18L47.31 48.98L51.61 42.31L53.04 39.09Z';
+
 export function BrandMark({
   size = 72,
   className,
@@ -31,12 +48,7 @@ export function BrandMark({
       aria-label={title}
       aria-hidden={title ? undefined : true}
     >
-      <circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" strokeWidth="2.5" opacity="0.22" />
-      <circle cx="32" cy="32" r="20.5" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.14" />
-      {/* The volt token, written as a literal: this paints in the first frame,
-          before any stylesheet has had to resolve a custom property, and SVG
-          rasterisers outside the browser (share images) do not know our tokens. */}
-      <path d="M38 8 L20 34 H31 L26 56 L46 27 H34 Z" fill="#c8ff2e" />
+      <path d={MARK_PATH} fill="currentColor" fillRule="evenodd" />
     </svg>
   );
 }

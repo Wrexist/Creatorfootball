@@ -14,8 +14,8 @@
  * pngquant or ffmpeg in this environment and no network to install one. So all
  * decoding, scaling, keying and WebP/JPEG/PNG encoding happens inside a
  * headless page via `<canvas>`, `drawImage`, `getImageData` and
- * `canvas.toDataURL(...)`, exactly as `tools/brand/render.mjs` rasterises the
- * brand masters. Node only reads the input bytes and writes the decoded output.
+ * `canvas.toDataURL(...)`, exactly as `tools/brand/icons.mjs` derives the icon
+ * set. Node only reads the input bytes and writes the decoded output.
  *
  *   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs --list
  *   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs --all

@@ -21,6 +21,8 @@
     "lint:fix": "eslint . --fix",
     "test:smoke": "pnpm --filter @cf/game test:smoke",
     "assets:ingest": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs",
+    "assets:icons": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/icons.mjs",
+    "assets:trace-mark": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/trace-mark.mjs --tolerance 0.2 --out tools/brand/mark.path.txt",
     "shots:store": "pnpm build && node tools/release/store-shots.mjs",
     "release:build-number": "node tools/release/next-build-number.mjs --ask",
     "shots:marketing": "node tools/release/marketing/render.mjs",
