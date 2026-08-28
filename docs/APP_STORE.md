@@ -9,7 +9,10 @@ The **How to ship** — workflows, secrets, signing, build numbers — lives in
 workflow and this listing ships via the *App Store metadata* workflow, so
 none of the copy below is ever retyped into a web form.
 
-All character counts were measured, not estimated.
+All character counts were measured, not estimated — and they are *character*
+counts of the trimmed text, which is what Apple counts and what the metadata
+workflow's limit gate re-measures on every run. (Byte counts run higher:
+`description.txt` is 2,796 bytes because of its em dashes.)
 
 ---
 
@@ -20,9 +23,9 @@ All character counts were measured, not estimated.
 | **Name** | 30 | `Creator Football: Club Manager` | 30/30 |
 | **Subtitle** | 30 | `Build a Club. Rule the League.` | 30/30 |
 | **Keywords** | 100 | see below | 97/100 |
-| **Promotional Text** | 170 | see `promotional_text.txt` | 137/170 |
-| **Description** | 4,000 | see `description.txt` | 2,796/4,000 |
-| **What's New (1.0)** | 4,000 | see `release_notes.txt` | 316/4,000 |
+| **Promotional Text** | 170 | see `promotional_text.txt` | 136/170 |
+| **Description** | 4,000 | see `description.txt` | 2,761/4,000 |
+| **What's New (1.0)** | 4,000 | see `release_notes.txt` | 315/4,000 |
 
 ### Keywords field
 

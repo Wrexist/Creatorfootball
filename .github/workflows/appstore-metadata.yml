@@ -69,12 +69,26 @@ jobs:
 
       # Character limits are enforced here, at 1x, before fastlane is even
       # installed — Apple enforces them server-side with a much worse error.
-      # Byte counts include the file's trailing newline, hence the +1.
+      #
+      # Counts the TRIMMED content, which is what deliver actually uploads
+      # (it strips surrounding whitespace). Counting the raw file instead
+      # would need a fudge factor for the trailing newline, and name.txt and
+      # subtitle.txt sit at exactly 30/30 — so a file committed with CRLF
+      # line endings would fail a byte-plus-one check for no real reason.
+      # LC_ALL=C.UTF-8 so `wc -m` counts characters, as Apple does, if
+      # non-ASCII copy (curly quotes, an em dash) is ever added.
       - name: Validate metadata field limits
+        env:
+          LC_ALL: C.UTF-8
         run: |
-          check() { # file, limit (chars incl. trailing newline slack)
-            n=$(wc -m < "fastlane/metadata/en-US/$1" | tr -d ' ')
-            if [ "$n" -gt $(($2 + 1)) ]; then
+          check() { # file, limit
+            f="fastlane/metadata/en-US/$1"
+            if [ ! -f "$f" ]; then
+              echo "::error::$f is missing — deliver would silently ship the field unchanged."
+              exit 1
+            fi
+            n=$(printf '%s' "$(tr -d '\r' < "$f")" | wc -m | tr -d ' ')
+            if [ "$n" -gt "$2" ]; then
               echo "::error::fastlane/metadata/en-US/$1 is $n chars — limit is $2."
               exit 1
             fi
