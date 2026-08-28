@@ -186,8 +186,9 @@
     box-shadow: var(--shadow-lift);
   }
   /*
-   * Level 4 is modal: only `GlassSheet` and `GlassModal` use it, and both sit
-   * over a whole screen of arbitrary content rather than over a known surface.
+   * Level 4 is the floating level: `GlassSheet`, `GlassModal` and `Toast`. All
+   * three sit over a whole screen of arbitrary content rather than over a known
+   * surface, which is what separates them from the card levels.
    *
    * That is why it carries a ground of its own rather than only a white film.
    * An 11% film over a 48px blur is a beautiful material over a calm
@@ -621,11 +622,16 @@
     background:
       radial-gradient(140% 120% at 26% -18%, var(--glass-4-pool) 0%, transparent 68%),
       linear-gradient(180deg, rgb(255 255 255 / 0.07) 0%, transparent 42%, rgb(0 0 0 / 0.1) 100%),
-      var(--glass-4-bg),
+      /* The film, as a gradient rather than as a colour. Only the *last* layer
+         of a `background` shorthand may be a colour; a colour anywhere else
+         makes the whole declaration invalid, and an invalid shorthand resolves
+         to the initial value — a fully transparent panel — rather than falling
+         back to the previous rule. That is not a subtle degradation: it is how
+         the toast ended up with no background at all. */
+      linear-gradient(var(--glass-4-bg), var(--glass-4-bg)),
       /* The ground, restated. This block overrides the base `.glass-4` in the
          same layer, so a modal's contrast guarantee has to be repeated here or
-         it is silently lost — which is exactly how the section menu ended up
-         with the league table legible through it. */
+         it is silently lost. */
       var(--glass-4-ground);
     border: 1px solid var(--glass-4-border);
     backdrop-filter: var(--glass-4-filter);

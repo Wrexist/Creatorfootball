@@ -138,7 +138,14 @@ function ToastViewport({
                 // `status` (polite) rather than `alert`: a toast should not
                 // interrupt whatever the screen reader is mid-sentence on.
                 role={toast.tone === 'error' ? 'alert' : 'status'}
-                className="glass-3 glass-sheen pointer-events-auto relative flex w-full max-w-md items-start gap-3 overflow-hidden rounded-lg py-3 pl-3.5 pr-2"
+                /*
+                  `glass-4`, not `glass-3`. A toast floats over whatever screen
+                  happens to be underneath it, which is the same problem a sheet
+                  has and not the one a card has: level 3 is tuned to sit on a
+                  known background, and over a team sheet its own text became
+                  the second-most legible thing in the rectangle.
+                */
+                className="glass-4 glass-sheen pointer-events-auto relative flex w-full max-w-md items-start gap-3 overflow-hidden rounded-lg py-3 pl-3.5 pr-2"
               >
                 <span className="mt-px shrink-0 text-ink-muted [&_svg]:size-[18px]" aria-hidden="true">
                   {toast.icon ?? tone.icon}

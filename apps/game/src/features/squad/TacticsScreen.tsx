@@ -9,7 +9,7 @@ import {
 import {
   ConditionRing, Divider, EmptyState, FitText, GlassButton, GlassPanel, GlassPill, GlassSegmented,
   GlassSheet, KeyValueRow, NameText, PlayerPortrait, PositionChip, RatingBadge, Screen,
-  SectionHeader, cn, conditionLabel, haptics, sidesWord,
+  SectionHeader, cn, conditionLabel, haptics, sidesWord, useToast,
   IconCheck, IconInjury, IconStar, IconSwap, IconTactics, IconWarning,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
@@ -236,6 +236,11 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   const [shapeSize, setShapeSize] = useState<'7' | '11'>('7');
   const [duty, setDuty] = useState<null | 'captainId' | 'penaltyTakerId' | 'setPieceTakerId'>(null);
   const drag = useRef<DragState | null>(null);
+  const toast = useToast();
+  // The last auto-pick toast, so a second press replaces its undo rather than
+  // stacking a second one. Two undos on screen at once, each rewinding to a
+  // different team, is a worse offer than none.
+  const lastPickToast = useRef<number | null>(null);
   // Mirrored into state so the tokens can react to the drag. The ref is what
   // the pointer handlers read (they run outside React and must not go stale);
   // these two are what the pitch renders from.
@@ -563,8 +568,38 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
     setSelection(null);
   }, [data.squad, setTactics]);
 
+  /**
+   * Pick the strongest available side.
+   *
+   * Two things make this worth pressing rather than merely available.
+   *
+   * It is *undoable*. A button that silently replaces a team somebody spent ten
+   * minutes arranging is a button they learn not to touch — which is a shame,
+   * because the side it picks is provably the best one available. The undo is
+   * what makes it safe to try, and safe to try is what makes it useful.
+   *
+   * And it *says what it did*. "Nothing appeared to happen" and "it agreed with
+   * every choice you had already made" look identical, so the count is the
+   * difference between a button that seems broken and one that just told you
+   * your team was already right.
+   */
   const autoPick = useCallback(() => {
+    const previous: Partial<TacticSetup> = {
+      lineup: tactics.lineup,
+      bench: tactics.bench,
+      captainId: tactics.captainId,
+      setPieceTakerId: tactics.setPieceTakerId,
+      penaltyTakerId: tactics.penaltyTakerId,
+    };
     const suggestion = autoLineup(data.squad, formation);
+
+    // Count the slots that actually changed hands, not the fields that were
+    // reassigned: reordering the bench is not a team change.
+    let changes = 0;
+    for (const slot of formation.slots) {
+      if ((tactics.lineup[slot.id] ?? null) !== (suggestion.lineup[slot.id] ?? null)) changes += 1;
+    }
+
     setTactics({
       lineup: suggestion.lineup,
       bench: suggestion.bench,
@@ -573,7 +608,22 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       penaltyTakerId: suggestion.penaltyTakerId,
     });
     setSelection(null);
-  }, [data.squad, formation, setTactics]);
+    haptics.impact();
+
+    if (lastPickToast.current !== null) toast.dismiss(lastPickToast.current);
+    lastPickToast.current = changes === 0
+      ? toast.show({
+        title: 'That was already your strongest side',
+        description: 'Nothing here to improve for this shape.',
+      })
+      : toast.show({
+        title: `${changes} ${changes === 1 ? 'change' : 'changes'} to your side`,
+        description: `The strongest available ${sidesWord(formation.slots.length)} for this shape. `
+          + 'Fit and rested players first; anyone injured or suspended left out.',
+        action: { label: 'Undo', onPress: () => setTactics(previous) },
+        duration: 8000,
+      });
+  }, [data.squad, formation, tactics, setTactics, toast]);
 
   const shapes = useMemo(
     () => formationsFor(shapeSize === '7' ? 7 : 11),

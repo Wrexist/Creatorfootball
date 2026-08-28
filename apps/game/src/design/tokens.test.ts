@@ -62,6 +62,57 @@ describe('glass fallbacks', () => {
   });
 
   /**
+   * Only the *last* layer of a `background` shorthand may be a colour.
+   *
+   * A colour in any earlier layer makes the whole declaration invalid — and an
+   * invalid shorthand does not fall back to the previous rule in the cascade,
+   * it resolves to the initial value. The panel does not merely lose its tint;
+   * it loses its background entirely and becomes fully transparent.
+   *
+   * Which is exactly what happened when the modal surface was given its ground:
+   * the film was left as a bare `var(--glass-4-bg)` in front of it, two colours
+   * in one shorthand, and every sheet, modal and toast in the product silently
+   * lost its background. Nothing failed, nothing logged, and it looks entirely
+   * reasonable in a diff. The fix is to write a colour layer as a gradient of
+   * itself when it is not last, and this is the check that says so.
+   */
+  it('never puts a colour anywhere but last in a background shorthand', () => {
+    const IMAGE = /^(?:-webkit-)?(?:repeating-)?(?:linear|radial|conic)-gradient\(|^url\(|^image-set\(|^none$/;
+    // Comments come out of the whole file first, before declarations are even
+    // found. This file explains itself between background layers, and that
+    // prose contains both commas and semicolons — a semicolon inside a comment
+    // ends the "declaration" early and leaves the comment itself looking like a
+    // layer, which is how this check first reported the line that fixed it.
+    const css = TOKENS.replace(/\/\*[\s\S]*?\*\//g, ' ');
+    for (const [, value] of css.matchAll(/background:\s*([^;]+);/g)) {
+      if (value === undefined) continue;
+      // Split on commas that are not inside parentheses: gradients contain them.
+      const layers: string[] = [];
+      let depth = 0;
+      let current = '';
+      for (const ch of value) {
+        if (ch === '(') depth += 1;
+        if (ch === ')') depth -= 1;
+        if (ch === ',' && depth === 0) { layers.push(current.trim()); current = ''; continue; }
+        current += ch;
+      }
+      layers.push(current.trim());
+      if (layers.length < 2) continue;
+
+      layers.slice(0, -1).forEach((layer, index) => {
+        const stripped = layer.trim();
+        if (stripped.length === 0) return;
+        expect(
+          IMAGE.test(stripped),
+          `layer ${index + 1} of "${value.replace(/\s+/g, ' ').slice(0, 90)}" is a colour, `
+          + 'which is only legal in the final layer — wrap it as '
+          + 'linear-gradient(c, c) or move it to the end',
+        ).toBe(true);
+      });
+    }
+  });
+
+  /**
    * Level 4 is the modal level: `GlassSheet` and `GlassModal` and nothing else.
    * Unlike every other surface it sits over content it cannot know anything
    * about, so a white film and a blur are not enough on their own — over a

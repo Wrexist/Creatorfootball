@@ -5,6 +5,7 @@ import { isAvailable } from '../players/player';
 import type { Formation, FormationSlot, TacticSetup } from './tactics';
 import { DEFAULT_TACTICS } from './tactics';
 import type { PlayerId } from '../core/brand';
+import { assignMax } from './assignment';
 
 /**
  * Formation data.
@@ -274,45 +275,104 @@ export function slotFit(player: Player, s: FormationSlot): number {
 }
 
 /**
- * Greedy best-fit selection: fill the slots that are hardest to cover first
- * (keeper, then defence, then attack) so the algorithm never strands itself
- * with a winger in goal. Good enough to be the AI's permanent team sheet and
- * the human player's one-tap "auto pick".
+ * How much worse than his best a player is when he cannot last the match.
+ *
+ * `slotFit` already carries a mild fitness term because the simulator wants it
+ * there: a tired player really is a slightly worse player. Selection is a
+ * different question. "Who is best right now" and "who should start" diverge
+ * exactly when somebody is too spent to finish, and a team sheet that starts a
+ * 30%-fit star because he still out-rates a fresh reserve is one nobody would
+ * pick by hand.
+ *
+ * So selection applies a second, steeper penalty that the simulator never sees:
+ * nothing below full freshness is free, and below `TIRED` it bites hard enough
+ * to lose a duel with a rested player of similar quality — without ever
+ * overturning a large gap in ability, because a knackered world-class player is
+ * still often the right call.
+ */
+const TIRED = 70;
+
+function freshness(fitness: number): number {
+  const clamped = Math.max(0, Math.min(100, fitness));
+  if (clamped >= TIRED) return 1 - (100 - clamped) * 0.002; // 100 -> 1.00, 70 -> 0.94
+  return 0.94 - (TIRED - clamped) * 0.006; // 70 -> 0.94, 0 -> 0.52
+}
+
+/**
+ * What a player is worth in a slot when *picking a side*, as opposed to when
+ * simulating one.
+ *
+ * Availability is a cliff rather than a penalty. An injured or suspended player
+ * cannot play at all, so he is never preferred to somebody who can — but the
+ * score stays finite and ordered, because a squad with more slots than fit
+ * bodies still has to field a team, and when it does it should field its best
+ * unavailable players rather than an arbitrary one.
+ */
+export function selectionFit(player: Player, s: FormationSlot): number {
+  const base = slotFit(player, s) * freshness(player.fitness);
+  return isAvailable(player) ? base : base * 0.01;
+}
+
+/**
+ * Pick the best possible side, and mean it.
+ *
+ * This is what "Pick a team for me" runs, what a club's manager AI falls back
+ * to when it has no valid sheet, and what the onboarding squad screen shows a
+ * new player as their first eleven. It used to be greedy — fill the hardest
+ * slots first, best remaining player each time — and greedy is not a rounding
+ * error on this problem. Filling the defence first hands it the best
+ * all-rounder in the squad and leaves a slot only he could play to somebody who
+ * cannot play it. See `assignment.ts` for the worked case.
+ *
+ * It is now an exact solve: the assignment of players to slots with the highest
+ * total fit, out of every possible assignment. Not a better heuristic — no
+ * heuristic at all.
+ *
+ * Three things it weighs that the old one did not:
+ *
+ *   - **Freshness**, steeply, so a spent star does not start ahead of a rested
+ *     deputy of similar quality.
+ *   - **Availability**, as a cliff, so an injured player is only ever selected
+ *     when there is nobody fit to take the shirt.
+ *   - **The bench**, as cover rather than as a ranking. Seven of the best
+ *     remaining players by rating can leave a side with no defender to bring
+ *     on; the bench is chosen to answer the question "what happens if somebody
+ *     goes off", one role at a time.
  */
 export function autoLineup(players: readonly Player[], formation: Formation): TacticSetup {
-  const pool = players.filter(isAvailable);
-  const usable = pool.length >= formation.slots.length ? pool : players.slice();
-  const remaining = new Set(usable);
-
-  const order: FormationSlot[] = [...formation.slots].sort(
-    (a, b) => slotPriority(a) - slotPriority(b),
-  );
-
+  const slots = formation.slots;
   const lineup: Record<string, PlayerId | null> = {};
-  for (const s of formation.slots) lineup[s.id] = null;
+  for (const s of slots) lineup[s.id] = null;
 
+  // A squad too small to field the shape is a real state — an injury crisis, a
+  // half-built save — and the answer is the best partial side we can name, not
+  // an exception. The solver needs at least as many players as slots, so the
+  // shortfall is handled here rather than there.
+  const candidates = [...players];
+  const fieldable = Math.min(slots.length, candidates.length);
   const picked: Player[] = [];
-  for (const s of order) {
-    let best: Player | null = null;
-    let bestScore = -1;
-    for (const p of remaining) {
-      const score = slotFit(p, s);
-      if (score > bestScore) { bestScore = score; best = p; }
-    }
-    if (best) {
-      lineup[s.id] = best.id;
-      picked.push(best);
-      remaining.delete(best);
-    }
+
+  if (fieldable > 0) {
+    // Only as many slots as we can actually fill, hardest to cover first, so a
+    // short squad leaves an attacking slot empty rather than the goal.
+    const filling = [...slots]
+      .sort((a, b) => slotPriority(a) - slotPriority(b))
+      .slice(0, fieldable);
+
+    const score = filling.map((s) => candidates.map((p) => selectionFit(p, s)));
+    const { columnFor } = assignMax(score);
+
+    filling.forEach((s, index) => {
+      const player = candidates[columnFor[index] ?? -1];
+      if (player) {
+        lineup[s.id] = player.id;
+        picked.push(player);
+      }
+    });
   }
 
-  // Bench keeps one spare keeper first, then the best of the rest.
-  const rest = [...remaining].sort((a, b) => b.overall - a.overall);
-  const spareKeeper = rest.find((p) => p.position === 'GK');
-  const bench = [
-    ...(spareKeeper ? [spareKeeper] : []),
-    ...rest.filter((p) => p !== spareKeeper),
-  ].slice(0, 7);
+  const started = new Set(picked);
+  const bench = pickBench(candidates.filter((p) => !started.has(p)), slots);
 
   const captain = best(picked, (p) => p.mental.leadership * 1.5 + p.overall + p.age);
   const setPiece = best(picked, (p) => p.attributes.crossing + p.attributes.technique + p.attributes.passing * 0.5);
@@ -327,6 +387,78 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
     setPieceTakerId: setPiece?.id ?? null,
     penaltyTakerId: penalty?.id ?? null,
   };
+}
+
+/** How many players sit on the bench. Enough to cover every line once, plus one. */
+const BENCH_SIZE = 7;
+
+/**
+ * Choose a bench that covers the side, rather than the seven best players left.
+ *
+ * A bench is not a ranking, it is an insurance policy: its job is to answer
+ * "somebody has just gone off, who comes on". Ordering by rating answers a
+ * different question and routinely produced a bench of five midfielders and no
+ * defender — fine until the twentieth minute.
+ *
+ * The keeper comes first and unconditionally, because losing yours with no
+ * replacement is the one substitution problem with no recovery at all. After
+ * that each place goes to whoever raises the *worst-covered* role the most, so
+ * cover spreads across the lines before it deepens in any one of them. Any
+ * places left over — a bench bigger than the number of roles — go to the best
+ * players remaining, which is the right tiebreak once every line has cover.
+ */
+function pickBench(candidates: readonly Player[], slots: readonly FormationSlot[]): Player[] {
+  // Only players who can actually come on. An injured or suspended name among
+  // the substitutes is not cover, it is a seat — and it reads as cover on the
+  // team sheet, which is worse than an obviously short bench.
+  const available = candidates.filter(isAvailable);
+  if (available.length === 0) return [];
+
+  const roles = [...new Set(slots.filter((s) => s.role !== 'GK').map((s) => s.role))];
+  /** The best a player on the bench could do in each role, so far. */
+  const covered = new Map<FormationSlot['role'], number>(roles.map((r) => [r, 0]));
+  /** The best slot of each role, to score cover against. */
+  const slotForRole = new Map<FormationSlot['role'], FormationSlot>();
+  for (const s of slots) if (!slotForRole.has(s.role)) slotForRole.set(s.role, s);
+
+  const remaining = new Set(available);
+  const bench: Player[] = [];
+
+  const keeperSlot = slots.find((s) => s.role === 'GK');
+  if (keeperSlot) {
+    const keeper = best([...remaining], (p) => selectionFit(p, keeperSlot));
+    if (keeper) { bench.push(keeper); remaining.delete(keeper); }
+  }
+
+  while (bench.length < BENCH_SIZE && remaining.size > 0) {
+    // The role most in need of cover right now.
+    let weakestRole: FormationSlot['role'] | null = null;
+    let weakest = Infinity;
+    for (const role of roles) {
+      const value = covered.get(role) ?? 0;
+      if (value < weakest) { weakest = value; weakestRole = role; }
+    }
+
+    const target = weakestRole ? slotForRole.get(weakestRole) : undefined;
+    const choice = target
+      ? best([...remaining], (p) => selectionFit(p, target))
+      : best([...remaining], (p) => p.overall);
+    if (!choice) break;
+
+    bench.push(choice);
+    remaining.delete(choice);
+    // Credit this player against every role he could actually cover, not only
+    // the one he was picked for: a utility player is cover twice over, and a
+    // bench that ignores that fills up with specialists.
+    for (const role of roles) {
+      const s = slotForRole.get(role);
+      if (!s) continue;
+      const value = selectionFit(choice, s);
+      if (value > (covered.get(role) ?? 0)) covered.set(role, value);
+    }
+  }
+
+  return bench;
 }
 
 const slotPriority = (s: FormationSlot): number =>
