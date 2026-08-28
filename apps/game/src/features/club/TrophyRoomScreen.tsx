@@ -12,6 +12,7 @@ import {
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
+import { humanise } from '@/design/text';
 
 /**
  * The trophy room.
@@ -152,7 +153,7 @@ function TrophyRoomBody({ state }: { state: GameState }): ReactNode {
             data.records.map(([key, record], index) => (
               <KeyValueRow
                 key={key}
-                label={key.replace(/_/g, ' ').toLowerCase()}
+                label={humanise(key)}
                 hint={record.holderName ? `${record.holderName} · season ${record.season}` : `Season ${record.season}`}
                 value={Math.round(record.value)}
                 divided={index !== data.records.length - 1}
@@ -268,7 +269,7 @@ function TrophyRoomBody({ state }: { state: GameState }): ReactNode {
           data.records.map(([key, record], index) => (
             <KeyValueRow
               key={key}
-              label={key.replace(/_/g, ' ').toLowerCase()}
+              label={humanise(key)}
               hint={record.holderName ? `${record.holderName} · season ${record.season}` : `Season ${record.season}`}
               value={Math.round(record.value)}
               divided={index !== data.records.length - 1}

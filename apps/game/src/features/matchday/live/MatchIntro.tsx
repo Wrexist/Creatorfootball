@@ -307,7 +307,7 @@ function IntroPlayer({
       className="flex w-[42vw] max-w-[150px] flex-col items-center"
     >
       <PlayerPortrait seed={player?.portraitSeed ?? club.id} size={64} colors={colors} shape="squircle" />
-      <span className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-volt">{tag}</span>
+      <span className="mt-2 text-micro font-bold uppercase tracking-[0.18em] text-volt">{tag}</span>
       <span className="mt-1 text-balance text-[15px] font-bold leading-tight text-ink">{name}</span>
       <span className="tnum mt-0.5 text-[12px] text-ink-muted">{line}</span>
     </motion.div>
@@ -342,7 +342,7 @@ function ShapeStrip({ context, accent }: { context: MatchdayContext; accent: str
           }}
         />
       ))}
-      <span className="absolute bottom-1 right-2 text-[9px] font-bold uppercase tracking-[0.14em] text-ink-dim">
+      <span className="absolute bottom-1 right-2 text-micro font-bold uppercase tracking-[0.14em] text-ink-dim">
         You attack →
       </span>
     </div>

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@cf/engine';
 import {
   ART_ASSETS, ArtLayer, GlassButton, GlassCard, GlassPill, HeroScene, IconChevronRight,
-  useArtAsset, useConfirm, useDesignMotion,
+  NameText, useArtAsset, useConfirm, useDesignMotion,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -137,9 +137,16 @@ export function TitleScreen(): ReactNode {
                 <div className="flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-volt">Continue</p>
-                    <p className="mt-1 truncate font-display text-[22px] font-bold tracking-[-0.03em] text-ink">
-                      {meta.clubName}
-                    </p>
+                    {/* The name of the club they came back for. It shares this
+                        row with a chevron and a date, so it is fitted — cutting
+                        it here would put an ellipsis on the single most
+                        important word on the screen. */}
+                    <NameText
+                      name={meta.clubName}
+                      role="title"
+                      lines={1}
+                      className="mt-1 font-display font-bold tracking-[-0.03em] text-ink"
+                    />
                     <p className="tnum mt-1 text-[13px] text-ink-muted">
                       Season {meta.season} · Week {meta.week} · {meta.managerName}
                     </p>

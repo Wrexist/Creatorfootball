@@ -13,6 +13,7 @@ import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
 import { facilityDefs, ledgerOf } from './bridge';
+import { humanise } from '@/design/text';
 
 /**
  * Finances.
@@ -34,7 +35,7 @@ const KIND_LABELS: Record<string, string> = {
   PENALTY: 'Fines', ADJUSTMENT: 'Adjustments',
 };
 
-const label = (kind: string): string => KIND_LABELS[kind] ?? kind.replace(/_/g, ' ').toLowerCase();
+const label = (kind: string): string => KIND_LABELS[kind] ?? humanise(kind);
 
 type Period = 'recent' | 'season' | 'all';
 

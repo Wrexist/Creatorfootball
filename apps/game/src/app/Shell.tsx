@@ -2,7 +2,9 @@ import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { playerClub, unreadStories } from '@cf/engine';
-import { AppShell, ClubBadge, HeaderSlotProvider, useDesignMotion, type TabId } from '@/design';
+import {
+  AppShell, ClubBadge, HeaderSlotProvider, NameText, useDesignMotion, type TabId,
+} from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 import { PRIMARY_NAV, isImmersive, screenNameFor, sectionFor } from './routes';
@@ -32,7 +34,16 @@ function NavHeader(): ReactNode {
     <div className="flex items-center gap-2.5 lg:gap-3">
       <ClubBadge visual={club.visual} size={32} label={club.name} />
       <div className="hidden min-w-0 lg:block">
-        <p className="truncate text-[14px] font-semibold text-ink">{club.shortName}</p>
+        {/* A club name is identity, so it is fitted rather than cut. This is a
+            fixed-width sidebar slot and "Saltp…" is not a shorter name — it is
+            an unreadable one. */}
+        <NameText
+          name={club.shortName}
+          {...(club.abbreviation ? { abbr: club.abbreviation } : {})}
+          role="bodyStrong"
+          lines={1}
+          className="text-ink"
+        />
         <p className="tnum truncate text-[11px] text-ink-dim">
           Season {state.clock.season} · Week {state.clock.week}
         </p>

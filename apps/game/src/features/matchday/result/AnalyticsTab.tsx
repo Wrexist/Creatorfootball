@@ -7,6 +7,7 @@ import { CompareRow } from '../shared/CompareRow';
 import { MomentumWave } from '../shared/MomentumWave';
 import { SPECIAL_RULE_TONE, minuteLabel, one, two } from '../shared/format';
 import { kitColors, paletteFor } from '../shared/kit';
+import { humanise } from '@/design/text';
 
 /**
  * Match analytics.
@@ -128,7 +129,7 @@ export function AnalyticsTab({
                 </GlassPill>
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-semibold text-ink">
-                    {rule.ruleId.replace(/_/g, ' ').toLowerCase()}
+                    {humanise(rule.ruleId)}
                   </p>
                   <p className="text-[13px] leading-snug text-ink-muted text-pretty">{rule.reason}</p>
                 </div>

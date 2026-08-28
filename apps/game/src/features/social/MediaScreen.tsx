@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { storyReach, type GameState, type NewsStory } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
-  IconBell, KeyValueRow, NewsCard, Screen, SectionHeader, displayTags, formatCount,
+  IconBell, KeyValueRow, NewsCard, Screen, SectionHeader, displayTags, entityKindLabel,
+  formatCount,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -208,7 +209,7 @@ function MediaView({ state }: { state: GameState }): ReactNode {
             <ul className="flex flex-col">
               {opened.entities.map((entity) => (
                 <li key={`${entity.kind}-${entity.id}`}>
-                  <KeyValueRow label={entity.name} value={entity.kind} divided={false} />
+                  <KeyValueRow label={entity.name} value={entityKindLabel(entity.kind)} divided={false} />
                 </li>
               ))}
             </ul>

@@ -252,6 +252,26 @@ function ArenaLine({ share }: { share: number }): ReactNode {
   );
 }
 
+/**
+ * How rare a special rule is, written out.
+ *
+ * The engine calls these `COMMON`/`RARE`/`EPIC` and they were reaching the pill
+ * in that form — the one piece of shouting on a screen where every other label
+ * is set in sentence case.
+ */
+const RULE_RARITY: Readonly<Record<'COMMON' | 'RARE' | 'EPIC', string>> = {
+  COMMON: 'Common',
+  RARE: 'Rare',
+  EPIC: 'Epic',
+};
+
+/** The three results a stake can turn on, written out. */
+const STAKE_OUTCOME: Readonly<Record<'WIN' | 'DRAW' | 'LOSS', string>> = {
+  WIN: 'Win',
+  DRAW: 'Draw',
+  LOSS: 'Defeat',
+};
+
 function StakesPanel({ context }: { context: MatchdayContext }): ReactNode {
   const position = context.ourPosition;
   return (
@@ -263,7 +283,9 @@ function StakesPanel({ context }: { context: MatchdayContext }): ReactNode {
               tone={line.kind === 'WIN' ? 'positive' : line.kind === 'DRAW' ? 'neutral' : 'danger'}
               size="sm"
             >
-              {line.kind}
+              {/* The constant is `WIN`/`DRAW`/`LOSS`; the player is told what
+                  happens, in the words a person would use for it. */}
+              {STAKE_OUTCOME[line.kind]}
             </GlassPill>
             <span className="min-w-0 flex-1 text-[15px] leading-snug text-ink text-pretty">{line.text}</span>
           </li>
@@ -345,7 +367,7 @@ function OpponentPanel({ context }: { context: MatchdayContext }): ReactNode {
             <span className="tnum block font-display text-[20px] font-bold leading-none text-ink">
               {theirRow.position}
             </span>
-            <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+            <span className="mt-0.5 block text-micro font-semibold uppercase tracking-[0.14em] text-ink-dim">
               in the table
             </span>
           </div>
@@ -458,7 +480,7 @@ function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode 
           >
             <div className="flex items-start justify-between gap-2">
               <h4 className="text-[15px] font-bold text-ink">{rule.name}</h4>
-              <GlassPill tone={SPECIAL_RULE_TONE[rule.id]} size="sm">{rule.rarity}</GlassPill>
+              <GlassPill tone={SPECIAL_RULE_TONE[rule.id]} size="sm">{RULE_RARITY[rule.rarity]}</GlassPill>
             </div>
             <p className="mt-1 text-[13px] leading-snug text-ink-muted text-pretty">{rule.description}</p>
             <p className="mt-1.5 text-[12px] leading-snug text-warning text-pretty">
@@ -492,7 +514,7 @@ function RuleWindowsPanel({ context }: { context: MatchdayContext }): ReactNode 
                     <span className="text-[14px] font-semibold text-ink">
                       {definition.name}{quantity > 1 ? ` ×${quantity}` : ''}
                     </span>
-                    <GlassPill tone={SPECIAL_RULE_TONE[definition.id]} size="xs">{definition.rarity}</GlassPill>
+                    <GlassPill tone={SPECIAL_RULE_TONE[definition.id]} size="xs">{RULE_RARITY[definition.rarity]}</GlassPill>
                   </div>
                   <p className="text-[12px] leading-snug text-ink-muted text-pretty">
                     Counterplay: {definition.counterplay}

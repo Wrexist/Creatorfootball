@@ -2,6 +2,7 @@ import { memo, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import type { Creator, CreatorTier } from '@cf/engine';
 import { cn } from '../cn';
+import { humanise, sentenceCase } from '../text';
 import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { FOCUS_RING } from '../glass/glassLevel';
@@ -56,10 +57,7 @@ function SentimentDot({ value }: { value: number }): ReactNode {
 }
 
 /** SUPER_FAN -> "Super fan". Roles are content, so they read as words. */
-function sentenceCase(value: string): string {
-  const words = value.replace(/_/g, ' ').toLowerCase();
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}
+
 
 export const CreatorCard = memo(function CreatorCard({
   creator,
@@ -137,7 +135,7 @@ export const CreatorCard = memo(function CreatorCard({
             <GlassPill size="xs" icon={<IconFlame />}>{TONE_LABEL[creator.style.tone]}</GlassPill>
             {creator.roles.slice(0, 3).map((role) => (
               <GlassPill key={role} size="xs">
-                {sentenceCase(role)}
+                {sentenceCase(humanise(role))}
               </GlassPill>
             ))}
           </span>

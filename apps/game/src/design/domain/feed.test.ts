@@ -1,7 +1,9 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { STORY_MOTIFS, StoryArt, displayTags, storyMotifFor, type StoryMotif } from './feed';
+import {
+  STORY_MOTIFS, StoryArt, displayTags, entityKindLabel, storyMotifFor, type StoryMotif,
+} from './feed';
 
 /**
  * Editorial art is the only picture in the news feed, and it is chosen from the
@@ -117,5 +119,27 @@ describe('displayTags', () => {
   it('answers with an empty list rather than throwing on nothing', () => {
     expect(displayTags(undefined)).toEqual([]);
     expect(displayTags([])).toEqual([]);
+  });
+});
+
+describe('entityKindLabel', () => {
+  /**
+   * "Named in this story" listed its entities with the engine's own word in
+   * the value column: "Liverpool FC … club", lower case, beside a headline set
+   * in display type.
+   */
+  it('writes out the kinds the engine actually emits', () => {
+    expect(entityKindLabel('club')).toBe('Club');
+    expect(entityKindLabel('player')).toBe('Player');
+  });
+
+  it('humanises a kind nobody has written copy for yet', () => {
+    // `kind` is an open string on the engine side, so the fallback has to be a
+    // word rather than a crash or a constant.
+    expect(entityKindLabel('youth_prospect')).toBe('Youth prospect');
+  });
+
+  it('answers with an empty string rather than throwing on nothing', () => {
+    expect(entityKindLabel('')).toBe('');
   });
 });

@@ -48,7 +48,7 @@ const ScorerRow = memo(function ScorerRow({
       </span>
       <span className="text-right">
         <span className="tnum block text-[16px] font-bold text-ink">{goals}</span>
-        <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-dim">
+        <span className="block text-micro uppercase tracking-[0.12em] text-ink-dim">
           {assists} ast
         </span>
       </span>

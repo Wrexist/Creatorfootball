@@ -10,6 +10,7 @@ import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup } from './clubs';
 import { ZONE_LABEL, ZONE_TONE, positionAsk, useSeasonShape } from './data';
 import { StandingsTable } from './components/StandingsTable';
+import { humanise } from '@/design/text';
 
 /**
  * The table.
@@ -154,7 +155,7 @@ function StandingsView({ state }: { state: GameState }): ReactNode {
                 label="Goal difference"
                 value={detailRow.goalDifference > 0 ? `+${detailRow.goalDifference}` : detailRow.goalDifference}
               />
-              <KeyValueRow label="Philosophy" value={detailClub.philosophy.replace(/_/g, ' ').toLowerCase()} />
+              <KeyValueRow label="Philosophy" value={humanise(detailClub.philosophy)} />
               <KeyValueRow label="Home" value={detailClub.stadium.name} divided={false} />
             </div>
             <p className="text-[13px] leading-relaxed text-ink-muted text-pretty">

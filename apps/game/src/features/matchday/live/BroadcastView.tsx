@@ -11,6 +11,7 @@ import { isNoteworthy, minuteLabel, momentumPhrase, one } from '../shared/format
 import type { KitPalette } from '../shared/kit';
 import { EventFeed } from './EventFeed';
 import { useLiveStats } from './useLiveStats';
+import { humanise, sentenceCase } from '@/design/text';
 
 /**
  * Broadcast mode.
@@ -101,7 +102,7 @@ export function BroadcastView({
         </AnimatePresence>
         {headline && (
           <p className="mt-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
-            {minuteLabel(headline.minute)} · {headline.type.replace(/_/g, ' ').toLowerCase()}
+            {minuteLabel(headline.minute)} · {humanise(headline.type)}
           </p>
         )}
       </GlassPanel>
@@ -260,4 +261,4 @@ function collectActiveRules(feed: readonly MatchEvent[]): string[] {
 }
 
 const label = (value: string): string =>
-  value.charAt(0) + value.slice(1).toLowerCase().replace(/_/g, ' ');
+  sentenceCase(humanise(value));

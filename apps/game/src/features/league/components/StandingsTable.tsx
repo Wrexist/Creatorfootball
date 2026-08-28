@@ -151,7 +151,7 @@ export const StandingsTable = memo(function StandingsTable({
 }: StandingsTableProps): ReactNode {
   return (
     <div className={className}>
-      <div className="flex items-center gap-2 px-1.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-dim">
+      <div className="flex items-center gap-2 px-1.5 pb-1.5 text-micro font-bold uppercase tracking-[0.14em] text-ink-dim">
         <span aria-hidden="true" className="w-1 shrink-0" />
         <span className="w-5 shrink-0 text-center">#</span>
         <span className="w-[22px] shrink-0" aria-hidden="true" />

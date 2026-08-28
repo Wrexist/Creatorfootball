@@ -193,7 +193,7 @@ const Token = memo(function Token({
           >
             {player.lastName}
           </FitText>
-          <span className="tnum text-[10px] font-bold leading-none text-volt">{player.overall}</span>
+          <span className="tnum text-micro font-bold leading-none text-volt">{player.overall}</span>
         </>
       ) : (
         <>
@@ -203,7 +203,7 @@ const Token = memo(function Token({
           {position ? (
             <PositionChip position={position} size="xs" className="-mt-1.5 relative z-1" />
           ) : (
-            <span className="text-[10px] uppercase tracking-[0.1em] text-ink-dim">Empty</span>
+            <span className="text-micro uppercase tracking-[0.1em] text-ink-dim">Empty</span>
           )}
         </>
       )}

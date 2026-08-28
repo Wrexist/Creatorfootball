@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type {
   AnyDomainEvent, GameState, NewsStory, SocialPost,
 } from '@cf/engine';
+import { humanise } from '@/design/text';
 
 /**
  * Feed reads.
@@ -276,7 +277,7 @@ export function describeEvent(event: AnyDomainEvent): { title: string; detail: s
       };
     default:
       return {
-        title: event.type.replace(/_/g, ' ').toLowerCase(),
+        title: humanise(event.type),
         detail: event.entities.map((e) => e.name).join(', ') || 'Recorded in the world journal.',
       };
   }

@@ -81,6 +81,30 @@ const MOTIF_PATTERNS: readonly (readonly [StoryMotif, RegExp])[] = [
 ];
 
 /**
+ * A story entity's kind, written out.
+ *
+ * `kind` is an open string on the engine side and the screens were printing it
+ * straight into the value column of a row — so "Named in this story" listed
+ * "Liverpool FC … club" in lower case, next to a headline set in display type.
+ * The fallback humanises rather than guessing, so a kind nobody has written
+ * copy for yet arrives as a word instead of a constant.
+ */
+const ENTITY_KIND_LABELS: Readonly<Record<string, string>> = {
+  club: 'Club',
+  player: 'Player',
+  creator: 'Creator',
+  manager: 'Manager',
+  competition: 'Competition',
+};
+
+export function entityKindLabel(kind: string): string {
+  const known = ENTITY_KIND_LABELS[kind];
+  if (known) return known;
+  const words = kind.replace(/[_-]+/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : '';
+}
+
+/**
  * The tags a player should actually see, in the words they should see them in.
  *
  * A story's tag list is two vocabularies in one array. Some of it is topic —
