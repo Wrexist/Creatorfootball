@@ -75,6 +75,24 @@ export function MatchLiveScreen(): ReactNode {
   const playback = useMatchStore((s) => s.playback);
   const result = useMatchStore((s) => s.result);
   const highlight = useMatchStore((s) => s.highlight);
+  const liveFeed = useMatchStore((s) => s.feed);
+
+  // The most recently opened rule window that has not closed. The pitch takes
+  // this as a trigger: a change of value replays the sweep, and null means no
+  // window is open, so a rule that ends leaves nothing running.
+  const openRuleKey = useMemo(() => {
+    const ended = new Set<string>();
+    // Newest-first, so an END seen before its START means the window is closed.
+    for (const event of liveFeed) {
+      const ruleId = typeof event.detail?.ruleId === 'string' ? event.detail.ruleId : null;
+      if (ruleId === null) continue;
+      if (event.type === 'SPECIAL_RULE_END') ended.add(ruleId);
+      else if (event.type === 'SPECIAL_RULE_START' && !ended.has(ruleId)) {
+        return `${ruleId}-${String(event.minute)}`;
+      }
+    }
+    return null;
+  }, [liveFeed]);
 
   const [intro, setIntro] = useState(true);
   const [camera, setCamera] = useState<PitchCamera>('WIDE');
@@ -349,6 +367,7 @@ export function MatchLiveScreen(): ReactNode {
           camera={camera}
           onCamera={setCamera}
           drama={drama.label}
+          ruleKey={openRuleKey}
           impactKey={celebrating?.id ?? null}
           impactStrength={celebrating && (celebrating.side ?? 'home') === playerSide ? 1 : 0.5}
           fill={wide}

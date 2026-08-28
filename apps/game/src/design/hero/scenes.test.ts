@@ -15,7 +15,11 @@ import { HeroScene, heroBokeh, heroRain, rimAt, type HeroSceneVariant } from './
  */
 
 const DESIGN_DIR = fileURLToPath(new URL('..', import.meta.url));
-const TOKENS = readFileSync(join(DESIGN_DIR, 'tokens.css'), 'utf8');
+// Normalised to LF. The assertions below match on a bare newline, and a
+// Windows checkout (core.autocrlf=true) hands back CRLF, which silently
+// turns every indexOf into -1 and every slice into 'the rest of the file'.
+const TOKENS = readFileSync(join(DESIGN_DIR, 'tokens.css'), 'utf8')
+  .replace(/\r\n/g, '\n');
 
 const VARIANTS: HeroSceneVariant[] = ['title', 'triumph', 'consolation'];
 

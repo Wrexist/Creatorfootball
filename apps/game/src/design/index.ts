@@ -31,6 +31,13 @@ export {
   createWebAudioDriver, SFX_CUES, type SfxCue, type SfxOptions, type AudioDriver,
 } from './audio';
 export { useMediaQuery, useReducedTransparency, useCoarsePointer, useCanHover } from './useMediaQuery';
+
+/* --- generated art ----------------------------------------------------
+   Optional plates over procedural paths that already draw. Every export here
+   degrades to nothing when the file is absent — see `design/art/assets.ts`. */
+export { ArtLayer, useArtAsset, type ArtLayerProps, type ArtStatus } from './art/ArtLayer';
+export { ART_ASSETS, type ArtAssetName } from './art/assets';
+export { artImage, resetArtImages } from './art/loadArt';
 export { useSvgId } from './useSvgId';
 export { BREAKPOINTS, useBreakpoint, useIsMobile, useIsWide, type Breakpoint } from './useBreakpoint';
 
@@ -171,8 +178,8 @@ export {
 
 /* --- hero moments ----------------------------------------------------- */
 export {
-  ShinyText, SpotlightCard, GlareHover, GlareSweep, CardFoil, GradualBlur,
-  type ShinyTextProps, type SpotlightCardProps, type GlareHoverProps, type CardFoilProps,
+  ShinyText, SpotlightCard, GlareHover, GlareSweep, CardFoil, GradualBlur, RuleSweep,
+  type RuleSweepProps, type ShinyTextProps, type SpotlightCardProps, type GlareHoverProps, type CardFoilProps,
   type GradualBlurProps,
 } from './hero/effects';
 export {

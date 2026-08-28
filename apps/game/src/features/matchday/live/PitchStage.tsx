@@ -1,7 +1,7 @@
 import { memo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Side } from '@cf/engine';
-import { IconEye, cn, haptics, useDesignMotion } from '@/design';
+import { IconEye, RuleSweep, cn, haptics, useDesignMotion } from '@/design';
 import { ROLE_SHORT, type KitPalette, type PitchRole } from '../shared/kit';
 import { CAMERA_HINT, CAMERA_LABEL } from '../shared/format';
 import { PitchView } from './PitchView';
@@ -40,6 +40,8 @@ export interface PitchStageProps {
   /** playerId -> live match rating. */
   ratings?: Readonly<Record<string, number>>;
   drama: string | null;
+  /** Open rule window, or null. A change of value replays the H6 sweep. */
+  ruleKey?: string | null;
   impactKey: string | null;
   /** 0-1. A goal for the managed side lands harder than one against it. */
   impactStrength?: number;
@@ -53,7 +55,7 @@ const ROLE_KEY: readonly PitchRole[] = ['DEF', 'MID', 'ATT'];
 export const PitchStage = memo(function PitchStage({
   homePalette, awayPalette, playerSide, numbers, keepers, roles, camera, onCamera,
   names, ratings,
-  drama, impactKey, impactStrength = 1, fill = false, className,
+  drama, ruleKey = null, impactKey, impactStrength = 1, fill = false, className,
 }: PitchStageProps): ReactNode {
   const m = useDesignMotion();
   const ours = playerSide === 'home' ? homePalette : awayPalette;
@@ -88,6 +90,11 @@ export const PitchStage = memo(function PitchStage({
           impactStrength={impactStrength}
           className="h-full w-full rounded-none"
         />
+
+        {/* H6: the rule-window wash. Sits over the grass and under the
+            drama banner, so a rule opening never obscures the words that
+            say what happened. */}
+        <RuleSweep triggerKey={ruleKey} />
 
         {/* --- the drama banner ---------------------------------------- */}
         <AnimatePresence>

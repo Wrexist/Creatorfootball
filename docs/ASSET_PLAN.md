@@ -97,8 +97,54 @@ ships) · ambient audio v2: crowd intensity loops ×3 + rain variant.
    optional override, not a gap.
 3. ~~**Trophy set**~~ — shipped as `design/domain/silverware.tsx`.
 4. ~~**Title hero scene**~~ — shipped as `design/hero/scenes.tsx`, with both result moods.
-5. **What is left that is genuinely absent art:** store screenshots ×8, the splash/app-icon
-   polish pass, `favicon.ico`, the club-reveal celebration kit, and all of P2. Everything else
-   above now renders from code.
+5. ~~**Club-reveal kit + P2 polish**~~ — shipped. See §6.1.
+6. **What is left that is genuinely absent art:** store screenshots ×8 (must be real captures of
+   the built app), the splash/app-icon polish pass, and `favicon.ico`. Everything else above now
+   renders from code or ships as an override plate.
 
 Totals: **P0 ≈15 files · P1 ≈55–90 items · P2 ≈15–22 items.**
+
+### 6.1 Generated-art pass — what actually shipped
+
+Eight plates, generated locally and ingested through `tools/brand/ingest.mjs`. Every one is an
+override: `design/art/ArtLayer.tsx` renders nothing when a file is missing, and the procedural
+path behind it is untouched. Deleting all eight returns the app to exactly what shipped before.
+
+| Asset | Destination | Size | Method | Wired into |
+|---|---|---|---|---|
+| B6a | `art/heroes/reveal-burst.webp` | 89.0 KB / 90 | procedural plate | `HeroReveal`, behind the crest |
+| B6b | `art/heroes/reveal-motes.webp` | 55.6 KB / 60 | procedural plate | `HeroReveal`, ambient layer |
+| C1 | `art/textures/stadium-haze.webp` | 77.1 KB / 80 | procedural plate | `HeroSurface` `haze`/`stadium` |
+| C2 | `art/sprites/ball.webp` | 5.6 KB / 20 | procedural plate | `pitchRenderer.drawBall` |
+| C4 | `art/sprites/reward-tokens.webp` | 16.7 KB / 40 | procedural plate | not yet — see below |
+| C5 | `art/textures/rule-sweep.webp` | 44.1 KB / 48 | plate + SDXL img2img @0.22 | `RuleSweep` on the pitch (H6) |
+| B5 | `art/textures/foil-legendary.webp` | 6.1 KB / 48 | procedural, seamless | `.cf-foil` background layer |
+| C3 | `art/textures/kit-fabric.webp` | 14.7 KB / 16 | procedural, seamless | `KitPreview` shirt swatch |
+
+**On method.** Text-to-image was tried first and rejected for every one of these. SDXL renders
+*matter*, and these entries specify *fields*: eight straight generations produced pleated paper,
+mushroom gills, a honeycomb tunnel, ink rings and a floodlight-mast seascape, none of which could
+satisfy a checklist that says "exactly twelve rays", "max luma ≤45%" or "volt under 3%". A
+diffusion model cannot count and cannot hold a luminance ceiling. So the geometry is drawn from
+the numbers in `AI_ASSET_PROMPTS.md` and, where it helps, SDXL runs over the top at low denoise
+for grain. On B6a/B6b/C1 even that was reverted: the grain is incompressible and cost more weight
+budget than it bought quality.
+
+**Seams.** B5 and C3 are built from integer-frequency sine gratings, so they are periodic by
+construction rather than by a tiling sampler. Both pass the 3×3 offset test.
+
+**Not wired yet: C4 only.** The reward-token strip is for H8 "objective claimed" — tokens flying
+to the balance chip along a path. That flight animation does not exist in the app at all, so
+wiring C4 means building the moment, not loading a file. The strip is correct, ingested and
+verified, and it is waiting on that feature rather than on anything about the asset.
+
+**In situ beat the eye twice.** The burst was sized in `vmax` (about 1400px on a 430px phone, so
+its empty centre swallowed the screen) and centred on the overlay rather than the crest. The foil
+tile, at the amplitude that looked right on its own, smeared a diagonal marble across the
+legendary card. None of that was visible in the plates themselves; all of it was obvious the
+moment the asset was composited into the screen that uses it. `apps/game/e2e/insitu.mjs` is that
+check, and it is worth running after any change to these files.
+
+**Kept procedural.** B1–B3 hero backdrops and B4a–e trophies were not replaced. The shipped
+`design/hero/scenes.tsx` and `design/domain/silverware.tsx` are better than anything this pass
+produced, which is the outcome the brief asked for over shipping a mediocre render.

@@ -10,7 +10,7 @@ import {
 import {
   Accordion, AttributeBar, CardRail, ClubBadge, ClubCard, Confirm, Counter, CreatorAvatar,
   CreatorCard, Divider, EmptyState, ErrorState, FormGuide, GlareHover, GoalBurst, GradualBlur,
-  HeroReveal, KeyValueRow, MatchCard, MatchEventRow, MomentumBar, MoneyLabel, NewsCard,
+  HeroReveal, KeyValueRow, MatchCard, MatchEventRow, MomentumBar, MoneyLabel, NewsCard, RuleSweep,
   PlayerCard, PlayerPortrait, PositionChip, ProgressBar, RatingBadge, Screen, ScoreDisplay,
   SectionHeader, ShinyText, SideNav, Skeleton, SocialPost, Sparkline, SpotlightCard, StatCard,
   StatGrid, TabBar, Timeline, ToastProvider, TraitChip, TrendIndicator, TrophyMoment,
@@ -216,6 +216,7 @@ function HeroDemos(): ReactNode {
   const [signing, setSigning] = useState(false);
   const club = GALLERY_CLUBS[0];
   const player = GALLERY_PLAYERS[0];
+  const [sweep, setSweep] = useState(0);
 
   return (
     <>
@@ -224,6 +225,18 @@ function HeroDemos(): ReactNode {
         <GlassButton onClick={() => setGoal(true)}>Goal burst</GlassButton>
         <GlassButton onClick={() => setTrophy(true)}>Trophy</GlassButton>
         <GlassButton onClick={() => setSigning(true)}>Signing</GlassButton>
+      </Row>
+
+      <Row label="Special-rule sweep (H6) — violet wash across the pitch, never volt">
+        <GlassButton onClick={() => setSweep((n) => n + 1)}>Open a rule window</GlassButton>
+        <div className="relative h-[120px] w-[320px] overflow-hidden rounded-lg bg-[#0A1410]">
+          <RuleSweep triggerKey={sweep === 0 ? null : `gallery-${String(sweep)}`} />
+        </div>
+        <p className="max-w-[30ch] self-center text-caption leading-relaxed text-ink-muted">
+          The generated plate (C5) when it loads, a live gradient when it does not — so the moment
+          plays either way. A hero moment that only exists when an optional file resolves is an
+          optional hero moment.
+        </p>
       </Row>
 
       <Row label="Ambient effects (used inside hero surfaces)">
@@ -1020,7 +1033,7 @@ function GalleryBody(): ReactNode {
                 </>
               )}
             </Row>
-            <Row label="Legendary foil — hover it. Procedural interference pattern, no tile file; plain glass under reduced transparency">
+            <Row label="Legendary foil — hover it. Seamless tile over a procedural interference pattern; plain glass under reduced transparency">
               {player && club && (
                 <>
                   <div className="w-[240px]"><PlayerCard player={player} club={club} variant="legendary" onPress={() => undefined} /></div>
@@ -1028,9 +1041,12 @@ function GalleryBody(): ReactNode {
                   <div className="w-[148px]"><PlayerCard player={GALLERY_PLAYERS[3]!} club={GALLERY_CLUBS[2]} variant="legendary" /></div>
                   <p className="max-w-[30ch] self-center text-caption leading-relaxed text-ink-muted">
                     Two gratings at different pitches and angles beat into the drifting bands a
-                    printed foil makes; one wide conic supplies the hue shift. The movement is the
-                    hover glare only — transform-only, absent on touch and under reduced motion —
-                    so this is the third continuous animation on the object and not the fourth.
+                    printed foil makes; one wide conic supplies the hue shift. A generated 512px
+                    tile (B5) now rides on top as the first background layer — and only as a
+                    layer, because a URL that 404s drops out of the stack and leaves exactly the
+                    three gradients that shipped. The movement is the hover glare only —
+                    transform-only, absent on touch and under reduced motion — so this is the
+                    third continuous animation on the object and not the fourth.
                   </p>
                 </>
               )}

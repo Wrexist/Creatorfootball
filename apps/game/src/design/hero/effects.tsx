@@ -2,6 +2,8 @@ import { useRef, type ReactNode } from 'react';
 import { motion, useMotionTemplate, useMotionValue } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
+import { useArtAsset } from '../art/ArtLayer';
+import { ART_ASSETS } from '../art/assets';
 import { useCanHover } from '../useMediaQuery';
 
 /**
@@ -275,3 +277,64 @@ export function GradualBlur({
     />
   );
 }
+
+/* --- special-rule sweep ------------------------------------------------ */
+
+export interface RuleSweepProps {
+  /**
+   * Identity of the rule window that is open, or `null` for none. A *change*
+   * of key replays the sweep, so this is the trigger as well as the state.
+   */
+  triggerKey: string | null;
+  className?: string;
+}
+
+/**
+ * H6 — a `--color-special` wash crossing the pitch when a rule window opens.
+ *
+ * The C5 plate is an override here, not the feature: the gradient fallback
+ * below is a real sweep in its own right, so the moment plays whether or not
+ * the file loaded. That ordering matters — a hero moment that only exists when
+ * an optional asset resolves is an optional hero moment.
+ *
+ * Violet, never volt. Volt is reserved for state the player owns; mixing the
+ * two here would break the semantic mapping the palette is built on.
+ */
+export function RuleSweep({ triggerKey, className }: RuleSweepProps): ReactNode {
+  const plate = useArtAsset(ART_ASSETS.ruleSweep);
+
+  if (triggerKey === null) return null;
+
+  const body = plate === 'ready' ? (
+    <img
+      src={ART_ASSETS.ruleSweep}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      decoding="async"
+      className="h-full w-full object-fill"
+      style={{ opacity: 0.22 }}
+    />
+  ) : (
+    <span
+      className="block h-full w-full"
+      style={{
+        opacity: 0.22,
+        background:
+          'linear-gradient(98deg, transparent 0%, rgb(124 140 255 / 0.5) 34%, var(--color-special) 50%, transparent 100%)',
+      }}
+    />
+  );
+
+  return (
+    <span
+      key={triggerKey}
+      aria-hidden="true"
+      className={cn('cf-rule-sweep pointer-events-none absolute inset-y-0 left-0 w-[72%]', className)}
+      style={{ mixBlendMode: 'screen' }}
+    >
+      {body}
+    </span>
+  );
+}
+

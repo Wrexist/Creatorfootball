@@ -886,7 +886,18 @@
   attribute strip sit — a finish must never be something text has to survive.
 */
 .cf-foil {
+  /*
+    B5 is the first layer in this stack and the only optional one. A
+    `background-image` URL that 404s simply does not paint — the browser drops
+    that layer and composites the rest — so the three procedural gradients
+    below are the foil whenever the tile is absent, with no JS, no state and
+    no way for the file to become load-bearing.
+
+    It is authored seamless (integer-frequency gratings, verified on a 3x3
+    offset) so a 512px tile repeats across any card size without a seam.
+  */
   background-image:
+    url('/art/textures/foil-legendary.webp'),
     repeating-linear-gradient(
       115deg,
       rgb(200 255 46 / 0.115) 0px,
@@ -912,7 +923,7 @@
       rgb(255 215 106 / 0.028) 300deg,
       rgb(200 255 46 / 0.03) 360deg
     );
-  background-size: 128px 128px, 96px 96px, 100% 100%;
+  background-size: 168px 168px, 128px 128px, 96px 96px, 100% 100%;
   mix-blend-mode: screen;
   -webkit-mask-image: linear-gradient(196deg, #000 0%, #000 34%, rgb(0 0 0 / 0.22) 60%, transparent 78%);
   mask-image: linear-gradient(196deg, #000 0%, #000 34%, rgb(0 0 0 / 0.22) 60%, transparent 78%);
@@ -926,3 +937,45 @@
   .cf-foil { display: none; }
 }
 [data-reduced-effects='true'] .cf-foil { display: none; }
+
+/*
+  Generated-art fade-in, for `design/art/ArtLayer.tsx`.
+
+  Deliberately a `from`-only keyframe: the implicit end state is the element's
+  own opacity, so a plate mixed at 18% fades 0 → 18% and never to 1. With a
+  `to { opacity: 1 }` the animation's fill would fight the inline opacity and
+  every plate would land at full strength, which is exactly the mistake the
+  weight budgets and the "under 3% volt" rule exist to prevent.
+
+  `backwards` fill applies the 0 before the first frame, so a decoded image
+  never flashes at full opacity for one frame before the fade starts.
+*/
+@keyframes cf-art-in {
+  from { opacity: 0; }
+}
+
+/*
+  H6 special-rule sweep, for `design/hero/effects.tsx`.
+
+  A CSS keyframe rather than a motion variant, for the same reason
+  `cf-floodlight` is: nothing in the composition depends on where in the cycle
+  it is caught, so the global reduced-motion rule above collapses it safely
+  instead of leaving a half-played travel. It also sidesteps mixing a keyframed
+  opacity with a single-value transform, which Motion resolves by jumping
+  straight to the last frame — and the last frame here is opacity 0, so the
+  sweep silently never appeared.
+
+  Replay is by remount: the component keys the element on the rule window, so a
+  new window restarts the animation from 0%.
+*/
+@keyframes cf-rule-sweep {
+  0%   { opacity: 0; transform: translateX(-70%); }
+  18%  { opacity: 1; }
+  72%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(70%); }
+}
+
+.cf-rule-sweep {
+  animation: cf-rule-sweep 1.6s ease-in-out both;
+  will-change: opacity, transform;
+}
