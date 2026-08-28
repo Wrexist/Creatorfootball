@@ -1,0 +1,137 @@
+name: App Store metadata
+
+# Pushes the App Store listing — name, subtitle, keywords, description,
+# promotional text, URLs, categories, copyright, review notes, optionally
+# screenshots — from apps/game/fastlane/ to App Store Connect with fastlane
+# `deliver`. This is the ASO half of the release setup: the binary ships via
+# ios-testflight.yml, the words ship from here, and the repo (not a web form)
+# is the source of truth for both. docs/APP_STORE.md explains every value;
+# docs/RELEASE_IOS.md explains the setup.
+#
+# Runs on ubuntu deliberately: metadata upload is pure App Store Connect API,
+# no Xcode and no macOS 10x billing involved.
+#
+# Required repository secrets (shared with ios-testflight.yml — same three
+# names, same values, see that file's header for how to create them):
+#   APP_STORE_CONNECT_KEY_ID
+#   APP_STORE_CONNECT_ISSUER_ID
+#   APP_STORE_CONNECT_API_KEY_BASE64
+#
+# Prerequisite: the app record must already exist in App Store Connect
+# (deliver updates records, it cannot create them) and must have an editable
+# version — see docs/RELEASE_IOS.md §"Create the app record".
+#
+# Cadence (docs/APP_STORE.md): promotional text can ship any time without
+# review; name/subtitle/keywords changes only take effect with a version
+# review, so batch them with releases.
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_screenshots:
+        description: 'Also upload screenshots from apps/game/fastlane/screenshots/'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: appstore-metadata
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/game
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Verify required secrets
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_KEY_B64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        run: |
+          missing=()
+          [ -n "$KEY_ID" ]      || missing+=("APP_STORE_CONNECT_KEY_ID")
+          [ -n "$ISSUER_ID" ]   || missing+=("APP_STORE_CONNECT_ISSUER_ID")
+          [ -n "$API_KEY_B64" ] || missing+=("APP_STORE_CONNECT_API_KEY_BASE64")
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::Missing required secret(s): ${missing[*]}. See .github/workflows/ios-testflight.yml's header for what each one is."
+            exit 1
+          fi
+
+      # Character limits are enforced here, at 1x, before fastlane is even
+      # installed — Apple enforces them server-side with a much worse error.
+      # Byte counts include the file's trailing newline, hence the +1.
+      - name: Validate metadata field limits
+        run: |
+          check() { # file, limit (chars incl. trailing newline slack)
+            n=$(wc -m < "fastlane/metadata/en-US/$1" | tr -d ' ')
+            if [ "$n" -gt $(($2 + 1)) ]; then
+              echo "::error::fastlane/metadata/en-US/$1 is $n chars — limit is $2."
+              exit 1
+            fi
+            echo "  $1: $n/$2"
+          }
+          check name.txt 30
+          check subtitle.txt 30
+          check keywords.txt 100
+          check promotional_text.txt 170
+          check description.txt 4000
+          check release_notes.txt 4000
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Install fastlane
+        run: gem install fastlane --no-document
+
+      # fastlane's API-key JSON wants the PEM inline; reuse the same tolerant
+      # decode as the build workflow (raw PEM or base64, CR-tolerant).
+      - name: Write App Store Connect API key file
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_KEY_B64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            let raw = (process.env.API_KEY_B64 || "").trim();
+            if (!raw.includes("BEGIN")) raw = Buffer.from(raw, "base64").toString("utf8");
+            raw = raw.replace(/\r/g, "");
+            if (!raw.includes("BEGIN PRIVATE KEY")) {
+              console.error("APP_STORE_CONNECT_API_KEY_BASE64 did not decode to a PEM key.");
+              process.exit(1);
+            }
+            fs.writeFileSync(process.env.RUNNER_TEMP + "/asc_api_key.json", JSON.stringify({
+              key_id: process.env.KEY_ID,
+              issuer_id: process.env.ISSUER_ID,
+              key: raw,
+              in_house: false,
+            }));
+          '
+
+      # Everything else (identifier, categories, copyright, skip flags) comes
+      # from fastlane/Deliverfile — reviewable in a diff, not spread across
+      # CLI flags.
+      - name: Push metadata to App Store Connect
+        env:
+          INCLUDE_SCREENSHOTS: ${{ inputs.include_screenshots }}
+        run: |
+          EXTRA=()
+          if [ "$INCLUDE_SCREENSHOTS" = "true" ]; then
+            EXTRA+=(--skip_screenshots false --overwrite_screenshots true)
+          fi
+          fastlane deliver --api_key_path "$RUNNER_TEMP/asc_api_key.json" "${EXTRA[@]}"
+
+      - name: Clean up API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/asc_api_key.json"

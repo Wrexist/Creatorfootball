@@ -124,8 +124,10 @@ export default tseslint.config(
   },
 
   // --- end-to-end scripts drive a real browser from Node ---
+  // (store-shots drives the same browser harness to render App Store
+  // screenshot drafts, so its page.evaluate callbacks see the DOM too.)
   {
-    files: ['apps/game/e2e/**/*.mjs'],
+    files: ['apps/game/e2e/**/*.mjs', 'tools/release/store-shots.mjs'],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
       sourceType: 'module',

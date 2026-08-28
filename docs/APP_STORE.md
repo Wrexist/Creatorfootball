@@ -4,6 +4,10 @@ Everything needed to create the App Store Connect record and ship v1.0 of
 **Creator Football** (`com.creatorfootball.app`). Machine-readable copies of
 every text field live in `apps/game/fastlane/metadata/en-US/` — this document
 is the source of truth for *why*, plus everything fastlane files can't carry.
+The **How to ship** — workflows, secrets, signing, build numbers — lives in
+[`RELEASE_IOS.md`](RELEASE_IOS.md): the binary ships via the *iOS TestFlight*
+workflow and this listing ships via the *App Store metadata* workflow, so
+none of the copy below is ever retyped into a web form.
 
 All character counts were measured, not estimated.
 
@@ -110,8 +114,10 @@ Required set: **6.9" iPhone (1290×2796)** — App Store Connect derives the
 6.5"/6.1" sets. Optional but recommended: **13" iPad (2064×2752)** since the
 build targets device family 1,2.
 
-Capture from the real build at those sizes (no device frames needed; captions
-below each). Order is conversion-ranked:
+`pnpm shots:store` renders drafts from the real bundle at exactly 1290×2796;
+the in-match moments below still want a played save behind them. Finals go in
+`apps/game/fastlane/screenshots/en-US/` (numbered in the order below) and
+upload via the metadata workflow. Order is conversion-ranked:
 
 | # | Screen | Caption |
 |---|---|---|
@@ -164,20 +170,27 @@ Build side (this repo):
 - [x] Portrait-only on iPhone; all orientations on iPad
 - [x] `ITSAppUsesNonExemptEncryption=false`; `arm64` device capability
 - [x] Native haptics/status-bar/splash wired behind capability detection
+- [x] Shared Xcode scheme committed so CI can archive headlessly
+- [x] Archive + TestFlight upload automated: *iOS TestFlight* workflow
+      (versions stamped per run, build number resolved against App Store
+      Connect — nothing to bump by hand; see `RELEASE_IOS.md`)
 - [ ] **Real-device pass** (FINAL_AUDIT §6 blocking item): glass blur, pitch
       renderer frame rate, haptics feel, keyboard avoidance on iPhone
-- [ ] Archive with Xcode (requires macOS): bump `MARKETING_VERSION` /
-      `CURRENT_PROJECT_VERSION` if re-submitting, then validate + upload
 
 Store side (App Store Connect):
 
+- [ ] Secrets added + API key created per `RELEASE_IOS.md` §1–3
 - [ ] App record created with bundle ID above; SKU set
-- [ ] All en-US fields pasted from `fastlane/metadata/en-US/`
+- [ ] All en-US fields, categories, copyright and review notes pushed by the
+      *App Store metadata* workflow (replaces pasting from
+      `fastlane/metadata/en-US/`)
 - [ ] Age rating questionnaire submitted (section 3 answers)
 - [ ] App Privacy: Data Not Collected
 - [ ] URLs reachable (after first Pages deploy)
 - [ ] Screenshots uploaded per section 5
-- [ ] Review notes pasted; contact email confirmed monitored
+- [ ] Review notes pushed by the metadata workflow; review contact
+      name/email/phone filled in App Store Connect (deliberately not
+      committed to the repo) and the email confirmed monitored
 - [ ] Pricing: free, no IAP in v1.0; availability: all 175 regions default
 
 Post-launch ASO cadence: refresh Promotional Text freely (no review); revisit

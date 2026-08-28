@@ -32,6 +32,10 @@ tools/sim/src/__*.ts
 tools/sim/src/_audit/
 .shots/
 
+# Store-screenshot drafts rendered by tools/release/store-shots.mjs. The
+# repo carries only the curated finals, in apps/game/fastlane/screenshots/.
+tools/release/store-shots/
+
 # Downloaded generations waiting to be ingested by `tools/brand/ingest.mjs`.
 # They are working files — the pipeline's *output* is what the repo carries.
 tools/brand/inbox/*

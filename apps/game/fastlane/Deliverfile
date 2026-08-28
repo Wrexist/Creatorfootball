@@ -1,0 +1,35 @@
+# Deliverfile — fastlane `deliver` configuration for Creator Football.
+#
+# `deliver` pushes the App Store listing (metadata/, and screenshots/ when
+# asked) to App Store Connect, which makes the repo the source of truth for
+# every ASO field instead of a web form someone edited once. It is run by
+# .github/workflows/appstore-metadata.yml; docs/APP_STORE.md holds the *why*
+# behind every value.
+#
+# Text fields live as files under metadata/ (deliver's native layout — the
+# en-US ones predate this file). Non-localised settings that have no file
+# form live here.
+
+app_identifier "com.creatorfootball.app"
+
+# © line shown on the store page. Update the year when a release actually
+# ships in a new year, not preemptively.
+copyright "© 2026 Wrexist"
+
+# App Store Connect models "Games → Sports + Simulation" as the GAMES
+# category with two subcategories (docs/APP_STORE.md §2).
+primary_category "GAMES"
+primary_first_sub_category "GAMES_SPORTS"
+primary_second_sub_category "GAMES_SIMULATION"
+
+# v1.0 has no IAP — do not let precheck go looking for them.
+precheck_include_in_app_purchases false
+
+# Metadata-only by default: the binary ships via ios-testflight.yml and
+# screenshots are uploaded deliberately (workflow input), never as a side
+# effect of a copy change.
+skip_binary_upload true
+skip_screenshots true
+
+# CI has no one to answer the interactive HTML-preview prompt.
+force true

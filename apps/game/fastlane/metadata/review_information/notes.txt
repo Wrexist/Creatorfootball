@@ -1,0 +1,11 @@
+Creator Football is a single-player football management game. Everything runs
+on-device; there is no server, account or online component.
+
+To review quickly:
+1. Launch and tap through club creation (any choices work).
+2. From Home, tap PLAY to reach matchday. Decisions appear as timed prompts;
+   any choice progresses the match.
+3. Saves persist locally between launches; deleting the app deletes the save.
+
+The app uses no tracking, shows no ads, and requires no special permissions.
+No demo account is needed because there are no accounts.
