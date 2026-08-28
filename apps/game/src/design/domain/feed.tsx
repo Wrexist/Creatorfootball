@@ -81,6 +81,63 @@ const MOTIF_PATTERNS: readonly (readonly [StoryMotif, RegExp])[] = [
 ];
 
 /**
+ * A story entity's kind, written out.
+ *
+ * `kind` is an open string on the engine side and the screens were printing it
+ * straight into the value column of a row — so "Named in this story" listed
+ * "Liverpool FC … club" in lower case, next to a headline set in display type.
+ * The fallback humanises rather than guessing, so a kind nobody has written
+ * copy for yet arrives as a word instead of a constant.
+ */
+const ENTITY_KIND_LABELS: Readonly<Record<string, string>> = {
+  club: 'Club',
+  player: 'Player',
+  creator: 'Creator',
+  manager: 'Manager',
+  competition: 'Competition',
+};
+
+export function entityKindLabel(kind: string): string {
+  const known = ENTITY_KIND_LABELS[kind];
+  if (known) return known;
+  const words = kind.replace(/[_-]+/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : '';
+}
+
+/**
+ * The tags a player should actually see, in the words they should see them in.
+ *
+ * A story's tag list is two vocabularies in one array. Some of it is topic —
+ * `match`, `result`, `transfer` — which is exactly what a chip on a story is
+ * for. The rest is bookkeeping the generator needs and nobody else does:
+ * `tpl:md_k_match_lost` names the template that wrote the copy,
+ * `trigger:SHOCK_DEFEAT` the event that fired it, `mood:NEGATIVE` the tone it
+ * was written in. Those shipped to players as chips, which is how a reader of
+ * a match report ended up looking at an internal template id.
+ *
+ * The namespace separator is the whole rule: anything `prefix:value` is
+ * addressed to the engine, anything plain is addressed to the reader. It keeps
+ * working when a content pack invents its own vocabulary, which packs are
+ * explicitly allowed to do — a new `source:` prefix stays hidden without this
+ * function having to learn about it first.
+ */
+export function displayTags(tags: readonly string[] | undefined): string[] {
+  if (!tags || tags.length === 0) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const tag of tags) {
+    if (tag.includes(':')) continue;
+    const clean = tag.replace(/[_-]+/g, ' ').trim();
+    if (clean.length === 0) continue;
+    const label = clean.charAt(0).toUpperCase() + clean.slice(1);
+    if (seen.has(label.toLowerCase())) continue;
+    seen.add(label.toLowerCase());
+    out.push(label);
+  }
+  return out;
+}
+
+/**
  * Choose the motif for a story's tags, or `null` when nothing matches — and
  * `null` is a real answer, not a failure: the seeded bands are still the
  * correct picture for a story about a facility upgrade or a sponsor.
@@ -306,10 +363,10 @@ export const NewsCard = memo(function NewsCard({
       {lead && (
         <div className="relative h-28 w-full">
           <StoryArt seed={story.imageSeed ?? story.id} motif={storyMotifFor(story.tags)} />
-          {story.tags[0] && (
+          {displayTags(story.tags)[0] && (
             <div className="absolute left-3 top-3">
               <GlassPill tone={sentimentTone} size="xs" filled={sentimentTone !== 'neutral'}>
-                {story.tags[0]}
+                {displayTags(story.tags)[0]}
               </GlassPill>
             </div>
           )}

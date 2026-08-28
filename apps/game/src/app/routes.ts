@@ -112,11 +112,28 @@ export interface SubDestination {
 }
 
 /**
+ * How many destinations a rail shows before the rest move behind "More".
+ *
+ * Five tabs at the bottom was already judged to be the limit of what reads as
+ * navigation rather than as a wall — and then World grew to eight rail
+ * destinations and Club to seven, which is worse, because a rail scrolls
+ * sideways and so does not even admit how many there are. A new player sees
+ * "Scouting" cut off at the edge and has no way to know whether two things are
+ * hidden or six.
+ *
+ * Four is what fits a 393pt phone without scrolling. Everything past it is one
+ * tap away in a sheet that shows the whole list at once, which is a better
+ * answer than a rail you have to swipe and count.
+ */
+const RAIL_LIMIT = 4;
+
+/**
  * The rail inside each section.
  *
  * A section with one destination shows no rail at all — a single tab is chrome
  * that explains nothing. Order runs from the screen you open most to the one
- * you open least, because the first item is the one the section lands on.
+ * you open least: the first item is the one the section lands on, and the
+ * first `RAIL_LIMIT` are the ones that stay on the rail.
  */
 export const SECTION_NAV: Readonly<Record<SectionKey, readonly SubDestination[]>> = {
   home: [],
@@ -128,26 +145,74 @@ export const SECTION_NAV: Readonly<Record<SectionKey, readonly SubDestination[]>
     { path: ROUTES.scouting, label: 'Scouting', matchPrefix: '/market/scouting' },
   ],
   matchday: [],
+  // Objectives and Finances are what a manager is asked to *act* on, so they
+  // lead; Sponsors, Fans and History are things they read, and they can wait
+  // behind "More".
   club: [
     { path: ROUTES.club, label: 'Overview', matchPrefix: '/club' },
+    { path: ROUTES.objectives, label: 'Objectives', matchPrefix: '/objectives' },
+    { path: ROUTES.finances, label: 'Finances', matchPrefix: '/club/finances' },
     { path: ROUTES.facilities, label: 'Facilities', matchPrefix: '/club/facilities' },
     { path: ROUTES.sponsors, label: 'Sponsors', matchPrefix: '/club/sponsors' },
     { path: ROUTES.fans, label: 'Fans', matchPrefix: '/club/fans' },
-    { path: ROUTES.finances, label: 'Finances', matchPrefix: '/club/finances' },
-    { path: ROUTES.objectives, label: 'Objectives', matchPrefix: '/objectives' },
     { path: ROUTES.history, label: 'History', matchPrefix: '/club/history' },
   ],
+  // The table and the fixture list are why anyone opens this section; the five
+  // feeds behind them are one family and belong together in the sheet.
   world: [
     { path: ROUTES.league, label: 'League', matchPrefix: '/league' },
     { path: ROUTES.fixtures, label: 'Fixtures', matchPrefix: '/league/fixtures' },
     { path: ROUTES.social, label: 'Social', matchPrefix: '/social' },
+    { path: ROUTES.media, label: 'Media', matchPrefix: '/social/media' },
     { path: ROUTES.press, label: 'Press', matchPrefix: '/social/press' },
     { path: ROUTES.creators, label: 'Creators', matchPrefix: '/social/creators' },
     { path: ROUTES.community, label: 'Community', matchPrefix: '/social/community' },
     { path: ROUTES.rivalries, label: 'Rivalries', matchPrefix: '/league/rivalries' },
-    { path: ROUTES.media, label: 'Media', matchPrefix: '/social/media' },
   ],
 };
+
+/**
+ * Split a section's destinations into the ones on the rail and the ones behind
+ * "More".
+ *
+ * The active destination is always on the rail, even when its natural place is
+ * in the overflow: arriving on a screen whose own tab is hidden behind a button
+ * leaves the player with no way to see where they are. When promotion is
+ * needed it takes the last rail slot, so the leading destinations — the ones
+ * chosen for being the most used — keep their positions and the rail does not
+ * reshuffle under the thumb.
+ */
+export function splitRail(
+  items: readonly SubDestination[],
+  activePath: string,
+): { rail: readonly SubDestination[]; overflow: readonly SubDestination[] } {
+  if (items.length <= RAIL_LIMIT) return { rail: items, overflow: [] };
+
+  const active = subDestinationIn(items, activePath);
+  const rail = items.slice(0, RAIL_LIMIT);
+  const overflow = items.slice(RAIL_LIMIT);
+  if (!active || rail.includes(active)) return { rail, overflow };
+
+  return {
+    rail: [...rail.slice(0, RAIL_LIMIT - 1), active],
+    overflow: [rail[RAIL_LIMIT - 1] as SubDestination, ...overflow.filter((item) => item !== active)],
+  };
+}
+
+/** Longest-prefix match of `pathname` against a list of destinations. */
+function subDestinationIn(
+  items: readonly SubDestination[],
+  pathname: string,
+): SubDestination | null {
+  let best: SubDestination | null = null;
+  let bestLength = -1;
+  for (const sub of items) {
+    if (pathname === sub.matchPrefix || pathname.startsWith(`${sub.matchPrefix}/`)) {
+      if (sub.matchPrefix.length > bestLength) { best = sub; bestLength = sub.matchPrefix.length; }
+    }
+  }
+  return best;
+}
 
 /** Which section owns a path, or null on an immersive or pre-game screen. */
 export function sectionFor(pathname: string): SectionKey | null {
@@ -170,14 +235,7 @@ export function sectionFor(pathname: string): SectionKey | null {
 export function subDestinationFor(pathname: string): SubDestination | null {
   const section = sectionFor(pathname);
   if (!section) return null;
-  let best: SubDestination | null = null;
-  let bestLength = -1;
-  for (const sub of SECTION_NAV[section]) {
-    if (pathname === sub.matchPrefix || pathname.startsWith(`${sub.matchPrefix}/`)) {
-      if (sub.matchPrefix.length > bestLength) { best = sub; bestLength = sub.matchPrefix.length; }
-    }
-  }
-  return best;
+  return subDestinationIn(SECTION_NAV[section], pathname);
 }
 
 export const buildPath = (route: string, params: Record<string, string>): string =>

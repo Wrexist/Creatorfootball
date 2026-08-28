@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Club, Player } from '@cf/engine';
-import { ClubBadge, GlassButton, IconFans, PlayerPortrait, ShinyText, cn, haptics, sfx, useDesignMotion } from '@/design';
+import {
+  ClubBadge, EASE, GlassButton, IconFans, PlayerPortrait, ShinyText, cn, haptics, sfx, useDesignMotion,
+} from '@/design';
 import { arenaShareLine, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitPalette } from '../shared/kit';
 
@@ -147,7 +149,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
                   <motion.div
                     initial={{ x: -46, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.62, ease: EASE.outQuint }}
                     className="flex w-[38vw] max-w-[132px] flex-col items-center gap-2"
                   >
                     <ClubBadge visual={home.visual} size={84} label={home.name} />
@@ -166,7 +168,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
                   <motion.div
                     initial={{ x: 46, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.62, ease: EASE.outQuint }}
                     className="flex w-[38vw] max-w-[132px] flex-col items-center gap-2"
                   >
                     <ClubBadge visual={away.visual} size={84} label={away.name} />
@@ -303,11 +305,11 @@ function IntroPlayer({
     <motion.div
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay, duration: 0.42, ease: EASE.outQuint }}
       className="flex w-[42vw] max-w-[150px] flex-col items-center"
     >
       <PlayerPortrait seed={player?.portraitSeed ?? club.id} size={64} colors={colors} shape="squircle" />
-      <span className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-volt">{tag}</span>
+      <span className="mt-2 text-micro font-bold uppercase tracking-[0.18em] text-volt">{tag}</span>
       <span className="mt-1 text-balance text-[15px] font-bold leading-tight text-ink">{name}</span>
       <span className="tnum mt-0.5 text-[12px] text-ink-muted">{line}</span>
     </motion.div>
@@ -342,7 +344,7 @@ function ShapeStrip({ context, accent }: { context: MatchdayContext; accent: str
           }}
         />
       ))}
-      <span className="absolute bottom-1 right-2 text-[9px] font-bold uppercase tracking-[0.14em] text-ink-dim">
+      <span className="absolute bottom-1 right-2 text-micro font-bold uppercase tracking-[0.14em] text-ink-dim">
         You attack →
       </span>
     </div>

@@ -238,10 +238,20 @@ export const IconCard = icon('IconCard', (
   <rect x="6.6" y="2.9" width="11" height="15.4" rx="1.8" transform="rotate(12 12 12)" />
 ));
 
+/**
+ * Exchange: a substitution on the timeline, and reordering in the squad list.
+ *
+ * Drawn *horizontally* on purpose. The vertical form of this — two opposed
+ * arrows on the y-axis — is `IconSort`, and the two were previously the same
+ * drawing to within a couple of grid units. That is invisible in the icon
+ * sheet and obvious in the squad header, where both sit side by side as
+ * icon-only buttons doing entirely different things: one reorders the list, one
+ * opens sort and filter. Two controls a tap apart must not share a silhouette.
+ */
 export const IconSwap = icon('IconSwap', (
   <>
-    <path d="M8 20V4M8 4 4.5 7.6M8 4l3.5 3.6" />
-    <path d="M16 4v16M16 20l-3.5-3.6M16 20l3.5-3.6" />
+    <path d="M4.5 9h15M16.2 5.7 19.5 9l-3.3 3.3" />
+    <path d="M19.5 15h-15M7.8 11.7 4.5 15l3.3 3.3" />
   </>
 ));
 

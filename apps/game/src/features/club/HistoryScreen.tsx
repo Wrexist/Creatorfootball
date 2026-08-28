@@ -36,7 +36,7 @@ const SeasonRow = memo(function SeasonRow({
     <GlassPanel padding="md" accent={summary.trophies.length > 0 ? 'volt' : 'none'}>
       <div className="flex items-start gap-4">
         <div className="flex w-14 shrink-0 flex-col items-center">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-dim">Season</span>
+          <span className="text-micro font-semibold uppercase tracking-[0.16em] text-ink-dim">Season</span>
           <span className="tnum font-display text-[28px] font-bold leading-none tracking-[-0.04em] text-ink">
             {summary.season}
           </span>

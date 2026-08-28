@@ -35,60 +35,18 @@ export const LETTERBOX = '#050607';
 /** @typedef {{ axis: 'x' | 'y', from: number, to: number, fromAlpha: number, toAlpha: number }} Scrim */
 
 export const ASSETS = [
-  // ---- A — launch-blocking -------------------------------------------------
-  {
-    id: 'A1',
-    name: 'App icon master',
-    dest: 'tools/brand/icon-master.png',
-    format: 'png',
-    width: 2048,
-    height: 2048,
-    budgetKB: 900,
-    alpha: false,
-    fit: 'cover',
-    note: 'Square emblem plate. Flattened onto #08090B — the master carries no alpha.',
-    flatten: '#08090B',
-  },
-  {
-    id: 'A1-icon',
-    name: 'iOS app icon / ASC marketing icon',
-    dest: 'apps/game/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
-    format: 'png',
-    width: 1024,
-    height: 1024,
-    budgetKB: 400,
-    alpha: false,
-    fit: 'cover',
-    note: 'Same artwork as A1 at 1024². No alpha, no rounded corners — iOS masks.',
-    flatten: '#08090B',
-  },
-  {
-    id: 'A2',
-    name: 'Splash / launch screen',
-    dest: 'apps/game/ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732.png',
-    format: 'png',
-    width: 2732,
-    height: 2732,
-    budgetKB: 700,
-    alpha: false,
-    fit: 'cover',
-    note: 'Copy the written file over all three identical entries in the imageset.',
-    flatten: '#08090B',
-  },
-  {
-    id: 'A3',
-    name: 'Social share card / OG banner',
-    dest: 'website/og-image.jpg',
-    format: 'jpeg',
-    width: 1200,
-    height: 630,
-    budgetKB: 60,
-    alpha: false,
-    fit: 'cover',
-    flatten: '#050607',
-    scrim: { axis: 'x', from: 0.55, to: 0, fromAlpha: 0, toAlpha: 0.55 },
-    note: 'Left-half scrim so the wordmark can be set on glass in post.',
-  },
+  // ---- A — the brand identity slots ---------------------------------------
+  //
+  // The app icon, the launch image and the share card used to live here, fed
+  // by one-off generations dropped in `inbox/`. They do not any more: they are
+  // derived from the committed masters in `masters/` by `icons.mjs`, together
+  // with every favicon, `.ico` and PWA icon in the repo, so that the identity
+  // has exactly one source and re-deriving it is a command rather than an
+  // export session. See `tools/brand/README.md` § "Two pipelines, one brand".
+  //
+  // This file keeps what it was always best at: the *generated* game art
+  // below, where each destination is one download that will never be made
+  // twice.
 
   // ---- B — high player-visible --------------------------------------------
   {
@@ -268,6 +226,58 @@ export const ASSETS = [
     alpha: true,
     fit: 'contain',
     note: 'Contain keeps the left and right edge columns transparent so the sweep can translate off-screen.',
+  },
+
+  // ---- E — brand art inside the game ---------------------------------------
+  //
+  // The crest and the lockup, cut out of the same masters the app icon comes
+  // from, so the mark a player sees on the splash is the mark on their home
+  // screen. Like everything else here these are overrides: every surface that
+  // uses one draws without it too.
+  {
+    id: 'E1',
+    name: 'Crest — isolated',
+    dest: 'apps/game/public/art/emblems/crest.webp',
+    format: 'webp',
+    width: 560,
+    height: 678,
+    budgetKB: 90,
+    alpha: true,
+    fit: 'contain',
+    note: 'The master already carries alpha. Contain, because a clipped shield edge is the one thing that would look broken.',
+  },
+  {
+    id: 'E2',
+    name: 'Crest — arena plate',
+    dest: 'apps/game/public/art/heroes/crest-arena.webp',
+    format: 'webp',
+    width: 1440,
+    height: 810,
+    budgetKB: 140,
+    alpha: false,
+    fit: 'cover',
+    flatten: '#050607',
+    note: 'Landscape backdrop behind the crest on hero surfaces. Full-bleed, so it crops.',
+  },
+  {
+    id: 'E3',
+    name: 'Wordmark lockup',
+    dest: 'apps/game/public/art/brand/wordmark.webp',
+    format: 'webp',
+    width: 1024,
+    height: 410,
+    budgetKB: 70,
+    alpha: false,
+    fit: 'contain',
+    flatten: '#000000',
+    note: [
+      'Crest and wordmark set together, on black rather than on alpha.',
+      'Keying this one costs twice: the glow around the lockup *is* the artwork,',
+      'so a key either eats it or leaves a halo, and the ragged alpha channel it',
+      'produces is encoded losslessly and blows the budget on its own. Composited',
+      'with `screen` over the product\'s graphite ground, black is transparent and',
+      'the glow survives intact. The 2.5:1 box is the master\'s own aspect.',
+    ].join(' '),
   },
 ];
 

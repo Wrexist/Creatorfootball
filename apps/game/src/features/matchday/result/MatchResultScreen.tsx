@@ -20,6 +20,7 @@ import { minuteLabel, one, stateOfPlay } from '../shared/format';
 import { AnalyticsTab } from './AnalyticsTab';
 import { concernRoute } from './concernRoute';
 import { masteryLines } from './mastery';
+import { humanise } from '@/design/text';
 
 /**
  * The post-match sequence.
@@ -360,7 +361,7 @@ function KeyMomentStage({ result, home, away, playerIsHome, state }: StageProps)
 
   return (
     <>
-      <SectionHeader title="The moment" subtitle={`${minuteLabel(event.minute)} · ${event.type.replace(/_/g, ' ').toLowerCase()}`} />
+      <SectionHeader title="The moment" subtitle={`${minuteLabel(event.minute)} · ${humanise(event.type)}`} />
       <GlassPanel nested level={2} padding="lg" accent={oursDidIt ? 'volt' : 'danger'} className="mt-3">
         <div className="flex items-start gap-3">
           {player && <PlayerPortrait seed={player.portraitSeed} size={56} colors={kit} shape="squircle" />}
@@ -563,7 +564,7 @@ function FansStage({ state, before }: StageProps): ReactNode {
                   ? 'That did not go down well.'
                   : 'The mood is much as it was.'}
             </p>
-            <p className="text-[13px] text-ink-muted">{club.fanCulture.replace(/_/g, ' ').toLowerCase()} support</p>
+            <p className="text-[13px] text-ink-muted">{humanise(club.fanCulture)} support</p>
           </div>
           <TrendIndicator delta={sentimentDelta} size="md" />
         </div>

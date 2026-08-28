@@ -7,9 +7,9 @@ import {
   type TacticSetup, type TacticVector,
 } from '@cf/engine';
 import {
-  Divider, EmptyState, FitText, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
-  KeyValueRow, NameText, PlayerPortrait, PositionChip, RatingBadge, Screen, SectionHeader, cn,
-  sidesWord,
+  ConditionRing, Divider, EmptyState, FitText, GlassButton, GlassPanel, GlassPill, GlassSegmented,
+  GlassSheet, KeyValueRow, NameText, PlayerPortrait, PositionChip, RatingBadge, Screen,
+  SectionHeader, cn, conditionLabel, haptics, sidesWord, useToast,
   IconCheck, IconInjury, IconStar, IconSwap, IconTactics, IconWarning,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
@@ -38,31 +38,97 @@ import { SETTINGS, VECTOR_TERMS, type SettingKey } from './tacticsCopy';
 
 type Selection = { kind: 'slot'; slotId: string } | { kind: 'bench'; playerId: PlayerId } | null;
 
+/**
+ * Drop-target id for the bench panel.
+ *
+ * Slot ids come from the formation, so this needs to be something no formation
+ * can mint. The double underscore is the whole guard, and it is enough: slot
+ * ids are `gk`, `dl`, `mc` and friends.
+ */
+const BENCH_TARGET = '__bench';
+
+/**
+ * Distance from a token's top edge to the centre of its portrait, in px.
+ *
+ * Tokens are anchored by their *portrait*, not by their bounding box. A box
+ * centred on the slot puts the face above where the player actually is and the
+ * name below it, and the error grows with every row of the token — which is how
+ * the goalkeeper ended up standing on his own six-yard line with his name
+ * sliced off by the touchline.
+ *
+ * The value is the button's top padding plus half the condition ring. Both are
+ * fixed by the token's own layout, so this is a constant rather than a
+ * measurement.
+ */
+const PORTRAIT_ANCHOR = 4 + 21;
+
 interface DragState {
   readonly source: Exclude<Selection, null>;
   readonly node: HTMLElement;
   readonly startX: number;
   readonly startY: number;
+  /** The scrolling ancestor, so a drag can reach past the fold. */
+  readonly scroller: HTMLElement | null;
+  /** Where that ancestor was scrolled to when the drag began. */
+  readonly startScrollTop: number;
+  /** Last pointer position, in client coordinates. Drives the edge scroll. */
+  clientX: number;
+  clientY: number;
+  /** Handle for the auto-scroll loop, so it can be stopped on release. */
+  frame: number;
   moved: boolean;
 }
+
+/** How close to an edge the finger has to be before the list starts moving. */
+const SCROLL_EDGE = 72;
+/** Fastest auto-scroll, in px per frame, reached at the very edge. */
+const SCROLL_SPEED = 14;
 
 /* --- the token ------------------------------------------------------- */
 
 interface TokenProps {
   player: Player | undefined;
+  /** The pitch slot this token sits in. Absent for a bench token. */
   slot?: FormationSlot;
   selected: boolean;
+  /** Set on anything a dragged token may be dropped onto. */
   dropTarget?: string;
+  /** Lit while a drag is hovering this target. */
+  dropActive?: boolean;
+  /** Dimmed while it is the token being dragged. */
+  lifted?: boolean;
   colors: { primary: string; secondary: string };
   label: string;
   onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
   onClick: () => void;
 }
 
+/**
+ * One player on the team sheet.
+ *
+ * Three things have to be legible at 72px wide, and only one of them used to
+ * be: **who** (the portrait and surname), **where** (the position this slot is,
+ * and whether this player actually plays there) and **how fit** (whether they
+ * can be asked to do it for ninety minutes).
+ *
+ * Position was the gap. It was drawn only on *empty* slots, so the moment a
+ * slot was filled the pitch stopped saying what any of its shapes meant — you
+ * could see eleven faces and not one position, and the only way to find out
+ * that your striker was in goal was to read a warning sentence above the pitch.
+ * The chip is now always there, and it turns red when the player in the slot
+ * does not belong in it, which is the same fact the warning states in words.
+ */
 const Token = memo(function Token({
-  player, slot, selected, dropTarget, colors, label, onPointerDown, onClick,
+  player, slot, selected, dropTarget, dropActive = false, lifted = false,
+  colors, label, onPointerDown, onClick,
 }: TokenProps): ReactNode {
+  // On the pitch a token shows the *slot's* position, because that is the
+  // question ("what is this shape?"). On the bench there is no slot, so it
+  // shows the player's own, which is the question there ("what is he?").
+  const position = slot?.position ?? player?.position;
   const fit = player && slot ? familiarity(player.position, slot.position) : 1;
+  const available = player ? isAvailable(player) : true;
+
   return (
     <button
       type="button"
@@ -72,30 +138,49 @@ const Token = memo(function Token({
       aria-label={label}
       aria-pressed={selected}
       className={cn(
-        'flex min-h-11 w-full touch-none select-none flex-col items-center gap-1 rounded-md px-1 py-1.5',
-        'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
+        'flex min-h-11 w-full touch-none select-none flex-col items-center gap-1 rounded-md px-1 pb-1.5 pt-1',
+        'outline-none transition-[background-color,box-shadow] duration-[var(--duration-fast)] ease-out-quint',
+        'focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
         selected && 'bg-volt/16 ring-2 ring-volt',
+        // A drop target has to answer "will it land here?" while a finger is
+        // still over it — after the release is too late to be feedback.
+        dropActive && !selected && 'bg-volt/10 ring-2 ring-volt/70',
+        lifted && 'opacity-40',
       )}
     >
       {player ? (
         <>
           <span className="relative">
-            <PlayerPortrait seed={player.portraitSeed} size={34} shape="circle" colors={colors} />
-            {!isAvailable(player) && (
-              <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-pill bg-danger text-ink [&_svg]:size-2.5">
+            <ConditionRing
+              fitness={player.fitness}
+              size={42}
+              unavailable={!available}
+            >
+              <PlayerPortrait seed={player.portraitSeed} size={34} shape="circle" colors={colors} />
+            </ConditionRing>
+            {!available && (
+              <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-pill bg-danger text-ink [&_svg]:size-2.5">
                 <IconInjury />
               </span>
             )}
-            {fit < 1 && (
-              <span
-                className={cn(
-                  'absolute -bottom-0.5 -left-1 size-2.5 rounded-pill border border-base',
-                  fit >= 0.7 ? 'bg-warning' : 'bg-danger',
-                )}
-                aria-hidden="true"
-              />
-            )}
           </span>
+
+          {position && (
+            <PositionChip
+              position={position}
+              size="xs"
+              outOfPosition={fit < 1}
+              className={cn(
+                '-mt-1.5 relative z-1',
+                // Out of position is a fact about the *team sheet*, not about
+                // the player, so it is stated where the sheet is read rather
+                // than only in a sentence above it.
+                fit < 0.6 && 'border-danger/70 bg-danger/20 text-ink',
+                fit >= 0.6 && fit < 1 && 'border-warning/60 bg-warning/15 text-ink',
+              )}
+            />
+          )}
+
           {/* The slot is 60-odd pixels wide and a surname is content, so it is
               fitted rather than cut: it shrinks to the type floor, then falls
               back to the first part of a double-barrelled name. */}
@@ -108,14 +193,18 @@ const Token = memo(function Token({
           >
             {player.lastName}
           </FitText>
-          <span className="tnum text-[10px] font-bold leading-none text-volt">{player.overall}</span>
+          <span className="tnum text-micro font-bold leading-none text-volt">{player.overall}</span>
         </>
       ) : (
         <>
-          <span className="flex size-[34px] items-center justify-center rounded-pill border border-dashed border-white/25 text-ink-dim [&_svg]:size-4">
+          <span className="flex size-[42px] items-center justify-center rounded-pill border border-dashed border-white/25 text-ink-dim [&_svg]:size-4">
             <IconStar />
           </span>
-          <span className="text-[10px] uppercase tracking-[0.1em] text-ink-dim">{slot?.position ?? 'Empty'}</span>
+          {position ? (
+            <PositionChip position={position} size="xs" className="-mt-1.5 relative z-1" />
+          ) : (
+            <span className="text-micro uppercase tracking-[0.1em] text-ink-dim">Empty</span>
+          )}
         </>
       )}
     </button>
@@ -147,6 +236,16 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   const [shapeSize, setShapeSize] = useState<'7' | '11'>('7');
   const [duty, setDuty] = useState<null | 'captainId' | 'penaltyTakerId' | 'setPieceTakerId'>(null);
   const drag = useRef<DragState | null>(null);
+  const toast = useToast();
+  // The last auto-pick toast, so a second press replaces its undo rather than
+  // stacking a second one. Two undos on screen at once, each rewinding to a
+  // different team, is a worse offer than none.
+  const lastPickToast = useRef<number | null>(null);
+  // Mirrored into state so the tokens can react to the drag. The ref is what
+  // the pointer handlers read (they run outside React and must not go stale);
+  // these two are what the pitch renders from.
+  const [dragging, setDragging] = useState<Exclude<Selection, null> | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   const data = useMemo(() => {
     const club = playerClub(state);
@@ -262,31 +361,119 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
     });
   }, [tactics, setTactics]);
 
-  const commitDrop = useCallback((source: Exclude<Selection, null>, slotId: string) => {
-    if (source.kind === 'slot') {
-      if (source.slotId === slotId) return;
-      const a = tactics.lineup[source.slotId] ?? null;
-      const b = tactics.lineup[slotId] ?? null;
-      setTactics({ lineup: { ...tactics.lineup, [source.slotId]: b, [slotId]: a } });
+  /** Take a player out of the side and name them on the bench instead. */
+  const benchPlayer = useCallback((slotId: string) => {
+    const outgoing = tactics.lineup[slotId] ?? null;
+    if (!outgoing) return;
+    setTactics({
+      lineup: { ...tactics.lineup, [slotId]: null },
+      bench: [outgoing, ...tactics.bench.filter((id) => id !== outgoing)],
+    });
+  }, [tactics, setTactics]);
+
+  const commitDrop = useCallback((source: Exclude<Selection, null>, target: string) => {
+    // Dropping onto the bench is the move that was missing. Every other
+    // arrangement could be made by dragging, but taking a player *out* of the
+    // side could only be done by dragging somebody else on top of them — so a
+    // ten-man shape was unreachable by the gesture the screen teaches.
+    if (target === BENCH_TARGET) {
+      if (source.kind === 'slot') benchPlayer(source.slotId);
       return;
     }
-    place(slotId, source.playerId);
-  }, [tactics, setTactics, place]);
+    if (source.kind === 'slot') {
+      if (source.slotId === target) return;
+      const a = tactics.lineup[source.slotId] ?? null;
+      const b = tactics.lineup[target] ?? null;
+      setTactics({ lineup: { ...tactics.lineup, [source.slotId]: b, [target]: a } });
+      return;
+    }
+    place(target, source.playerId);
+  }, [tactics, setTactics, place, benchPlayer]);
 
   /**
    * Pointer-event drag. Raw rather than a gesture library so the token can opt
    * out of hit-testing itself (`pointer-events: none` while lifted) and the
-   * drop target is simply whatever is under the finger when it lifts.
+   * drop target is simply whatever is under the finger.
+   *
+   * The target is now resolved on every move rather than only on release, which
+   * is what lets the pitch light the slot a finger is over. Without it the
+   * gesture is a leap of faith: you let go and find out, and the undo for a
+   * wrong drop is another drag.
    */
   const startDrag = useCallback((event: React.PointerEvent<HTMLElement>, source: Exclude<Selection, null>) => {
     if (event.button !== 0 && event.pointerType === 'mouse') return;
     const node = event.currentTarget;
-    const record: DragState = { source, node, startX: event.clientX, startY: event.clientY, moved: false };
+    const scroller = node.closest<HTMLElement>('.scroll-y');
+    const record: DragState = {
+      source,
+      node,
+      startX: event.clientX,
+      startY: event.clientY,
+      scroller,
+      startScrollTop: scroller?.scrollTop ?? 0,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      frame: 0,
+      moved: false,
+    };
     drag.current = record;
+
+    const targetUnder = (x: number, y: number): string | null => {
+      const element = document.elementFromPoint(x, y);
+      return element?.closest<HTMLElement>('[data-drop-slot]')?.dataset['dropSlot'] ?? null;
+    };
+
+    /**
+     * Follow the finger, in content coordinates.
+     *
+     * The scroll offset is part of the sum because the list moves underneath a
+     * held token: the token's own origin scrolls with the content, so tracking
+     * the pointer alone would leave it sliding away from the finger by exactly
+     * the distance scrolled.
+     */
+    const paint = (current: DragState): void => {
+      const scrolled = (current.scroller?.scrollTop ?? 0) - current.startScrollTop;
+      const dx = current.clientX - current.startX;
+      const dy = current.clientY - current.startY + scrolled;
+      current.node.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+    };
+
+    /**
+     * Scroll the list when the finger nears its edges.
+     *
+     * Without this the gesture stops at the fold, and on a phone the bench is
+     * always past the fold — so "drag a substitute on" was a gesture the screen
+     * advertised and the layout made impossible. Speed ramps with depth into
+     * the edge band, so a finger parked just inside it creeps and a finger held
+     * at the very edge moves properly.
+     */
+    const step = (): void => {
+      const current = drag.current;
+      if (!current?.moved || !current.scroller) return;
+      const box = current.scroller.getBoundingClientRect();
+      const fromTop = current.clientY - box.top;
+      const fromBottom = box.bottom - current.clientY;
+      let delta = 0;
+      if (fromTop < SCROLL_EDGE) delta = -SCROLL_SPEED * (1 - Math.max(0, fromTop) / SCROLL_EDGE);
+      else if (fromBottom < SCROLL_EDGE) delta = SCROLL_SPEED * (1 - Math.max(0, fromBottom) / SCROLL_EDGE);
+
+      if (delta !== 0) {
+        const before = current.scroller.scrollTop;
+        current.scroller.scrollTop = before + delta;
+        if (current.scroller.scrollTop !== before) {
+          paint(current);
+          const over = targetUnder(current.clientX, current.clientY);
+          setHovered((was) => (was === over ? was : over));
+        }
+      }
+      current.frame = requestAnimationFrame(step);
+    };
 
     const onMove = (move: PointerEvent): void => {
       const current = drag.current;
       if (!current) return;
+      current.clientX = move.clientX;
+      current.clientY = move.clientY;
       const dx = move.clientX - current.startX;
       const dy = move.clientY - current.startY;
       if (!current.moved && Math.hypot(dx, dy) < 6) return;
@@ -294,34 +481,59 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
         current.moved = true;
         current.node.style.pointerEvents = 'none';
         current.node.style.zIndex = '40';
-        current.node.style.opacity = '0.92';
+        // The token is picked up, so it says so: a nudge, the source dims, and
+        // the lifted copy starts following the finger.
+        haptics.selection();
+        setDragging(current.source);
+        current.frame = requestAnimationFrame(step);
       }
-      current.node.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+      paint(current);
+      const over = targetUnder(move.clientX, move.clientY);
+      setHovered((was) => {
+        if (was === over) return was;
+        if (over !== null) haptics.selection();
+        return over;
+      });
     };
 
-    const onUp = (up: PointerEvent): void => {
+    const finish = (current: DragState | null): void => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
-      const current = drag.current;
-      drag.current = null;
+      window.removeEventListener('pointercancel', onCancel);
+      if (current?.frame) cancelAnimationFrame(current.frame);
+      setDragging(null);
+      setHovered(null);
       if (!current) return;
       current.node.style.transform = '';
       current.node.style.pointerEvents = '';
       current.node.style.zIndex = '';
       current.node.style.opacity = '';
-      if (!current.moved) return;
-      const target = document.elementFromPoint(up.clientX, up.clientY);
-      const slotId = target?.closest<HTMLElement>('[data-drop-slot]')?.dataset['dropSlot'];
-      if (slotId) {
-        commitDrop(current.source, slotId);
+    };
+
+    const onUp = (up: PointerEvent): void => {
+      const current = drag.current;
+      drag.current = null;
+      finish(current);
+      if (!current?.moved) return;
+      const target = targetUnder(up.clientX, up.clientY);
+      if (target) {
+        commitDrop(current.source, target);
+        haptics.impact();
         setSelection(null);
       }
     };
 
+    // A cancelled pointer — a system gesture, a call arriving — puts the token
+    // back rather than committing wherever the finger happened to be.
+    const onCancel = (): void => {
+      const current = drag.current;
+      drag.current = null;
+      finish(current);
+    };
+
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    window.addEventListener('pointercancel', onCancel);
   }, [commitDrop]);
 
   const tapSlot = useCallback((slotId: string) => {
@@ -356,8 +568,38 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
     setSelection(null);
   }, [data.squad, setTactics]);
 
+  /**
+   * Pick the strongest available side.
+   *
+   * Two things make this worth pressing rather than merely available.
+   *
+   * It is *undoable*. A button that silently replaces a team somebody spent ten
+   * minutes arranging is a button they learn not to touch — which is a shame,
+   * because the side it picks is provably the best one available. The undo is
+   * what makes it safe to try, and safe to try is what makes it useful.
+   *
+   * And it *says what it did*. "Nothing appeared to happen" and "it agreed with
+   * every choice you had already made" look identical, so the count is the
+   * difference between a button that seems broken and one that just told you
+   * your team was already right.
+   */
   const autoPick = useCallback(() => {
+    const previous: Partial<TacticSetup> = {
+      lineup: tactics.lineup,
+      bench: tactics.bench,
+      captainId: tactics.captainId,
+      setPieceTakerId: tactics.setPieceTakerId,
+      penaltyTakerId: tactics.penaltyTakerId,
+    };
     const suggestion = autoLineup(data.squad, formation);
+
+    // Count the slots that actually changed hands, not the fields that were
+    // reassigned: reordering the bench is not a team change.
+    let changes = 0;
+    for (const slot of formation.slots) {
+      if ((tactics.lineup[slot.id] ?? null) !== (suggestion.lineup[slot.id] ?? null)) changes += 1;
+    }
+
     setTactics({
       lineup: suggestion.lineup,
       bench: suggestion.bench,
@@ -366,7 +608,22 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       penaltyTakerId: suggestion.penaltyTakerId,
     });
     setSelection(null);
-  }, [data.squad, formation, setTactics]);
+    haptics.impact();
+
+    if (lastPickToast.current !== null) toast.dismiss(lastPickToast.current);
+    lastPickToast.current = changes === 0
+      ? toast.show({
+        title: 'That was already your strongest side',
+        description: 'Nothing here to improve for this shape.',
+      })
+      : toast.show({
+        title: `${changes} ${changes === 1 ? 'change' : 'changes'} to your side`,
+        description: `The strongest available ${sidesWord(formation.slots.length)} for this shape. `
+          + 'Fit and rested players first; anyone injured or suspended left out.',
+        action: { label: 'Undo', onPress: () => setTactics(previous) },
+        duration: 8000,
+      });
+  }, [data.squad, formation, tactics, setTactics, toast]);
 
   const shapes = useMemo(
     () => formationsFor(shapeSize === '7' ? 7 : 11),
@@ -463,12 +720,28 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       )}
 
       {/* --- the pitch ------------------------------------------------ */}
-      <div className="relative mx-auto w-full max-w-[420px]">
+      {/*
+        Two layers, and the split is the fix for a real bug: the markings are
+        clipped to the pitch and the tokens are not.
+
+        Tokens are centred on their slot, so a slot near an end line puts half
+        a token past the touchline — which is correct, and which the pitch's own
+        `overflow-hidden` was cutting in half. The goalkeeper lost his name and
+        his rating to it on every formation. Padding the outer box by half a
+        token and letting the tokens draw into that padding gives them the room
+        they were always asking for, while the grass and its lines stay crisply
+        clipped to the rounded rectangle they belong to.
+      */}
+      <div className="relative mx-auto w-full max-w-[420px] px-2 pb-11 pt-2">
         <div
-          className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-white/[0.08]"
+          className="relative aspect-[3/4] w-full rounded-xl border border-white/[0.08]"
           style={{ background: 'linear-gradient(180deg, var(--color-pitch-mid) 0%, var(--color-pitch-deep) 100%)' }}
         >
-          <svg viewBox="0 0 100 133" className="absolute inset-0 size-full" aria-hidden="true">
+          <svg
+            viewBox="0 0 100 133"
+            className="absolute inset-0 size-full overflow-hidden rounded-xl"
+            aria-hidden="true"
+          >
             <g fill="none" stroke="var(--color-pitch-line)" strokeWidth="0.6">
               <rect x="4" y="4" width="92" height="125" rx="2" />
               <line x1="4" y1="66.5" x2="96" y2="66.5" />
@@ -483,20 +756,34 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
           {formation.slots.map((slot) => {
             const playerId = tactics.lineup[slot.id] ?? null;
             const player = playerId ? byId.get(playerId) : undefined;
+            const fit = player ? familiarity(player.position, slot.position) : 1;
             return (
               <div
                 key={slot.id}
-                className="absolute w-[72px] -translate-x-1/2 translate-y-1/2"
-                style={{ left: `${slot.y * 100}%`, bottom: `${slot.x * 100}%` }}
+                className="absolute w-[72px]"
+                style={{
+                  left: `${slot.y * 100}%`,
+                  // Slot x runs back to front, so it is measured from the goal
+                  // line the team is defending.
+                  top: `${(1 - slot.x) * 100}%`,
+                  transform: `translate(-50%, -${PORTRAIT_ANCHOR}px)`,
+                }}
               >
                 <Token
                   player={player}
                   slot={slot}
                   dropTarget={slot.id}
+                  dropActive={hovered === slot.id}
+                  lifted={dragging?.kind === 'slot' && dragging.slotId === slot.id}
                   selected={selection?.kind === 'slot' && selection.slotId === slot.id}
                   colors={colors}
                   label={player
-                    ? `${player.displayName}, ${slot.position}. Tap to select or drag to move.`
+                    ? [
+                      `${player.displayName}, ${slot.position}`,
+                      fit < 1 ? `out of position, ${Math.round(fit * 100)}% familiar` : null,
+                      conditionLabel(player.fitness),
+                      'Tap to select, or drag to move.',
+                    ].filter(Boolean).join('. ')
                     : `Empty ${slot.position} slot. Tap to fill.`}
                   onPointerDown={(event) => startDrag(event, { kind: 'slot', slotId: slot.id })}
                   onClick={() => tapSlot(slot.id)}
@@ -521,27 +808,48 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       {data.bench.length === 0 && data.reserves.length === 0 ? (
         <EmptyState size="sm" title="Nobody left" description="Every fit player is in the starting side." />
       ) : (
-        <GlassPanel padding="sm">
-          <div className="grid grid-cols-4 gap-1 sm:grid-cols-6">
-            {[...data.bench, ...data.reserves].map((player) => (
-              <Token
-                key={player.id}
-                player={player}
-                selected={selection?.kind === 'bench' && selection.playerId === player.id}
-                colors={colors}
-                label={`${player.displayName}, ${player.position}, rated ${player.overall}. Tap to select or drag onto the pitch.`}
-                onPointerDown={(event) => startDrag(event, { kind: 'bench', playerId: player.id })}
-                onClick={() => tapBench(player.id)}
-              />
-            ))}
-          </div>
-        </GlassPanel>
+        // The panel itself is a drop target, so a player can be dragged *off*
+        // the pitch. Without it the gesture only worked in one direction and
+        // the way to drop to ten men was to find it in a menu.
+        <div
+          data-drop-slot={BENCH_TARGET}
+          className={cn(
+            'rounded-lg transition-shadow duration-[var(--duration-fast)] ease-out-quint',
+            hovered === BENCH_TARGET && dragging?.kind === 'slot' && 'ring-2 ring-volt',
+          )}
+        >
+          <GlassPanel padding="sm">
+            {dragging?.kind === 'slot' && (
+              <p className="mb-2 text-center text-[12px] font-semibold text-volt">
+                Drop here to take them off
+              </p>
+            )}
+            <div className="grid grid-cols-4 gap-1 sm:grid-cols-6">
+              {[...data.bench, ...data.reserves].map((player) => (
+                <Token
+                  key={player.id}
+                  player={player}
+                  lifted={dragging?.kind === 'bench' && dragging.playerId === player.id}
+                  selected={selection?.kind === 'bench' && selection.playerId === player.id}
+                  colors={colors}
+                  label={[
+                    `${player.displayName}, ${player.position}, rated ${player.overall}`,
+                    conditionLabel(player.fitness),
+                    'Tap to select, or drag onto the pitch.',
+                  ].join('. ')}
+                  onPointerDown={(event) => startDrag(event, { kind: 'bench', playerId: player.id })}
+                  onClick={() => tapBench(player.id)}
+                />
+              ))}
+            </div>
+          </GlassPanel>
+        </div>
       )}
 
       {/* --- formation ------------------------------------------------ */}
       <SectionHeader
         title="Shape"
-        subtitle="Ids read back to front, keeper implied"
+        subtitle="Defenders, midfielders, then attackers. The keeper is a given."
         action={
           <GlassSegmented
             value={shapeSize}

@@ -110,7 +110,7 @@ const Conversation = memo(function Conversation({
           />
           <span
             aria-hidden="true"
-            className="absolute left-0 top-0 flex size-6 items-center justify-center rounded-pill bg-white/[0.08] text-[9px] font-bold text-ink-dim"
+            className="absolute left-0 top-0 flex size-6 items-center justify-center rounded-pill bg-white/[0.08] text-micro font-bold text-ink-dim"
           >
             {quoted.authorName.charAt(0).toUpperCase()}
           </span>

@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@cf/engine';
 import {
-  GlassButton, GlassCard, GlassPill, HeroScene, IconChevronRight, useConfirm, useDesignMotion,
+  ART_ASSETS, ArtLayer, GlassButton, GlassCard, GlassPill, HeroScene, IconChevronRight,
+  NameText, useArtAsset, useConfirm, useDesignMotion,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -29,6 +30,10 @@ function relativeTime(from: number, now: number): string {
 
 export function TitleScreen(): ReactNode {
   const m = useDesignMotion();
+  // E1 is an override on the drawn mark, not a replacement: `BrandMark` stays
+  // mounted underneath and is what shows until the plate has decoded, and
+  // forever if it never does.
+  const crest = useArtAsset(ART_ASSETS.crest);
   const navigate = useNavigate();
   const confirm = useConfirm();
   const meta = useGameStore((s) => s.meta);
@@ -65,6 +70,23 @@ export function TitleScreen(): ReactNode {
           below a hole where a picture should be. */}
       <HeroScene variant="title" seed="creator-football" />
 
+      {/* E2 over the drawn scene rather than instead of it, and mixed *low*.
+          The plate is the crest lit in an arena, which is the same mark as the
+          badge below and the same words as the headline — at any strength
+          where you can read it as a logo it is the third statement of one
+          thing and it swamps the type it sits behind. At 12% it stops being a
+          logo and becomes what it is useful for: lit depth above the fold,
+          with `HeroScene` still establishing the ground and the contrast. */}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[46%] overflow-hidden">
+        <ArtLayer src={ART_ASSETS.crestArena} opacity={0.12} blend="screen" fade={0.8} />
+        {/* The plate carries no scrim of its own and the headline crosses its
+            lower half, so the fade to the ground happens here. */}
+        <span
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to bottom, transparent 8%, var(--color-base) 92%)' }}
+        />
+      </span>
+
       <div
         className="scroll-y relative flex flex-1 flex-col justify-between px-6 pb-[calc(var(--safe-bottom)+28px)] pt-[calc(var(--safe-top)+40px)]"
       >
@@ -74,7 +96,15 @@ export function TitleScreen(): ReactNode {
           animate="visible"
           className="flex flex-col items-start gap-6"
         >
-          <BrandMark size={56} className="text-ink" />
+          <span className="relative block h-14 w-14">
+            {/* Once the plate is up these are the same silhouette twice, so the
+                drawn one steps aside rather than doubling it. It is still what
+                holds the space, and what stays if the plate never arrives. */}
+            <span style={{ opacity: crest === 'ready' ? 0 : 1, transition: 'opacity 0.5s ease-out' }}>
+              <BrandMark size={56} className="text-ink" />
+            </span>
+            <ArtLayer src={ART_ASSETS.crest} blend="normal" fade={0.5} className="object-contain" />
+          </span>
           <div>
             <h1
               ref={headingRef}
@@ -107,9 +137,16 @@ export function TitleScreen(): ReactNode {
                 <div className="flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-volt">Continue</p>
-                    <p className="mt-1 truncate font-display text-[22px] font-bold tracking-[-0.03em] text-ink">
-                      {meta.clubName}
-                    </p>
+                    {/* The name of the club they came back for. It shares this
+                        row with a chevron and a date, so it is fitted — cutting
+                        it here would put an ellipsis on the single most
+                        important word on the screen. */}
+                    <NameText
+                      name={meta.clubName}
+                      role="title"
+                      lines={1}
+                      className="mt-1 font-display font-bold tracking-[-0.03em] text-ink"
+                    />
                     <p className="tnum mt-1 text-[13px] text-ink-muted">
                       Season {meta.season} · Week {meta.week} · {meta.managerName}
                     </p>

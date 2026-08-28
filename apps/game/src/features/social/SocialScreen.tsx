@@ -10,7 +10,7 @@ import {
 import {
   Divider, EmptyState, GlassButton, GlassIcon, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
   IconBall, IconBell, IconFans, IconSocial, IconWarning, IconWhistle, KeyValueRow, ListRow,
-  NameText, Screen, SectionHeader, StatBlock, Text, cn, formatCount, useToast,
+  NameText, Screen, SectionHeader, StatBlock, Text, cn, entityKindLabel, formatCount, useToast,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
@@ -454,7 +454,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
                         density="compact"
                         divided={false}
                         title={entity.name}
-                        subtitle={entity.kind}
+                        subtitle={entityKindLabel(entity.kind)}
                         chevron
                         onPress={() => {
                           setOpenEventFor(null);
@@ -462,7 +462,7 @@ function SocialView({ state }: { state: GameState }): ReactNode {
                         }}
                       />
                     ) : (
-                      <KeyValueRow label={entity.name} value={entity.kind} divided={false} />
+                      <KeyValueRow label={entity.name} value={entityKindLabel(entity.kind)} divided={false} />
                     )}
                   </li>
                 );

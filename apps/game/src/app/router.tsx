@@ -42,10 +42,21 @@ const SquadIntroScreen = lazy(async () => ({
   default: (await import('@/features/creation')).SquadIntroScreen,
 }));
 
-/* The gallery is a development surface and the one deliberate exception to
-   "import only from @/design": it is not part of the kit's public barrel, and
-   it must never be pulled into a player-facing chunk. */
-const Gallery = lazy(async () => ({ default: (await import('@/design/Gallery')).Gallery }));
+/*
+   The gallery is a development surface and the one deliberate exception to
+   "import only from @/design": it is not part of the kit's public barrel.
+
+   The `import.meta.env.DEV` guard is on the `lazy` call rather than only on the
+   route, and that placement is the whole point. Vite replaces the constant at
+   build time, so a guard around the *route* leaves `false && <Route/>` — dead
+   code Rollup happily drops — while the `lazy(() => import(...))` above it is
+   still evaluated at module scope, the dynamic import is still reachable, and
+   the 60kB chunk is still emitted into a shipped app. Guarding the import is
+   what actually removes it.
+*/
+const Gallery = import.meta.env.DEV
+  ? lazy(async () => ({ default: (await import('@/design/Gallery')).Gallery }))
+  : null;
 
 /**
  * Shown while a route's chunk is in flight. It mirrors the shape of a `Screen`
@@ -263,15 +274,40 @@ export function AppRoutes({ location }: { location: Location }): ReactNode {
 
         <Route path={ROUTES.objectives} element={<ObjectivesScreen />} />
         <Route path={ROUTES.rewards} element={<RewardsScreen />} />
-        <Route path={ROUTES.store} element={<StoreScreen />} />
+        {/*
+          The storefront is finished and v1.0 does not ship it.
+
+          It prices its offers in real money and its Buy button cannot take
+          money — there is no in-app purchase configured for this release, as
+          `fastlane/Deliverfile` says in as many words. A store that shows
+          "£4.99" and answers a tap with "checkout is not available yet" is
+          placeholder content in a paid-content surface, which is guideline 2.1
+          and one of the most commonly cited rejections there is. Nothing links
+          here today, so the screen is already unreachable in the app — but
+          unreachable is not the same as absent, and this is the difference
+          between a reviewer not finding it and it not being there.
+
+          Un-gate this in the release that configures IAP; the screen itself
+          needs no changes.
+        */}
+        {import.meta.env.DEV && <Route path={ROUTES.store} element={<StoreScreen />} />}
         <Route path={ROUTES.contentPacks} element={<ContentPacksScreen />} />
         <Route path={ROUTES.settings} element={<SettingsScreen />} />
       </Route>
 
-      <Route path={ROUTES.gallery} element={<Gallery />} />
-      {/* `/design` is the name people say out loud; the route table's canonical
-          path is `/dev/gallery`, so this is an alias rather than a second entry. */}
-      <Route path="/design" element={<Navigate to={ROUTES.gallery} replace />} />
+      {/* Development only, and gated on a build-time constant so the whole
+          gallery — its chunk, its fixtures and every component it demonstrates
+          in isolation — is dropped from a release build rather than merely
+          being hard to reach. A design surface shipping inside a submitted app
+          is 60kB nobody downloads on purpose and one more thing a reviewer can
+          find. `/design` is the name people say out loud; `/dev/gallery` is the
+          route table's canonical path, so that one is an alias. */}
+      {Gallery && (
+        <>
+          <Route path={ROUTES.gallery} element={<Gallery />} />
+          <Route path="/design" element={<Navigate to={ROUTES.gallery} replace />} />
+        </>
+      )}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

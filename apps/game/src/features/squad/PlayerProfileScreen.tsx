@@ -19,7 +19,7 @@ import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
 import { playerArc } from './arc';
-import { sentenceCase } from '@/design/text';
+import { humanise, sentenceCase } from '@/design/text';
 import { canOfferRenewal, offerRenewal, presentRenewal } from './renewal';
 
 /**
@@ -578,7 +578,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
         open={trait !== null}
         onClose={() => setTrait(null)}
         title={trait?.name ?? ''}
-        subtitle={trait ? `${trait.kind} trait` : undefined}
+        subtitle={trait ? sentenceCase(`${humanise(trait.kind)} trait`) : undefined}
       >
         {trait && (
           <div className="flex flex-col gap-3">
@@ -607,7 +607,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
             </GlassPanel>
             {trait.conditions && trait.conditions.length > 0 && (
               <Text role="caption" as="p" className="text-pretty">
-                Only applies {trait.conditions.map((c) => c.replace(/_/g, ' ').toLowerCase()).join(' or ')} — the rest
+                Only applies {trait.conditions.map(humanise).join(' or ')} — the rest
                 of the time it does nothing at all.
               </Text>
             )}

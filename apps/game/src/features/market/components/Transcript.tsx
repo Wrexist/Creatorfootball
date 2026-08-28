@@ -45,7 +45,7 @@ const Beat = memo(function Beat({
       <span
         aria-hidden="true"
         className={cn(
-          'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-pill text-[10px] font-bold',
+          'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-pill text-micro font-bold',
           ours ? 'bg-volt/20 text-volt' : 'bg-white/[0.08] text-ink-muted',
         )}
       >

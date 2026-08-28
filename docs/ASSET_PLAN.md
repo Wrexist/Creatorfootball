@@ -45,12 +45,12 @@ side off the same call sites.
 
 | Asset | Spec → destination | Notes |
 |---|---|---|
-| Final app icon master | SVG master + PNG 1024² → xcassets `AppIcon` | Polish the existing volt-ball mark; verify legibility at 40–60px |
-| Splash final | PNG 2732² (+ dark variant) → replace 3 identical Splash copies | Mark + wordmark on `#08090B` |
+| ~~Final app icon master~~ **DONE** | `tools/brand/masters/app-icon.png` → xcassets `AppIcon` 1024², PWA 192/512, maskable 512, apple-touch 180 | The CF crest, lit in an arena. Derived by `pnpm assets:icons`, never hand-exported. Palette-encoded: 358 KB at 1024² |
+| ~~Splash final~~ **DONE** | `tools/brand/masters/splash.png` → all three Splash imageset copies, 2732² | Crest + wordmark on `#08090B`, written by `pnpm assets:icons`. The web splash shows the same lockup (`art/brand/wordmark.webp`), so the native-to-webview hand-off is invisible |
 | Store screenshots ×8 (+3 iPad optional) | PNG 1290×2796 → App Store Connect | Conversion-ranked per APP_STORE.md §5: decision sheet, home, market, pitch, feed, table, squad, club identity. Needs staged game states |
-| ~~Web favicon set~~ **DONE (except `.ico`)** | `favicon.svg` + `icon-192.png` + `apple-touch-icon.png` 180² → `website/` | Volt-ball mark redrawn as vector to match the iOS AppIcon (four seams, one sheen, graphite ground); PNGs rasterised from `icon.html` via headless Chromium. A `.ico` is still outstanding and only matters for legacy Windows browsers |
-| ~~Social share card~~ **DONE** | 1200×630 JPEG → `website/og-image.jpg`, ~50 KB | Stadium-at-dusk composition on `#08090B` with the wordmark on glass and one volt rail; drawn as HTML/SVG and rasterised. `og:image`/`twitter:image` (+ dimensions and alt) now on all four pages, alongside the new favicon links |
-| ASC marketing icon | PNG 1024² | Same master as app icon |
+| ~~Web favicon set~~ **DONE** | `favicon.svg` + `favicon.ico` (16/32/48) + `icon-192.png` + `apple-touch-icon.png` → `website/`, and the same set plus `manifest.webmanifest` → `apps/game/public/` | The flat CF mark, traced to a single SVG path from `masters/mark-mono.png` (`pnpm assets:trace-mark`) so it stays a shape at 16 px; the larger slots come from the 3D icon master. The `.ico` that was outstanding now ships |
+| ~~Social share card~~ **DONE** | 1200×630 JPEG → `website/og-image.jpg`, 131 KB | The painted lockup over a floodlit stadium, from `masters/share-card.png`. It carries its own wordmark, so it takes no scrim. `og:image`/`twitter:image` (+ dimensions and alt) on all pages |
+| ~~ASC marketing icon~~ **DONE** | PNG 1024² | The same `AppIcon-512@2x.png` the catalogue carries — one master, one command |
 
 ## 3. P1 — high player-visible (~55–90 items)
 

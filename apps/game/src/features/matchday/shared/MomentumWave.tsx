@@ -99,7 +99,7 @@ export const MomentumWave = memo(function MomentumWave({
           />
         ))}
       </svg>
-      <figcaption className="mt-1 flex justify-between text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+      <figcaption className="mt-1 flex justify-between text-micro font-semibold uppercase tracking-[0.14em] text-ink-dim">
         <span>{homeLabel}</span>
         <span>{awayLabel}</span>
       </figcaption>

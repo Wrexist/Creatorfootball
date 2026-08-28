@@ -230,13 +230,13 @@ function RailButton({
       )}
     >
       {icon}
-      <span className="text-[10px] font-bold uppercase tracking-[0.06em] leading-none">
+      <span className="text-micro font-bold uppercase tracking-[0.06em] leading-none">
         {label}
       </span>
       {badge !== undefined && badge > 0 && (
         <span
           className={cn(
-            'tnum absolute right-1 top-1 min-w-4 rounded-pill px-1 text-[9px] font-bold leading-4',
+            'tnum absolute right-1 top-1 min-w-4 rounded-pill px-1 text-micro font-bold leading-4',
             primary ? 'bg-volt-ink text-volt' : 'bg-white/16 text-ink',
           )}
         >

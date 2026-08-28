@@ -78,7 +78,7 @@ export interface FitTextProps {
   style?: CSSProperties;
 }
 
-interface Fitted {
+export interface Fitted {
   readonly text: string;
   readonly size: number;
   readonly wrap: boolean;
@@ -91,6 +91,94 @@ interface Fitted {
 }
 
 const SEP = '\u001F';
+
+/** Widest single word in `text`, using the caller's measuring function. */
+function longestWordWidth(text: string, widthAt: (t: string) => number): number {
+  let widest = 0;
+  for (const word of text.split(/\s+/)) {
+    if (word.length === 0) continue;
+    const width = widthAt(word);
+    if (width > widest) widest = width;
+  }
+  return widest;
+}
+
+export interface FitInputs {
+  /** Width of the slot, in px. */
+  readonly available: number;
+  /** Line budget. 1 forbids wrapping. */
+  readonly lines: number;
+  /** Smallest acceptable size, in px. */
+  readonly floor: number;
+  /** Largest acceptable size, in px. */
+  readonly ceiling: number;
+  /** Lands a size on the type scale. */
+  readonly quantise: (value: number) => number;
+  /** Width of `text` when set at `reference` px on one line. */
+  readonly widthAt: (text: string) => number;
+  /** Size the widths are measured at. */
+  readonly reference: number;
+}
+
+/**
+ * Pick the candidate, size and wrap mode that fits — the whole decision, with
+ * no DOM in it.
+ *
+ * Candidates outer, strategies inner. A *complete* name that has to wrap is
+ * better than a shortened one that does not, so every strategy is exhausted on
+ * the full string before the short name is considered at all.
+ *
+ * Sizes are compared against the floor BEFORE they are snapped: snapping clamps
+ * to the floor, so a candidate needing 4px would come back as 11px and be
+ * accepted while still overflowing by 140px.
+ *
+ * Returns `null` when nothing fits, which is the caller's cue to fall back to
+ * the shortest candidate at the floor, broken mid-word if it has to be.
+ */
+export function chooseFit(pool: readonly string[], inputs: FitInputs): Fitted | null {
+  const { available, lines, floor, ceiling, quantise, widthAt, reference } = inputs;
+  const RAG_LOSS = 0.86; // ragged right-hand edge; a wrapped line is never full
+
+  for (const candidate of pool) {
+    const naturalAtReference = widthAt(candidate);
+    if (naturalAtReference <= 0) continue;
+
+    const oneLine = ((available - 0.5) / naturalAtReference) * reference;
+    if (oneLine >= floor) {
+      return {
+        text: candidate, size: Math.min(ceiling, quantise(oneLine)),
+        wrap: false, breakAnywhere: false,
+      };
+    }
+
+    // Wrapping needs somewhere to break. A single word has none, so
+    // "Kingsway" moves on to "KWR" instead of becoming "Kings / way".
+    if (lines > 1 && /\s/.test(candidate)) {
+      // Area alone is not enough, and getting this wrong is what put
+      // "Liverpool FC" on top of the scoreline. The line budget says the
+      // *total* text fits in `lines x available`; it says nothing about any one
+      // line. A name whose longest word is wider than the slot at that size
+      // still overflows horizontally — and since these sit in flex rows with no
+      // clipping, the overflow lands on whatever is beside them.
+      //
+      // So the wrapped size is the smaller of two constraints: the area budget,
+      // and the size at which the longest single word still fits on one line.
+      // The second one binds for exactly the names this branch serves — long
+      // ones with one long word in them.
+      const longest = longestWordWidth(candidate, widthAt);
+      const areaFit = ((available * lines * RAG_LOSS) / naturalAtReference) * reference;
+      const wordFit = longest > 0 ? ((available - 0.5) / longest) * reference : areaFit;
+      const wrapped = Math.min(areaFit, wordFit);
+      if (wrapped >= floor) {
+        return {
+          text: candidate, size: Math.min(ceiling, quantise(wrapped)),
+          wrap: true, breakAnywhere: false,
+        };
+      }
+    }
+  }
+  return null;
+}
 
 export function FitText({
   children,
@@ -151,43 +239,20 @@ export function FitText({
     node.style.whiteSpace = 'nowrap';
     node.style.fontSize = `${REFERENCE}px`;
 
-    let result: Fitted | null = null;
-
-    // Candidates outer, strategies inner. A *complete* name that has to wrap is
-    // better than a shortened one that does not, so every strategy is exhausted
-    // on the full string before the short name is considered at all.
-    //
-    // The `required` size is compared against the floor BEFORE it is snapped:
-    // snapping clamps to the floor, so a candidate needing 4px would come back
-    // as 11px and be accepted while still overflowing by 140px.
-    const RAG_LOSS = 0.86; // ragged right-hand edge; a wrapped line is never full
-    for (const candidate of pool) {
-      node.textContent = candidate;
-      const naturalAtReference = node.scrollWidth;
-      if (naturalAtReference <= 0) continue;
-
-      const oneLine = ((available - 0.5) / naturalAtReference) * REFERENCE;
-      if (oneLine >= floor) {
-        result = {
-          text: candidate, size: Math.min(ceiling, quantise(oneLine)),
-          wrap: false, breakAnywhere: false,
-        };
-        break;
-      }
-
-      // Wrapping needs somewhere to break. A single word has none, so
-      // "Kingsway" moves on to "KWR" instead of becoming "Kings / way".
-      if (lines > 1 && /\s/.test(candidate)) {
-        const wrapped = ((available * lines * RAG_LOSS) / naturalAtReference) * REFERENCE;
-        if (wrapped >= floor) {
-          result = {
-            text: candidate, size: Math.min(ceiling, quantise(wrapped)),
-            wrap: true, breakAnywhere: false,
-          };
-          break;
-        }
-      }
-    }
+    const result = chooseFit(pool, {
+      available,
+      lines,
+      floor,
+      ceiling,
+      quantise,
+      // One write and one read per measurement, all inside the single reflow
+      // this callback is already holding open.
+      widthAt: (text) => {
+        node.textContent = text;
+        return node.scrollWidth;
+      },
+      reference: REFERENCE,
+    });
 
     node.style.whiteSpace = previousWhiteSpace;
     node.style.fontSize = previousFontSize;

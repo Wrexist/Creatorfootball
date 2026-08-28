@@ -182,7 +182,7 @@ export const PitchView = memo(function PitchView({
 
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute left-2 top-2 rounded-pill bg-void/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-muted"
+        className="pointer-events-none absolute left-2 top-2 rounded-pill bg-void/60 px-2.5 py-1 text-micro font-bold uppercase tracking-[0.16em] text-ink-muted"
       >
         {PHASE_LABEL[phase]}
       </span>
@@ -194,7 +194,7 @@ export const PitchView = memo(function PitchView({
       </p>
 
       {PROFILE && profile !== '' && (
-        <span className="pointer-events-none absolute bottom-2 left-2 rounded-xs bg-void/70 px-1.5 py-0.5 font-mono text-[10px] text-volt">
+        <span className="pointer-events-none absolute bottom-2 left-2 rounded-xs bg-void/70 px-1.5 py-0.5 font-mono text-micro text-volt">
           {profile}
         </span>
       )}

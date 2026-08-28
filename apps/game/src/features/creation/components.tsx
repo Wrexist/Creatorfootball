@@ -50,7 +50,7 @@ export function CreationProgress({ current }: { current: string }): ReactNode {
             />
             <span
               className={cn(
-                'text-[10px] font-semibold uppercase tracking-[0.14em]',
+                'text-micro font-semibold uppercase tracking-[0.14em]',
                 active ? 'text-ink' : 'text-ink-dim',
               )}
               aria-current={active ? 'step' : undefined}

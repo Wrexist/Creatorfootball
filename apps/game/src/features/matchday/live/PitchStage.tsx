@@ -123,7 +123,7 @@ export const PitchStage = memo(function PitchStage({
         overlapping is the most interesting thing on the pitch.
       */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-t border-white/[0.06] px-2">
-        <span className="flex items-center gap-1.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.12em] text-ink">
+        <span className="flex items-center gap-1.5 whitespace-nowrap text-micro font-bold uppercase tracking-[0.12em] text-ink">
           {/* The club's colour is a swatch, never the ink: half the kits in the
               league would fail contrast as text at this size. */}
           <span
@@ -145,7 +145,7 @@ export const PitchStage = memo(function PitchStage({
                 className="block size-1.5 rounded-pill"
                 style={{ background: ours.plate[role] }}
               />
-              <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-dim">
+              <span className="text-micro font-bold uppercase tracking-[0.08em] text-ink-dim">
                 {ROLE_SHORT[role]}
               </span>
             </li>
@@ -158,7 +158,7 @@ export const PitchStage = memo(function PitchStage({
           onClick={() => { haptics.selection(); setLabelMode(nextLabelMode); }}
           className={cn(
             'flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-pill px-2.5',
-            'text-[10px] font-bold uppercase tracking-[0.12em]',
+            'text-micro font-bold uppercase tracking-[0.12em]',
             'outline-none transition-colors duration-[var(--duration-fast)] hover:bg-white/[0.08]',
             'focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
             labelMode === 'NUMBERS' ? 'text-ink-dim' : 'text-volt',
@@ -174,7 +174,7 @@ export const PitchStage = memo(function PitchStage({
           onClick={() => { haptics.selection(); onCamera(next); }}
           className={cn(
             'flex min-h-11 items-center gap-1.5 rounded-pill px-2.5',
-            'text-[10px] font-bold uppercase tracking-[0.12em] text-ink',
+            'text-micro font-bold uppercase tracking-[0.12em] text-ink',
             'outline-none transition-colors duration-[var(--duration-fast)] hover:bg-white/[0.08]',
             'focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
             '[&_svg]:size-3.5 [&_svg]:text-volt',

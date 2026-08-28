@@ -168,8 +168,11 @@ badge, rounded-corner squircle mask, border, frame, gradient mesh, rainbow, lens
 ```
 
 **Post-processing.** Trim to exact square; flatten onto `#08090B` (kill alpha); export 1024² PNG-24;
-`pngquant --quality 88-98` then `oxipng -o4`. Re-derive the 2048² master as an SVG redraw if the
-raster is adopted, so `tools/brand/render.mjs` can keep producing the web PNGs from one source.
+`pngquant --quality 88-98` then `oxipng -o4`.
+
+**Superseded.** A painted icon master now ships at `tools/brand/masters/app-icon.png`, and every
+icon slot in the repo is derived from it by `pnpm assets:icons`. Keep this entry as the spec a
+replacement master has to meet, not as work outstanding.
 
 **Acceptance.** ☐ Silhouette still reads as a ball at 40 px and 60 px. ☐ Exactly one sheen.
 ☐ No legible glyph anywhere. ☐ Corner pixels are `#08090B` ±2. ☐ No alpha channel.
@@ -221,10 +224,13 @@ app flashes on launch. Flatten, export PNG-24, `pngquant --quality 85-96`.
 ### A3 — Social share card / OG banner refresh
 
 **Purpose / where.** `og:image` and `twitter:image` on all four website pages; the first impression
-in every link unfurl. A card already ships, rasterised from `tools/brand/og.html`; this is an
-optional painted upgrade.
-**Destination.** `website/og-image.jpg` (1200×630, JPEG q78, **≤60 KB** — it is fetched by crawlers
-on a cold cache). Keep `tools/brand/og.html` as the fallback master.
+in every link unfurl.
+
+**Superseded.** The painted card ships: `tools/brand/masters/share-card.png` → `website/og-image.jpg`
+via `pnpm assets:icons`. It carries its own lockup, so it takes no scrim. This entry remains the
+spec for a replacement.
+**Destination.** `website/og-image.jpg` (1200×630, JPEG, ≤160 KB — it is fetched by crawlers on a
+cold cache).
 
 ```
 A wide cinematic plate of a fictional football stadium at dusk, seen from high in the stands
@@ -1945,7 +1951,7 @@ committed. ☐ No hummable pitch. ☐ At −26 LUFS it sits below the ambience b
 |---|---|---|
 | **App Store screenshots ×8 (+3 iPad)** | Apple guideline 2.3.1 requires screenshots to show the actual product. A generated or mocked-up screen is a rejection. | Capture the real build at 1290×2796 (and 2064×2752), staged per `APP_STORE.md` §5, ranked: decision sheet, home, market, pitch, feed, table, squad, club identity. |
 | **Anything containing the wordmark, a caption or any typography** | The type stack is system SF Pro; a generator cannot set it, and generated glyphs are always subtly wrong. Every prompt above bans text for this reason. | Generate the plate, then set type in a design tool — on glass, never directly on imagery. |
-| **`favicon.ico`** | It is a multi-resolution container derived from the existing `favicon.svg`, not artwork. | Re-run `tools/brand/render.mjs` against `icon.html` and pack 16/32/48 px into the `.ico`. |
+| **`favicon.ico`** | It is a multi-resolution container derived from the mark, not artwork. | Already handled: `pnpm assets:icons` packs 16/32/48 px PNGs into the `.ico` for both the game and the website. |
 | **Club crests, kits and player portraits** | `ClubBadge`, `kit.ts` and `face.tsx` are seeded generators that must scale to newgens forever. A file cannot cover an unbounded set, and `LICENSING_ARCHITECTURE.md` G7 requires generated identities to come from an original component set. | Extend the generator. Hand-painted plates are only ever an *overlay* on top of it. |
 | **Real creator or footballer likenesses** | `LICENSING_ARCHITECTURE.md` §6.1: no real person, no photo, no caricature, **and no "legally distinct" near-miss**. Licensed identities enter through `RightsMetadata`, never through the art pipeline. | Nothing. Base content is 100% fictional. |
 | **Real stadiums, league marks, sponsor boards, broadcast overlays** | Same section: no recognisable stadium architecture, no real crest, no sponsor mark, no reproduction of a real broadcast graphics package. | The prompts above explicitly ban all of these in their negatives; keep them there. |

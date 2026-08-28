@@ -76,7 +76,7 @@ export const LineupBoard = memo(function LineupBoard({
                 {/* Surnames wrap rather than clip. A board that renders
                     "Alvarss…" is worse than one that renders a name on two
                     lines, and no name in the content packs needs three. */}
-                <span className="w-full break-words rounded-xs bg-void/60 px-1 text-center text-[10px] font-semibold leading-tight text-ink">
+                <span className="w-full break-words rounded-xs bg-void/60 px-1 text-center text-micro font-semibold leading-tight text-ink">
                   {player.displayName.split(' ').slice(-1)[0]}
                 </span>
               </>
@@ -86,7 +86,7 @@ export const LineupBoard = memo(function LineupBoard({
                   className="size-[34px] rounded-pill border border-dashed border-white/25"
                   aria-hidden="true"
                 />
-                <span className="w-full text-center text-[10px] font-semibold text-ink-dim">
+                <span className="w-full text-center text-micro font-semibold text-ink-dim">
                   {slot.position}
                 </span>
               </>
