@@ -195,3 +195,50 @@ pnpm build        pass
 pnpm test:smoke   pass  (6/6, including the IndexedDB migration)
 pnpm audit:all    pass
 ```
+
+
+---
+
+# Addendum — the write race the last pass created
+
+Follow-up to the persistence work above, which moved careers to IndexedDB and
+in doing so removed the accidental ordering guarantee localStorage had provided.
+
+**Predicted risk, not reproducible.** Overlapping `apply()` writes landing out
+of order could not be reproduced.
+
+**Actual bug, reproducible immediately.** Abandoning a career was undone by a
+save already in flight: `abandon()` deleted the save, the app moved to
+`NO_SAVE`, and an unawaited `apply()` persist then wrote the career back. The
+player's next boot loaded the career they had just deleted. Proven with a
+failing test before any fix was written.
+
+Fixed by routing every write through a single-slot queue
+(`apps/game/src/state/saveQueue.ts`): one writer at a time, a backlog coalesced
+to the newest state, and a `cancelAndDrain()` that `abandon()` calls to drop
+queued writes and wait for the in-flight one before deleting.
+
+The queue itself had a lifecycle bug on first write, caught by its own tests: a
+push arriving between the drain loop exiting and the running flag being cleared
+was never started, and the write was silently lost. The flag is now cleared
+inside the loop's own async scope rather than from a `.finally()` on the
+returned promise, because a `.finally()` callback runs *after* the
+continuations of the callers that drain just resolved.
+
+12 tests added — 7 on the queue's contract, 5 driving the real store against
+the real save layer. One fails against the previous code.
+
+## Verification
+
+```
+pnpm typecheck    pass
+pnpm lint         pass  (--max-warnings=0)
+pnpm test         767 engine + 246 app = 1,013, all passing *
+pnpm build        pass
+pnpm test:smoke   pass  (6/6)
+pnpm audit:all    pass
+```
+
+\* On this container the engine runner exits non-zero after all 767 pass, with
+a Vitest reporter RPC timeout. Pre-existing and environmental — it reproduces
+at `HEAD` with no local changes. See `REMAINING_RISKS.md` §9.

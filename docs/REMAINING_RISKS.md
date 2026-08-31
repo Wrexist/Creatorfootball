@@ -27,22 +27,21 @@ Splitting the content packs out requires breaking a module-scope cycle between
 engine modules and content data; a previous attempt shipped a page that died on
 load. Full detail and the prerequisite in PERFORMANCE_NOTES.
 
-## 3. Concurrent `apply()` writes are now genuinely concurrent (medium — RAISED)
+## 3. RESOLVED — concurrent `apply()` writes
 
-This was listed last pass as "low today, dangerous if the adapter changes."
-**The adapter has changed.** Careers now persist to IndexedDB, whose writes
-complete on transaction commit rather than on a microtask, so two overlapping
-`apply()` calls can genuinely land out of order and persist an older state over
-a newer one.
+Listed last pass as raised by the move to IndexedDB. Now fixed, and the
+underlying bug turned out to be worse than the one predicted.
 
-`gameStore.apply()` still fires persistence without awaiting it. The window is
-small — the mutation is synchronous and the second write usually starts after
-the first — but it is no longer closed by the adapter's timing.
+The predicted risk — overlapping writes landing out of order — was **not**
+reproducible. What was reproducible, immediately, was different: abandoning a
+career could be undone by a save already in flight. The delete ran, the app
+showed "no save", and the next boot loaded the career the player had just
+deleted.
 
-**Recommended next step, now the highest-value cheap fix in this list:**
-serialise persistence behind a single-slot queue that coalesces pending writes,
-so the last state always wins and intermediate writes are dropped rather than
-raced. This was cheap before the adapter changed and it is still cheap.
+All writes now go through a single-slot queue (`apps/game/src/state/saveQueue.ts`)
+that serialises them, coalesces a backlog down to the newest state, and lets
+`abandon()` drop queued writes and wait for the in-flight one before deleting.
+Covered by 12 tests, one of which fails against the previous code.
 
 ## 4. Snapshot-compute-apply in the feature engines (low)
 
@@ -111,7 +110,34 @@ IndexedDB migration in a browser. Still missing is the full loop: create a
 career, play a match, reload, assert the world survived. That remains the
 single most valuable test this repository does not have.
 
-## 9. Environment: pinned Chromium mismatch (tooling, not product)
+## 9. `pnpm test` can exit non-zero on a fully green run (tooling, pre-existing)
+
+On a slow or loaded machine the engine suite finishes with all 767 tests
+passing and then fails the process:
+
+```
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+Test Files  59 passed (59)
+Tests  767 passed (767)
+Errors  1 error
+```
+
+This is Vitest's reporter RPC timing out, not a test failing. It appeared when
+this sandbox got slower — the same suite took ~150 s in earlier sessions and
+~232 s now — and **it reproduces at `HEAD` with no local changes**, so it is
+neither new nor caused by the save-queue work. It has not been seen on a
+machine running the suite at its normal speed.
+
+It is left alone deliberately. The obvious workarounds — reducing worker
+concurrency, or a quieter reporter — would slow the suite everywhere to
+accommodate one slow container, and cannot be validated against the project's
+real CI from here.
+
+**Recommended next step:** if this appears in real CI, prefer shortening the
+suite over throttling it. `PERFORMANCE_NOTES.md` names the lever: shard the
+long headless-season tests, which account for most of the 203 s of test time.
+
+## 10. Environment: pinned Chromium mismatch (tooling, not product)
 
 The sandbox provides Chromium build 1194; Playwright 1.62 expects 1234. The
 smoke test fails to launch unless `CHROMIUM_PATH` is set:

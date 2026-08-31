@@ -9,6 +9,7 @@ import {
 } from '@cf/engine';
 import { storage } from '@/platform/storage';
 import { contentRegistry } from '@/state/content';
+import { CANCELLED, createSaveQueue } from './saveQueue';
 
 /**
  * The single bridge between the engine and the interface.
@@ -76,6 +77,13 @@ async function persist(state: GameState): Promise<SaveMeta | null> {
   return result.ok ? result.value : null;
 }
 
+/**
+ * Every write in the app goes through this one queue, so two saves can never
+ * be in flight together and abandoning a career cannot be undone by a save
+ * that was already on its way. See saveQueue.ts.
+ */
+const saveQueue = createSaveQueue(persist, () => null);
+
 export const useGameStore = create<GameStoreState>((set, get) => {
   /**
    * Shared by every write path. `null` means storage rejected the write; the
@@ -83,12 +91,15 @@ export const useGameStore = create<GameStoreState>((set, get) => {
    * make sure the player hears about it.
    */
   const notePersist = async (next: GameState): Promise<SaveMeta | null> => {
-    const meta = await persist(next);
-    if (meta === null) set({ persistFailed: true });
+    const outcome = await saveQueue.push(next);
+    // The write was dropped because the career was abandoned. Nothing failed,
+    // and there is no longer a save for this state to belong to.
+    if (outcome === CANCELLED) return null;
+    if (outcome === null) set({ persistFailed: true });
     // A device can fall back to memory *during* a write, so this is re-read
     // after every save rather than only at boot.
     if (storage.isEphemeral && !get().ephemeralStorage) set({ ephemeralStorage: true });
-    return meta;
+    return outcome;
   };
 
   return {
@@ -234,6 +245,9 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   },
 
   abandon: async () => {
+    // Stop the writers before deleting, or a save already in flight lands on
+    // top of the delete and the "abandoned" career is back on the next boot.
+    await saveQueue.cancelAndDrain();
     await deleteSave(storage);
     set({ phase: 'NO_SAVE', state: null, meta: null, lastCycle: null, error: null });
   },

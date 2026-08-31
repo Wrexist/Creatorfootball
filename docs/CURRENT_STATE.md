@@ -15,14 +15,19 @@ it, on the commit that introduced this file. Nothing is estimated.
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | **59 files, 767 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **22 files, 234 tests, all passing** |
-| **Total** | `pnpm test` | **1,001 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **24 files, 246 tests, all passing** |
+| **Total** | `pnpm test` | **1,013 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **6/6** against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
-Earlier documents state 262, 531, 653 and 753 tests. All four are historical.
+Earlier documents state 262, 531, 653 and 753 tests. All are historical.
 `pnpm test` is the only source of truth.
+
+**Known tooling issue.** On a slow machine `pnpm test` can exit non-zero after
+every test passes, with `[vitest-worker]: Timeout calling "onTaskUpdate"`. That
+is the reporter's RPC timing out, not a test failing. It reproduces at `HEAD`
+with no local changes. See `REMAINING_RISKS.md` §9.
 
 **Environment note.** This sandbox ships Chromium build 1194 while Playwright
 1.62 expects 1234, so the smoke test needs its existing escape hatch:
@@ -79,7 +84,14 @@ the hundreds of megabytes.
 
 `apps/game/src/platform/storage.ts` now layers IndexedDB over the existing
 localStorage adapter over an in-memory fallback, resolving once behind the
-first read. An existing localStorage career is copied across on first boot,
+first read.
+
+Every write goes through a single-slot queue (`state/saveQueue.ts`): writes are
+serialised, a backlog coalesces down to the newest state, and abandoning a
+career drops queued writes and waits for the in-flight one before deleting.
+Without it, abandoning a career could be undone by a save already on its way —
+the delete ran, the app showed "no save", and the next boot loaded the career
+the player had just deleted. An existing localStorage career is copied across on first boot,
 verified, and only then removed to reclaim the space. If any step fails the
 originals are left untouched and the next boot retries. This is covered by a
 real-browser check in `pnpm test:smoke`.

@@ -89,7 +89,9 @@ a ~5 MB localStorage budget, and the backup copy doubles it) over the
 localStorage adapter, over an in-memory map when the browser refuses everything,
 reporting that last case through `isEphemeral`. A career already written to
 localStorage is migrated across on first boot and verified before the originals
-are reclaimed.
+are reclaimed. All writes are serialised through a single-slot queue in
+`state/saveQueue.ts`, so two saves are never in flight together and deleting a
+career cannot be overwritten by one already on its way.
 
 ## Opponent AI
 
@@ -142,7 +144,7 @@ Feature screens are lazily imported and chunked per feature.
 | Suite | Count | Command |
 |---|---|---|
 | Engine unit/integration | 767 | `pnpm --filter @cf/engine test` |
-| App unit | 234 | `pnpm --filter @cf/game test` |
+| App unit | 246 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 6 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 
