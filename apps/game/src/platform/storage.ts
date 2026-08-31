@@ -1,4 +1,6 @@
 import type { StorageAdapter } from '@cf/engine';
+import { SAVE_KEY, BACKUP_KEY, META_KEY } from '@cf/engine';
+import { IdbStorage, idbAvailable } from './idb';
 
 /**
  * Web/native storage adapter.
@@ -71,4 +73,82 @@ export class WebStorage implements StorageAdapter {
   }
 }
 
-export const storage = new WebStorage();
+/** The keys a career lives in. Migrated together or not at all. */
+const SAVE_KEYS = [SAVE_KEY, BACKUP_KEY, META_KEY] as const;
+
+/**
+ * The storage the game actually uses: IndexedDB where it exists, localStorage
+ * where it does not, memory where neither will accept a write.
+ *
+ * Resolved lazily and exactly once. Every method on `StorageAdapter` is already
+ * async, so the whole negotiation — open the database, move an existing
+ * localStorage career across, fall back if any of that fails — hides behind the
+ * first `get`. Callers keep importing one `storage` object and never learn that
+ * any of this happened, which is the reason the adapter interface exists.
+ */
+class LayeredStorage implements StorageAdapter {
+  private readonly web = new WebStorage();
+  private resolved: Promise<StorageAdapter> | null = null;
+  private usingIdb = false;
+
+  /**
+   * True when nothing written will outlive the session. IndexedDB is durable,
+   * so this can only be true once we have fallen back to the web layer and it
+   * has itself fallen back to memory.
+   */
+  get isEphemeral(): boolean {
+    return !this.usingIdb && this.web.isEphemeral;
+  }
+
+  private backend(): Promise<StorageAdapter> {
+    if (!this.resolved) this.resolved = this.choose();
+    return this.resolved;
+  }
+
+  private async choose(): Promise<StorageAdapter> {
+    if (!idbAvailable()) return this.web;
+    const idb = new IdbStorage();
+    try {
+      // Prove the database actually works before committing to it. An open
+      // that succeeds and a transaction that aborts is a real combination in
+      // private browsing, and discovering it on the first save would be far
+      // worse than discovering it now.
+      await idb.set('__cf_probe__', '1');
+      await idb.remove('__cf_probe__');
+      await this.migrateFromWeb(idb);
+      this.usingIdb = true;
+      return idb;
+    } catch {
+      return this.web;
+    }
+  }
+
+  /**
+   * Move a career written before this app used IndexedDB.
+   *
+   * Copy, read back, and only then clear the originals — reclaiming several
+   * megabytes of localStorage that would otherwise stay spent forever. If any
+   * step fails the originals are left exactly as they were, and the next boot
+   * simply tries again.
+   */
+  private async migrateFromWeb(idb: IdbStorage): Promise<void> {
+    if (await idb.get(SAVE_KEY)) return; // Already living in IndexedDB.
+
+    const carried: string[] = [];
+    for (const key of SAVE_KEYS) {
+      const value = await this.web.get(key);
+      if (value === null) continue;
+      await idb.set(key, value);
+      if ((await idb.get(key)) !== value) throw new Error(`Verification failed migrating ${key}`);
+      carried.push(key);
+    }
+    for (const key of carried) await this.web.remove(key);
+  }
+
+  async get(key: string): Promise<string | null> { return (await this.backend()).get(key); }
+  async set(key: string, value: string): Promise<void> { return (await this.backend()).set(key, value); }
+  async remove(key: string): Promise<void> { return (await this.backend()).remove(key); }
+  async keys(): Promise<string[]> { return (await this.backend()).keys(); }
+}
+
+export const storage = new LayeredStorage();

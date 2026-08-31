@@ -12,6 +12,7 @@ import type { Contract } from '../contracts/contract';
 import type { Competition, Fixture, Season } from '../league/types';
 import type { RuleCard } from '../matches/specialRules';
 import type { DecisionTrigger } from '../matches/decisions';
+import type { OpponentModel } from '../simulation/opponentModel';
 
 /**
  * The complete serialisable game state.
@@ -52,6 +53,12 @@ export interface GameState {
   readonly social: SocialState;
   readonly rivalries: Readonly<Record<string, Rivalry>>;
   readonly objectives: ObjectiveState;
+  /**
+   * What the league has observed the player actually do. The AI counters this
+   * rather than reading the player's current tactics sheet, which it has no
+   * business seeing. See simulation/opponentModel.ts.
+   */
+  readonly opponentModel: OpponentModel;
   readonly boardPressure: BoardPressure;
   readonly decisionMemory: DecisionMemory;
   readonly decisionRecord: DecisionRecord;

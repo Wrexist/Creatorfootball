@@ -1,5 +1,10 @@
 # Creator Football — Roadmap
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 Phased implementation plan, mapped to **what exists in this repository today** versus what
 remains. Every phase has an objective gate; a phase is not complete until every criterion
 measurably passes.

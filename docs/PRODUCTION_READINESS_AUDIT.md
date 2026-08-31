@@ -146,3 +146,52 @@ pnpm build        pass
 pnpm test:smoke   pass  (5/5 against the real production bundle)
 pnpm audit:all    pass  (economy, simulation, 9 invariants, save integrity)
 ```
+
+
+---
+
+# Addendum — gameplay and persistence cycle
+
+A later pass against the current-state gameplay brief. Baseline was again fully
+green before any change.
+
+## Fixed
+
+**Persistence outgrew localStorage (P0, measured).** A career's save plateaus
+at ~3.1 MB and the save layer keeps a backup, so a mature career needed ~6.3 MB
+against a ~5 MB budget — careers stopped saving around season five. Trimming was
+measured and rejected (still ~4.7 MB, and it costs the player their financial
+history). Careers now live in IndexedDB, with a verified migration of any
+existing localStorage save. Covered by a real-browser check in `pnpm test:smoke`.
+
+**The opponent AI was cheating (P0).** It read `playerClub.tactics` directly at
+match setup — the player's tactics screen — while its own comment described
+reading what the player "has been playing all month". It is now driven by filed
+observations of matches actually played, gated on a real majority and on the
+opposing manager's adaptability, and surfaced to the player in the match
+preview.
+
+## Tests changed on purpose
+
+Three tests were rewritten because the **specification** changed, not to make a
+run green. Each now asserts the inverse of what it asserted before, with a
+comment saying why:
+
+- `aiClub.test.ts` — "reads the lean from the PLAYER'S setup" became "ignores
+  the player's tactics screen entirely", plus a new test that the counter must
+  be earned over repeated matches.
+- `matchSetup.test.ts` — the counter-lean wiring test now plays the shape before
+  expecting it to be countered, and a new test asserts an unplayed shape is
+  *not* countered.
+- `save.test.ts` — migration chain extended to v6.
+
+## Verification
+
+```
+pnpm typecheck    pass
+pnpm lint         pass  (--max-warnings=0)
+pnpm test         pass  (767 engine + 234 app = 1,001)
+pnpm build        pass
+pnpm test:smoke   pass  (6/6, including the IndexedDB migration)
+pnpm audit:all    pass
+```

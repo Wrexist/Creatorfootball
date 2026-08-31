@@ -70,7 +70,7 @@ separate persistence model — the save *is* the state, wrapped in an envelope:
 { version, savedAt, checksum, state }
 ```
 
-- `SAVE_VERSION` is currently **5**, with a registered migration for every step
+- `SAVE_VERSION` is currently **6**, with a registered migration for every step
   from 1. `save.test.ts` asserts the chain has no holes.
 - Writes are validated before they replace the previous save (`validateState`),
   so an invalid state is refused rather than persisted.
@@ -83,9 +83,25 @@ separate persistence model — the save *is* the state, wrapped in an envelope:
 - Adapter failures are returned, never thrown. See PRODUCTION_READINESS_AUDIT.
 
 Storage is an interface (`StorageAdapter`). `apps/game/src/platform/storage.ts`
-is the only file in the product that knows `localStorage` exists; it degrades to
-an in-memory map when the browser refuses (private mode, quota) and reports that
-through `isEphemeral`.
+is the only file in the product that knows where a save physically lives. It
+layers **IndexedDB** (the default — a plateaued career measures ~3.1 MB against
+a ~5 MB localStorage budget, and the backup copy doubles it) over the
+localStorage adapter, over an in-memory map when the browser refuses everything,
+reporting that last case through `isEphemeral`. A career already written to
+localStorage is migrated across on first boot and verified before the originals
+are reclaimed.
+
+## Opponent AI
+
+An AI club meeting the player leans its tactics against what the league has
+**observed** the player do — never against the player's tactics screen, which
+no opponent can see. Observations are filed once per played match into a
+bounded window on `GameState.opponentModel`; a tendency must be a real majority
+before anyone acts on it, and the confidence needed scales with the opposing
+manager's adaptability. The read is shown to the player in the match preview,
+generated from the same call that produces the tactics.
+
+See `simulation/opponentModel.ts`.
 
 ## The game loop
 
@@ -125,9 +141,9 @@ Feature screens are lazily imported and chunked per feature.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 753 | `pnpm --filter @cf/engine test` |
+| Engine unit/integration | 767 | `pnpm --filter @cf/engine test` |
 | App unit | 234 | `pnpm --filter @cf/game test` |
-| Browser smoke (real bundle) | 5 checks | `pnpm test:smoke` |
+| Browser smoke (real bundle) | 6 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 
 The audits are the unusual and valuable part. `pnpm audit:invariants` plays 12

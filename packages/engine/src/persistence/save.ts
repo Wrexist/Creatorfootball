@@ -14,7 +14,7 @@ import { err, ok, type Result } from '../core/result';
  *  - No progression lives only in component state.
  */
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 export const SAVE_KEY = 'cf.save.v1';
 export const BACKUP_KEY = 'cf.save.backup.v1';
 export const META_KEY = 'cf.save.meta.v1';
@@ -80,6 +80,12 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     ...state,
     settings: { ...(state.settings as Record<string, unknown> | undefined), sound: true },
   }),
+  // 5 -> 6: the opponent's observation record. An existing career has been
+  // played, but nobody was writing any of it down, so the honest seed is an
+  // empty record: the league starts watching from here. The player is read
+  // again after a couple of matches rather than being retroactively countered
+  // for a shape the AI never actually saw.
+  5: (state) => ({ ...state, opponentModel: { samples: [] } }),
 };
 
 export function migrate(raw: Record<string, unknown>, from: number): Result<GameState, LoadError> {

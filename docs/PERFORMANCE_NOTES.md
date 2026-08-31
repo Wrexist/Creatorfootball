@@ -88,7 +88,7 @@ Net effect: save size and cycle cost are bounded by design, not by luck. The
 
 ## Known slow spot in development
 
-The engine test suite takes ~150 s for 753 tests, dominated by the simulation
+The engine test suite takes ~150 s for 767 tests, dominated by the simulation
 and season-length integration tests. This is CI/developer-loop cost, not player
 cost. If it becomes a drag, the lever is sharding the long headless-season tests
 rather than trimming coverage — those are the tests carrying the most value.

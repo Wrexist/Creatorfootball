@@ -1,5 +1,10 @@
 # AUDIT FOUR: CURRENT STATE OF THE PRODUCT
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 **Subject:** Creator Football (`/home/user/Creatorfootball`), the running application.
 **Method:** the production build (`npx vite build` → `npx vite preview --port 4314`) driven with
 Playwright + Chromium 1194 at 393×852, 375×667, 834×1194 and 1440×900. A career was created from

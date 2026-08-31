@@ -27,18 +27,22 @@ Splitting the content packs out requires breaking a module-scope cycle between
 engine modules and content data; a previous attempt shipped a page that died on
 load. Full detail and the prerequisite in PERFORMANCE_NOTES.
 
-## 3. Concurrent `apply()` writes are ordered only by the adapter (low today)
+## 3. Concurrent `apply()` writes are now genuinely concurrent (medium — RAISED)
 
-`gameStore.apply()` persists without awaiting. With `localStorage` the adapter
-resolves on a microtask, so writes complete in call order and the last write
-wins correctly. **That guarantee is a property of the adapter, not of the
-code.** Swapping in Capacitor Preferences, IndexedDB or a server store — all of
-which are anticipated in `platform/storage.ts` — introduces genuinely concurrent
-writes that can land out of order, persisting an older state over a newer one.
+This was listed last pass as "low today, dangerous if the adapter changes."
+**The adapter has changed.** Careers now persist to IndexedDB, whose writes
+complete on transaction commit rather than on a microtask, so two overlapping
+`apply()` calls can genuinely land out of order and persist an older state over
+a newer one.
 
-**Recommended next step:** serialise persistence behind a single-slot queue
-(coalescing pending writes) before changing the adapter. Cheap to do now,
-painful to debug later.
+`gameStore.apply()` still fires persistence without awaiting it. The window is
+small — the mutation is synchronous and the second write usually starts after
+the first — but it is no longer closed by the adapter's timing.
+
+**Recommended next step, now the highest-value cheap fix in this list:**
+serialise persistence behind a single-slot queue that coalesces pending writes,
+so the last state always wins and intermediate writes are dropped rather than
+raced. This was cheap before the adapter changed and it is still cheap.
 
 ## 4. Snapshot-compute-apply in the feature engines (low)
 
@@ -51,7 +55,25 @@ Today every one of these paths is fully synchronous, so `s === current` always
 holds and no bug is reachable. It is listed because the invariant is implicit
 and one `await` anywhere in these functions would break it silently.
 
-## 5. Save-format guarantees that are weaker than they look (low, by design)
+## 5. IndexedDB has failure modes localStorage did not (medium)
+
+The move to IndexedDB fixed the save ceiling and introduced a different set of
+edges, all handled but none yet seen on a real device:
+
+- An `open` that is *blocked* by another tab never settles on its own. This is
+  rejected explicitly, because without that the boot hangs behind a promise
+  that never resolves and presents as a splash screen that never leaves.
+- An open that succeeds and a transaction that then aborts is a real
+  combination in private browsing, so the layer probes with a real write and
+  delete before committing to IndexedDB.
+- Writes resolve on transaction commit, not request success, so quota failures
+  surface where they can be handled.
+
+The localStorage→IndexedDB migration is covered by a real-browser check in
+`pnpm test:smoke`. What is **not** covered is the multi-tab case and Safari's
+storage eviction under pressure. Both need a real device.
+
+## 6. Save-format guarantees that are weaker than they look (low, by design)
 
 - The checksum is FNV-1a. It catches truncation and casual hand-editing. It is
   **not** tamper-proof and must never be treated as an anti-cheat control if
@@ -64,7 +86,7 @@ and one `await` anywhere in these functions would break it silently.
   proxy, not the real thing. Keep a corpus of genuine saves from each shipped
   version once the game is in players' hands.
 
-## 6. Live match state can outlive its screen (low)
+## 7. Live match state can outlive its screen (low)
 
 Leaving a live match unmounts the screen but deliberately does not `reset()` —
 the result screen reads the finished result off the store. Consequently,
@@ -76,7 +98,7 @@ replay it with different in-match decisions.
 Whether that matters is a design call, not a bug. Flagging it so it is a
 decision rather than an accident.
 
-## 7. The browser smoke test is the only guard on the built artefact (low)
+## 8. The browser smoke test is the only guard on the built artefact (low)
 
 It covers five things: boot without runtime errors, content renders, no control
 covered by other chrome, no overflow at 375 px, and every primary route
@@ -84,11 +106,12 @@ navigates. That is a well-chosen set and it caught two real shipped bugs. It is
 still five checks against a whole product, and it does not play a match, save,
 reload, or exercise the recovery paths in a real browser.
 
-**Recommended next step:** extend it to a full loop — create a career, play a
-match, reload the page, assert the world survived. The save-integrity work in
-this pass is unit-tested but never exercised end to end in a browser.
+**Partly addressed.** A sixth check now drives the real localStorage →
+IndexedDB migration in a browser. Still missing is the full loop: create a
+career, play a match, reload, assert the world survived. That remains the
+single most valuable test this repository does not have.
 
-## 8. Environment: pinned Chromium mismatch (tooling, not product)
+## 9. Environment: pinned Chromium mismatch (tooling, not product)
 
 The sandbox provides Chromium build 1194; Playwright 1.62 expects 1234. The
 smoke test fails to launch unless `CHROMIUM_PATH` is set:

@@ -475,6 +475,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
     inventory: { ruleCards: [], scoutCredits: 3, cosmeticIds: [], facilityCredits: 0 },
     settings,
     eventLog: [],
+    opponentModel: { samples: [] },
     idCounters: {},
     analytics: { sessionCount: 1, matchesPlayed: 0, decisionsMade: 0, lastSeenCycle: 0 },
   };

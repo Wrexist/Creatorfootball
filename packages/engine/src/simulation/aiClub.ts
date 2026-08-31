@@ -382,15 +382,12 @@ export function counterLeanAgainst(shape: PlayShape): Partial<TacticSetup> | nul
 }
 
 /**
- * The lean an AI club should start with against the player's club, read from
- * what the player has set up. Pure derivation — no state is stored, so it
- * cannot drift from the tactics the player actually controls.
+ * NOTE: the counter an AI club brings against the player lives in
+ * `opponentModel.ts`, not here. It used to live in this file and read
+ * `playerClub.tactics` directly — the setup sitting in the player's tactics
+ * screen, which no opponent has any way of seeing. It is now derived from
+ * observations of matches the player has actually played.
  */
-export function aiCounterLeanVsPlayer(state: GameState): Partial<TacticSetup> | null {
-  const playerClub = state.clubs[state.playerClubId];
-  if (!playerClub) return null;
-  return counterLeanAgainst(playShapeOf(playerClub.tactics));
-}
 
 const ageFit = (age: number, band: readonly [number, number]): number => {
   if (age >= band[0] && age <= band[1]) return 1;

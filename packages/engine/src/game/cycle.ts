@@ -26,6 +26,7 @@ import { rollObjectives } from '../progression/objectives';
 import { updateLegacy } from '../progression/legacy';
 import { ContentRegistry, BASE_PACK, type CreatorSeasonConfigDef } from '../content';
 import { applyMatchResult } from './applyResult';
+import { observeTactics } from '../simulation/opponentModel';
 import { buildMatchSetup } from './matchSetup';
 import { rolloverSeason } from './seasonRollover';
 import { GameEventFactory } from './eventFactory';
@@ -126,6 +127,20 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
     const applied = applyMatchResult(next, fixture, result, events);
     next = applied.state;
     allEvents.push(...applied.events);
+
+    // The league files a scouting note on the player's own matches only — the
+    // shape they actually walked out with, recorded once the match has been
+    // played. This is the sole source the opponent AI is allowed to read; it
+    // must never look at the tactics screen directly. See opponentModel.ts.
+    if (involvesPlayer) {
+      const playerClub = next.clubs[next.playerClubId];
+      if (playerClub) {
+        next = {
+          ...next,
+          opponentModel: observeTactics(next.opponentModel, playerClub.tactics, next.clock.cycle),
+        };
+      }
+    }
 
     // --- 2. rivalry, which reads the result and feeds next week ---------
     const rivalry = rivalryFor(next, fixture.homeClubId, fixture.awayClubId);

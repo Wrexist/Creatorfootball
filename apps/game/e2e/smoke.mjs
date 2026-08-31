@@ -192,6 +192,59 @@ if (navErrors.length > bootErrors.length) {
   pass('navigating every primary route threw nothing');
 }
 
+// --- 6. a career survives the storage layer ----------------------------
+//
+// The game outgrew localStorage: a plateaued save measures ~3.1 MB and the
+// save layer keeps a backup copy, against a ~5 MB origin budget. Careers now
+// live in IndexedDB, with anything already written to localStorage carried
+// across on first boot. That migration is the riskiest code in the storage
+// path and it only exists in a browser, so it is checked in one — in its own
+// context, so nothing above can have primed it.
+{
+  const ctx2 = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const p2 = await ctx2.newPage();
+  const KEYS = ['cf.save.v1', 'cf.save.backup.v1', 'cf.save.meta.v1'];
+
+  // A career written by a previous version of the app, before IndexedDB.
+  await p2.addInitScript((keys) => {
+    for (const k of keys) window.localStorage.setItem(k, `legacy-value-for-${k}`);
+  }, KEYS);
+
+  await p2.goto(BASE, { waitUntil: 'networkidle' });
+  await p2.waitForTimeout(2500);
+
+  const moved = await p2.evaluate(async (keys) => {
+    const db = await new Promise((resolve, reject) => {
+      const r = indexedDB.open('cf.game', 1);
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const read = (key) => new Promise((resolve, reject) => {
+      const req = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+      req.onsuccess = () => resolve(req.result ?? null);
+      req.onerror = () => reject(req.error);
+    });
+    const out = {};
+    for (const k of keys) out[k] = { idb: await read(k), local: window.localStorage.getItem(k) };
+    return out;
+  }, KEYS).catch((e) => ({ error: String(e) }));
+
+  if (moved.error) {
+    fail(`the storage layer never reached IndexedDB: ${moved.error.slice(0, 160)}`);
+  } else {
+    const notCarried = KEYS.filter((k) => moved[k]?.idb !== `legacy-value-for-${k}`);
+    const notReclaimed = KEYS.filter((k) => moved[k]?.local !== null);
+    if (notCarried.length > 0) {
+      fail(`localStorage career was not carried into IndexedDB: ${notCarried.join(', ')}`);
+    } else if (notReclaimed.length > 0) {
+      fail(`localStorage copies were not reclaimed after migration: ${notReclaimed.join(', ')}`);
+    } else {
+      pass('an existing localStorage career migrates into IndexedDB and frees the old copies');
+    }
+  }
+  await ctx2.close();
+}
+
 await browser.close();
 
 console.log(
