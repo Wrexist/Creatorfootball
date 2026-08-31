@@ -108,6 +108,21 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     clearPersistFailed();
   }, [persistFailed, clearPersistFailed, toast]);
 
+  // Private browsing, or a device that has already refused a write, leaves the
+  // game running entirely in memory. Everything works, which is exactly the
+  // problem: the player builds a career and loses all of it on reload with no
+  // warning at all. Say so once, plainly, while they can still act on it.
+  const ephemeralStorage = useGameStore((s) => s.ephemeralStorage);
+  const clearEphemeralWarning = useGameStore((s) => s.clearEphemeralWarning);
+  useEffect(() => {
+    if (!ephemeralStorage) return;
+    toast.warning(
+      'This session will not be saved',
+      'This device is not letting the game store data — often private browsing, or a full device. You can play, but your career will be gone when you close the app.',
+    );
+    clearEphemeralWarning();
+  }, [ephemeralStorage, clearEphemeralWarning, toast]);
+
   if (phase === 'ERROR') return <SaveRecoveryScreen />;
   if (phase === 'BOOTING' || splashHeld) return <SplashScreen />;
   return children;

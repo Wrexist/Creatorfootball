@@ -1,0 +1,115 @@
+# Remaining Risks
+
+Open risks after the hardening pass, ordered by expected damage. Each entry says
+what could actually go wrong, not just what is imperfect.
+
+## 1. Entity ids are not unique across careers (medium, partially mitigated)
+
+The season id is the literal string `season_1` for every new game, so fixture
+ids and match ids repeat between saves. This already caused one silent
+progression bug (see PRODUCTION_READINESS_AUDIT §3), which is fixed — but the
+*root cause* is untouched, and the fix is local to match commits.
+
+Anything else that caches, dedupes, or keys by entity id across a save boundary
+will hit the same trap: analytics keyed by match id, a future cloud save, a
+share/replay link, crash-report grouping.
+
+**Recommended next step:** derive the season id from the save id (or seed) so
+ids are globally unique, and delete this class of bug rather than defending
+against it one call site at a time. `matchCommitGuard.test.ts` asserts the
+collision today, so it will fail loudly and correctly when this is fixed —
+update that test as part of the change.
+
+## 2. The engine loads as one 273 kB gzip chunk on first visit (medium)
+
+First-visit cost on a mobile network, behind the splash. Cached afterwards.
+Splitting the content packs out requires breaking a module-scope cycle between
+engine modules and content data; a previous attempt shipped a page that died on
+load. Full detail and the prerequisite in PERFORMANCE_NOTES.
+
+## 3. Concurrent `apply()` writes are ordered only by the adapter (low today)
+
+`gameStore.apply()` persists without awaiting. With `localStorage` the adapter
+resolves on a microtask, so writes complete in call order and the last write
+wins correctly. **That guarantee is a property of the adapter, not of the
+code.** Swapping in Capacitor Preferences, IndexedDB or a server store — all of
+which are anticipated in `platform/storage.ts` — introduces genuinely concurrent
+writes that can land out of order, persisting an older state over a newer one.
+
+**Recommended next step:** serialise persistence behind a single-slot queue
+(coalescing pending writes) before changing the adapter. Cheap to do now,
+painful to debug later.
+
+## 4. Snapshot-compute-apply in the feature engines (low)
+
+Several actions read `store.state` into a local `s`, compute from it, then write
+the result onto whatever `current` is inside `apply()`. If those ever diverge,
+freshly computed data is written onto a different base state — `orderScoutReport`
+writing a ledger snapshot derived from `s.ledger` is the clearest example.
+
+Today every one of these paths is fully synchronous, so `s === current` always
+holds and no bug is reachable. It is listed because the invariant is implicit
+and one `await` anywhere in these functions would break it silently.
+
+## 5. Save-format guarantees that are weaker than they look (low, by design)
+
+- The checksum is FNV-1a. It catches truncation and casual hand-editing. It is
+  **not** tamper-proof and must never be treated as an anti-cheat control if
+  leaderboards or any server-trusted progression are added.
+- `validateState` checks structure and the single most damaging corruption
+  (a player owned by two clubs). It does not verify economic consistency — a
+  save with an impossible balance that is structurally intact will load.
+- Migrations are forward-only and untested against *real* old saves; they are
+  tested against synthetic states stripped of newer fields. That is a good
+  proxy, not the real thing. Keep a corpus of genuine saves from each shipped
+  version once the game is in players' hands.
+
+## 6. Live match state can outlive its screen (low)
+
+Leaving a live match unmounts the screen but deliberately does not `reset()` —
+the result screen reads the finished result off the store. Consequently,
+navigating away mid-match and back re-creates the simulator and restarts from
+minute 0. The match RNG is seeded deterministically, so this is not a re-roll
+exploit in the usual sense, but a player who dislikes how a match is going can
+replay it with different in-match decisions.
+
+Whether that matters is a design call, not a bug. Flagging it so it is a
+decision rather than an accident.
+
+## 7. The browser smoke test is the only guard on the built artefact (low)
+
+It covers five things: boot without runtime errors, content renders, no control
+covered by other chrome, no overflow at 375 px, and every primary route
+navigates. That is a well-chosen set and it caught two real shipped bugs. It is
+still five checks against a whole product, and it does not play a match, save,
+reload, or exercise the recovery paths in a real browser.
+
+**Recommended next step:** extend it to a full loop — create a career, play a
+match, reload the page, assert the world survived. The save-integrity work in
+this pass is unit-tested but never exercised end to end in a browser.
+
+## 8. Environment: pinned Chromium mismatch (tooling, not product)
+
+The sandbox provides Chromium build 1194; Playwright 1.62 expects 1234. The
+smoke test fails to launch unless `CHROMIUM_PATH` is set:
+
+```
+CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome pnpm test:smoke
+```
+
+The escape hatch already existed and works. Worth wiring into CI configuration
+so it is not rediscovered each time.
+
+## Documentation overlap (housekeeping)
+
+`docs/` carries several earlier audit and planning documents —
+`CURRENT_STATE_AUDIT.md`, `FINAL_AUDIT.md`, `AUDIT_ARCHITECTURE.md`,
+`AUDIT_GAMEPLAY.md`, `AUDIT_UX.md`, `ARCHITECTURE.md`, `IMPLEMENTATION_PLAN.md`
+— that overlap with the four documents added in this pass and were written
+against earlier states of the code.
+
+They were **not** deleted here: they are the project's history, some are
+published via GitHub Pages, and removing another author's documents on
+inference is not this pass's call. Before trusting any of them, check the claim
+against the code. `CURRENT_ARCHITECTURE.md` is the one written from the current
+source.

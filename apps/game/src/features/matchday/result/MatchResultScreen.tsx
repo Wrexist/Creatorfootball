@@ -41,9 +41,6 @@ const STAGES = [
 ] as const;
 type Stage = (typeof STAGES)[number];
 
-/** Matches already handed to `advance()`. Survives a remount of this screen. */
-const committed = new Set<string>();
-
 interface Snapshot {
   readonly sentiment: number;
   readonly followers: number;
@@ -68,7 +65,7 @@ export function MatchResultScreen(): ReactNode {
   /* --- commit the result to the world, once ---------------------------- */
 
   useEffect(() => {
-    if (!result || committed.has(result.matchId)) return;
+    if (!result) return;
     const current = useGameStore.getState().state;
     if (current) {
       const club = current.clubs[current.playerClubId];
@@ -78,7 +75,10 @@ export function MatchResultScreen(): ReactNode {
         position: standings(current).find((row) => row.clubId === current.playerClubId)?.position ?? null,
       };
     }
-    committed.add(result.matchId);
+    // The store owns double-commit protection, because it is the only place
+    // that can tell a remount from a genuinely new result: it checks the
+    // world's own fixture status, which a reload cannot forget and a previous
+    // career cannot poison.
     void useGameStore.getState().advance(result);
   }, [result]);
 

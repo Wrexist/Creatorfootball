@@ -131,6 +131,40 @@ export function validateState(state: GameState): string[] {
   return problems;
 }
 
+/**
+ * Storage adapters are hostile infrastructure, not pure functions.
+ *
+ * A real device refuses writes: Safari throws `QuotaExceededError` once the
+ * origin is full, private mode throws on the first write, and a native
+ * key-value plugin can reject for reasons we never see. These helpers turn
+ * every one of those into a value.
+ *
+ * This matters more than it looks. `saveGame` used to let an adapter rejection
+ * escape as a rejected promise, which meant the one caller that persists
+ * without awaiting (`gameStore.apply`) produced an unhandled rejection and
+ * never set the "changes could not be saved" flag, and the caller that
+ * advances the week threw away the entire simulated cycle — match result
+ * included — because the *write* failed after the simulation had succeeded.
+ * A full disk cost the player a week of football. Failures are now returned,
+ * so callers can keep the state they already computed and warn instead.
+ */
+async function tryRead(storage: StorageAdapter, key: string): Promise<Result<string | null, string>> {
+  try {
+    return ok(await storage.get(key));
+  } catch (error) {
+    return err(`Storage read failed for ${key}: ${String(error)}`);
+  }
+}
+
+async function tryWrite(storage: StorageAdapter, key: string, value: string): Promise<string | null> {
+  try {
+    await storage.set(key, value);
+    return null;
+  } catch (error) {
+    return `Storage write failed for ${key}: ${String(error)}`;
+  }
+}
+
 export async function saveGame(
   storage: StorageAdapter,
   state: GameState,
@@ -156,11 +190,24 @@ export async function saveGame(
     state,
   };
 
-  // Promote the current save to backup before writing the new one.
-  const previous = await storage.get(SAVE_KEY);
-  if (previous) await storage.set(BACKUP_KEY, previous);
+  let serialised: string;
+  try {
+    serialised = JSON.stringify(envelope);
+  } catch (error) {
+    return err(`Save serialisation failed: ${String(error)}`);
+  }
 
-  await storage.set(SAVE_KEY, JSON.stringify(envelope));
+  // Promote the current save to backup before writing the new one. A failure
+  // here is not fatal: it costs us the safety net for this write, but the
+  // existing save is still intact and the new one is still worth attempting.
+  const previous = await tryRead(storage, SAVE_KEY);
+  if (previous.ok && previous.value) await tryWrite(storage, BACKUP_KEY, previous.value);
+
+  const wrote = await tryWrite(storage, SAVE_KEY, serialised);
+  // The previous save is untouched on failure, so the player loses this write
+  // rather than their career. Metadata is deliberately not updated: it must
+  // never advertise a save that was not written.
+  if (wrote) return err(wrote);
 
   const club = state.clubs[state.playerClubId];
   const manager = state.managers[state.playerManagerId];
@@ -174,12 +221,15 @@ export async function saveGame(
     savedAt: now,
     version: SAVE_VERSION,
   };
-  await storage.set(META_KEY, JSON.stringify(meta));
+  const wroteMeta = await tryWrite(storage, META_KEY, JSON.stringify(meta));
+  if (wroteMeta) return err(wroteMeta);
   return ok(meta);
 }
 
 async function readEnvelope(storage: StorageAdapter, key: string): Promise<Result<GameState, LoadError>> {
-  const raw = await storage.get(key);
+  const read = await tryRead(storage, key);
+  if (!read.ok) return err({ code: 'CORRUPT', detail: read.error });
+  const raw = read.value;
   if (!raw) return err({ code: 'NOT_FOUND' });
 
   let parsed: SaveEnvelope;
@@ -229,13 +279,19 @@ export async function loadGame(
 }
 
 export async function loadMeta(storage: StorageAdapter): Promise<SaveMeta | null> {
-  const raw = await storage.get(META_KEY);
+  const read = await tryRead(storage, META_KEY);
+  if (!read.ok) return null;
+  const raw = read.value;
   if (!raw) return null;
   try { return JSON.parse(raw) as SaveMeta; } catch { return null; }
 }
 
+/**
+ * Abandoning a career must succeed even on a storage layer that is refusing
+ * writes, otherwise the player is trapped on a save they asked to delete.
+ */
 export async function deleteSave(storage: StorageAdapter): Promise<void> {
-  await storage.remove(SAVE_KEY);
-  await storage.remove(BACKUP_KEY);
-  await storage.remove(META_KEY);
+  for (const key of [SAVE_KEY, BACKUP_KEY, META_KEY]) {
+    try { await storage.remove(key); } catch { /* nothing left to do but continue */ }
+  }
 }

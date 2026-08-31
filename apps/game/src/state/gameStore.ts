@@ -5,6 +5,7 @@ import {
   type GameState, type NewsStory, type SocialPost, type MatchResult,
   type CycleSummary, type Fixture, type SaveMeta, type ClubChoice, type ManagerChoice,
   type CreatorSeasonConfigDef, type FixtureId,
+  isMatchResultApplied,
 } from '@cf/engine';
 import { storage } from '@/platform/storage';
 import { contentRegistry } from '@/state/content';
@@ -44,6 +45,14 @@ interface GameStoreState {
    * because the failure belongs to persistence, not to whatever button ran it.
    */
   persistFailed: boolean;
+  /**
+   * Storage exists but nothing written to it will survive the session —
+   * private browsing, or a device that has already refused a write and pushed
+   * us to the in-memory fallback. The player is mid-career and has no reason
+   * to suspect it, so this is surfaced once rather than left for them to
+   * discover when they reopen the app to an empty save slot.
+   */
+  ephemeralStorage: boolean;
 
   boot: () => Promise<void>;
   startNewGame: (opts: { seed?: string; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
@@ -54,6 +63,7 @@ interface GameStoreState {
   abandon: () => Promise<void>;
   clearCycleFeedback: () => void;
   clearPersistFailed: () => void;
+  clearEphemeralWarning: () => void;
 }
 
 /**
@@ -75,6 +85,9 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   const notePersist = async (next: GameState): Promise<SaveMeta | null> => {
     const meta = await persist(next);
     if (meta === null) set({ persistFailed: true });
+    // A device can fall back to memory *during* a write, so this is re-read
+    // after every save rather than only at boot.
+    if (storage.isEphemeral && !get().ephemeralStorage) set({ ephemeralStorage: true });
     return meta;
   };
 
@@ -87,11 +100,15 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   busy: false,
   lastCycle: null,
   persistFailed: false,
+  ephemeralStorage: false,
 
   boot: async () => {
     set({ phase: 'BOOTING', error: null });
     try {
       const loaded = await loadGame(storage);
+      // The adapter probes real storage on first access, so by now it knows
+      // whether this session can persist at all.
+      if (storage.isEphemeral) set({ ephemeralStorage: true });
       if (loaded.ok) {
         set({
           phase: 'READY',
@@ -139,6 +156,15 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   advance: async (playerResult) => {
     const current = get().state;
     if (!current || get().busy) return null;
+    /**
+     * Committing a match result is not idempotent — it advances the week — so
+     * the same result must never be handed over twice. `busy` covers the
+     * in-flight window (a remount while the first call is still awaiting the
+     * save); this covers everything after it, including a reload, by asking
+     * the world whether that match has already been played rather than
+     * trusting a counter that lives only as long as the tab does.
+     */
+    if (playerResult && isMatchResultApplied(current, playerResult.matchId)) return null;
     set({ busy: true });
     try {
       const result = advanceCycle(current, {
@@ -192,7 +218,12 @@ export const useGameStore = create<GameStoreState>((set, get) => {
     if (!current) return;
     const next = mutate(current);
     set({ state: next });
-    void notePersist(next);
+    // Deliberately not awaited: the mutation is already on screen and blocking
+    // a tap on a disk write would be worse than the write being late. The catch
+    // is a backstop — `saveGame` returns its failures rather than throwing, so
+    // reaching here means something below the adapter broke, and an unhandled
+    // rejection would take the persist-failure toast down with it.
+    void notePersist(next).catch(() => set({ persistFailed: true }));
   },
 
   save: async () => {
@@ -209,6 +240,7 @@ export const useGameStore = create<GameStoreState>((set, get) => {
 
   clearCycleFeedback: () => set({ lastCycle: null }),
   clearPersistFailed: () => set({ persistFailed: false }),
+  clearEphemeralWarning: () => set({ ephemeralStorage: false }),
   };
 });
 
