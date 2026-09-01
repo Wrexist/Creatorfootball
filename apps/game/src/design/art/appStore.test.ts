@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -144,5 +144,69 @@ describe('Info.plist', () => {
       `the home screen says "${display}" and the store says "${listed}"`,
     ).toBe(true);
     expect(display?.length ?? 0).toBeLessThanOrEqual(listed.length);
+  });
+});
+
+/**
+ * Real-world marks in the copy people actually read.
+ *
+ * The engine already guards the *game's* content: `basePack.test.ts` flattens
+ * the base pack, the club lore and both example packs into one corpus and
+ * asserts that no real club, competition, nation or brand — and none of the
+ * competitor league marks — appears anywhere in it. That is the large surface
+ * and it is covered.
+ *
+ * What it cannot reach is the copy outside the engine: the App Store listing
+ * and the marketing site. Those are written by hand, by whoever is selling the
+ * game that week, and they are exactly where "like the Kings League" gets
+ * typed. The listing is also the copy Apple reads.
+ *
+ * The two surfaces get different lists on purpose. Naming a platform is
+ * ordinary and necessary when asking a creator where their audience is — the
+ * sign-up form on the site says "YouTube / TikTok / Twitch / Instagram links",
+ * which is nominative use and entirely fine. Claiming another competition's
+ * name never is, on either surface.
+ */
+const COMPETITOR_MARKS = [
+  'kings league', 'queens league', 'baller league', 'icon league', 'liga de creadores',
+  'sidemen', 'gamechanger', 'game changer', 'president penalty', 'rulebreaker',
+];
+
+const REAL_FOOTBALL_MARKS = [
+  'premier league', 'la liga', 'bundesliga', 'serie a', 'ligue 1', 'champions league',
+  'fifa', 'uefa', 'wembley', 'manchester united', 'liverpool fc', 'real madrid',
+  'barcelona', 'juventus', 'bayern munich', 'wrexham',
+];
+
+const PLATFORM_MARKS = ['nike', 'adidas', 'puma', 'coca-cola', 'pepsi', 'sky sports', 'dazn', 'espn'];
+
+const readAll = (dir: string, extension: string): string => {
+  const walk = (d: string): string[] =>
+    readdirSync(d, { withFileTypes: true }).flatMap((entry) => {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) return walk(full);
+      return entry.name.endsWith(extension) ? [readFileSync(full, 'utf8')] : [];
+    });
+  return existsSync(dir) ? walk(dir).join('\n').toLowerCase() : '';
+};
+
+describe('copy that ships outside the engine', () => {
+  it('keeps every competitor mark out of the App Store listing', () => {
+    const listing = readAll(path.join(gameRoot, 'fastlane/metadata'), '.txt');
+    expect(listing.length, 'no App Store metadata was read').toBeGreaterThan(0);
+    for (const mark of [...COMPETITOR_MARKS, ...REAL_FOOTBALL_MARKS, ...PLATFORM_MARKS]) {
+      expect(listing.includes(mark), `"${mark}" appears in the App Store listing`).toBe(false);
+    }
+  });
+
+  it('keeps every competitor mark off the marketing site', () => {
+    // Platform names are deliberately absent from this list: the creator
+    // sign-up form names them to ask where an audience lives, which is what
+    // they are for.
+    const site = readAll(path.resolve(gameRoot, '..', '..', 'website'), '.html');
+    expect(site.length, 'no website copy was read').toBeGreaterThan(0);
+    for (const mark of [...COMPETITOR_MARKS, ...REAL_FOOTBALL_MARKS]) {
+      expect(site.includes(mark), `"${mark}" appears on the marketing site`).toBe(false);
+    }
   });
 });

@@ -79,9 +79,14 @@ Determinism (seeded RNG, counter ids) is enforced by tests.
 - **Split the engine chunk.** Blocked on a module-scope cycle between engine
   modules and content data; a previous attempt shipped a page that died on load.
   Prerequisite is breaking the cycle, not changing chunk config.
-- **Content-safety audit.** Never done. Verify clubs/players/creators/sponsors/
-  competitions/logos/copy are fictional, and that real identities can only enter
-  through the licensing/content architecture.
+- ~~**Content-safety audit.**~~ **Done — and it turns out it always had been.**
+  This entry said "never done" for three cycles and was wrong.
+  `basePack.test.ts` flattens the base pack, the club lore and both example
+  packs into one corpus and asserts that no real club, competition, nation or
+  brand, and none of the competitor league marks, appears anywhere in it. The
+  built bundle and the App Store listing were then scanned by hand and are
+  clean. The one gap was the copy written outside the engine — the store
+  listing and the marketing site — which is now guarded in `appStore.test.ts`.
 - **In-match adaptation from the opponent model.** Today the only in-match AI
   response is one scripted trailing reaction. The observation model exists and
   is unused during a match.

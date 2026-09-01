@@ -15,8 +15,8 @@ it, on the commit that introduced this file. Nothing is estimated.
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | **59 files, 769 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **25 files, 251 tests, all passing** |
-| **Total** | `pnpm test` | **1,020 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **25 files, 253 tests, all passing** |
+| **Total** | `pnpm test` | **1,022 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **8/8** against the real bundle (~76 s) |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
@@ -174,6 +174,14 @@ now on and leaves the ids it already holds alone.
   creation does not resolve until the save is on disk — is asserted separately
   in `gameStore.test.ts`, because a write that merely races the player still
   lands before the browser test looks.
+- **Content safety is audited and guarded.** `basePack.test.ts` asserts no real
+  club, competition, nation or brand — and no competitor league mark — appears
+  anywhere in the base pack, the club lore or either example pack. Licensed and
+  community packs are test fixtures and are never loaded at runtime; the app
+  loads `BASE_PACK` and nothing else. The App Store listing and the marketing
+  site are guarded separately in `appStore.test.ts`, because the engine's
+  corpus cannot reach them and hand-written marketing copy is where a
+  competitor's name actually gets typed.
 - **The snapshot-compute-apply invariant is enforced.** Feature engines that
   commit through `apply` must contain no async boundary; see
   `CURRENT_ARCHITECTURE.md` and `engineInvariant.test.ts`.
