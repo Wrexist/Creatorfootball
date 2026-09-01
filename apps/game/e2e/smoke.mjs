@@ -14,6 +14,10 @@
  * Usage: node e2e/smoke.mjs [baseUrl]
  */
 import { chromium } from 'playwright';
+import { execFileSync } from 'node:child_process';
+import { readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:4173';
 // CHROMIUM_PATH pins a specific Chromium (sandboxed machines, pinned builds).
@@ -243,6 +247,107 @@ if (navErrors.length > bootErrors.length) {
     }
   }
   await ctx2.close();
+}
+
+// --- 7. a real career survives a reload --------------------------------
+//
+// The loop that matters and that nothing else covered: a genuine save loads
+// out of IndexedDB into the running app, a change made through the interface
+// is persisted, and it is still there after the page is reloaded. Every part
+// of that is real — the built bundle, the real storage layer, the real save
+// queue — except the career itself, which is built by the engine rather than
+// by clicking through three creation screens. Driving those would make this
+// test a hostage to their layout while testing nothing extra about
+// persistence, which is what it is here to check.
+{
+  const fixturePath = join(tmpdir(), `cf-smoke-save-${process.pid}.json`);
+  let fixture = null;
+  try {
+    execFileSync('pnpm', ['--filter', '@cf/sim', 'exec', 'tsx', 'src/saveFixture.ts', fixturePath], {
+      stdio: 'ignore',
+    });
+    fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
+  } catch (e) {
+    fail(`could not build a save fixture: ${String(e).slice(0, 160)}`);
+  }
+
+  if (fixture) {
+    const ctx3 = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const p3 = await ctx3.newPage();
+    const loopErrors = [];
+    p3.on('pageerror', (e) => loopErrors.push(String(e)));
+
+    // First load creates the database; then the career is written into it.
+    await p3.goto(BASE, { waitUntil: 'networkidle' });
+    await p3.waitForTimeout(1500);
+
+    const seeded = await p3.evaluate(async (entries) => {
+      const db = await new Promise((resolve, reject) => {
+        const r = indexedDB.open('cf.game', 1);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('kv', 'readwrite');
+        const store = tx.objectStore('kv');
+        for (const [key, value] of entries) store.put(value, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      return true;
+    }, [['cf.save.v1', fixture['cf.save.v1']], ['cf.save.meta.v1', fixture['cf.save.meta.v1']]])
+      .catch((e) => String(e));
+
+    if (seeded !== true) {
+      fail(`could not seed a career into IndexedDB: ${String(seeded).slice(0, 160)}`);
+    } else {
+      // The app must boot that career, not a fresh world.
+      await p3.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+      await p3.waitForTimeout(2500);
+      const body = (await p3.textContent('body')) ?? '';
+      // The club and the clock come from the loaded save, so seeing both is
+      // proof the app booted this career rather than a fresh world. Checked at
+      // the mobile viewport, where the wide-screen "Your save" aside is
+      // correctly absent — so it deliberately is not part of the assertion.
+      const loadedOurCareer =
+        body.includes(fixture.expect.clubShortName) && body.includes(`Season ${fixture.expect.season}`);
+
+      if (!loadedOurCareer) {
+        fail(`the seeded career did not load: settings showed neither "${fixture.expect.clubShortName}" nor its season`);
+      } else {
+        const motion = p3.getByRole('switch', { name: 'Reduce motion' });
+        if ((await motion.count()) === 0) {
+          fail('could not find the "Reduce motion" control to change a persisted setting');
+        } else {
+          const before = await motion.first().getAttribute('aria-checked');
+          await motion.first().click();
+          await p3.waitForTimeout(1200); // let the save queue drain
+
+          // The whole point: reload the page and see whether it stuck.
+          await p3.reload({ waitUntil: 'networkidle' });
+          await p3.waitForTimeout(2500);
+          const after = await p3.getByRole('switch', { name: 'Reduce motion' }).first().getAttribute('aria-checked');
+          const stillOurs = ((await p3.textContent('body')) ?? '').includes(fixture.expect.clubShortName);
+
+          if (after === before) {
+            fail(`a setting changed in the app did not survive a reload (still ${String(after)})`);
+          } else if (!stillOurs) {
+            fail('the career was lost across a reload');
+          } else {
+            pass('a real career loads from IndexedDB, takes a change, and survives a reload');
+          }
+        }
+      }
+    }
+
+    const loopFailures = loopErrors.filter((e) => !/favicon|404/i.test(e));
+    if (loopFailures.length > 0) {
+      fail(`${loopFailures.length} runtime error(s) during the save loop: ${loopFailures[0].slice(0, 180)}`);
+    }
+    await ctx3.close();
+  }
+  rmSync(fixturePath, { force: true });
 }
 
 await browser.close();

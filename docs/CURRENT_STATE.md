@@ -14,11 +14,11 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **59 files, 767 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **59 files, 769 tests, all passing** |
 | App tests | `pnpm --filter @cf/game test` | **24 files, 246 tests, all passing** |
-| **Total** | `pnpm test` | **1,013 tests, all passing** |
+| **Total** | `pnpm test` | **1,015 tests, all passing** |
 | Production build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **6/6** against the real bundle |
+| Browser smoke | `pnpm test:smoke` | **7/7** against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
 Earlier documents state 262, 531, 653 and 753 tests. All are historical.
@@ -96,7 +96,7 @@ verified, and only then removed to reclaim the space. If any step fails the
 originals are left untouched and the next boot retries. This is covered by a
 real-browser check in `pnpm test:smoke`.
 
-Save format: `SAVE_VERSION` is **6**, with a registered migration for every
+Save format: `SAVE_VERSION` is **7**, with a registered migration for every
 step from 1 and a test asserting the chain has no holes. Writes are validated
 before they replace a good save, the previous save is promoted to a backup, and
 adapter failures are returned rather than thrown.
@@ -137,6 +137,21 @@ cheating; a stated one is a decision.
 
 ---
 
+## 4a. Entity ids — changed
+
+Ids used to be identical in every save ever created: clubs `club_0`..`club_11`,
+the first season literally `season_1`, fixtures and matches derived from those.
+Two careers shared their ids exactly, which had already caused one silent bug.
+
+`createNewGame` now derives a six-character token from the seed and creation
+time and scopes what it creates: `mwru75_club_0`, `mwru75_season_1`,
+`fx_mwru75_season_1_0`. Determinism is untouched — the token is a pure function
+of the inputs, and a test asserts two runs stay byte-identical. Measured cost:
++144 kB on a ten-season save (+4.7%), affordable now careers are in IndexedDB.
+
+The v6→v7 migration gives an existing career a token for ids it creates from
+now on and leaves the ids it already holds alone.
+
 ## 5. What is strong
 
 - Engine/UI separation is real, not aspirational.
@@ -153,9 +168,10 @@ cheating; a stated one is a decision.
 
 ## 6. Known limitations
 
-- **Entity ids are not unique across careers.** The season id is hardcoded
-  `season_1`, so fixture and match ids repeat between saves. Defended against
-  at the one place it caused a bug; the root cause is open.
+- **Pre-v7 careers still share entity ids with each other.** New careers scope
+  their ids to the career that created them (see §4a); existing saves keep the
+  ids already written into them, because rewriting every club, fixture and
+  ledger reference inside a live save is riskier than the collision warrants.
 - **The engine ships as one 273 kB gzip chunk**, loaded behind the splash on
   first visit. Splitting it requires breaking a module-scope cycle; a previous
   attempt shipped a page that died on load.

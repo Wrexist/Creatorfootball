@@ -315,6 +315,7 @@ export function buildTestWorld(opts: TestWorldOptions = {}): TestWorld {
     },
     eventLog: [],
     opponentModel: { samples: [] },
+    idToken: 'testw',
     idCounters: {},
     analytics: { sessionCount: 1, matchesPlayed: 0, decisionsMade: 0, lastSeenCycle: 0 },
   };

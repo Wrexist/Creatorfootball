@@ -4,7 +4,7 @@ import { buildTestWorld } from '../simulation/fixtures';
 import { MIGRATIONS, SAVE_VERSION, migrate, validateState } from './save';
 
 /** Fields that did not exist yet at each version, newest first. */
-const ADDED_AFTER_V1 = ['boardPressure', 'decisionMemory', 'decisionRecord', 'opponentModel'] as const;
+const ADDED_AFTER_V1 = ['boardPressure', 'decisionMemory', 'decisionRecord', 'opponentModel', 'idToken'] as const;
 
 const stripFields = (state: GameState, fields: readonly string[]): Record<string, unknown> => {
   const rest = { ...(state as unknown as Record<string, unknown>) };
@@ -17,14 +17,17 @@ const stripToV1 = (state: GameState): Record<string, unknown> => stripFields(sta
 
 /** A v2 save has the board field but predates the decision memory. */
 const stripToV2 = (state: GameState): Record<string, unknown> =>
-  stripFields(state, ['decisionMemory', 'decisionRecord', 'opponentModel']);
+  stripFields(state, ['decisionMemory', 'decisionRecord', 'opponentModel', 'idToken']);
 
 /** A v3 save has both decision fields except the graded record. */
 const stripToV3 = (state: GameState): Record<string, unknown> =>
-  stripFields(state, ['decisionRecord', 'opponentModel']);
+  stripFields(state, ['decisionRecord', 'opponentModel', 'idToken']);
 
 /** A v5 save is complete except for the opponent's observation record. */
-const stripToV5 = (state: GameState): Record<string, unknown> => stripFields(state, ['opponentModel']);
+const stripToV5 = (state: GameState): Record<string, unknown> => stripFields(state, ['opponentModel', 'idToken']);
+
+/** A v6 save is complete except for the id-scoping token. */
+const stripToV6 = (state: GameState): Record<string, unknown> => stripFields(state, ['idToken']);
 
 describe('save migrations', () => {
   it('has a registered step for every version on the chain', () => {
@@ -34,7 +37,7 @@ describe('save migrations', () => {
   });
 
   it('migrates a pre-board save forward with the fields defaulted in', () => {
-    expect(SAVE_VERSION).toBe(6);
+    expect(SAVE_VERSION).toBe(7);
     const { state } = buildTestWorld({ clubCount: 4 });
     const raw = stripToV1(state);
     expect('boardPressure' in raw).toBe(false);
@@ -103,6 +106,25 @@ describe('save migrations', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.opponentModel).toEqual({ samples: [] });
+    expect(validateState(result.value)).toEqual([]);
+  });
+
+  /**
+   * An existing career keeps the ids already written into every club, fixture
+   * and ledger account it holds — rewriting them would be far riskier than the
+   * collision warrants. It gains a token for the ids it creates from here.
+   */
+  it('gives an existing career a token without touching its ids', () => {
+    const { state } = buildTestWorld({ clubCount: 4 });
+    const raw = stripToV6({ ...state, saveId: 'save_abc123' });
+    expect('idToken' in raw).toBe(false);
+
+    const result = migrate(raw, 6);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.idToken).toBe('abc123');
+    // Every club it already had is still under exactly the same id.
+    expect(Object.keys(result.value.clubs)).toEqual(Object.keys(state.clubs));
     expect(validateState(result.value)).toEqual([]);
   });
 });

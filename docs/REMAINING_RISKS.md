@@ -3,22 +3,30 @@
 Open risks after the hardening pass, ordered by expected damage. Each entry says
 what could actually go wrong, not just what is imperfect.
 
-## 1. Entity ids are not unique across careers (medium, partially mitigated)
+## 1. RESOLVED — entity ids now scoped to the career that created them
 
-The season id is the literal string `season_1` for every new game, so fixture
-ids and match ids repeat between saves. This already caused one silent
-progression bug (see PRODUCTION_READINESS_AUDIT §3), which is fixed — but the
-*root cause* is untouched, and the fix is local to match commits.
+Entity ids used to be identical in every save ever created: clubs were
+`club_0`..`club_11`, the first season was literally `season_1`, and fixture and
+match ids derived from those. Two careers shared their ids exactly, which had
+already cost one silent bug.
 
-Anything else that caches, dedupes, or keys by entity id across a save boundary
-will hit the same trap: analytics keyed by match id, a future cloud save, a
-share/replay link, crash-report grouping.
+`createNewGame` now derives a six-character token from the seed and the
+creation time and scopes the ids it creates with it — `mwru75_club_0`,
+`mwru75_season_1`, `fx_mwru75_season_1_0`. Determinism is untouched: the token
+is a pure function of `createNewGame`'s inputs, so the same seed and time still
+produce a byte-identical world, and a test asserts it.
 
-**Recommended next step:** derive the season id from the save id (or seed) so
-ids are globally unique, and delete this class of bug rather than defending
-against it one call site at a time. `matchCommitGuard.test.ts` asserts the
-collision today, so it will fail loudly and correctly when this is fixed —
-update that test as part of the change.
+Measured cost: **+144 kB on a ten-season save (+4.7%)**, most of it the club
+prefix repeated on every ledger account. Worth it now that careers live in
+IndexedDB rather than against a 5 MB ceiling.
+
+**Existing careers keep the ids they have.** Rewriting every club, fixture and
+ledger reference inside a live save would be far riskier than the collision
+warrants, so the v6→v7 migration only gives an old save a token — taken from
+its own save id — for the ids it creates from that point on. Two *pre-existing*
+careers with different seeds therefore stop sharing season ids going forward,
+but their existing clubs and fixtures still collide with each other's. Anything
+that keys across saves should treat pre-v7 careers as unreliable.
 
 ## 2. The engine loads as one 273 kB gzip chunk on first visit (medium)
 
@@ -97,18 +105,21 @@ replay it with different in-match decisions.
 Whether that matters is a design call, not a bug. Flagging it so it is a
 decision rather than an accident.
 
-## 8. The browser smoke test is the only guard on the built artefact (low)
+## 8. Browser coverage of the built artefact (low — improved)
 
-It covers five things: boot without runtime errors, content renders, no control
-covered by other chrome, no overflow at 375 px, and every primary route
-navigates. That is a well-chosen set and it caught two real shipped bugs. It is
-still five checks against a whole product, and it does not play a match, save,
-reload, or exercise the recovery paths in a real browser.
+Seven checks now run against the real bundle: boot without runtime errors,
+content renders, no control covered by other chrome, no overflow at 375 px,
+every primary route navigates, the localStorage→IndexedDB migration, and — new
+— a real career loading out of IndexedDB, taking a change made through the
+interface, and surviving a page reload. That last one was previously listed
+here as "the single most valuable test this repository does not have". It was
+verified to fail when persistence is disabled, so it is not passing vacuously.
 
-**Partly addressed.** A sixth check now drives the real localStorage →
-IndexedDB migration in a browser. Still missing is the full loop: create a
-career, play a match, reload, assert the world survived. That remains the
-single most valuable test this repository does not have.
+The career it loads is built by the engine rather than by clicking through the
+three creation screens. That is deliberate — driving those would make the test
+a hostage to their layout while proving nothing extra about persistence — but
+it does mean **onboarding itself is still not covered by any browser test**.
+A regression that breaks career creation would be caught only by a human.
 
 ## 9. `pnpm test` can exit non-zero on a fully green run (tooling, pre-existing)
 

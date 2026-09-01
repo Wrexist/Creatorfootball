@@ -55,11 +55,13 @@ Ids come from a save-scoped `IdFactory` counter and randomness from a seeded
 the same seed produces a byte-identical world, and the invariant audit asserts
 that no two subsystems accidentally share a random stream.
 
-One consequence is easy to miss and has already caused a bug: **entity ids are
-not unique across careers.** The season id is the literal string `season_1` for
-every new game, so fixture ids and therefore match ids repeat between saves.
-Anything that caches by entity id must be scoped to a save or, better, derived
-from state. See `isMatchResultApplied` in `game/selectors.ts`.
+Ids are also scoped to the career that created them. `createNewGame` derives a
+six-character token from the seed and creation time (`saveToken` in
+`core/ids.ts`), carried on `GameState.idToken`, and prefixes the clubs,
+competition and seasons it creates with it. Before this they were identical in
+every save — `club_0`, `season_1` — and two careers shared their ids exactly,
+which cost one silent bug. Saves created before v7 keep their original ids; see
+`REMAINING_RISKS.md` §1.
 
 ## State and persistence
 
@@ -70,7 +72,7 @@ separate persistence model — the save *is* the state, wrapped in an envelope:
 { version, savedAt, checksum, state }
 ```
 
-- `SAVE_VERSION` is currently **6**, with a registered migration for every step
+- `SAVE_VERSION` is currently **7**, with a registered migration for every step
   from 1. `save.test.ts` asserts the chain has no holes.
 - Writes are validated before they replace the previous save (`validateState`),
   so an invalid state is refused rather than persisted.
@@ -143,9 +145,9 @@ Feature screens are lazily imported and chunked per feature.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 767 | `pnpm --filter @cf/engine test` |
+| Engine unit/integration | 769 | `pnpm --filter @cf/engine test` |
 | App unit | 246 | `pnpm --filter @cf/game test` |
-| Browser smoke (real bundle) | 6 checks | `pnpm test:smoke` |
+| Browser smoke (real bundle) | 7 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 
 The audits are the unusual and valuable part. `pnpm audit:invariants` plays 12

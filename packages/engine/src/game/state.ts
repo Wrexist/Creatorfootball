@@ -58,6 +58,12 @@ export interface GameState {
    * rather than reading the player's current tactics sheet, which it has no
    * business seeing. See simulation/opponentModel.ts.
    */
+  /**
+   * Scopes this career's entity ids so they cannot collide with another
+   * career's. See `saveToken` in core/ids.ts. Careers created before this
+   * existed carry their seed here instead, and keep the ids they already have.
+   */
+  readonly idToken: string;
   readonly opponentModel: OpponentModel;
   readonly boardPressure: BoardPressure;
   readonly decisionMemory: DecisionMemory;

@@ -242,3 +242,53 @@ pnpm audit:all    pass
 \* On this container the engine runner exits non-zero after all 767 pass, with
 a Vitest reporter RPC timeout. Pre-existing and environmental — it reproduces
 at `HEAD` with no local changes. See `REMAINING_RISKS.md` §9.
+
+
+---
+
+# Addendum — id collisions and the loop that was missing
+
+Two items taken off the risk register.
+
+## Entity ids scoped to their career
+
+Ids were identical in every save ever created: `club_0`..`club_11`,
+`season_1`, and fixture and match ids derived from those. `createNewGame` now
+derives a six-character token from the seed and creation time and scopes what
+it creates with it. Determinism is preserved and asserted.
+
+The test that locked in the old behaviour — "produces colliding match ids
+across two different careers" — was written last cycle specifically to fail the
+day this was fixed, and it did. It now asserts the opposite, alongside a new
+test that two runs of the same inputs are still byte-identical.
+
+Existing saves keep the ids already written into them; the v6→v7 migration only
+grants a token for ids created from that point on.
+
+**Measured cost:** +144 kB on a ten-season save (3,035 kB → 3,179 kB, +4.7%),
+mostly the club prefix repeated across ledger accounts.
+
+## The full persistence loop, in a browser
+
+A seventh smoke check builds a real career with the engine, writes it into
+IndexedDB, loads it in the built app, changes a setting through the interface,
+reloads the page, and asserts both the change and the career survived.
+
+Verified not to pass vacuously: with `apply()`'s persistence disabled it fails
+with "a setting changed in the app did not survive a reload".
+
+The career is built by the engine rather than by driving the three creation
+screens — that would make the test a hostage to their layout while proving
+nothing extra about persistence. **Onboarding therefore remains uncovered by
+any browser test**, which is now the notable gap.
+
+## Verification
+
+```
+pnpm typecheck    pass
+pnpm lint         pass  (--max-warnings=0)
+pnpm test         pass  (769 engine + 246 app = 1,015)
+pnpm build        pass
+pnpm test:smoke   pass  (7/7)
+pnpm audit:all    pass
+```

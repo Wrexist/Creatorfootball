@@ -14,7 +14,7 @@ import { err, ok, type Result } from '../core/result';
  *  - No progression lives only in component state.
  */
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export const SAVE_KEY = 'cf.save.v1';
 export const BACKUP_KEY = 'cf.save.backup.v1';
 export const META_KEY = 'cf.save.meta.v1';
@@ -86,6 +86,17 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // again after a couple of matches rather than being retroactively countered
   // for a shape the AI never actually saw.
   5: (state) => ({ ...state, opponentModel: { samples: [] } }),
+  // 6 -> 7: entity ids became scoped to the career that created them. An
+  // existing save's ids are already written into every club, fixture and
+  // ledger account it holds, so they are left exactly as they are — rewriting
+  // them would be a far larger and riskier operation than the collision
+  // warrants. What it gains is a token for the ids it creates from now on,
+  // taken from its own save id so that two existing careers with different
+  // seeds stop sharing season ids going forward.
+  6: (state) => ({
+    ...state,
+    idToken: String(state.saveId ?? 'legacy').replace(/^save_/, '') || 'legacy',
+  }),
 };
 
 export function migrate(raw: Record<string, unknown>, from: number): Result<GameState, LoadError> {

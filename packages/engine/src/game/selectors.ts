@@ -279,14 +279,18 @@ export function topConcern(s: GameState): ClubConcern {
  * advance the week a second time. That guard used to be a module-level `Set`
  * of match ids in the app, which failed in two ways: it did not survive a
  * reload (so a refresh on the result screen could double-advance), and it
- * outlived the career that filled it. Fixture ids are derived from a season id
- * that is literally `season_1` for every new game, so match ids repeat across
- * careers — abandoning a save and starting another in the same session left
- * the new career's first result already marked as committed, and it was
+ * outlived the career that filled it. Fixture ids were derived from a season id
+ * that was literally `season_1` for every new game, so match ids repeated
+ * across careers — abandoning a save and starting another in the same session
+ * left the new career's first result already marked as committed, and it was
  * silently dropped: no points, no money, no week advanced.
  *
- * Asking the world instead is correct in both cases, because applying a result
- * is exactly what marks its fixture completed.
+ * Ids are scoped to their career now, so that second failure no longer has a
+ * way to happen in a save created since. This check stays regardless: it is
+ * the one that survives a reload, it is the one that is still correct for a
+ * career created before ids were scoped, and asking the world is simply the
+ * right question — applying a result is exactly what marks its fixture
+ * completed.
  */
 export function isMatchResultApplied(s: GameState, matchId: MatchId): boolean {
   for (const fixture of Object.values(s.fixtures)) {

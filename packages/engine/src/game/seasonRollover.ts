@@ -317,7 +317,10 @@ export function rolloverSeason(
   }, next);
 
   // --- 6. next season's calendar ----------------------------------------
-  const nextSeasonId = asId<SeasonId>(`season_${nextNumber}`);
+  // Scoped to this career, like every other id it creates. A career made
+  // before tokens existed carries its seed here, so its later seasons are
+  // still distinct from another career's.
+  const nextSeasonId = asId<SeasonId>(`${state.idToken}_season_${nextNumber}`);
   const totalWeeks = (clubIds.length - 1) * (competition?.rounds ?? 2);
 
   const rivalPairs: (readonly [ClubId, ClubId])[] = Object.values(next.rivalries)

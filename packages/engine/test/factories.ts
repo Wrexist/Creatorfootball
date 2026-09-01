@@ -188,6 +188,7 @@ export function makeGameState(over: Partial<GameState> = {}): GameState {
     },
     eventLog: [],
     opponentModel: { samples: [] },
+    idToken: 'factory',
     idCounters: {},
     analytics: { sessionCount: 1, matchesPlayed: 0, decisionsMade: 0, lastSeenCycle: 0 },
     ...over,

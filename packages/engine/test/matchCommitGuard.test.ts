@@ -17,17 +17,25 @@ const firstFixture = (s: GameState): Fixture =>
 
 describe('match result commit guard', () => {
   /**
-   * The reason the guard cannot be a process-lifetime set of match ids: those
-   * ids are not unique to a career. Fixtures are named from a season id that
-   * is hardcoded to `season_1` for every new game, so two different careers
-   * produce the same first match id.
+   * This asserted the opposite until entity ids were scoped to the career that
+   * created them: fixtures were named from a season id hardcoded to `season_1`,
+   * so two careers produced the same first match id. That collision is what
+   * made a process-lifetime set of match ids unsafe as a guard, and the test
+   * was written to fail loudly the day it was fixed. This is that day.
    */
-  it('produces colliding match ids across two different careers', () => {
+  it('gives two careers distinct fixture and match ids', () => {
     const a = newCareer('seed-alpha');
     const b = newCareer('seed-bravo');
 
     expect(a.saveId).not.toBe(b.saveId);
-    expect(firstFixture(a).id).toBe(firstFixture(b).id);
+    expect(a.idToken).not.toBe(b.idToken);
+    expect(firstFixture(a).id).not.toBe(firstFixture(b).id);
+    expect(a.playerClubId).not.toBe(b.playerClubId);
+  });
+
+  /** Uniqueness must not have cost determinism: same inputs, same world. */
+  it('is still byte-identical for identical inputs', () => {
+    expect(JSON.stringify(newCareer('seed-alpha'))).toBe(JSON.stringify(newCareer('seed-alpha')));
   });
 
   it('reports an unplayed fixture as not yet applied', () => {
@@ -57,7 +65,8 @@ describe('match result commit guard', () => {
    * The bug this replaces: career A plays its first match, career B is started
    * in the same session, and B's identically-named first result is treated as
    * already committed and silently dropped. Deriving the answer from the world
-   * gets it right because B's own fixture is still scheduled.
+   * gets it right because B's own fixture is still scheduled — and now the ids
+   * differ too, so the same mistake would need both defences to fail.
    */
   it('does not carry one career’s played matches into another', () => {
     const a = newCareer('seed-alpha');

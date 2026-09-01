@@ -24,6 +24,7 @@ import {
   type ClubTemplate, type ContentPack, type CreatorSeasonConfigDef,
 } from '../content';
 import { generateSponsorOffers, inheritedSponsorDeals } from '../sponsors/sponsors';
+import { saveToken } from '../core/ids';
 
 /**
  * New game creation.
@@ -143,6 +144,11 @@ function roleForRank(rank: number, size: number): SquadRole {
 
 export function createNewGame(opts: NewGameOptions): GameState {
   const rng = new Rng(opts.seed);
+  /**
+   * Scopes every id this career creates. Two careers must not share ids, and
+   * the same (seed, now) must still produce a byte-identical world.
+   */
+  const idToken = saveToken(opts.seed, opts.now);
   const registry = new ContentRegistry();
   registry.load(BASE_PACK);
   for (const pack of opts.packs ?? []) registry.load(pack);
@@ -166,7 +172,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
   const squadRng = rng.fork('squads');
 
   templates.forEach((template, index) => {
-    const clubId = asId<ClubId>(`club_${index}`);
+    const clubId = asId<ClubId>(`${idToken}_club_${index}`);
     templateToClubId.set(template.id, clubId);
     const isPlayerClub = template.id === playerTemplateId;
 
@@ -321,8 +327,8 @@ export function createNewGame(opts: NewGameOptions): GameState {
   });
 
   // --- competition, season, fixtures -----------------------------------
-  const competitionId = asId<CompetitionId>('comp_premier');
-  const seasonId = asId<SeasonId>('season_1');
+  const competitionId = asId<CompetitionId>(`${idToken}_comp_premier`);
+  const seasonId = asId<SeasonId>(`${idToken}_season_1`);
   const clubIds = [...templateToClubId.values()];
 
   const rivalPairs: (readonly [ClubId, ClubId])[] = [];
@@ -439,7 +445,8 @@ export function createNewGame(opts: NewGameOptions): GameState {
 
   return {
     version: 1,
-    saveId: `save_${opts.seed}`,
+    saveId: `save_${idToken}`,
+    idToken,
     seed: opts.seed,
     createdAt: opts.now,
     clock: initialClock(opts.now),
