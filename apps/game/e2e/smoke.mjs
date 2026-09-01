@@ -40,6 +40,61 @@ page.on('console', (m) => { if (m.type() === 'error') pageErrors.push(m.text());
 
 console.log(`\nBrowser smoke test against ${BASE}\n`);
 
+/**
+ * An option card is the only thing on the creation steps carrying aria-pressed.
+ * Matched by attribute rather than by role state, because Playwright's
+ * `pressed: false` also matches buttons with no aria-pressed at all — which
+ * quietly selects the header's back arrow and walks the test out of the flow
+ * it is supposed to be testing.
+ */
+const OPTION = 'button[aria-pressed="false"]';
+
+/** What the app has actually written, read the way the app stores it. */
+const readSave = (target) => target.evaluate(async () => {
+  const db = await new Promise((resolve, reject) => {
+    const r = indexedDB.open('cf.game', 1);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+  const get = (key) => new Promise((resolve, reject) => {
+    const rq = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+    rq.onsuccess = () => resolve(rq.result ?? null);
+    rq.onerror = () => reject(rq.error);
+  });
+  return { save: await get('cf.save.v1'), meta: await get('cf.save.meta.v1') };
+});
+
+/**
+ * Walk a new player through career creation by clicking what a player clicks.
+ *
+ * Every wait is a readiness signal rather than a sleep: each step's forward
+ * button carries its blocker text until the step is satisfied and only then
+ * takes its real label, so waiting for that label is waiting for the step to
+ * be complete.
+ */
+async function createCareerThroughUi(target) {
+  const start = target.getByRole('button', { name: /start your career/i }).first();
+  await start.waitFor({ state: 'visible' });
+  await start.click();
+
+  await target.waitForURL('**/create/manager');
+  await target.locator(OPTION).first().click();
+  await target.getByRole('button', { name: /next: your club/i }).click();
+
+  await target.waitForURL('**/create/club');
+  await target.locator(OPTION).first().click();
+  // Taking a club over is the default path. If that default ever changes this
+  // fails loudly here, which is the right outcome: the journey a new player is
+  // actually walked through would have changed.
+  await target.getByRole('button', { name: /^take over\s/i }).click();
+
+  // The reveal only renders once the career reached READY.
+  await target.getByRole('button', { name: /meet your squad/i }).click();
+  await target.waitForURL('**/create/squad');
+  await target.getByRole('button', { name: /^play\b/i }).click();
+  await target.waitForURL(/\/matchday/);
+}
+
 // --- 1. the built app boots at all ------------------------------------
 await page.goto(BASE, { waitUntil: 'networkidle' });
 await page.waitForTimeout(2500);
@@ -60,37 +115,58 @@ if (/could not finish loading|something went wrong/i.test(bodyText)) {
   pass('the app rendered content');
 }
 
-// --- 2. walk into a real game ------------------------------------------
-const footerState = () => page.evaluate(() => {
-  const b = [...document.querySelectorAll('button')].pop();
-  return { txt: b?.innerText.trim().replace(/\n/g, ' ') ?? '', disabled: Boolean(b?.disabled) };
-});
+// --- 2. a career can be created from nothing, and survives -------------
+//
+// The journey every new player makes, and the one nothing else covers: an
+// empty install, through every onboarding step, to a first career that is
+// still there after a reload.
+//
+// It doubles as the setup for the route checks below, which need a game to
+// look at. That is why it asserts rather than merely walking: when creation
+// breaks it now says so here, instead of leaving those checks to fail with
+// something misleading about controls being covered up.
+try {
+  const fresh = await readSave(page);
+  if (fresh.save !== null || fresh.meta !== null) {
+    fail('the run began with a career already in storage, so creation was never exercised');
+  } else {
+    await createCareerThroughUi(page);
 
-const start = page.getByRole('button', { name: /start your career|continue/i }).first();
-if (await start.count()) { await start.click(); await page.waitForTimeout(1400); }
+    const born = await readSave(page);
+    const meta = born.meta ? JSON.parse(born.meta) : null;
+    if (!born.save || !meta) {
+      fail('onboarding completed but no career was written to storage');
+    } else {
+      // Reload, and require the career back. The root route is the honest
+      // test of it: it sends a loaded career to /home and everyone else back
+      // to /onboarding, so landing on /home proves both that the save was
+      // read and that onboarding did not restart.
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.goto(BASE, { waitUntil: 'networkidle' });
 
-for (let step = 0; step < 14; step++) {
-  const s = await footerState();
-  if (!s.disabled) {
-    await page.locator('button').last().click();
-    await page.waitForTimeout(1400);
-    if (page.url().includes('/home') || page.url().includes('/matchday')) break;
-    continue;
+      let landedInGame = true;
+      try {
+        await page.waitForURL('**/home');
+      } catch {
+        landedInGame = false;
+      }
+      const after = await readSave(page);
+      const afterMeta = after.meta ? JSON.parse(after.meta) : null;
+
+      if (!landedInGame) {
+        fail(
+          `after a reload the app went to ${new URL(page.url()).pathname} instead of the career ` +
+          `it had just created (${meta.clubName}) — onboarding restarted or the save was not read`,
+        );
+      } else if (!afterMeta || afterMeta.saveId !== meta.saveId) {
+        fail(`the career did not survive a reload: saved ${meta.saveId}, found ${afterMeta?.saveId ?? 'nothing'}`);
+      } else {
+        pass(`a career created through onboarding (${meta.clubName}) persists and survives a reload`);
+      }
+    }
   }
-  if (/name your club/i.test(s.txt)) {
-    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke United', { delay: 8 }); }
-  } else if (/city/i.test(s.txt)) {
-    const i = await page.$$('input'); const t = i[1] ?? i[0]; if (t) { await t.click(); await t.type('Smoketon', { delay: 8 }); }
-  } else if (/name/i.test(s.txt)) {
-    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke Tester', { delay: 8 }); }
-  } else if (/archetype|manager/i.test(s.txt)) {
-    const c = page.getByRole('button', { name: /tactician|motivator|showman/i }).first();
-    if (await c.count()) await c.click();
-  } else if (/club|philosoph|culture/i.test(s.txt)) {
-    const c = page.locator('button').nth(4);
-    if (await c.count()) await c.click();
-  } else break;
-  await page.waitForTimeout(600);
+} catch (e) {
+  fail(`the onboarding journey broke: ${String(e).split('\n').slice(0, 2).join(' ').slice(0, 220)}`);
 }
 
 // --- 3. every primary action is actually clickable ---------------------
@@ -350,136 +426,6 @@ if (navErrors.length > bootErrors.length) {
   rmSync(fixturePath, { force: true });
 }
 
-// --- 8. a career can be created from nothing, and survives -------------
-//
-// The player journey no other test covers: a genuinely empty install, through
-// every onboarding step by clicking what a player clicks, to a first career
-// that is still there after a reload. Check 7 proves a save round-trips, but
-// it *seeds* the career — so career creation itself, and the first write it
-// performs, had no browser coverage at all. A regression there would have
-// reached a human before it reached automation.
-//
-// Every wait here is a readiness signal rather than a sleep: the forward
-// button on each step carries the blocker text until the step is satisfied and
-// only then takes its real label, so waiting for that label *is* waiting for
-// the step to be complete.
-{
-  const ctx4 = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  const p4 = await ctx4.newPage();
-  const bornErrors = [];
-  p4.on('pageerror', (e) => bornErrors.push(String(e)));
-  p4.on('console', (m) => { if (m.type() === 'error') bornErrors.push(m.text()); });
-
-  const readSave = () => p4.evaluate(async () => {
-    const db = await new Promise((resolve, reject) => {
-      const r = indexedDB.open('cf.game', 1);
-      r.onsuccess = () => resolve(r.result);
-      r.onerror = () => reject(r.error);
-    });
-    const get = (key) => new Promise((resolve, reject) => {
-      const rq = db.transaction('kv', 'readonly').objectStore('kv').get(key);
-      rq.onsuccess = () => resolve(rq.result ?? null);
-      rq.onerror = () => reject(rq.error);
-    });
-    return { save: await get('cf.save.v1'), meta: await get('cf.save.meta.v1') };
-  });
-
-  try {
-    await p4.goto(BASE, { waitUntil: 'networkidle' });
-
-    // 1. Nothing exists yet. Both halves matter: an empty store, and a title
-    //    screen offering to start rather than to continue.
-    const fresh = await readSave();
-    // The title screen sits behind a minimum splash hold, so wait for the
-    // control itself rather than for the network to fall quiet.
-    const startBtn = p4.getByRole('button', { name: /start your career/i }).first();
-    let offersStart = true;
-    try {
-      await startBtn.waitFor({ state: 'visible' });
-    } catch {
-      offersStart = false;
-    }
-
-    if (fresh.save !== null || fresh.meta !== null) {
-      fail('the fresh-install check began with a career already in storage');
-    } else if (!offersStart) {
-      fail('a fresh install never offered to start a career');
-    } else {
-      // 2. Manager. The forward button is disabled and reads "Choose your
-      //    manager" until one is picked, so its real label is the signal.
-      // An option card is the only thing on these steps carrying aria-pressed.
-      // Matched by attribute rather than by role state, because Playwright's
-      // `pressed: false` also matches buttons with no aria-pressed at all —
-      // which quietly selects the header's back arrow and walks the test out
-      // of the flow it is supposed to be testing.
-      const OPTION = 'button[aria-pressed="false"]';
-
-      await startBtn.click();
-      await p4.waitForURL('**/create/manager');
-      await p4.locator(OPTION).first().click();
-      await p4.getByRole('button', { name: /next: your club/i }).click();
-
-      // 3. Club. Founding the club is the moment the engine builds the world
-      //    and the first save is written.
-      await p4.waitForURL('**/create/club');
-      await p4.locator(OPTION).first().click();
-      // Taking a club over is the default path. If that default ever changes
-      // this fails loudly here, which is the right outcome: the journey a new
-      // player is actually walked through would have changed.
-      await p4.getByRole('button', { name: /^take over\s/i }).click();
-
-      // 4. The reveal only renders once the career reached READY.
-      await p4.getByRole('button', { name: /meet your squad/i }).click();
-      await p4.waitForURL('**/create/squad');
-      await p4.getByRole('button', { name: /^play\b/i }).click();
-      await p4.waitForURL(/\/matchday/);
-
-      // 5. The career must be on disk by the time onboarding hands over.
-      const born = await readSave();
-      const meta = born.meta ? JSON.parse(born.meta) : null;
-      if (!born.save || !meta) {
-        fail('onboarding completed but no career was written to storage');
-      } else {
-        // 6. Reload, and require the career back. The regression that matters
-        //    is creation that looks successful and does not survive — and the
-        //    root route is the honest test of it: it sends a loaded career to
-        //    /home and everyone else back to /onboarding, so landing on /home
-        //    proves both that the save was read and that onboarding did not
-        //    restart.
-        await p4.reload({ waitUntil: 'networkidle' });
-        await p4.goto(BASE, { waitUntil: 'networkidle' });
-
-        let landedInGame = true;
-        try {
-          await p4.waitForURL('**/home');
-        } catch {
-          landedInGame = false;
-        }
-        const after = await readSave();
-        const afterMeta = after.meta ? JSON.parse(after.meta) : null;
-
-        if (!landedInGame) {
-          fail(
-            `after a reload the app went to ${new URL(p4.url()).pathname} instead of the career ` +
-            `it had just created (${meta.clubName}) — onboarding restarted or the save was not read`,
-          );
-        } else if (!afterMeta || afterMeta.saveId !== meta.saveId) {
-          fail(`the career did not survive a reload: saved ${meta.saveId}, found ${afterMeta?.saveId ?? 'nothing'}`);
-        } else {
-          pass(`a career created through onboarding (${meta.clubName}) persists and survives a reload`);
-        }
-      }
-    }
-  } catch (e) {
-    fail(`the onboarding journey broke: ${String(e).split('\n')[0].slice(0, 200)}`);
-  }
-
-  const bornFailures = bornErrors.filter((e) => !/favicon|404/i.test(e));
-  if (bornFailures.length > 0) {
-    fail(`${bornFailures.length} runtime error(s) during career creation: ${bornFailures[0].slice(0, 180)}`);
-  }
-  await ctx4.close();
-}
 
 await browser.close();
 
