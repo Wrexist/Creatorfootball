@@ -143,6 +143,7 @@ export function buildMatchSetup(
     substitutions: config.substitutions,
     liveDecisions: live && involvesPlayer,
     maxDecisions: opts.maxDecisions ?? 4,
+    adaptation: true,
   };
 
   return {

@@ -110,39 +110,59 @@ export function observeTactics(
  * shape reads far louder than two, and a player who mixes it up is never
  * confidently read at all — which is the correct answer, not a failure.
  */
-function dominant<T extends string>(
-  samples: readonly TendencySample[],
-  pick: (s: TendencySample) => T,
+/**
+ * The one majority reader, shared by both loops.
+ *
+ * The pre-match model reads filed tactics; the in-match adaptation reads the
+ * routes a side keeps attacking down. They must agree on what "a pattern" is
+ * — a real majority, believed in proportion to how much has been seen — so the
+ * arithmetic lives here once and the two callers only differ in how much
+ * evidence they demand before they will say anything at all.
+ */
+export interface MajorityOptions {
+  /** Below this many observations nobody claims to know anything. */
+  readonly minSamples: number;
+  /** Observations at which the evidence term saturates. */
+  readonly evidenceFull: number;
+}
+
+export function readMajority<T extends string>(
+  values: readonly T[],
+  opts: MajorityOptions,
 ): TendencyRead<T> | null {
-  if (samples.length < MIN_SAMPLES) return null;
+  if (values.length < opts.minSamples) return null;
 
   const counts = new Map<T, number>();
-  for (const sample of samples) {
-    const key = pick(sample);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
 
   let best: T | null = null;
   let bestCount = 0;
-  // Iterate the samples rather than the map so ties resolve to the value seen
+  // Iterate the values rather than the map so ties resolve to the value seen
   // most recently first, deterministically, with no dependence on insertion
   // order of a Map built from an unordered source.
-  for (let i = samples.length - 1; i >= 0; i--) {
-    const key = pick(samples[i] as TendencySample);
+  for (let i = values.length - 1; i >= 0; i--) {
+    const key = values[i] as T;
     const count = counts.get(key) ?? 0;
     if (count > bestCount) { best = key; bestCount = count; }
   }
   if (best === null) return null;
 
-  const agreement = bestCount / samples.length;
+  const agreement = bestCount / values.length;
   if (agreement <= MIN_AGREEMENT) return null;
-  const evidence = Math.min(1, samples.length / EVIDENCE_FULL);
+  const evidence = Math.min(1, values.length / opts.evidenceFull);
   return {
     value: best,
     confidence: clamp(agreement * evidence, 0, 1),
     matching: bestCount,
-    samples: samples.length,
+    samples: values.length,
   };
+}
+
+function dominant<T extends string>(
+  samples: readonly TendencySample[],
+  pick: (s: TendencySample) => T,
+): TendencyRead<T> | null {
+  return readMajority(samples.map(pick), { minSamples: MIN_SAMPLES, evidenceFull: EVIDENCE_FULL });
 }
 
 export interface OpponentRead {

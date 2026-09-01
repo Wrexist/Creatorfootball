@@ -141,7 +141,20 @@ produces a past-tense recap that the result screen shows, captured at kick-off
 so it describes the opponent actually played rather than the one the next
 observation would describe.
 
-See `simulation/opponentModel.ts`.
+The same read runs **inside a match**. `matches/adaptation.ts` files one
+observation per attack the other side makes (the shape and focus it was played
+in, taken where the attack ends and stamped on the SHOT event) and decides,
+through the shared majority reader and `counterPlan`, whether the bench moves:
+at least 5 of the last 8 attacks in one pattern, confidence above the
+manager's threshold, at most once per side per half, never in a half the side
+has already changed shape in, never against a setup it already holds, and
+never with the score as an input — `AdaptationInput` has no field for it. The
+simulator applies the lean through `applyTacticalChange` with an exclusive
+commentary tag, so the feed line names the football change. `MatchConfig.
+adaptation` switches it off for audits and A/B tests; the balance audit runs
+with it off so a setup is measured on its own.
+
+See `simulation/opponentModel.ts` and `matches/adaptation.ts`.
 
 ## The game loop
 
@@ -181,8 +194,8 @@ Feature screens are lazily imported and chunked per feature.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 771 | `pnpm --filter @cf/engine test` |
-| App unit | 246 | `pnpm --filter @cf/game test` |
+| Engine unit/integration | 793 | `pnpm --filter @cf/engine test` |
+| App unit | 253 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 

@@ -55,6 +55,9 @@ function setupFor(
     config: {
       minutes: 30, halves: 2, playersOnPitch: 7, benchSize: 7,
       substitutions: 5, liveDecisions: false, maxDecisions: 0,
+      // The audit measures what a setup does on its own. Two AI benches
+      // solving each other mid-match would blur exactly that.
+      adaptation: false,
     },
     importance: 3, isDerby: false, rivalryIntensity: 0,
     // A silent crowd: the audit measures quality and shape effects, so the

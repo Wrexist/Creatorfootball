@@ -14,9 +14,9 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **59 files, 771 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **60 files, 793 tests, all passing** |
 | App tests | `pnpm --filter @cf/game test` | **25 files, 253 tests, all passing** |
-| **Total** | `pnpm test` | **1,024 tests, all passing** |
+| **Total** | `pnpm test` | **1,046 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **9/9** against the real bundle (~65 s) |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
@@ -145,6 +145,38 @@ pre-match briefing also produces a past-tense recap — *"They came in having
 watched you sit deep, and pressed high to pull that block apart"* — captured at
 kick-off (before the cycle files a new observation) and shown on the result
 screen. Preview and result can never describe different opponents.
+
+**And it now happens during the match.** `packages/engine/src/matches/adaptation.ts`
+takes the same read inside a match: every attack the player's side makes files
+one observation — the shape and the attacking focus it was played in — into a
+bounded window of the last 8, and the opposing bench acts on it with the same
+majority rule, the same adaptability threshold and the same `counterPlan` the
+pre-match model uses. There is one system, not two.
+
+- **Observe.** An attack is filed where it ends, on the SHOT, and the event is
+  stamped with the same value, so the replay shows exactly what the bench saw.
+- **Identify.** At least 5 attacks; a real majority of the window in one
+  shape or down one flank; confidence above the manager's threshold. A blunt
+  manager needs the full window, a sharp one moves at the minimum.
+- **Decide.** Shape first, focus only if the shape gave nothing. One dimension
+  per adaptation. A side already set up to counter what it sees does nothing.
+  The decision is a pure function that cannot be told the score: the type has
+  no field for it (`@ts-expect-error` in the test proves the compiler refuses).
+- **Adapt.** Max one adaptation per side per half, and none in a half in which
+  the side has already changed shape (its scripted trailing response counts).
+  A change the player makes is invisible until it has been played: the record
+  keeps saying what the side *was* doing until attacks in the new shape out-vote
+  it, so a just-changed tactic is never countered.
+- **Told in football.** The live feed uses tagged commentary chosen exclusively
+  for the change ("{club} sit off and go long. They've worked out where the
+  space is."); the result screen's recap heading becomes "How they solved you"
+  and adds the past-tense sentence. The word "adaptation" never appears.
+
+The emergent routes an attack takes (cross, ball in behind, counter) were
+measured first and rejected as the observable: tactics move them by a few
+percent, dice move them by far more, and a majority appeared as often against
+a narrow side as a wide one. Reading dice and calling it a read would be the
+game cheating in the other direction.
 
 ## 4a. Entity ids — changed
 

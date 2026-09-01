@@ -10,6 +10,7 @@ import { traitModifier } from '../players/traits';
 import type { Formation, FormationSlot, TacticSetup, TacticVector } from '../tactics/tactics';
 import { formationById, formationsFor, autoLineup } from '../tactics/formations';
 import { applyVectorModifiers, toTacticVector } from '../tactics/vector';
+import { decideAdaptation, observeAttack, sampleOf, type AttackSample } from './adaptation';
 import type { MatchEvent, MatchEventType, PitchFrame, PitchPoint, PlayPhase, Side } from './events';
 import type { DecisionPrompt, DecisionOption, DecisionOutcome, DecisionTrigger } from './decisions';
 import type { ActiveSpecialRule, SpecialRuleId } from './specialRules';
@@ -112,6 +113,13 @@ export interface MatchConfig {
   readonly substitutions: number;
   readonly liveDecisions: boolean;
   readonly maxDecisions: number;
+  /**
+   * Whether AI sides may adapt mid-match to the shape the other side keeps
+   * attacking in. On in every real match; switchable off so a test or an audit
+   * can hold everything else equal and measure exactly what the adaptation
+   * changed.
+   */
+  readonly adaptation: boolean;
 }
 
 export interface ManagerMatchBonus {
@@ -130,6 +138,7 @@ export const DEFAULT_MATCH_CONFIG: MatchConfig = {
   substitutions: 5,
   liveDecisions: false,
   maxDecisions: 3,
+  adaptation: true,
 };
 
 export const NEUTRAL_MANAGER_BONUS: ManagerMatchBonus = {
@@ -289,6 +298,17 @@ export class MatchSimulator {
   private halfTimePrompt = false;
   /** Sides that have already spent their one scripted trailing response. */
   private readonly trailingResponseDone = new Set<Side>();
+  /**
+   * What each side has been attacking *in*, as the other bench sees it: the
+   * shape and focus of its last few attacks, oldest first, bounded. Filed only
+   * when an attack actually happens, so a change of setup is invisible until
+   * it has been played — and has to out-vote what was seen before it.
+   */
+  private attackLog: Record<Side, readonly AttackSample[]> = { home: [], away: [] };
+  /** `${side}:${period}` for every half in which that side changed shape at all. */
+  private readonly shapeChangedInPeriod = new Set<string>();
+  /** `${side}:${period}` for every half in which that side adapted. */
+  private readonly adaptedInPeriod = new Set<string>();
 
   /** Per-match openness. Shared by both sides, which is what overdisperses the scorelines. */
   private readonly openness: number;
@@ -412,7 +432,12 @@ export class MatchSimulator {
     this.pending = null;
   }
 
-  applyTacticalChange(side: Side, change: Partial<TacticSetup>, detail?: Readonly<Record<string, string | number | boolean>>): void {
+  applyTacticalChange(
+    side: Side,
+    change: Partial<TacticSetup>,
+    detail?: Readonly<Record<string, string | number | boolean>>,
+    commentaryTags?: readonly string[],
+  ): void {
     const team = this.teamFor(side);
     team.tactics = { ...team.tactics, ...change };
     if (change.formationId) {
@@ -420,9 +445,28 @@ export class MatchSimulator {
       this.reslot(team);
     }
     team.baseVector = this.vectorFor(team);
+    this.noteShapeChange(side);
+    this.emit('TACTICAL_CHANGE', {
+      side,
+      importance: 2,
+      ...(detail ? { detail } : {}),
+      ...(commentaryTags ? { tags: commentaryTags, exclusiveTags: true } : {}),
+    });
+  }
+
+  /**
+   * Every change of shape, by either mechanism, does two things: it marks the
+   * tick and it tells the other side's decision engine. It deliberately does
+   * NOT touch what the other bench has observed: the record still says what
+   * this side was doing, and only attacks played in the new setup can change
+   * it. That is what stops an opponent countering a change made seconds ago,
+   * and what stops a change from wiping the slate for free.
+   */
+  private noteShapeChange(side: Side): void {
+    const team = this.teamFor(side);
     team.shapeChangedTick = this.tick;
+    this.shapeChangedInPeriod.add(`${side}:${this.period}`);
     this.opponentChangedFor = side === 'home' ? 'away' : 'home';
-    this.emit('TACTICAL_CHANGE', { side, importance: 2, ...(detail ? { detail } : {}) });
   }
 
   /** Re-seat the players already on the pitch into a changed formation's slots. */
@@ -724,6 +768,7 @@ export class MatchSimulator {
     this.maybeSubstitution(minute);
     this.maybeDecision(minute, false);
     this.maybeScriptedResponse();
+    this.maybeAdaptation();
     this.checkPeriodBoundary(minute);
   }
 
@@ -751,6 +796,51 @@ export class MatchSimulator {
         trigger: 'AI_TRAILING_RESPONSE',
         stance: pushUp ? 'PUSH_UP' : 'DROP_DEEPER',
       });
+    }
+  }
+
+  /** File one attack for the bench on the other side to think about. */
+  private observe(team: TeamRuntime): AttackSample {
+    const sample = sampleOf(team.tactics);
+    this.attackLog = { ...this.attackLog, [team.side]: observeAttack(this.attackLog[team.side], sample) };
+    return sample;
+  }
+
+  /**
+   * The other manager solving you.
+   *
+   * OBSERVE → IDENTIFY → DECIDE → ADAPT, once per half at most, from what has
+   * actually been seen. The decision is a pure function that consumes no
+   * randomness and is never told the score; see `adaptation.ts`. It is run
+   * after the scripted trailing response on purpose: a side that has just made
+   * its one scoreline call has changed shape this half, and does not also get
+   * to adapt — one change per half is what a manager gets.
+   */
+  private maybeAdaptation(): void {
+    if (!this.setup.config.adaptation) return;
+    for (const team of [this.home, this.away]) {
+      if (team.team.isPlayerControlled) continue;
+      const key = `${team.side}:${this.period}`;
+      const other: Side = team.side === 'home' ? 'away' : 'home';
+      const decision = decideAdaptation({
+        observed: this.attackLog[other],
+        current: team.tactics,
+        adaptability: team.team.managerBonus.adaptability,
+        changedShapeThisPeriod: this.shapeChangedInPeriod.has(key),
+        adaptedThisPeriod: this.adaptedInPeriod.has(key),
+      });
+      if (!decision) continue;
+
+      this.adaptedInPeriod.add(key);
+      this.applyTacticalChange(team.side, decision.change, {
+        trigger: 'AI_ADAPTATION',
+        read: decision.read,
+        pattern: decision.pattern,
+        changes: Object.entries(decision.change).map(([k, v]) => `${k}=${String(v)}`).join(' '),
+        matching: decision.matching,
+        samples: decision.samples,
+        recap: decision.recap,
+      }, [decision.tag]);
     }
   }
 
@@ -1138,7 +1228,16 @@ export class MatchSimulator {
       assister.stats.keyPasses += 1;
       this.emit('CHANCE_CREATED', { side: atk.side, player: assister, secondary: shooter, xg: chance.xg, importance: chance.big ? 3 : 2 });
     }
-    this.emit('SHOT', { side: atk.side, player: shooter, xg: chance.xg, at: this.pointFor(atk.side, chance.x, chance.y), importance: chance.big ? 3 : 2 });
+    // The shape this attack was played in, as the other bench sees it.
+    // Observed here — the one place every attack ends — and stamped on the
+    // event from the same value, so what the opposition has logged and what
+    // the replay shows can never disagree.
+    const seen = this.observe(atk);
+    this.emit('SHOT', {
+      side: atk.side, player: shooter, xg: chance.xg, at: this.pointFor(atk.side, chance.x, chance.y),
+      importance: chance.big ? 3 : 2,
+      detail: { shape: seen.shape, focus: seen.focus },
+    });
     this.momentumTracker.impulse('SHOT', atk.side);
 
     const outcome = opts.penalty
@@ -1606,8 +1705,7 @@ export class MatchSimulator {
       untilTick: this.tick + option.durationMinutes * BALANCE.TICKS_PER_MINUTE,
     });
     this.decisions.record(prompt.id, option.id, prompt.minute, prompt.trigger);
-    team.shapeChangedTick = this.tick;
-    this.opponentChangedFor = side === 'home' ? 'away' : 'home';
+    this.noteShapeChange(side);
     this.emit('DECISION_RESOLVED', {
       side, importance: 3,
       detail: { promptId: prompt.id, optionId: option.id, label: option.label, effect: option.effect },
@@ -1798,6 +1896,8 @@ export class MatchSimulator {
     detail?: Readonly<Record<string, string | number | boolean>>;
     ruleName?: string;
     detailText?: string;
+    /** Restrict commentary to the tagged lines rather than merely preferring them. */
+    exclusiveTags?: boolean;
   } = {}): void {
     this.eventSeq += 1;
     const side = opts.side;
@@ -1815,7 +1915,10 @@ export class MatchSimulator {
       detail: opts.detailText,
     };
 
-    const text = this.commentary.line(type, ctx, opts.tags ? { tags: opts.tags } : {});
+    const text = this.commentary.line(
+      type, ctx,
+      opts.tags ? { tags: opts.tags, ...(opts.exclusiveTags ? { exclusive: true } : {}) } : {},
+    );
 
     const event: MatchEvent = {
       id: `${this.setup.matchId}:${this.eventSeq}`,

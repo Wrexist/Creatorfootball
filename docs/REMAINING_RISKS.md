@@ -193,6 +193,23 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome pnpm test:smoke
 The escape hatch already existed and works. Worth wiring into CI configuration
 so it is not rediscovered each time.
 
+## 11. Every AI bench now adapts, including in matches the player is not in (low, by design)
+
+`MatchConfig.adaptation` defaults on, so the league's AI-versus-AI fixtures
+are played by two benches that read each other with the same rule the player
+faces. That is the honest choice — the player's opponents should not be the
+only ones who think — and the balance and invariant audits pass with it on
+(the balance audit itself runs with it off, so a setup is measured alone).
+Two residual points. First, the underlying results distribution of the league
+moved by whatever the adaptation is worth, which the aggregate tests bound but
+do not describe; if the league table ever looks flatter or steeper than the
+reference data, this is the first knob to A/B by flipping the flag. Second,
+the read is of the shape a side *plays in*, not the routes its attacks take:
+the routes were measured and found to be dice at this simulation's tactic
+weights. A future balance pass that makes width or directness express more
+strongly in play would let the observable move to what the ball actually did,
+and `adaptation.ts` is written so only `sampleOf` and the sample type change.
+
 ## Documentation overlap (housekeeping)
 
 `docs/` carries several earlier audit and planning documents —

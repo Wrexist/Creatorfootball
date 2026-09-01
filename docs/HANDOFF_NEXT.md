@@ -26,9 +26,9 @@ pnpm monorepo, Node ≥20, TypeScript.
 |---|---|---|
 | Types | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | 59 files / **771** |
+| Engine tests | `pnpm --filter @cf/engine test` | 60 files / **793** |
 | App tests | `pnpm --filter @cf/game test` | 25 files / **253** |
-| **Total** | `pnpm test` | **1,024** |
+| **Total** | `pnpm test` | **1,046** |
 | Build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **9/9** vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |
@@ -88,9 +88,14 @@ Determinism (seeded RNG, counter ids) is enforced by tests.
   built bundle and the App Store listing were then scanned by hand and are
   clean. The one gap was the copy written outside the engine — the store
   listing and the marketing site — which is now guarded in `appStore.test.ts`.
-- **In-match adaptation from the opponent model.** Today the only in-match AI
-  response is one scripted trailing reaction. The observation model exists and
-  is unused during a match.
+- ~~**In-match adaptation from the opponent model.**~~ **Done.** The opposing
+  bench reads the shape and flank the player's side keeps attacking in, through
+  the same majority rule, threshold and `counterPlan` as the pre-match model,
+  and makes at most one targeted change per half, told in football commentary
+  and recapped on the result screen. See `matches/adaptation.ts` and section 4
+  of CURRENT_STATE. Not done, deliberately: reading emergent routes (crosses,
+  balls in behind) — measured and found to be dice, not intent, at this
+  simulation's tactic weights.
 - ~~**Post-match story naming the opponent's read.**~~ **Done.** The result screen
   now shows, in the past tense, what the opposition came in knowing — from the
   same decision as the pre-match briefing, captured at kick-off.
