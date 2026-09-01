@@ -4,7 +4,10 @@
     "noEmit": true,
     "types": ["node"],
     "baseUrl": ".",
-    "paths": { "@cf/engine": ["../../packages/engine/src/index.ts"] }
+    "paths": {
+      "@cf/engine": ["../../packages/engine/src/index.ts"],
+      "@cf/engine/*": ["../../packages/engine/src/*"]
+    }
   },
   "include": ["src/**/*"]
 }

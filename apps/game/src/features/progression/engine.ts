@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import {
-  BASE_PACK,
   Ledger,
   claimObjective,
   isRenderable,
@@ -14,7 +13,7 @@ import {
   type StoreOfferDef,
 } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
-import { contentRegistry } from '@/state/content';
+import { content, contentRegistry } from '@/state/content';
 
 /**
  * Progression's bridge to the engine.
@@ -50,7 +49,9 @@ export interface PackView {
 export function usePacks(state: GameState, now: number): PackView[] {
   return useMemo(() => {
     const region = state.settings.region || 'GLOBAL';
-    return [BASE_PACK].map((pack) => {
+    // This screen sits behind the save guard, so the content is loaded; the
+    // packs listed are the ones the world was actually built from.
+    return (content.ready()?.packs ?? []).map((pack) => {
       const manifest = pack.manifest;
       const identity = manifest.rights
         ? { kind: manifest.identityKind, rights: manifest.rights }

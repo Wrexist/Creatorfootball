@@ -1,7 +1,7 @@
 import { simulateMatch, generateSquad, Rng, autoLineup, formationById, DEFAULT_TACTICS,
   type MatchSetup, type Player, type ClubId, type MatchId, asId } from '@cf/engine';
 import { heading, note, evaluate, printChecks, summarise, stats, histogram, table, warn } from './report';
-import { progress } from './harness';
+import { progress, registry } from './harness';
 
 /**
  * Simulation audit.
@@ -16,7 +16,9 @@ import { progress } from './harness';
 const MATCHES = Number(globalThis.process?.env?.['SIM_MATCHES'] ?? 1000);
 
 function squadOf(seed: string, target: number, size = 18): Player[] {
-  return generateSquad(new Rng(seed), { targetOverall: target, size, idPrefix: seed.slice(0, 6) });
+  return generateSquad(new Rng(seed), {
+    targetOverall: target, size, idPrefix: seed.slice(0, 6), nameBank: registry().nameBank(),
+  });
 }
 
 function setupFor(

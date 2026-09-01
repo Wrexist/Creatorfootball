@@ -16,6 +16,10 @@ import { useGameStore } from '@/state/gameStore';
  */
 export function SaveRecoveryScreen(): ReactNode {
   const error = useGameStore((s) => s.error);
+  const source = useGameStore((s) => s.errorSource);
+  // The save is fine and the connection is not: the advice is "try again",
+  // and "start over" would throw away a career for a network blip.
+  const contentFailed = source === 'CONTENT';
   const boot = useGameStore((s) => s.boot);
   const abandon = useGameStore((s) => s.abandon);
   const confirm = useConfirm();
@@ -50,19 +54,20 @@ export function SaveRecoveryScreen(): ReactNode {
         </span>
 
         <h1 className="font-display text-[28px] font-bold leading-tight tracking-[-0.035em] text-ink">
-          We could not open your save
+          {contentFailed ? 'Your league could not be prepared' : 'We could not open your save'}
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-muted text-pretty">
           {error ?? 'The save file could not be read.'}
         </p>
         <p className="mt-2 text-[15px] leading-relaxed text-ink-muted text-pretty">
-          Nothing has been deleted. The file is still on this device exactly as it was, so if this
-          is a version problem an update may well fix it.
+          {contentFailed
+            ? 'Your save is fine and has not been touched. This is almost always the connection dropping partway through.'
+            : 'Nothing has been deleted. The file is still on this device exactly as it was, so if this is a version problem an update may well fix it.'}
         </p>
 
         <GlassPanel level={1} radius="lg" padding="sm" className="mt-6">
           <KeyValueRow label="Save file" value="Untouched" divided />
-          <KeyValueRow label="Backup" value="Checked and unusable" divided />
+          <KeyValueRow label="Backup" value={contentFailed ? 'Untouched' : 'Checked and unusable'} divided />
           <KeyValueRow label="What we changed" value="Nothing" />
         </GlassPanel>
 
@@ -70,9 +75,11 @@ export function SaveRecoveryScreen(): ReactNode {
           <GlassButton variant="primary" size="lg" block loading={retrying} onClick={() => void retry()}>
             Try again
           </GlassButton>
-          <GlassButton variant="ghost" size="md" block onClick={() => void startOver()}>
-            Start a new career instead
-          </GlassButton>
+          {!contentFailed && (
+            <GlassButton variant="ghost" size="md" block onClick={() => void startOver()}>
+              Start a new career instead
+            </GlassButton>
+          )}
         </div>
       </div>
     </div>

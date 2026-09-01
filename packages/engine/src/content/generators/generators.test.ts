@@ -9,6 +9,11 @@ import { generateCreator, tierForFollowers } from './creatorGenerator';
 import { clubFromTemplate, DEFAULT_FORMATION_ID } from './clubGenerator';
 import { MANAGER_ARCHETYPES, PREMADE_MANAGERS, generateManager } from './managerGenerator';
 import { BASE_CLUBS } from '../packs/base/clubs';
+import { BASE_NAME_BANK } from '../packs/base/nameBank';
+import { BASE_FACILITY_IDS } from '../packs/base/facilities';
+
+/** Content is handed to every generator; none of them may import a pack. */
+const FACILITIES = { facilityIds: BASE_FACILITY_IDS };
 import { GENERATION_BALANCE } from '../balance';
 
 const SAMPLES = 2000;
@@ -29,6 +34,7 @@ describe('generatePlayer distributions', () => {
   const rng = rngFrom('dist-test');
   const players = Array.from({ length: SAMPLES }, (_, i) =>
     generatePlayer(rng, {
+      nameBank: BASE_NAME_BANK,
       targetOverall: 40 + (i % 51), // sweep 40..90 so the whole range is exercised
       ageRange: [16, 36],
       idPrefix: 'dist',
@@ -142,7 +148,7 @@ describe('position identity', () => {
     const byPosition = new Map<Position, ReturnType<typeof generatePlayer>[]>();
     for (const position of POSITIONS) {
       byPosition.set(position, Array.from({ length: 120 }, (_, i) =>
-        generatePlayer(rng, { targetOverall: 72, position, idPrefix: 'pos', idIndex: i })));
+        generatePlayer(rng, { nameBank: BASE_NAME_BANK, targetOverall: 72, position, idPrefix: 'pos', idIndex: i })));
     }
     const avg = (position: Position, key: keyof ReturnType<typeof generatePlayer>['attributes']): number =>
       mean((byPosition.get(position) ?? []).map((p) => p.attributes[key]));
@@ -163,7 +169,7 @@ describe('generateSquad', () => {
   it('produces a valid, balanced squad with correct positional cover', () => {
     const rng = rngFrom('squad-test');
     for (let i = 0; i < 40; i++) {
-      const squad = generateSquad(rng, { targetOverall: 55 + i, size: 18, idPrefix: `sq${i}` });
+      const squad = generateSquad(rng, { nameBank: BASE_NAME_BANK, targetOverall: 55 + i, size: 18, idPrefix: `sq${i}` });
       expect(squad).toHaveLength(18);
       const coverage = squadCoverage(squad);
       expect(coverage.GK).toBeGreaterThanOrEqual(2);
@@ -184,7 +190,7 @@ describe('generateSquad', () => {
     for (const target of [48, 62, 74, 86]) {
       const means: number[] = [];
       for (let i = 0; i < 25; i++) {
-        means.push(mean(generateSquad(rng, { targetOverall: target, idPrefix: `m${target}${i}` }).map((p) => p.overall)));
+        means.push(mean(generateSquad(rng, { nameBank: BASE_NAME_BANK, targetOverall: target, idPrefix: `m${target}${i}` }).map((p) => p.overall)));
       }
       expect(mean(means)).toBeGreaterThan(target - 2.5);
       expect(mean(means)).toBeLessThan(target + 2.5);
@@ -197,7 +203,7 @@ describe('generateSquad', () => {
     let veteranTotal = 0;
     const runs = 40;
     for (let i = 0; i < runs; i++) {
-      const squad = generateSquad(rng, { targetOverall: 70, idPrefix: `sh${i}` });
+      const squad = generateSquad(rng, { nameBank: BASE_NAME_BANK, targetOverall: 70, idPrefix: `sh${i}` });
       const ages = squad.map((p) => p.age);
       expect(Math.max(...ages) - Math.min(...ages)).toBeGreaterThanOrEqual(8);
       prospectTotal += squad.filter((p) => p.age <= 20).length;
@@ -213,7 +219,7 @@ describe('generateSquad', () => {
 
   it('honours the home nation bias without producing a monoculture', () => {
     const rng = rngFrom('squad-nation');
-    const squad = generateSquad(rng, { targetOverall: 70, size: 18, homeNation: 'VLK', idPrefix: 'nat' });
+    const squad = generateSquad(rng, { nameBank: BASE_NAME_BANK, targetOverall: 70, size: 18, homeNation: 'VLK', idPrefix: 'nat' });
     const home = squad.filter((p) => p.nationality === 'VLK').length;
     expect(home).toBeGreaterThan(4);
     expect(home).toBeLessThan(18);
@@ -233,32 +239,32 @@ describe('generateSquad', () => {
 
 describe('determinism', () => {
   it('produces identical players from identical seeds', () => {
-    const a = generatePlayer(new Rng('fixed-seed'), { targetOverall: 78, idPrefix: 'd', idIndex: 1 });
-    const b = generatePlayer(new Rng('fixed-seed'), { targetOverall: 78, idPrefix: 'd', idIndex: 1 });
+    const a = generatePlayer(new Rng('fixed-seed'), { nameBank: BASE_NAME_BANK, targetOverall: 78, idPrefix: 'd', idIndex: 1 });
+    const b = generatePlayer(new Rng('fixed-seed'), { nameBank: BASE_NAME_BANK, targetOverall: 78, idPrefix: 'd', idIndex: 1 });
     expect(a).toEqual(b);
   });
 
   it('produces identical squads from identical seeds and different ones otherwise', () => {
-    const a = generateSquad(new Rng('squad-seed'), { targetOverall: 70, idPrefix: 'x' });
-    const b = generateSquad(new Rng('squad-seed'), { targetOverall: 70, idPrefix: 'x' });
-    const c = generateSquad(new Rng('squad-seed-2'), { targetOverall: 70, idPrefix: 'x' });
+    const a = generateSquad(new Rng('squad-seed'), { nameBank: BASE_NAME_BANK, targetOverall: 70, idPrefix: 'x' });
+    const b = generateSquad(new Rng('squad-seed'), { nameBank: BASE_NAME_BANK, targetOverall: 70, idPrefix: 'x' });
+    const c = generateSquad(new Rng('squad-seed-2'), { nameBank: BASE_NAME_BANK, targetOverall: 70, idPrefix: 'x' });
     expect(a).toEqual(b);
     expect(a.map((p) => p.displayName)).not.toEqual(c.map((p) => p.displayName));
   });
 
   it('produces identical creators, managers and clubs from identical seeds', () => {
-    expect(generateCreator(new Rng('c'), {})).toEqual(generateCreator(new Rng('c'), {}));
-    expect(generateManager(new Rng('m'), {})).toEqual(generateManager(new Rng('m'), {}));
+    expect(generateCreator(new Rng('c'), { nameBank: BASE_NAME_BANK })).toEqual(generateCreator(new Rng('c'), { nameBank: BASE_NAME_BANK }));
+    expect(generateManager(new Rng('m'), { nameBank: BASE_NAME_BANK })).toEqual(generateManager(new Rng('m'), { nameBank: BASE_NAME_BANK }));
     const id = asId<ClubId>('club_1');
     const template = BASE_CLUBS[0]!;
-    expect(clubFromTemplate(new Rng('k'), template, id)).toEqual(clubFromTemplate(new Rng('k'), template, id));
+    expect(clubFromTemplate(new Rng('k'), template, id, FACILITIES)).toEqual(clubFromTemplate(new Rng('k'), template, id, FACILITIES));
   });
 
   it('forked streams do not disturb each other', () => {
     const root = new Rng('root');
-    const first = generatePlayer(root.fork('players'), { targetOverall: 70, idPrefix: 'f', idIndex: 0 });
+    const first = generatePlayer(root.fork('players'), { nameBank: BASE_NAME_BANK, targetOverall: 70, idPrefix: 'f', idIndex: 0 });
     root.fork('transfers').int(0, 1000); // an unrelated subsystem burning draws
-    const second = generatePlayer(new Rng('root').fork('players'), { targetOverall: 70, idPrefix: 'f', idIndex: 0 });
+    const second = generatePlayer(new Rng('root').fork('players'), { nameBank: BASE_NAME_BANK, targetOverall: 70, idPrefix: 'f', idIndex: 0 });
     expect(first).toEqual(second);
   });
 });
@@ -266,7 +272,7 @@ describe('determinism', () => {
 describe('generateCreator', () => {
   it('produces creators whose followers match their tier band', () => {
     const rng = rngFrom('creator-dist');
-    const creators = Array.from({ length: 600 }, () => generateCreator(rng, {}));
+    const creators = Array.from({ length: 600 }, () => generateCreator(rng, { nameBank: BASE_NAME_BANK }));
     for (const creator of creators) {
       expect(tierForFollowers(creator.followers)).toBe(creator.tier);
       expect(creator.roles.length).toBeGreaterThan(0);
@@ -285,8 +291,8 @@ describe('generateCreator', () => {
 
   it('scales attributes with tier but leaves controversy free to vary', () => {
     const rng = rngFrom('creator-tiers');
-    const local = Array.from({ length: 300 }, () => generateCreator(rng, { tier: 'LOCAL' }));
-    const global = Array.from({ length: 300 }, () => generateCreator(rng, { tier: 'GLOBAL' }));
+    const local = Array.from({ length: 300 }, () => generateCreator(rng, { nameBank: BASE_NAME_BANK, tier: 'LOCAL' }));
+    const global = Array.from({ length: 300 }, () => generateCreator(rng, { nameBank: BASE_NAME_BANK, tier: 'GLOBAL' }));
     expect(mean(global.map((c) => c.attributes.audience)))
       .toBeGreaterThan(mean(local.map((c) => c.attributes.audience)) + 20);
     // A nobody can still be toxic: controversy must not track tier.
@@ -300,7 +306,7 @@ describe('clubFromTemplate', () => {
   it('derives a coherent club from every base template', () => {
     const rng = rngFrom('clubs');
     for (const [i, template] of BASE_CLUBS.entries()) {
-      const club = clubFromTemplate(rng, template, asId<ClubId>(`club_${i}`));
+      const club = clubFromTemplate(rng, template, asId<ClubId>(`club_${i}`), FACILITIES);
       expect(club.name).toBe(template.name);
       expect(club.stadium.capacity).toBe(template.stadiumCapacity);
       expect(club.tactics.formationId).toBe(DEFAULT_FORMATION_ID);
@@ -319,13 +325,13 @@ describe('clubFromTemplate', () => {
 
   it('gives clubs of different philosophies genuinely different tactical setups', () => {
     const rng = rngFrom('club-tactics');
-    const setups = BASE_CLUBS.map((t, i) => clubFromTemplate(rng, t, asId<ClubId>(`c${i}`)).tactics);
+    const setups = BASE_CLUBS.map((t, i) => clubFromTemplate(rng, t, asId<ClubId>(`c${i}`), FACILITIES).tactics);
     const signatures = new Set(setups.map((t) => `${t.press}|${t.line}|${t.risk}|${t.tempo}`));
     expect(signatures.size).toBeGreaterThan(4);
   });
 
   it('flags the player club and strips its AI profile', () => {
-    const club = clubFromTemplate(rngFrom('mine'), BASE_CLUBS[0]!, asId<ClubId>('mine'), { isPlayerClub: true });
+    const club = clubFromTemplate(rngFrom('mine'), BASE_CLUBS[0]!, asId<ClubId>('mine'), { ...FACILITIES, isPlayerClub: true });
     expect(club.isPlayerClub).toBe(true);
     expect(club.aiProfileId).toBeNull();
   });
@@ -359,8 +365,8 @@ describe('managers', () => {
 
   it('expresses the archetype in the generated attributes', () => {
     const rng = rngFrom('managers');
-    const showmen = Array.from({ length: 200 }, () => generateManager(rng, { archetypeId: 'showman' }));
-    const tacticians = Array.from({ length: 200 }, () => generateManager(rng, { archetypeId: 'tactician' }));
+    const showmen = Array.from({ length: 200 }, () => generateManager(rng, { nameBank: BASE_NAME_BANK, archetypeId: 'showman' }));
+    const tacticians = Array.from({ length: 200 }, () => generateManager(rng, { nameBank: BASE_NAME_BANK, archetypeId: 'tactician' }));
     expect(mean(showmen.map((m) => m.attributes.brandBuilding)))
       .toBeGreaterThan(mean(tacticians.map((m) => m.attributes.brandBuilding)) + 25);
     expect(mean(tacticians.map((m) => m.attributes.tacticalKnowledge)))
@@ -371,7 +377,7 @@ describe('managers', () => {
 
   it('builds a manager from a pre-made template without losing the person', () => {
     const template = PREMADE_MANAGERS[0]!;
-    const manager = generateManager(rngFrom('premade'), { template });
+    const manager = generateManager(rngFrom('premade'), { nameBank: BASE_NAME_BANK, template });
     expect(manager.name).toBe(template.name);
     expect(manager.archetypeId).toBe(template.archetypeId);
     expect(manager.bio).toBe(template.bio);

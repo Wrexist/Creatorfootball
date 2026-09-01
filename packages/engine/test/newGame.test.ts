@@ -1,13 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { createNewGame } from '../src/game/newGame';
+import { ContentRegistry } from '../src/content';
+import { BASE_PACK } from '../src/content/packs/base';
 import { validateState } from '../src/persistence/save';
 import { computeStandings } from '../src/league/standings';
 import { squadStrength, squadWageBill, playerClub, nextFixture } from '../src/game/selectors';
 import { verifyFixtures } from '../src/league/fixtures';
 import type { ClubId } from '../src/core/brand';
 
+/** The base universe, loaded once and validated, handed to every world built here. */
+const registry = (() => {
+  const r = new ContentRegistry();
+  r.load(BASE_PACK);
+  return r;
+})();
+
 const newGame = (seed = 'smoke') =>
   createNewGame({
+    registry,
     seed,
     now: 1_700_000_000_000,
     manager: { kind: 'PREMADE', templateId: 'manager_vera_lindqvist' },

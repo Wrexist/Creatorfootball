@@ -3,9 +3,19 @@ import {
   createNewGame, isMatchResultApplied, asId,
   type GameState, type MatchId, type Fixture,
 } from '../src/index';
+import { ContentRegistry } from '../src/content';
+import { BASE_PACK } from '../src/content/packs/base';
+
+/** The base universe, loaded once and validated, handed to every world built here. */
+const registry = (() => {
+  const r = new ContentRegistry();
+  r.load(BASE_PACK);
+  return r;
+})();
 
 const newCareer = (seed: string): GameState =>
   createNewGame({
+    registry,
     seed,
     now: 1_700_000_000_000,
     manager: { kind: 'PREMADE', templateId: 'manager_vera_lindqvist' },

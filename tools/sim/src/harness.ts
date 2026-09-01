@@ -1,7 +1,10 @@
 import {
-  createNewGame, advanceCycle, Ledger, ContentRegistry, BASE_PACK,
+  createNewGame, advanceCycle, Ledger, ContentRegistry,
   type GameState, type CycleSummary,
 } from '@cf/engine';
+// The pack is reached by its own path on purpose: the engine's barrel no
+// longer carries it, so nothing can pull it into the engine bundle by accident.
+import { BASE_PACK } from '@cf/engine/content/packs/base/index';
 
 /**
  * Shared harness for the headless audits.
@@ -33,6 +36,7 @@ export interface SeasonRun {
 
 export function startGame(seed: string, clubTemplateId = 'club_cinderwick_town'): GameState {
   return createNewGame({
+    registry: registry(),
     seed,
     now: EPOCH,
     manager: { kind: 'PREMADE', templateId: 'manager_vera_lindqvist' },

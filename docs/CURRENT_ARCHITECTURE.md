@@ -37,7 +37,7 @@ re-rolling listings on mount) is documented in
 | `core/` | Seeded RNG, branded ids, clock, `Result`, invariants, domain events |
 | `game/` | `GameState`, `createNewGame`, `advanceCycle`, `applyMatchResult`, season rollover, selectors, mutations |
 | `matches/` | Match simulator, momentum, ratings, commentary, in-match decisions, special rules |
-| `content/` | Content schema, validation, loader, generators, and the base content pack |
+| `content/` | Content schema, validation, registry, generators; `content/packs/` holds the base pack, reachable only by its own path |
 | `simulation/` | World tick, AI clubs, emergent narrative, cascade effects |
 | `social/`, `media/` | Post/story generation, engagement, trending, press conferences |
 | `economy/` | Double-entry-ish `Ledger`, cycle economics, audit harness |
@@ -190,12 +190,30 @@ Routing is data: `app/routes.ts` holds all 27 routes, and the tab bar, wide-scre
 side navigation, deep links and analytics screen tracking all read from it.
 Feature screens are lazily imported and chunked per feature.
 
+## Content loading
+
+The base pack is a lazy chunk. The engine never imports it: `createNewGame`,
+`advanceCycle` and `rolloverSeason` take a `ContentRegistry`, the generators
+take a name bank and a facility list, and the engine barrel exports no pack
+constant. The app's single loader (`state/content.ts`) fetches
+`content/packs/base` with one dynamic `import()`, validates it through the
+registry, caches the result and exposes a subscribable status. Every consumer
+joins the same promise or the same registry. `contentRegistry()` is the sync
+accessor for code that runs once a career exists — a career is READY only
+after its content loaded, so the throw inside it is an invariant alarm.
+
+`vite.config.ts` puts `content/packs/**` in a `content` chunk that depends on
+the `engine` chunk and never the reverse; `contentBoundary.test.ts` reads the
+source and refuses the first import that would recreate the old cycle, and
+`pnpm test:smoke` boots the real bundle, counts the content request (exactly
+one) and refuses a blank creation step.
+
 ## Testing
 
 | Suite | Count | Command |
 |---|---|---|
 | Engine unit/integration | 793 | `pnpm --filter @cf/engine test` |
-| App unit | 253 | `pnpm --filter @cf/game test` |
+| App unit | 275 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 

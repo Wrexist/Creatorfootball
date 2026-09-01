@@ -19,9 +19,9 @@ import { seedRivalries } from '../rivalries/rivalries';
 import { emptyBonuses } from '../contracts/contract';
 import { defaultValuationContext, marketValue, wageDemand } from '../transfers/valuation';
 import {
-  BASE_PACK, ContentRegistry, DEFAULT_FORMATION_ID, clubFromTemplate,
+  DEFAULT_FORMATION_ID, clubFromTemplate, type ContentRegistry,
   generateManager, generateSquad, generateCreator,
-  type ClubTemplate, type ContentPack, type CreatorSeasonConfigDef,
+  type ClubTemplate, type CreatorSeasonConfigDef,
 } from '../content';
 import { generateSponsorOffers, inheritedSponsorDeals } from '../sponsors/sponsors';
 import { saveToken } from '../core/ids';
@@ -72,8 +72,16 @@ export interface NewGameOptions {
   readonly now: number;
   readonly manager: ManagerChoice;
   readonly club: ClubChoice;
-  /** Extra packs on top of the base pack. */
-  readonly packs?: readonly ContentPack[];
+  /**
+   * The content the world is built from: the base pack and whatever sits on
+   * top of it, already loaded and validated. The engine never loads content
+   * itself — a registry that reaches this function has passed validation, and
+   * where it came from (a static import, a lazy chunk, a test fixture) is not
+   * the engine's business. This is what keeps the content pack out of the
+   * engine's bundle and keeps career creation identical however the pack
+   * arrived.
+   */
+  readonly registry: ContentRegistry;
   readonly settings?: Partial<GameSettings>;
 }
 
@@ -149,12 +157,12 @@ export function createNewGame(opts: NewGameOptions): GameState {
    * the same (seed, now) must still produce a byte-identical world.
    */
   const idToken = saveToken(opts.seed, opts.now);
-  const registry = new ContentRegistry();
-  registry.load(BASE_PACK);
-  for (const pack of opts.packs ?? []) registry.load(pack);
+  const registry = opts.registry;
+  if (registry.packs().length === 0) throw new Error('[NEW_GAME] the content registry is empty');
 
   const config = registry.seasonConfig() as CreatorSeasonConfigDef;
   const nameBank = registry.nameBank();
+  const facilityIds = registry.facilities().map((f) => f.id);
   const { templates, playerTemplateId } = resolveClubTemplates(opts.club, registry);
 
   const clubs: Record<string, Club> = {};
@@ -178,6 +186,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
 
     const club = clubFromTemplate(clubRng, template, clubId, {
       isPlayerClub,
+      facilityIds,
       startingBudget: template.budget,
     });
 
@@ -278,6 +287,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
         isPlayer: true,
         clubId: playerClubId,
         id: playerManagerId,
+        nameBank,
       })
     : generateManager(managerRng, {
         name: choice.name,
@@ -288,6 +298,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
         isPlayer: true,
         clubId: playerClubId,
         id: playerManagerId,
+        nameBank,
       } as Parameters<typeof generateManager>[1]);
 
   managers[playerManagerId] = playerManager;
@@ -305,6 +316,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
       // meaningless as a progression currency.
       quality: clamp((template.reputation - 30) / 70, 0.1, 0.95),
       reputation: template.reputation,
+      nameBank,
     });
     clubs[clubId] = { ...(clubs[clubId] as Club), managerId };
   }
@@ -318,6 +330,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
       template,
       id: creatorId,
       clubId,
+      nameBank,
     } as Parameters<typeof generateCreator>[1]);
     creators[creatorId] = creator;
     if (clubId && clubs[clubId]) {
@@ -438,7 +451,7 @@ export function createNewGame(opts: NewGameOptions): GameState {
     commentary: true,
     autoDecisionTimeout: true,
     region: 'GB',
-    enabledPackIds: [BASE_PACK.manifest.id, ...(opts.packs ?? []).map((p) => p.manifest.id)],
+    enabledPackIds: registry.packs().map((p) => p.id),
     difficulty: 'STANDARD',
     ...opts.settings,
   };

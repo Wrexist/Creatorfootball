@@ -15,8 +15,8 @@ it, on the commit that introduced this file. Nothing is estimated.
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | **60 files, 793 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **25 files, 253 tests, all passing** |
-| **Total** | `pnpm test` | **1,046 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **27 files, 275 tests, all passing** |
+| **Total** | `pnpm test` | **1,068 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **9/9** against the real bundle (~65 s) |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
@@ -193,6 +193,52 @@ of the inputs, and a test asserts two runs stay byte-identical. Measured cost:
 The v6→v7 migration gives an existing career a token for ids it creates from
 now on and leaves the ids it already holds alone.
 
+## 4b. Content loading — changed
+
+The base content pack is now a lazy chunk, and the player cannot tell.
+
+Before, `BASE_PACK` was imported at module scope by the engine itself —
+`newGame.ts` built a registry from it on every call, `cycle.ts` kept a module
+cache of it, the generators used its name bank as a fallback, and the engine's
+barrel re-exported it — so the pack lived inside the engine chunk and every
+first visit downloaded 388 kB of fiction before the title screen. The earlier
+attempt to split it died on load because of exactly those edges.
+
+Now:
+
+- **The engine never imports a pack.** `createNewGame` and `advanceCycle`
+  take a `ContentRegistry`; the generators take a name bank and facility list.
+  The engine's barrel exports no pack constants. A boundary test
+  (`contentBoundary.test.ts`) fails on the first import that comes back.
+- **One loader owns the lifecycle** — `apps/game/src/state/content.ts`:
+  REQUEST → LOAD (one dynamic `import()`) → VALIDATE (the registry, same rules
+  as any pack) → CACHE → READY. Concurrent callers share the in-flight
+  promise; later callers share the registry; the promise never resolves with
+  a partial registry; a failure drops the in-flight promise so the next call
+  retries. Status (`IDLE`/`LOADING`/`READY`/`FAILED`) is subscribable.
+- **Intent is the prefetch signal.** "Start your career" starts the load; the
+  manager step (which needs nothing) makes sure it started; the club step
+  renders immediately with its header, both paths and the whole club designer,
+  and fills the takeover list in when the universe arrives — three card-shaped
+  skeletons under "Preparing your league" until then, an inline "try again" if
+  it never does. Confirming waits inside the existing "building the league"
+  beat. Nothing says chunk, module or loading.
+- **Nothing is created early.** `startNewGame` awaits the content, then
+  builds, then saves, then says READY. A failure returns the phase to where
+  it was with a message in the player's language. If a second creation is
+  asked for while the first waits, the first stands down: only the latest
+  request builds and saves. Booting a saved career waits for the content too;
+  a content failure there is reported as such, offers "try again", and never
+  offers to delete the save.
+- **Determinism is untouched.** The same registry produces byte-identical
+  worlds however it arrived; the three reference world hashes are unchanged
+  by this refactor.
+
+Measured on the built bundle (desktop headless Chromium, medians of three):
+first screen 1738 → 1507 kB of script (−13%), engine chunk 282 → 205 kB
+gzip, content chunk 77 kB gzip requested exactly once, confirm-to-playable
+2390 → 2373 ms, journey bytes unchanged (no duplication).
+
 ## 5. What is strong
 
 - Engine/UI separation is real, not aspirational.
@@ -234,9 +280,10 @@ now on and leaves the ids it already holds alone.
   their ids to the career that created them (see §4a); existing saves keep the
   ids already written into them, because rewriting every club, fixture and
   ledger reference inside a live save is riskier than the collision warrants.
-- **The engine ships as one 273 kB gzip chunk**, loaded behind the splash on
-  first visit. Splitting it requires breaking a module-scope cycle; a previous
-  attempt shipped a page that died on load.
+- **The engine ships as a 205 kB gzip chunk plus a 77 kB content chunk** that
+  arrives only when a career is created or opened (see §4b). The split is
+  guarded by a source-level boundary test and by the browser smoke suite,
+  which counts the content request and refuses a blank step.
 - **No real-device testing has been done.** Every performance number in this
   repository is desktop-browser or headless Node. Phase 23 of the current
   brief cannot be closed from CI.

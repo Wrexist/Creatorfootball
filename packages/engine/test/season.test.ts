@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createNewGame } from '../src/game/newGame';
+import { ContentRegistry } from '../src/content';
+import { BASE_PACK } from '../src/content/packs/base';
 import { advanceCycle } from '../src/game/cycle';
 import { validateState } from '../src/persistence/save';
 import { computeStandings } from '../src/league/standings';
@@ -8,11 +10,19 @@ import { auditEconomy } from '../src/economy/audit';
 import type { GameState } from '../src/game/state';
 import type { ClubId } from '../src/core/brand';
 
+/** The base universe, loaded once and validated, handed to every world built here. */
+const registry = (() => {
+  const r = new ContentRegistry();
+  r.load(BASE_PACK);
+  return r;
+})();
+
 const START = 1_700_000_000_000;
 const CYCLE_MS = 604_800_000;
 
 const newGame = (seed: string): GameState =>
   createNewGame({
+    registry,
     seed,
     now: START,
     manager: { kind: 'PREMADE', templateId: 'manager_vera_lindqvist' },
@@ -38,7 +48,7 @@ async function playSeason(seed: string, weeks = 22) {
   let state = newGame(seed);
   const summaries = [];
   for (let i = 0; i < weeks; i++) {
-    const result = advanceCycle(state, { now: START + i * CYCLE_MS });
+    const result = advanceCycle(state, { registry, now: START + i * CYCLE_MS });
     state = result.state;
     summaries.push(result.summary);
     if (i % 4 === 3) await breathe();
@@ -110,7 +120,7 @@ describe('a full season', () => {
     // it loses, results collapse, and the decline compounds beyond recovery.
     let state = newGame('season-decay');
     for (let cycle = 0; cycle < 66; cycle++) {
-      state = advanceCycle(state, { now: START + cycle * CYCLE_MS }).state;
+      state = advanceCycle(state, { registry, now: START + cycle * CYCLE_MS }).state;
       if (cycle % 4 === 3) await breathe();
     }
     const club = state.clubs[state.playerClubId]!;
@@ -181,7 +191,7 @@ describe('a full season', () => {
     let stories = 0;
     let posts = 0;
     for (let i = 0; i < 6; i++) {
-      const result = advanceCycle(state, { now: START + i * CYCLE_MS });
+      const result = advanceCycle(state, { registry, now: START + i * CYCLE_MS });
       state = result.state;
       stories += result.stories.length;
       posts += result.posts.length;
@@ -234,7 +244,7 @@ describe('a full season', () => {
     let state = newGame('season-i');
     const phases: string[] = [];
     for (let i = 0; i < 22; i++) {
-      const result = advanceCycle(state, { now: START + i * CYCLE_MS });
+      const result = advanceCycle(state, { registry, now: START + i * CYCLE_MS });
       state = result.state;
       phases.push(state.clock.phase);
       if (i === 21) expect(result.summary.seasonComplete).toBe(true);

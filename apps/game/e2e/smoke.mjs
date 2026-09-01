@@ -71,17 +71,41 @@ const readSave = (target) => target.evaluate(async () => {
  * button carries its blocker text until the step is satisfied and only then
  * takes its real label, so waiting for that label is waiting for the step to
  * be complete.
+ *
+ * Along the way it watches for the two things the content split could break
+ * without any test in Node noticing: a step that renders nothing while the
+ * universe is still arriving, and the universe being fetched more than once.
+ * Both are recorded here and asserted by the caller.
  */
 async function createCareerThroughUi(target) {
+  const blankSteps = [];
+  const contentRequests = [];
+  const onRequest = (req) => { if (/\/assets\/content-[^/]*\.js/.test(req.url())) contentRequests.push(req.url()); };
+  target.on('request', onRequest);
+  const notBlank = async (step) => {
+    // A screen with a heading and something to press is not blank. Text alone
+    // would pass a spinner; a control alone would pass a stuck form.
+    const text = await target.evaluate(() => document.body.innerText.trim());
+    const controls = await target.locator('button:visible, input:visible').count();
+    if (text.length < 20 || controls === 0) blankSteps.push(`${step}: ${text.length} chars, ${controls} controls`);
+  };
+
   const start = target.getByRole('button', { name: /start your career/i }).first();
   await start.waitFor({ state: 'visible' });
   await start.click();
 
   await target.waitForURL('**/create/manager');
+  await target.locator(OPTION).first().waitFor({ state: 'visible' });
+  await notBlank('manager step');
   await target.locator(OPTION).first().click();
   await target.getByRole('button', { name: /next: your club/i }).click();
 
   await target.waitForURL('**/create/club');
+  // The step is on screen before its clubs are: the moment the URL changes
+  // there must already be a heading and something to press.
+  await notBlank('club step, on arrival');
+  await target.locator(OPTION).first().waitFor({ state: 'visible' });
+  await notBlank('club step, clubs listed');
   await target.locator(OPTION).first().click();
   // Taking a club over is the default path. If that default ever changes this
   // fails loudly here, which is the right outcome: the journey a new player is
@@ -89,10 +113,16 @@ async function createCareerThroughUi(target) {
   await target.getByRole('button', { name: /^take over\s/i }).click();
 
   // The reveal only renders once the career reached READY.
+  await target.getByRole('button', { name: /meet your squad/i }).waitFor({ state: 'visible' });
+  await notBlank('club reveal');
   await target.getByRole('button', { name: /meet your squad/i }).click();
   await target.waitForURL('**/create/squad');
+  await target.getByRole('button', { name: /^play\b/i }).waitFor({ state: 'visible' });
+  await notBlank('squad step');
   await target.getByRole('button', { name: /^play\b/i }).click();
   await target.waitForURL(/\/matchday/);
+  target.off('request', onRequest);
+  return { blankSteps, contentRequests };
 }
 
 // --- 1. the built app boots at all ------------------------------------
@@ -130,7 +160,22 @@ try {
   if (fresh.save !== null || fresh.meta !== null) {
     fail('the run began with a career already in storage, so creation was never exercised');
   } else {
-    await createCareerThroughUi(page);
+    const errorsBefore = pageErrors.length;
+    const journey = await createCareerThroughUi(page);
+    const journeyErrors = pageErrors.slice(errorsBefore).filter((e) => !/favicon|404/i.test(e));
+
+    // The universe is a lazy chunk. It must arrive exactly once — a second
+    // request would mean two loaders, or a loader that forgot — and no step
+    // may be a blank screen while it is on its way.
+    if (journey.contentRequests.length !== 1) {
+      fail(`the content chunk was requested ${journey.contentRequests.length} times during creation (expected exactly once)`);
+    } else if (journey.blankSteps.length > 0) {
+      fail(`creation showed a blank screen at: ${journey.blankSteps.join('; ')}`);
+    } else if (journeyErrors.length > 0) {
+      fail(`creation logged ${journeyErrors.length} error(s): ${journeyErrors[0].slice(0, 180)}`);
+    } else {
+      pass('career creation loaded the universe once, showed no blank step and threw nothing');
+    }
 
     const born = await readSave(page);
     const meta = born.meta ? JSON.parse(born.meta) : null;

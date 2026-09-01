@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ContentRegistry, BASE_PACK } from '../content';
+import { ContentRegistry } from '../content';
+import { BASE_PACK } from '../content/packs/base';
 import { createNewGame } from '../game/newGame';
 import {
   campaignOffers, creatorInterest, deliveredCampaigns, liveFeuds, runningCampaigns,
@@ -38,6 +39,7 @@ const registry = (() => {
 const AT = 1_700_000_000_000;
 
 const freshGame = () => createNewGame({
+  registry,
   seed: 'day-one',
   now: AT,
   manager: {

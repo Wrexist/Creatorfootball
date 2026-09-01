@@ -8,7 +8,7 @@ import {
   isMatchResultApplied,
 } from '@cf/engine';
 import { storage } from '@/platform/storage';
-import { contentRegistry } from '@/state/content';
+import { ContentError, content, contentRegistry, playerMessageFor } from '@/state/content';
 import { CANCELLED, createSaveQueue } from './saveQueue';
 
 /**
@@ -35,6 +35,13 @@ interface GameStoreState {
   state: GameState | null;
   meta: SaveMeta | null;
   error: string | null;
+  /**
+   * What `error` is about when the phase is ERROR. A save that could not be
+   * read and content that could not be loaded look the same to the shell and
+   * need opposite advice: one may be worth starting over from, the other
+   * never is — the save is fine, the connection is not.
+   */
+  errorSource: 'SAVE' | 'CONTENT' | null;
   /** True when the previous save was damaged and we fell back to the backup. */
   recoveredFromBackup: boolean;
   busy: boolean;
@@ -56,7 +63,7 @@ interface GameStoreState {
   ephemeralStorage: boolean;
 
   boot: () => Promise<void>;
-  startNewGame: (opts: { seed?: string; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
+  startNewGame: (opts: { seed?: string; now?: number; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
   advance: (playerResult?: MatchResult | null) => Promise<CycleSummary | null>;
   createSimulator: (fixtureId: FixtureId) => MatchSimulator | null;
   apply: (mutate: (state: GameState) => GameState) => void;
@@ -102,11 +109,20 @@ export const useGameStore = create<GameStoreState>((set, get) => {
     return outcome;
   };
 
+  /**
+   * Which creation is current. A player can ask for a career, then ask for a
+   * different one before the content the first was waiting on has arrived;
+   * only the latest request may build and save a world. Earlier ones find
+   * they have been superseded when they wake and do nothing.
+   */
+  let creationSerial = 0;
+
   return {
   phase: 'BOOTING',
   state: null,
   meta: null,
   error: null,
+  errorSource: null,
   recoveredFromBackup: false,
   busy: false,
   lastCycle: null,
@@ -114,13 +130,27 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   ephemeralStorage: false,
 
   boot: async () => {
-    set({ phase: 'BOOTING', error: null });
+    set({ phase: 'BOOTING', error: null, errorSource: null });
     try {
       const loaded = await loadGame(storage);
       // The adapter probes real storage on first access, so by now it knows
       // whether this session can persist at all.
       if (storage.isEphemeral) set({ ephemeralStorage: true });
       if (loaded.ok) {
+        // A saved world cannot be shown without the content it was built
+        // from, so READY waits for it. A fresh install does not: the title
+        // screen needs no content, and asking for it here would make the
+        // first screen wait on a download it has no use for yet.
+        try {
+          await content.load();
+        } catch (error) {
+          set({
+            phase: 'ERROR',
+            errorSource: 'CONTENT',
+            error: playerMessageFor(error instanceof ContentError ? error : null),
+          });
+          return;
+        }
         set({
           phase: 'READY',
           state: loaded.value.state,
@@ -137,30 +167,62 @@ export const useGameStore = create<GameStoreState>((set, get) => {
       // the player decides whether to start again.
       set({
         phase: 'ERROR',
+        errorSource: 'SAVE',
         error:
           loaded.error.code === 'UNSUPPORTED_VERSION'
             ? 'This save was created by a newer version of the game.'
             : 'Your save could not be read and no usable backup was found.',
       });
     } catch (error) {
-      set({ phase: 'ERROR', error: String(error) });
+      set({ phase: 'ERROR', errorSource: 'SAVE', error: String(error) });
     }
   },
 
-  startNewGame: async ({ seed, manager, club }) => {
+  /**
+   * Create a career: wait for the content, build the world, put it on disk,
+   * and only then say READY.
+   *
+   * Nothing is created until the content is here, so there is never a
+   * half-built career to save or show. A failure — the chunk did not arrive,
+   * the pack was invalid, the world threw — puts the phase back where it was
+   * (the title screen, or the career the player already had) with a message
+   * they can act on; it never sends them to the save-recovery screen, because
+   * their save is not what failed. And if a newer creation was asked for
+   * while this one waited, this one stands down.
+   */
+  startNewGame: async ({ seed, now, manager, club }) => {
+    const serial = ++creationSerial;
+    const superseded = (): boolean => serial !== creationSerial;
+    const failWith = (message: string): void => {
+      if (superseded()) return;
+      set({ phase: get().state ? 'READY' : 'NO_SAVE', busy: false, error: message });
+    };
     set({ phase: 'CREATING', busy: true, error: null });
+
+    let registry;
+    try {
+      registry = (await content.load()).registry;
+    } catch (error) {
+      failWith(playerMessageFor(error instanceof ContentError ? error : null));
+      return;
+    }
+    if (superseded()) return;
+
     try {
       const state = createNewGame({
+        registry,
         // A player-visible seed makes worlds shareable and bugs reproducible.
         seed: seed ?? Math.floor(Date.now() % 1e9).toString(36),
-        now: Date.now(),
+        now: now ?? Date.now(),
         manager,
         club,
       });
       const meta = await notePersist(state);
-      set({ phase: 'READY', state, meta, busy: false, lastCycle: null });
+      if (superseded()) return;
+      set({ phase: 'READY', state, meta, busy: false, lastCycle: null, error: null });
     } catch (error) {
-      set({ phase: 'ERROR', error: String(error), busy: false });
+      console.error('[game] career creation failed', error);
+      failWith('Your club could not be created. Nothing has been saved. Try again.');
     }
   },
 

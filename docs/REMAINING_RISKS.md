@@ -28,9 +28,25 @@ careers with different seeds therefore stop sharing season ids going forward,
 but their existing clubs and fixtures still collide with each other's. Anything
 that keys across saves should treat pre-v7 careers as unreliable.
 
-## 2. The engine loads as one 273 kB gzip chunk on first visit (medium — now mapped)
+## 2. RESOLVED — the content pack is its own lazy chunk
 
-First-visit cost on a mobile network, behind the splash; cached afterwards.
+The engine chunk is 205 kB gzip (was 282) and the 77 kB content chunk is
+fetched once, on intent, by one loader (`apps/game/src/state/content.ts`).
+See CURRENT_STATE §4b.
+
+**What actually caused the old cycle** was simpler than the analysis below
+believed: the *engine* imported the packs — `newGame.ts` and `cycle.ts` read
+`BASE_PACK`, the generators read the base name bank and facility ids as
+fallbacks, and the engine barrel re-exported all of it. Once those edges were
+removed, the pack's own value imports of engine leaves (listed below) are a
+one-way content → engine dependency, which a bundler orders without trouble.
+The six-leaf recipe was not needed. The remaining risks are operational: a
+failed content fetch on a saved career is a "try again" screen that never
+offers to delete the save, and a failed fetch during creation is an inline
+retry on the club list — both are tested in Node and one of them (the happy
+path) in the browser; the failure paths in a real browser remain unexercised.
+
+*The earlier analysis, kept for the record:*
 
 **The cycle is now precisely characterised, and it is not what the note in
 `vite.config.ts` implies.** There is no module cycle: nothing under `content/`

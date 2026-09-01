@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClubId, MatchId, PlayerId } from '../core/brand';
-import { ContentRegistry, BASE_PACK } from '../content';
+import { ContentRegistry } from '../content';
+import { BASE_PACK } from '../content/packs/base';
 import { buildTestWorld, makeTestEvent, withEvents } from '../simulation/fixtures';
 import { Ledger } from '../economy/ledger';
 import {

@@ -27,15 +27,15 @@ pnpm monorepo, Node ≥20, TypeScript.
 | Types | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | 60 files / **793** |
-| App tests | `pnpm --filter @cf/game test` | 25 files / **253** |
-| **Total** | `pnpm test` | **1,046** |
+| App tests | `pnpm --filter @cf/game test` | 27 files / **275** |
+| **Total** | `pnpm test` | **1,068** |
 | Build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **9/9** vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |
 
 Key facts: `SAVE_VERSION` 7, careers persist to **IndexedDB**, migrations 1→7
-complete. Save plateaus ~3.2 MB (does not grow unbounded). Engine ships as one
-273 kB gzip chunk; ~460 kB gzip to interactive. `eventLog` capped at 600.
+complete. Save plateaus ~3.2 MB (does not grow unbounded). Engine ships as a 205 kB
+gzip chunk; the 77 kB content chunk loads on intent, once. `eventLog` capped at 600.
 Determinism (seeded RNG, counter ids) is enforced by tests.
 
 ## 4. Done in the last three cycles — do NOT redo
@@ -76,10 +76,10 @@ Determinism (seeded RNG, counter ids) is enforced by tests.
   invariant explicit or enforced.
 
 ### P2
-- **Split the engine chunk.** Now mapped: a *chunk* cycle from six value imports
-  (base pack → engine leaves), not a module cycle. Recipe in `REMAINING_RISKS.md`
-  §2. A static split defers nothing; the real win needs the pack loaded via
-  dynamic `import()`, which makes `createNewGame` async — a design decision.
+- ~~**Split the engine chunk.**~~ **Done.** The content pack is a lazy chunk
+  behind one loader; the engine takes a registry and imports no pack;
+  `createNewGame` stayed synchronous — only the app's `startNewGame` waits.
+  Boundary test, smoke checks and measurements in CURRENT_STATE §4b.
 - ~~**Content-safety audit.**~~ **Done — and it turns out it always had been.**
   This entry said "never done" for three cycles and was wrong.
   `basePack.test.ts` flattens the base pack, the club lore and both example

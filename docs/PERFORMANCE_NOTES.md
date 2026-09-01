@@ -33,40 +33,40 @@ Chunk sizes from the production build (gzip measured directly on the artefacts):
 
 | Chunk | Raw | Gzip | Loaded |
 |---|---|---|---|
-| `engine` | 858 kB | **273 kB** | on app entry |
-| `vendor` (react, router) | 231 kB | 72 kB | eager |
-| `App` | 228 kB | 68 kB | on app entry |
-| `motion` | 138 kB | 44 kB | on app entry |
-| entry | 3 kB | 3 kB | eager |
-| ~14 per-feature chunks | 1–124 kB | — | on route |
+| `engine` | 626 kB | **205 kB** | on app entry |
+| `content` (the base pack) | 239 kB | **77 kB** | on intent: first career, or opening a save |
+| `vendor` (react, router) | 231 kB | 74 kB | eager |
+| `App` | 234 kB | 72 kB | on app entry |
+| `motion` | 138 kB | 45 kB | on app entry |
+| entry | 7 kB | 3.5 kB | eager |
+| ~14 per-feature chunks | 1–125 kB | — | on route |
 
 `dist/` totals 3.0 MB, of which 600 kB is art.
 
-The HTML loads only the 3 kB entry and `vendor` eagerly; `App`, `engine` and
-`motion` arrive via a dynamic import behind the splash screen. Time to
-interactive is therefore roughly **460 kB gzip**, most of it the engine.
+The HTML loads only the entry and `vendor` eagerly; `App`, `engine` and
+`motion` arrive via a dynamic import behind the splash screen. Time to the
+title screen is roughly **395 kB gzip** (was 460); the content chunk is
+fetched when the player says they are starting a career, and lands behind the
+manager step.
 
-### Why the engine is one chunk
+### Why the content is its own chunk, and how it stays one
 
-This is the largest single number in the build and it is deliberate. Splitting
-the content packs out (388 kB of source, the biggest area in the engine) was
-tried and shipped a broken production page: the engine's modules and its content
-data reference each other at module scope, Rollup cannot order two chunks that
-form a cycle, and the result was a temporal-dead-zone error on load. It built
-cleanly and passed every unit test, because unit tests run the source in Node
-and never touch the bundle. `apps/game/vite.config.ts` carries this warning
-inline.
+The first attempt at this split shipped a broken page: the engine imported the
+pack at module scope (`newGame`, `cycle`, the generators' fallbacks, the
+barrel), the pack imports engine leaves for its constants, and Rollup cannot
+order two chunks that form a cycle. Every engine → pack edge is gone now, so
+the `content` chunk depends on `engine` and never the reverse. Three things
+guard it: `contentBoundary.test.ts` reads the source and fails on the first
+import that comes back; `vite.config.ts` names the chunk and says why; and
+`pnpm test:smoke` boots the real bundle, counts the content request (exactly
+one) and refuses a blank creation step.
 
-**The prerequisite is now mapped** (`REMAINING_RISKS.md` §2). It is a *chunk*
-cycle, not a module cycle: the base pack imports six engine leaf modules as
-values at module scope, so a chunk holding only the packs depends on the engine
-chunk while the engine chunk depends on it. Moving `content/packs/**` together
-with those six leaves and their three type-only upstreams into one chunk
-removes the back-edge; `pnpm test:smoke` boots the real bundle and would catch
-a regression. The caveat: a static split defers no bytes — deferral needs the
-pack loaded through a dynamic `import()`, which makes `createNewGame` async and
-changes the engine's public API. That is a design decision, so it was mapped
-here and not done.
+Measured with `node e2e/measure.mjs` (desktop headless Chromium, median of
+three, same machine, before → after): first screen 1475 → 1448 ms with
+1738 → 1507 kB of script; start → manager step 1070 → 624 ms; next → club step
+88 → 104 ms (the pack is already here by then); confirm → playable
+2390 → 2373 ms; whole-journey script bytes 1789 → 1792 kB — nothing is
+downloaded twice.
 
 It is also worth being honest about the payoff: the splash screen already covers
 this load, and it is cached after first visit. This is a first-visit,
