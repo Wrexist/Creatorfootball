@@ -95,6 +95,39 @@ are reclaimed. All writes are serialised through a single-slot queue in
 `state/saveQueue.ts`, so two saves are never in flight together and deleting a
 career cannot be overwritten by one already on its way.
 
+## The snapshot-compute-apply invariant
+
+Feature engines (`features/*/engine.ts`, `features/squad/renewal.ts`) commit a
+single action like this:
+
+```ts
+const s = useGameStore.getState().state;      // snapshot
+const result = engineFunction(s, ...);        // compute from the snapshot
+store.apply((current) => merge(current, result));
+```
+
+`apply` hands the mutator the **live** state, but the values merged in were
+computed from the snapshot. Of the ten call sites, six merge snapshot-derived
+data and one ignores `current` entirely and returns a state built wholly from
+its snapshot.
+
+That is safe for exactly one reason: every one of these paths runs to
+completion synchronously, so the live state cannot move between the snapshot
+and the apply. Add a single `await` anywhere between them and the cycle can
+advance in that window — the apply then writes stale data over a newer world.
+Money computed against an older ledger; a squad written over one that has since
+changed. It would not throw and it would not fail an existing test.
+
+**The invariant: a module that commits state through `apply` must contain no
+asynchronous boundary.** Async work belongs before the snapshot, never inside
+it.
+
+Enforced by `apps/game/src/state/engineInvariant.test.ts`, which finds those
+modules by looking for `.apply(` rather than from a hardcoded list — so a
+module written later is covered the day it is written, and the guard cannot
+drift away from the code it guards. It rejects `async`, `await`, `.then(` and
+`new Promise`, ignoring comments and string literals.
+
 ## Opponent AI
 
 An AI club meeting the player leans its tactics against what the league has

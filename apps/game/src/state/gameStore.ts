@@ -223,6 +223,20 @@ export const useGameStore = create<GameStoreState>((set, get) => {
    * Escape hatch for actions that are a single engine call rather than a whole
    * cycle — accepting a transfer, setting tactics, upgrading a facility. The
    * mutation must still be an engine function; this only owns persistence.
+   *
+   * INVARIANT — snapshot, compute and apply must run synchronously.
+   *
+   * Callers overwhelmingly read state first, compute a result from that
+   * snapshot, then merge the result in here. `mutate` receives the *live*
+   * state, so if execution yields between the snapshot and this call, the
+   * world can move and the merge writes snapshot-derived data over a newer
+   * state — money computed against an older ledger, a squad written over one
+   * that has since changed. It would not throw and it would not fail a test.
+   *
+   * So a module that commits through `apply` must contain no async boundary.
+   * Enforced by `engineInvariant.test.ts`, which finds those modules by
+   * looking for this call rather than from a list. Async work belongs before
+   * the snapshot, never inside it.
    */
   apply: (mutate) => {
     const current = get().state;

@@ -83,6 +83,39 @@ describe('game store persistence', () => {
     expect(loaded.value.state.saveId).toBe(useGameStore.getState().state?.saveId);
   });
 
+  /**
+   * The browser suite proves a career created through onboarding is on disk by
+   * the time the player reaches matchday. It cannot prove *when* the write
+   * happened: by then the player has clicked through a reveal and a squad
+   * screen, and a write merely racing them would have landed anyway. Verified
+   * — removing the `await` in `startNewGame` leaves the browser test green.
+   *
+   * The ordering is what matters on a phone, where the app can be killed
+   * during the reveal. So it is asserted directly: the save must be on disk
+   * before creating a career resolves, not shortly afterwards.
+   */
+  it('finishes creating a career only once it is on disk', async () => {
+    const order: string[] = [];
+    const realSet = storage.set.bind(storage);
+    const spy = storage as unknown as { set: (k: string, v: string) => Promise<void> };
+    spy.set = async (key, value) => {
+      await realSet(key, value);
+      order.push(`wrote:${key}`);
+    };
+
+    try {
+      await newCareer();
+      order.push('createResolved');
+    } finally {
+      spy.set = realSet;
+    }
+
+    const wrote = order.indexOf(`wrote:${SAVE_KEY}`);
+    const resolved = order.indexOf('createResolved');
+    expect(wrote, 'the career was never written during creation').toBeGreaterThanOrEqual(0);
+    expect(wrote).toBeLessThan(resolved);
+  });
+
   it('boots a career back from storage exactly as it was saved', async () => {
     await newCareer();
     useGameStore.getState().apply((s) => ({ ...s, clock: { ...s.clock, cycle: 42 } }));
