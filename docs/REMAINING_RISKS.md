@@ -28,12 +28,34 @@ careers with different seeds therefore stop sharing season ids going forward,
 but their existing clubs and fixtures still collide with each other's. Anything
 that keys across saves should treat pre-v7 careers as unreliable.
 
-## 2. The engine loads as one 273 kB gzip chunk on first visit (medium)
+## 2. The engine loads as one 273 kB gzip chunk on first visit (medium — now mapped)
 
-First-visit cost on a mobile network, behind the splash. Cached afterwards.
-Splitting the content packs out requires breaking a module-scope cycle between
-engine modules and content data; a previous attempt shipped a page that died on
-load. Full detail and the prerequisite in PERFORMANCE_NOTES.
+First-visit cost on a mobile network, behind the splash; cached afterwards.
+
+**The cycle is now precisely characterised, and it is not what the note in
+`vite.config.ts` implies.** There is no module cycle: nothing under `content/`
+imports `game/` or `simulation/`, so the module graph is a DAG. What broke the
+earlier attempt was a *chunk* cycle. The base pack imports six engine leaf
+modules as **values at module scope** — `CREATOR_TIERS` and
+`CREATOR_ATTRIBUTE_KEYS` (`creators/creator`), `OUTLETS`/`OUTLET_MERGES`/
+`outletByName` (`media/balance`), `FALLBACK_MEDIA_TEMPLATES`,
+`FALLBACK_SOCIAL_TEMPLATES`, `MATCH_EVENT_TYPES`, `MENTAL_KEYS` — so a chunk
+holding only `content/packs` depends on the engine chunk, while the engine
+chunk depends on it. Rollup hoists such cycles and the pack constants evaluate
+before the leaves they read: the temporal-dead-zone error on load.
+
+**The recipe:** put `content/packs/**` *and* those six leaf modules, plus
+`content/schema`, `core/brand` and `licensing/identity` (their only upstream
+imports, all type-level), into one `content` chunk. That set is ~59 kB of
+source and has no runtime edge back into the engine chunk, so no cycle.
+`pnpm test:smoke` boots the real bundle and would catch a regression.
+
+**The caveat, which is why it was not done here:** a static split only loads
+two files in parallel; the bytes are identical and still arrive before first
+paint. The real win — deferring the pack until a career is created — needs
+`createNewGame` and the content registry to load it through a dynamic
+`import()`, which makes them asynchronous and changes the engine's public API.
+That is a deliberate design change, not a chunk-config tweak.
 
 ## 3. RESOLVED — concurrent `apply()` writes
 
@@ -77,8 +99,12 @@ edges, all handled but none yet seen on a real device:
   surface where they can be handled.
 
 The localStorage→IndexedDB migration is covered by a real-browser check in
-`pnpm test:smoke`. What is **not** covered is the multi-tab case and Safari's
-storage eviction under pressure. Both need a real device.
+`pnpm test:smoke`. The connection now honours `versionchange` — it closes and
+forgets its handle so a newer build in another tab can upgrade the schema
+instead of being blocked into a localStorage fallback — and a browser check
+opens a second page on the same career and requires it to see the first page's
+change. What is **not** covered is Safari's storage eviction under pressure,
+which needs a real device.
 
 ## 6. Save-format guarantees that are weaker than they look (low, by design)
 
@@ -144,9 +170,16 @@ concurrency, or a quieter reporter — would slow the suite everywhere to
 accommodate one slow container, and cannot be validated against the project's
 real CI from here.
 
-**Recommended next step:** if this appears in real CI, prefer shortening the
-suite over throttling it. `PERFORMANCE_NOTES.md` names the lever: shard the
-long headless-season tests, which account for most of the 203 s of test time.
+**Addressed.** The starvation mechanism is a worker blocked in synchronous
+simulation for tens of seconds. The balance suite already yielded to the event
+loop every hundred simulations for exactly this reason; `test/season.test.ts`
+— twenty-two cycles per season, sixty-six in the multi-season test — never
+yielded at all. It now yields every four cycles, and the balance suite every
+twenty-five simulations. Assertions, seeds and ordering are unchanged, and the
+suites take the same time. Not observed since. A controlled load reproduction
+was attempted three times and each was killed by the tool harness the moment a
+CPU-burner child was spawned, so this rests on the documented mechanism and on
+the natural before/after observation rather than on an A/B.
 
 ## 10. Environment: pinned Chromium mismatch (tooling, not product)
 

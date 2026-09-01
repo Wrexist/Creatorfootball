@@ -112,6 +112,26 @@ describe('opponent model', () => {
     expect(plan.notes.every((n) => n.trim().length > 0)).toBe(true);
   });
 
+  /**
+   * The preview warns in the future tense; the result screen explains in the
+   * past. Both come from the one decision, so a match can never be previewed
+   * with one read and recapped with another.
+   */
+  it('tells the same read before and after the match', () => {
+    const model = observeMany(BUS, 4);
+    const plan = counterPlan(readOpponent(model), 100);
+    expect(plan.recap).toHaveLength(plan.notes.length);
+    expect(plan.recap.every((r) => r.trim().length > 0)).toBe(true);
+    // Past tense, not a restatement of the warning.
+    expect(plan.recap[0]).toMatch(/came in having watched/);
+    expect(plan.notes[0]).not.toMatch(/came in having watched/);
+  });
+
+  it('has nothing to recap when it had nothing to say', () => {
+    const plan = counterPlan(readOpponent(observeMany(tactics(), 6)), 100);
+    expect(plan.recap).toEqual([]);
+  });
+
   it('records the observation, never the live tactics object', () => {
     const model = observeTactics(EMPTY_OPPONENT_MODEL, BUS, 1);
     const sample = model.samples[0];

@@ -112,7 +112,7 @@ describe('aggregate realism over 500 matches', () => {
       const sim = new MatchSimulator(setup);
       const r = sim.finish();
       accumulate(sim, r, agg);
-      if (i % 100 === 99) await breathe();
+      if (i % 25 === 24) await breathe();
     }
 
     const goals = mean(agg.goals);
@@ -207,7 +207,7 @@ describe('aggregate realism over 500 matches', () => {
 async function winRate(seedPrefix: string, edge: number, n: number): Promise<{ win: number; draw: number; loss: number }> {
   let w = 0, d = 0, l = 0;
   for (let i = 0; i < n; i++) {
-    if (i % 100 === 99) await breathe();
+    if (i % 25 === 24) await breathe();
     const rng = new Rng(`${seedPrefix}:${i}`);
     const setup = makeTestSetup({
       seed: `${seedPrefix}:${i}`,
@@ -273,7 +273,7 @@ describe('side symmetry', () => {
       }));
       if (r.homeScore > r.awayScore) home += 1;
       else if (r.awayScore > r.homeScore) away += 1;
-      if (i % 100 === 99) await breathe();
+      if (i % 25 === 24) await breathe();
     }
     // Same players at both ends: any consistent gap would be an engine bias.
     expect(Math.abs(home - away) / N).toBeLessThan(0.06);
@@ -307,7 +307,7 @@ async function winRateWithSupport(seedPrefix: string, support: number): Promise<
   let w = 0;
   const n = 400;
   for (let i = 0; i < n; i++) {
-    if (i % 100 === 99) await breathe();
+    if (i % 25 === 24) await breathe();
     const rng = new Rng(`${seedPrefix}:${i}`);
     const setup = makeTestSetup({
       seed: `${seedPrefix}:${i}`,

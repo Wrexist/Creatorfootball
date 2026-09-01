@@ -57,10 +57,16 @@ cleanly and passed every unit test, because unit tests run the source in Node
 and never touch the bundle. `apps/game/vite.config.ts` carries this warning
 inline.
 
-**The prerequisite for re-attempting it is breaking that module-scope cycle**,
-not changing the chunk configuration. `pnpm test:smoke` now exists and drives
-the real bundle in a browser, so a re-attempt would at least fail loudly — but
-it is a real refactor, not a config tweak, and it was left alone in this pass.
+**The prerequisite is now mapped** (`REMAINING_RISKS.md` §2). It is a *chunk*
+cycle, not a module cycle: the base pack imports six engine leaf modules as
+values at module scope, so a chunk holding only the packs depends on the engine
+chunk while the engine chunk depends on it. Moving `content/packs/**` together
+with those six leaves and their three type-only upstreams into one chunk
+removes the back-edge; `pnpm test:smoke` boots the real bundle and would catch
+a regression. The caveat: a static split defers no bytes — deferral needs the
+pack loaded through a dynamic `import()`, which makes `createNewGame` async and
+changes the engine's public API. That is a design decision, so it was mapped
+here and not done.
 
 It is also worth being honest about the payoff: the splash screen already covers
 this load, and it is cached after first visit. This is a first-visit,
@@ -90,8 +96,11 @@ Net effect: save size and cycle cost are bounded by design, not by luck. The
 
 The engine test suite takes ~150 s for 767 tests, dominated by the simulation
 and season-length integration tests. This is CI/developer-loop cost, not player
-cost. If it becomes a drag, the lever is sharding the long headless-season tests
-rather than trimming coverage — those are the tests carrying the most value.
+cost. The two heavy suites now yield to the event loop between simulations, so
+a worker can answer Vitest's reporter even under load; without that, a loaded
+machine failed the run on a reporter timeout with every assertion green. If the
+suite ever becomes a drag, the lever is sharding those long headless-season
+tests rather than trimming coverage — they carry the most value.
 
 ## Not worth doing
 

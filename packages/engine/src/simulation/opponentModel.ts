@@ -176,6 +176,14 @@ export interface CounterPlan {
    * the player reads can never drift from the tactics the AI actually brings.
    */
   readonly notes: readonly string[];
+  /**
+   * The same read, told after the match. The preview says what they *will*
+   * do; the result screen says what they *did* and why — closing the loop the
+   * preview opened, so a counter the player was warned about is named again
+   * where its consequence is visible. Both tenses come from one decision, so
+   * they cannot disagree.
+   */
+  readonly recap: readonly string[];
 }
 
 const SHAPE_NOTE: Record<PlayShape, string> = {
@@ -187,6 +195,19 @@ const SHAPE_NOTE: Record<PlayShape, string> = {
 const SHAPE_ANSWER: Record<PlayShape, string> = {
   LOW_BLOCK: 'They will press you high and stretch the pitch to pull that block apart.',
   HIGH_PRESS: 'They will sit off, go long over your line and run at the space you leave behind.',
+  BALANCED: '',
+};
+
+const SHAPE_RECAP: Record<PlayShape, string> = {
+  LOW_BLOCK: 'They came in having watched you sit deep, and pressed high to pull that block apart.',
+  HIGH_PRESS: 'They came in having watched you press high, sat off, and went long into the space behind.',
+  BALANCED: '',
+};
+
+const FOCUS_RECAP: Record<AttackingFocus, string> = {
+  LEFT: 'They knew you build down your left and crowded it.',
+  RIGHT: 'They knew you build down your right and crowded it.',
+  CENTRE: 'They knew you work the middle and packed it.',
   BALANCED: '',
 };
 
@@ -211,6 +232,7 @@ export function counterPlan(read: OpponentRead, adaptability: number): CounterPl
   const threshold = counterThreshold(adaptability);
   const lean: Record<string, unknown> = {};
   const notes: string[] = [];
+  const recap: string[] = [];
 
   const shape = read.shape;
   if (shape && shape.confidence >= threshold && shape.value !== 'BALANCED') {
@@ -220,6 +242,7 @@ export function counterPlan(read: OpponentRead, adaptability: number): CounterPl
       notes.push(
         `They have watched you ${SHAPE_NOTE[shape.value]} in ${shape.matching} of your last ${shape.samples}. ${SHAPE_ANSWER[shape.value]}`.trim(),
       );
+      recap.push(SHAPE_RECAP[shape.value]);
     }
   }
 
@@ -231,9 +254,10 @@ export function counterPlan(read: OpponentRead, adaptability: number): CounterPl
     notes.push(
       `They know you have been ${FOCUS_NOTE[focus.value]} — expect that side to be crowded.`,
     );
+    recap.push(FOCUS_RECAP[focus.value]);
   }
 
-  return { lean: lean as Partial<TacticSetup>, notes };
+  return { lean: lean as Partial<TacticSetup>, notes, recap };
 }
 
 /**

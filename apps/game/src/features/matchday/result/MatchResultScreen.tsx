@@ -315,6 +315,9 @@ function ResultStage({ result, home, away, playerIsHome, state }: StageProps): R
   const outcome = resultFor(result, state.playerClubId);
   const tone = outcome === 'W' ? 'positive' : outcome === 'D' ? 'neutral' : 'danger';
   const headline = outcome === 'W' ? 'Won it' : outcome === 'D' ? 'Shared it' : 'Lost it';
+  // What they came in knowing, captured before kick-off. Rendered only when
+  // there was a read: an empty line here would be noise on every other match.
+  const recap = useMatchStore((s) => s.opponentRecap);
 
   return (
     <GlassPanel nested level={2} padding="lg" accent={tone === 'positive' ? 'positive' : tone === 'danger' ? 'danger' : 'none'}>
@@ -336,6 +339,18 @@ function ResultStage({ result, home, away, playerIsHome, state }: StageProps): R
         {home.shortName} v {away.shortName} · {result.attendance.toLocaleString()} in
         {playerIsHome ? ' behind you' : ' against you'}
       </p>
+      {recap.length > 0 && (
+        <div className="mt-4 border-t border-white/[0.07] pt-3">
+          <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-dim">
+            What they came in knowing
+          </p>
+          {recap.map((line) => (
+            <p key={line} className="mt-1.5 text-[14px] leading-snug text-ink-muted text-pretty">
+              {line}
+            </p>
+          ))}
+        </div>
+      )}
     </GlassPanel>
   );
 }

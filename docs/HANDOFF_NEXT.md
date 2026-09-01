@@ -26,11 +26,11 @@ pnpm monorepo, Node ≥20, TypeScript.
 |---|---|---|
 | Types | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | 59 files / **769** |
-| App tests | `pnpm --filter @cf/game test` | 24 files / **246** |
-| **Total** | `pnpm test` | **1,015** |
+| Engine tests | `pnpm --filter @cf/engine test` | 59 files / **771** |
+| App tests | `pnpm --filter @cf/game test` | 25 files / **253** |
+| **Total** | `pnpm test` | **1,024** |
 | Build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **7/7** vs the real bundle |
+| Browser smoke | `pnpm test:smoke` | **9/9** vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |
 
 Key facts: `SAVE_VERSION` 7, careers persist to **IndexedDB**, migrations 1→7
@@ -76,9 +76,10 @@ Determinism (seeded RNG, counter ids) is enforced by tests.
   invariant explicit or enforced.
 
 ### P2
-- **Split the engine chunk.** Blocked on a module-scope cycle between engine
-  modules and content data; a previous attempt shipped a page that died on load.
-  Prerequisite is breaking the cycle, not changing chunk config.
+- **Split the engine chunk.** Now mapped: a *chunk* cycle from six value imports
+  (base pack → engine leaves), not a module cycle. Recipe in `REMAINING_RISKS.md`
+  §2. A static split defers nothing; the real win needs the pack loaded via
+  dynamic `import()`, which makes `createNewGame` async — a design decision.
 - ~~**Content-safety audit.**~~ **Done — and it turns out it always had been.**
   This entry said "never done" for three cycles and was wrong.
   `basePack.test.ts` flattens the base pack, the club lore and both example
@@ -90,12 +91,16 @@ Determinism (seeded RNG, counter ids) is enforced by tests.
 - **In-match adaptation from the opponent model.** Today the only in-match AI
   response is one scripted trailing reaction. The observation model exists and
   is unused during a match.
-- **Post-match story naming the opponent's read.** Close the loop: "they sat
-  deep because they'd watched you press."
+- ~~**Post-match story naming the opponent's read.**~~ **Done.** The result screen
+  now shows, in the past tense, what the opposition came in knowing — from the
+  same decision as the pre-match briefing, captured at kick-off.
 
 ### P3
-- Multi-tab IndexedDB behaviour; Safari eviction under pressure.
-- Shard the long headless-season tests (~200 s of the engine suite).
+- ~~Multi-tab IndexedDB~~ **Done** (`versionchange` honoured, second-tab browser
+  check). Safari eviction under pressure still needs a real device.
+- ~~Shard the long headless-season tests~~ **Addressed differently**: the heavy
+  suites now yield to the event loop, which is what the reporter timeout needed.
+  Sharding remains the lever if wall time ever matters.
 - UX / progressive-disclosure passes across Squad, Training, Market, Scouting,
   Club, Finance, Facilities, Sponsors, Objectives, League, Press — **after** the
   device pass, not before.

@@ -136,7 +136,10 @@ no opponent can see. Observations are filed once per played match into a
 bounded window on `GameState.opponentModel`; a tendency must be a real majority
 before anyone acts on it, and the confidence needed scales with the opposing
 manager's adaptability. The read is shown to the player in the match preview,
-generated from the same call that produces the tactics.
+generated from the same call that produces the tactics — and the same call
+produces a past-tense recap that the result screen shows, captured at kick-off
+so it describes the opponent actually played rather than the one the next
+observation would describe.
 
 See `simulation/opponentModel.ts`.
 
@@ -178,9 +181,9 @@ Feature screens are lazily imported and chunked per feature.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 769 | `pnpm --filter @cf/engine test` |
+| Engine unit/integration | 771 | `pnpm --filter @cf/engine test` |
 | App unit | 246 | `pnpm --filter @cf/game test` |
-| Browser smoke (real bundle) | 7 checks | `pnpm test:smoke` |
+| Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 
 The audits are the unusual and valuable part. `pnpm audit:invariants` plays 12

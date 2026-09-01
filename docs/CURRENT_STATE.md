@@ -14,20 +14,23 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **59 files, 769 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **59 files, 771 tests, all passing** |
 | App tests | `pnpm --filter @cf/game test` | **25 files, 253 tests, all passing** |
-| **Total** | `pnpm test` | **1,022 tests, all passing** |
+| **Total** | `pnpm test` | **1,024 tests, all passing** |
 | Production build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **8/8** against the real bundle (~76 s) |
+| Browser smoke | `pnpm test:smoke` | **9/9** against the real bundle (~65 s) |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
 Earlier documents state 262, 531, 653 and 753 tests. All are historical.
 `pnpm test` is the only source of truth.
 
-**Known tooling issue.** On a slow machine `pnpm test` can exit non-zero after
-every test passes, with `[vitest-worker]: Timeout calling "onTaskUpdate"`. That
-is the reporter's RPC timing out, not a test failing. It reproduces at `HEAD`
-with no local changes. See `REMAINING_RISKS.md` §9.
+**Tooling note.** Earlier in this cycle `pnpm test` could exit non-zero on a
+loaded machine after every test passed, with `[vitest-worker]: Timeout calling
+"onTaskUpdate"` — the reporter's RPC starved by a worker blocked in tens of
+seconds of synchronous simulation. The one heavy suite that never yielded
+(`test/season.test.ts`) now yields between cycles, the same remedy the balance
+suite already used; the balance suite yields four times as often. Assertions,
+seeds and ordering are unchanged. Not observed since; see `REMAINING_RISKS.md` §9.
 
 **Environment note.** This sandbox ships Chromium build 1194 while Playwright
 1.62 expects 1234, so the smoke test needs its existing escape hatch:
@@ -137,6 +140,12 @@ cheating; a stated one is a decision.
 
 ---
 
+**And it closes the loop after the match.** The same decision that produces the
+pre-match briefing also produces a past-tense recap — *"They came in having
+watched you sit deep, and pressed high to pull that block apart"* — captured at
+kick-off (before the cycle files a new observation) and shown on the result
+screen. Preview and result can never describe different opponents.
+
 ## 4a. Entity ids — changed
 
 Ids used to be identical in every save ever created: clubs `club_0`..`club_11`,
@@ -185,6 +194,10 @@ now on and leaves the ids it already holds alone.
 - **The snapshot-compute-apply invariant is enforced.** Feature engines that
   commit through `apply` must contain no async boundary; see
   `CURRENT_ARCHITECTURE.md` and `engineInvariant.test.ts`.
+- **Two tabs share one career.** The IndexedDB connection now honours
+  `versionchange`, so a newer build in another tab can upgrade the schema
+  instead of being blocked into a localStorage fallback; a browser check opens a
+  second page and requires it to see the first page's change.
 - **Pre-v7 careers still share entity ids with each other.** New careers scope
   their ids to the career that created them (see §4a); existing saves keep the
   ids already written into them, because rewriting every club, fixture and

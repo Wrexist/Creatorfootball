@@ -19,20 +19,36 @@ const newGame = (seed: string): GameState =>
     club: { kind: 'TEMPLATE', templateId: 'club_cinderwick_town' },
   });
 
-function playSeason(seed: string, weeks = 22) {
+/**
+ * Let the event loop turn between cycles.
+ *
+ * A season is twenty-odd full cycles of synchronous simulation, and the
+ * multi-season test below runs sixty-six. Run back to back with no yield, that
+ * holds the worker's event loop for tens of seconds, during which it cannot
+ * answer Vitest's reporter RPC — and on a loaded machine that surfaces as
+ * `Timeout calling "onTaskUpdate"` with every assertion green. The balance
+ * suite already yields for exactly this reason (see `breathe` there); this is
+ * the same remedy applied to the one heavy suite that lacked it. Nothing about
+ * the simulation changes: the same cycles run in the same order with the same
+ * seeds.
+ */
+const breathe = (): Promise<void> => new Promise((resolve) => { setTimeout(resolve, 0); });
+
+async function playSeason(seed: string, weeks = 22) {
   let state = newGame(seed);
   const summaries = [];
   for (let i = 0; i < weeks; i++) {
     const result = advanceCycle(state, { now: START + i * CYCLE_MS });
     state = result.state;
     summaries.push(result.summary);
+    if (i % 4 === 3) await breathe();
   }
   return { state, summaries };
 }
 
 describe('a full season', () => {
-  it('plays every fixture and rolls into the next season', () => {
-    const { state } = playSeason('season-a');
+  it('plays every fixture and rolls into the next season', async () => {
+    const { state } = await playSeason('season-a');
 
     expect(validateState(state)).toEqual([]);
 
@@ -56,8 +72,8 @@ describe('a full season', () => {
     expect(state.seasons[state.currentSeasonId]?.number).toBe(2);
   });
 
-  it('crowns a champion and records the season that produced it', () => {
-    const { state } = playSeason('season-champion');
+  it('crowns a champion and records the season that produced it', async () => {
+    const { state } = await playSeason('season-champion');
     const closed = Object.values(state.seasons).find((s) => s.completed);
     expect(closed).toBeDefined();
     expect(closed?.championClubId).toBeTruthy();
@@ -68,9 +84,9 @@ describe('a full season', () => {
     expect(summary!.won + summary!.drawn + summary!.lost).toBe(22);
   });
 
-  it('ages the squad, retires the finished and promotes from the academy', () => {
+  it('ages the squad, retires the finished and promotes from the academy', async () => {
     const before = newGame('season-ageing');
-    const { state: after } = playSeason('season-ageing');
+    const { state: after } = await playSeason('season-ageing');
 
     const stillHere = Object.keys(after.players).filter((id) => before.players[id]);
     // Everyone who survived is a year older.
@@ -88,13 +104,14 @@ describe('a full season', () => {
     expect(Object.keys(after.players).length).toBeGreaterThan(Object.keys(before.players).length);
   });
 
-  it('does not let a club decay to nothing across several seasons', () => {
+  it('does not let a club decay to nothing across several seasons', async () => {
     // The failure this guards against is a death spiral: sponsorship lapses,
     // the wage budget shrinks with the income, the club cannot replace players
     // it loses, results collapse, and the decline compounds beyond recovery.
     let state = newGame('season-decay');
     for (let cycle = 0; cycle < 66; cycle++) {
       state = advanceCycle(state, { now: START + cycle * CYCLE_MS }).state;
+      if (cycle % 4 === 3) await breathe();
     }
     const club = state.clubs[state.playerClubId]!;
     expect(state.clock.season).toBe(4);
@@ -113,8 +130,8 @@ describe('a full season', () => {
     expect(state.sponsors.active.length).toBeGreaterThan(0);
   });
 
-  it('produces a table where points reconcile with results', () => {
-    const { state } = playSeason('season-b');
+  it('produces a table where points reconcile with results', async () => {
+    const { state } = await playSeason('season-b');
     const table = computeStandings(
       Object.keys(state.clubs) as ClubId[],
       Object.values(state.fixtures),
@@ -132,8 +149,8 @@ describe('a full season', () => {
     expect(scored).toBe(conceded);
   });
 
-  it('scores at the rate the format calls for', () => {
-    const { state } = playSeason('season-c');
+  it('scores at the rate the format calls for', async () => {
+    const { state } = await playSeason('season-c');
     const played = Object.values(state.fixtures).filter((f) => f.homeScore !== null);
     const goals = played.reduce((n, f) => n + (f.homeScore ?? 0) + (f.awayScore ?? 0), 0);
     const perMatch = goals / played.length;
@@ -141,14 +158,14 @@ describe('a full season', () => {
     expect(perMatch).toBeLessThan(9.5);
   });
 
-  it('is fully deterministic across an entire season', () => {
-    const a = playSeason('repeat', 8);
-    const b = playSeason('repeat', 8);
+  it('is fully deterministic across an entire season', async () => {
+    const a = await playSeason('repeat', 8);
+    const b = await playSeason('repeat', 8);
     expect(JSON.stringify(a.state)).toEqual(JSON.stringify(b.state));
   });
 
-  it('keeps the economy auditable the whole way through', () => {
-    const { state } = playSeason('season-d');
+  it('keeps the economy auditable the whole way through', async () => {
+    const { state } = await playSeason('season-d');
     const ledger = Ledger.restore(state.ledger);
     expect(ledger.verify()).toEqual([]);
     // The audit may legitimately flag distress; it must never flag corruption.
@@ -159,7 +176,7 @@ describe('a full season', () => {
     expect(violations).not.toContain('NON_FINITE');
   });
 
-  it('lets the world react: stories, posts and events accumulate from real matches', () => {
+  it('lets the world react: stories, posts and events accumulate from real matches', async () => {
     let state = newGame('season-e');
     let stories = 0;
     let posts = 0;
@@ -174,9 +191,9 @@ describe('a full season', () => {
     expect(state.eventLog.length).toBeGreaterThan(0);
   });
 
-  it('develops and wears down squads rather than freezing them', () => {
+  it('develops and wears down squads rather than freezing them', async () => {
     const before = newGame('season-f');
-    const { state: after } = playSeason('season-f', 12);
+    const { state: after } = await playSeason('season-f', 12);
 
     const beforeIds = Object.keys(before.players);
     const changed = beforeIds.filter((id) => {
@@ -192,8 +209,8 @@ describe('a full season', () => {
     expect(injuries.length).toBeGreaterThan(0);
   });
 
-  it('never leaves a player owned by two clubs', () => {
-    const { state } = playSeason('season-g', 14);
+  it('never leaves a player owned by two clubs', async () => {
+    const { state } = await playSeason('season-g', 14);
     const owners = new Map<string, string>();
     for (const club of Object.values(state.clubs)) {
       for (const playerId of [...club.squad, ...club.youthSquad]) {
@@ -203,8 +220,8 @@ describe('a full season', () => {
     }
   });
 
-  it('never lets a suspension or injury run negative', () => {
-    const { state } = playSeason('season-h', 14);
+  it('never lets a suspension or injury run negative', async () => {
+    const { state } = await playSeason('season-h', 14);
     for (const player of Object.values(state.players)) {
       expect(player.suspensionMatches).toBeGreaterThanOrEqual(0);
       expect(player.fitness).toBeGreaterThanOrEqual(0);
@@ -213,7 +230,7 @@ describe('a full season', () => {
     }
   });
 
-  it('advances the narrative calendar rather than counting anonymous weeks', () => {
+  it('advances the narrative calendar rather than counting anonymous weeks', async () => {
     let state = newGame('season-i');
     const phases: string[] = [];
     for (let i = 0; i < 22; i++) {

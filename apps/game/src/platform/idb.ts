@@ -62,10 +62,24 @@ export class IdbStorage implements StorageAdapter {
     // Cached, but not cached on failure: a rejected promise must not become the
     // permanent answer for the rest of the session.
     if (!this.db) {
-      this.db = openDb().catch((error: unknown) => {
-        this.db = null;
-        throw error;
-      });
+      this.db = openDb()
+        .then((db) => {
+          // Two tabs, one database. When a newer build in another tab asks to
+          // upgrade the schema, every open connection is told first — and an
+          // open connection that ignores it blocks that upgrade forever, so the
+          // other tab's open rejects and it silently falls back to localStorage,
+          // splitting one career across two stores. Close, forget the handle,
+          // and the next operation reopens against whatever version now exists.
+          db.onversionchange = () => {
+            db.close();
+            this.db = null;
+          };
+          return db;
+        })
+        .catch((error: unknown) => {
+          this.db = null;
+          throw error;
+        });
     }
     return this.db;
   }

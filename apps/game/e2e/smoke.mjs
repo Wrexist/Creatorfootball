@@ -412,6 +412,23 @@ if (navErrors.length > bootErrors.length) {
             fail('the career was lost across a reload');
           } else {
             pass('a real career loads from IndexedDB, takes a change, and survives a reload');
+
+            // Two tabs, one career. A second page in the same context shares
+            // this IndexedDB, exactly as a second tab on a phone does. It must
+            // see the change the first tab just made — one store, one career,
+            // never a fork of it.
+            const p3b = await ctx3.newPage();
+            await p3b.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+            const secondTab = await p3b.getByRole('switch', { name: 'Reduce motion' }).first().getAttribute('aria-checked');
+            const secondTabBody = (await p3b.textContent('body')) ?? '';
+            if (secondTab !== after) {
+              fail(`a second tab saw a different setting (${String(secondTab)}) from the one just saved (${String(after)})`);
+            } else if (!secondTabBody.includes(fixture.expect.clubShortName)) {
+              fail('a second tab did not load the same career');
+            } else {
+              pass('a second tab sees the same career and the same change');
+            }
+            await p3b.close();
           }
         }
       }

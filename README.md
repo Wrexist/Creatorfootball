@@ -51,7 +51,7 @@ pnpm --filter @cf/game cap:sync   # copy the web build into the iOS/Android shel
 > base content pack and generators, transfers, scouting, training, facilities,
 > fans, sponsors, the economy cycle and audit, media, social, rivalries, AI
 > clubs, the world tick, objectives, legacy and analytics. `apps/game` has a
-> full design component library and a gallery. 84 test files, 1,022 tests.
+> full design component library and a gallery. 84 test files, 1,024 tests.
 > Careers persist to IndexedDB. See `docs/CURRENT_STATE.md` for verified status.
 >
 > CI gates every push on lint (including the engine-purity boundary),
