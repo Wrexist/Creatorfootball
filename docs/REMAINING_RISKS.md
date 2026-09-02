@@ -239,6 +239,21 @@ weights. A future balance pass that makes width or directness express more
 strongly in play would let the observable move to what the ball actually did,
 and `adaptation.ts` is written so only `sampleOf` and the sample type change.
 
+## 12. Matchday on a device (hardware blocked)
+
+The substitution sheet and the live pitch are proven in desktop Chromium
+(`e2e/matchday.mjs`): a goalkeeper change with the keeper recommended first,
+the count from the engine, one change from a double tap, shirts travelling
+at under 0.02 of the pitch per frame, the ball within reach of a shirt, a
+clean pause and resume. What that cannot say: how the sheet scrolls under a
+thumb, whether 60 fps holds on an older iPhone with the follow camera and
+the trail, memory over a full match, and whether Safari's rAF timing gives
+the motion model the steady intervals it measures. Every club is still
+created with an empty `tactics.bench` and the simulator fills it from squad
+order; the sheet now shows exactly that bench, but a bench chosen for cover
+(the engine's `pickBench`) would be better for every club, and changing it
+changes simulated results, so it is a deliberate balance decision for later.
+
 ## Documentation overlap (housekeeping)
 
 `docs/` carries several earlier audit and planning documents —

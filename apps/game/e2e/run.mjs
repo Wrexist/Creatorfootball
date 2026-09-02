@@ -51,7 +51,7 @@ try {
     process.exit(1);
   }
   let code = 0;
-  for (const suite of ['smoke', 'failure', 'recovery']) {
+  for (const suite of ['smoke', 'failure', 'recovery', 'matchday']) {
     const run = spawn(`node e2e/${suite}.mjs ${BASE}`, { shell: true, stdio: 'inherit' });
     const exit = await new Promise((resolve) => run.on('exit', (c) => resolve(c ?? 1)));
     if (exit !== 0 && code === 0) code = exit;

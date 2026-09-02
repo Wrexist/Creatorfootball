@@ -215,12 +215,31 @@ through the bundler's preload link or the browser's error message, and falls
 back to the plain specifier when neither exists. `e2e/failure.mjs` intercepts
 the chunk's request to prove the failure and recovery journeys in Chromium.
 
+## Matchday presentation
+
+Two layers, one direction. The simulator owns every football fact — where
+the shirts are each tick, who has the ball, what happened — and hands out a
+`PitchFrame` per tick. `features/matchday/live/motion.ts` turns frames into
+motion: shirts travel between snapshots on a measured interval, the ball is
+glued to its carrier (named, or inferred as the man nearest the engine's
+point), flies to a receiver on a change of hands and at the goal on a shot,
+and holds through a stoppage. `pitchRenderer.ts` paints what the motion model
+reports. No renderer value is read by the simulation; the render loop's
+timestamps drive presentation only, so frame rate cannot change a result.
+
+Substitutions go through the simulator's `checkSubstitution` (a verdict with
+a reason) and `substitutionStatus` (used, allowed, remaining, the match-day
+bench). The match store reads the status every tick; the sheet
+(`MatchSheets.tsx`) lists that bench, ranks replacements with
+`replacements.ts` (quality × familiarity × legs, plus a contextual label) and
+turns each refusal into its own sentence.
+
 ## Testing
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 793 | `pnpm --filter @cf/engine test` |
-| App unit | 279 | `pnpm --filter @cf/game test` |
+| Engine unit/integration | 800 | `pnpm --filter @cf/engine test` |
+| App unit | 301 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 

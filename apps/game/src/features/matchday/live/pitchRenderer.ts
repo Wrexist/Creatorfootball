@@ -1,3 +1,4 @@
+import { PitchMotion, type MotionNode, type MotionPoint } from './motion';
 import type { PitchFrame, PlayPhase, Side } from '@cf/engine';
 import { ART_ASSETS, artImage, SeedStream } from '@/design';
 import type { PitchRole } from '../shared/kit';
@@ -134,30 +135,9 @@ export interface PitchRendererOptions {
   readonly labelMode?: PitchLabelMode;
 }
 
-interface Node {
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-  side: Side;
-  state: PitchFrame['players'][number]['state'];
-  stamina: number;
-  hasBall: boolean;
-  /** Smoothed heading, in base (screen-space) units. */
-  hx: number;
-  hy: number;
-  /** Smoothed speed, base units per second. Drives the facing arrow's opacity. */
-  speed: number;
-  /** Opponents inside the pressing radius, recounted once per simulation tick. */
-  pressure: number;
-  /** Seconds since this player last entered a punctual state, for the flash. */
-  flash: number;
-  present: boolean;
-}
+type Node = MotionNode;
 
 /** Pitch units per second the smoothing aims for. Tuned by eye against 7-a-side. */
-const PLAYER_TAU = 0.26;
-const BALL_TAU = 0.11;
 const CAMERA_TAU = 0.42;
 const TRAIL_LENGTH = 14;
 
@@ -208,6 +188,8 @@ function roundRectPath(
   c.closePath();
 }
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
+/** Per-frame motion bookkeeping is only kept when somebody is looking at it. */
+const PROFILE_STATS = typeof window !== 'undefined' && window.location.search.includes('pitchprofile');
 
 export class PitchRenderer {
   private readonly canvas: HTMLCanvasElement;
@@ -222,8 +204,16 @@ export class PitchRenderer {
   private readonly sprites = new Map<string, HTMLCanvasElement>();
   private radius = 10;
 
-  private readonly nodes = new Map<string, Node>();
-  private ball = { x: 0.5, y: 0.5, targetX: 0.5, targetY: 0.5 };
+  /**
+   * Where everybody is drawn. The motion model owns every position — the
+   * shirts travelling between snapshots, the ball glued to its carrier or in
+   * flight — and this class only paints what it reports. See `motion.ts`.
+   */
+  private readonly motion: PitchMotion;
+  private lastNow = 0;
+  /** Largest per-frame movement since `stats()` was last read, in pitch units. */
+  private maxStep = 0;
+  private maxBallStep = 0;
   private trail: number[] = [];
   private labelCache = new Map<string, HTMLCanvasElement>();
   private labelProbe: CanvasRenderingContext2D | null = null;
@@ -254,13 +244,25 @@ export class PitchRenderer {
     this.canvas = canvas;
     this.ctx = ctx;
     this.opts = opts;
+    this.motion = new PitchMotion({ reducedMotion: opts.reducedMotion });
     this.trail = new Array<number>(TRAIL_LENGTH * 2).fill(0.5);
+  }
+
+  private get ball(): MotionPoint { return this.motion.ballPoint(); }
+  private get nodes(): { values(): IterableIterator<Node>; entries(): IterableIterator<[string, Node]>; get(id: string): Node | undefined } {
+    return { values: () => this.motion.values(), entries: () => this.motion.entries(), get: (id) => this.motion.node(id) };
+  }
+
+  /** The presentation clock, ms. The render loop drives it; a frame arriving between loops reads the wall clock. */
+  private clock(): number {
+    return typeof performance !== 'undefined' ? Math.max(this.lastNow, performance.now()) : this.lastNow;
   }
 
   setOptions(next: Partial<PitchRendererOptions>): void {
     const orientationChanged =
       next.orientation !== undefined && next.orientation !== this.opts.orientation;
     this.opts = { ...this.opts, ...next };
+    if (next.reducedMotion !== undefined) this.motion.setReducedMotion(next.reducedMotion);
     if (orientationChanged) this.turf = null;
     this.sprites.clear();
     this.dirty = true;
@@ -316,50 +318,25 @@ export class PitchRenderer {
 
   setFrame(frame: PitchFrame): void {
     this.phase = frame.phase;
-    this.ball.targetX = frame.ball.x;
-    this.ball.targetY = frame.ball.y;
 
-    for (const node of this.nodes.values()) node.present = false;
+    // A punctual state — the shot, the tackle — earns one flash. Read before
+    // the motion model overwrites the state with this frame's.
+    const punctual = new Set<string>();
+    for (const p of frame.players) {
+      const node = this.motion.node(p.playerId);
+      if (node && p.state !== node.state && (p.state === 'SHOOTING' || p.state === 'TACKLING')) punctual.add(p.playerId);
+    }
+
+    this.motion.setFrame(frame, this.clock());
 
     let possession: Side | null = null;
     for (const p of frame.players) {
-      let node = this.nodes.get(p.playerId);
-      if (!node) {
-        // A substitute appears at his position rather than sprinting in from
-        // wherever the shirt he replaced happened to be standing.
-        node = {
-          x: p.x, y: p.y, targetX: p.x, targetY: p.y,
-          side: p.side, state: p.state, stamina: p.stamina,
-          hasBall: p.hasBall, hx: 0, hy: 0, speed: 0, pressure: 0,
-          flash: 0, present: true,
-        };
-        this.nodes.set(p.playerId, node);
-      }
-      node.targetX = p.x;
-      node.targetY = p.y;
-      node.side = p.side;
-      node.stamina = p.stamina;
-      node.hasBall = p.hasBall;
-      node.present = true;
-      if (p.state !== node.state) {
-        node.state = p.state;
-        if (p.state === 'SHOOTING' || p.state === 'TACKLING') node.flash = 1;
-      }
+      if (punctual.has(p.playerId)) { const node = this.motion.node(p.playerId); if (node) node.flash = 1; }
       if (p.hasBall) possession = p.side;
     }
     this.possession = possession;
 
-    for (const [id, node] of this.nodes) if (!node.present) this.nodes.delete(id);
-
     this.countPressure();
-
-    if (this.opts.reducedMotion) {
-      // No easing: the shape snaps to what the simulation says. The pitch still
-      // conveys the whole picture, it just does not glide between ticks.
-      for (const node of this.nodes.values()) { node.x = node.targetX; node.y = node.targetY; }
-      this.ball.x = this.ball.targetX;
-      this.ball.y = this.ball.targetY;
-    }
     this.dirty = true;
   }
 
@@ -377,46 +354,39 @@ export class PitchRenderer {
       let count = 0;
       for (const other of list) {
         if (other.side === node.side) continue;
-        const dx = other.targetX - node.targetX;
-        const dy = other.targetY - node.targetY;
+        const dx = other.toX - node.toX;
+        const dy = other.toY - node.toY;
         if (dx * dx + dy * dy < PRESSURE_RADIUS_SQ) count += 1;
       }
       node.pressure = count;
     }
   }
 
-  /** Advance the interpolation and paint. `dtMs` is real elapsed time. */
-  tick(dtMs: number): void {
-    const dt = Math.min(0.1, Math.max(0, dtMs) / 1000);
+  /** Advance the presentation to `nowMs` (the render loop's timestamp) and paint. */
+  tick(nowMs: number): void {
+    const dtMs = this.lastNow === 0 ? 0 : Math.max(0, nowMs - this.lastNow);
+    this.lastNow = nowMs;
+    const dt = Math.min(0.1, dtMs / 1000);
 
-    if (!this.opts.reducedMotion && dt > 0) {
-      const pk = 1 - Math.exp(-dt / PLAYER_TAU);
-      const bk = 1 - Math.exp(-dt / BALL_TAU);
-      let moving = false;
-      for (const node of this.nodes.values()) {
-        const dx = node.targetX - node.x;
-        const dy = node.targetY - node.y;
-        if (dx * dx + dy * dy > 1e-8) moving = true;
-        const stepX = dx * pk;
-        const stepY = dy * pk;
-        node.x += stepX;
-        node.y += stepY;
-        // Heading is smoothed hard: a shirt that flickers its arrow every time
-        // the simulation nudges it sideways reads as jitter, not as intent.
-        const hk = 1 - Math.exp(-dt / 0.34);
-        node.hx += (stepX - node.hx) * hk;
-        node.hy += (stepY - node.hy) * hk;
-        node.speed += (Math.hypot(stepX, stepY) / Math.max(dt, 1e-4) - node.speed) * hk;
-        if (node.flash > 0) { node.flash = Math.max(0, node.flash - dt * 2.4); moving = true; }
+    if (dt > 0) {
+      // Remember where everything was, so the profiler can say how far it moved.
+      let before: [Node, number, number][] | null = null;
+      if (PROFILE_STATS) before = [...this.motion.values()].map((n) => [n, n.x, n.y]);
+      const ballBefore = { x: this.ball.x, y: this.ball.y };
+
+      const moved = this.motion.advance(nowMs);
+      if (moved) this.dirty = true;
+
+      if (before) {
+        for (const [n, x, y] of before) this.maxStep = Math.max(this.maxStep, Math.hypot(n.x - x, n.y - y));
+        this.maxBallStep = Math.max(this.maxBallStep, Math.hypot(this.ball.x - ballBefore.x, this.ball.y - ballBefore.y));
       }
-      const bdx = this.ball.targetX - this.ball.x;
-      const bdy = this.ball.targetY - this.ball.y;
-      if (bdx * bdx + bdy * bdy > 1e-8) moving = true;
-      this.ball.x += bdx * bk;
-      this.ball.y += bdy * bk;
-      if (moving) this.dirty = true;
 
-      this.pushTrail();
+      for (const node of this.motion.values()) {
+        if (node.flash > 0) { node.flash = Math.max(0, node.flash - dt * 2.4); this.dirty = true; }
+      }
+
+      if (!this.opts.reducedMotion) this.pushTrail();
 
       if (this.impactEnergy > 0) {
         this.impactEnergy = Math.max(0, this.impactEnergy - dt * 2.6);
@@ -434,10 +404,32 @@ export class PitchRenderer {
     this.draw();
   }
 
-  stats(): { readonly frames: number; readonly avgDrawMs: number } {
-    return {
+  /**
+   * Draw cost and motion for the profiler overlay and the browser tests. The
+   * step maxima reset on each read, so a reading covers the interval since the
+   * last one.
+   */
+  stats(): {
+    readonly frames: number; readonly avgDrawMs: number;
+    readonly maxStep: number; readonly maxBallStep: number; readonly settled: boolean;
+  } {
+    const out = {
       frames: this.drawFrames,
       avgDrawMs: this.drawFrames === 0 ? 0 : this.drawMsTotal / this.drawFrames,
+      maxStep: this.maxStep,
+      maxBallStep: this.maxBallStep,
+      settled: this.motion.settled(),
+    };
+    this.maxStep = 0;
+    this.maxBallStep = 0;
+    return out;
+  }
+
+  /** The drawn positions, in pitch units, for the profiler and the browser tests. */
+  positions(): { readonly ball: MotionPoint; readonly players: readonly { id: string; x: number; y: number }[] } {
+    return {
+      ball: { x: this.ball.x, y: this.ball.y },
+      players: [...this.motion.entries()].map(([id, n]) => ({ id, x: n.x, y: n.y })),
     };
   }
 

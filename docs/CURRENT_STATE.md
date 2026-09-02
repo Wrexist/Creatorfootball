@@ -14,11 +14,11 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **60 files, 793 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **27 files, 279 tests, all passing** |
-| **Total** | `pnpm test` | **1,072 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **61 files, 800 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **29 files, 301 tests, all passing** |
+| **Total** | `pnpm test` | **1,101 tests, all passing** |
 | Production build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks, against the real bundle |
+| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks + **5/5** matchday checks (live motion, pause, resume, goalkeeper substitution), against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
 Earlier documents state 262, 531, 653 and 753 tests. All are historical.
@@ -288,6 +288,61 @@ Measured on the built bundle (desktop headless Chromium, medians of three):
 first screen 1738 → 1507 kB of script (−13%), engine chunk 282 → 205 kB
 gzip, content chunk 77 kB gzip requested exactly once, confirm-to-playable
 2390 → 2373 ms, journey bytes unchanged (no duplication).
+
+## 4c. Matchday — changed
+
+**The goalkeeper substitution bug, and what was actually wrong.** A player
+was shown "5 changes left", took their keeper off, tapped the keeper on the
+bench and was told the change was not allowed and to check their remaining
+substitutions. Three defects, none of them the count: every club is created
+with an empty `tactics.bench`, so the simulator quietly picks its own seven
+from squad order; the sheet listed the *whole squad* minus the eleven as
+"the bench", so four of the names it offered were never on the match bench;
+and `makeSubstitution` returned a bare `false`, which the sheet dressed as a
+substitutions problem. Two more surfaced on the way: the remaining count was
+a React counter that ignored the substitutions the engine made by itself
+(it made fatigue changes for the human's side too), and a change made from
+the sheet was filed into the record but never handed to the live feed,
+because `step()` only returned events from inside its own tick.
+
+Now: the simulator answers `checkSubstitution` with a verdict and a reason
+(`NO_SUBS_LEFT`, `NOT_ON_PITCH`, `NOT_ON_BENCH`, `ALREADY_USED`, `SENT_OFF`,
+`INJURED`, `SAME_PLAYER`) in the order a manager thinks — the man coming
+off, the man coming on, and only then the count — and exposes
+`substitutionStatus` (used, allowed, remaining, the match-day bench with each
+seat's availability). The store reads it every tick; the sheet lists that
+bench and no other; the count in the rail is the engine's; every refusal is
+its own sentence. In a live match the engine no longer spends a human
+manager's changes on tired legs (injury replacements are still made, and a
+fixture nobody is watching is still managed on both benches, so simulated
+worlds are byte-identical). `step()` returns everything since the last step.
+
+**Who comes on.** Tapping the man coming off reorganises the sheet around
+that decision: he sits at the top, then "Recommended" (like-for-like first,
+labelled *Best fit*; *Fresh legs* when somebody who plays there has clearly
+more left; late and behind, an *Attacking option*; late and ahead, a
+*Defensive option*), then the rest of the bench, then anyone unavailable with
+the reason under his name. The eleven drop out of the way; a tap on the man
+at the top brings them back. Ranking is quality × position familiarity (the
+engine's own table, over natural and secondary positions) × legs; a keeper's
+shirt is only covered by a keeper. A double tap makes one change.
+
+**The live pitch moves.** The renderer already smoothed positions, but it
+chased a coarse per-tick ball point with a short time constant, so the ball
+darted sideways on channel noise, jumped to the centre circle at every
+stoppage (the simulator's "no possession" point) and led its carrier around
+by a length. `motion.ts` is the presentation layer now: every shirt travels
+from where it is drawn to where the new snapshot puts it, timed to arrive as
+the next snapshot is due (the interval is measured from the frames, so it is
+smooth at every match speed, and a paused match finishes its last segment
+and stops); the ball is glued to whoever has it, at his drawn position — the
+named carrier, or when the engine names none, the man nearest its point, with
+a little loyalty — flies to the receiver at a bounded pace when it changes
+hands, flies at the goal on a shot, and stays where play stopped through a
+stoppage. Nothing in it is read by the simulation. Browser-measured on the
+built bundle: largest per-frame shirt movement 0.016–0.019 of the pitch,
+ball within a shirt's reach in 19–20 of 20 samples, zero movement while
+paused, no jump on resume.
 
 ## 5. What is strong
 

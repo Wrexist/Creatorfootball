@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type {
-  FixtureId, MatchEvent, MatchSimulator, Player, PlayerId, SpecialRuleDefinition, SpecialRuleId,
+  FixtureId, MatchEvent, MatchSimulator, Player, SpecialRuleDefinition, SpecialRuleId,
   TacticSetup,
 } from '@cf/engine';
 import { ErrorState, Skeleton, cn, sfx, useConfirm, useIsWide } from '@/design';
@@ -99,7 +99,6 @@ export function MatchLiveScreen(): ReactNode {
   const [camera, setCamera] = useState<PitchCamera>('WIDE');
   const [speed, setSpeedState] = useState<MatchSpeed>(() => useMatchStore.getState().speed);
   const [celebrating, setCelebrating] = useState<MatchEvent | null>(null);
-  const [subsUsed, setSubsUsed] = useState(0);
   const [tactics, setTactics] = useState<TacticSetup | null>(null);
   const [cards, setCards] = useState<
     readonly { readonly definition: SpecialRuleDefinition; readonly quantity: number }[]
@@ -259,18 +258,14 @@ export function MatchLiveScreen(): ReactNode {
   const awayPalette = useMemo(() => (context ? paletteFor(context.away) : null), [context]);
   const ourKit = useMemo(() => (context ? kitColors(context.us.id, context.us.visual) : null), [context]);
 
-  const subsAllowed = setup?.config.substitutions ?? 0;
-  const subsRemaining = Math.max(0, subsAllowed - subsUsed);
+  // The simulator's own count, including the injury replacements it makes
+  // itself; nothing here keeps a tally of its own.
+  const subsRemaining = useMatchStore((s) => s.subs?.remaining ?? 0);
+  const durationMinutes = setup?.config.minutes ?? 30;
 
   /* --- actions --------------------------------------------------------- */
 
-  const substitute = useCallback((out: PlayerId, in_: PlayerId): boolean => {
-    const sim = simRef.current;
-    if (!sim) return false;
-    const ok = sim.makeSubstitution(playerSide, out, in_);
-    if (ok) setSubsUsed((n) => n + 1);
-    return ok;
-  }, [playerSide]);
+  const substitute = useMatchStore((s) => s.substitute);
 
   const applyTactics = useCallback((change: Partial<TacticSetup>): void => {
     const sim = simRef.current;
@@ -412,7 +407,7 @@ export function MatchLiveScreen(): ReactNode {
         onClose={() => setSheet(null)}
         squad={squad}
         kit={ourKit}
-        subsRemaining={subsRemaining}
+        durationMinutes={durationMinutes}
         onSubstitute={substitute}
       />
 
