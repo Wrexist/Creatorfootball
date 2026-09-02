@@ -13,113 +13,19 @@
  *
  * Usage: node e2e/failure.mjs [baseUrl]
  */
-import { chromium } from 'playwright';
+import {
+  JARGON, OPTION, createSuite, errorState, focused, readMeta, retryButton, toClubStep as toClubStepFrom,
+} from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:4173';
-const CHROME = process.env.CHROMIUM_PATH || undefined;
-const VIEWPORT = { width: 393, height: 852 };
-const OPTION = 'button[aria-pressed="false"]';
-const CONTENT_CHUNK = /\/assets\/content-[^/]*\.js/;
-/** Words a player must never read. */
-const JARGON = /\b(chunk|module|import|registry|validation|initiali[sz]|undefined|TypeError|Error:)\b/i;
+const { scenario, pass, fail, finish } = createSuite('failure journeys', BASE);
+const toClubStep = (page) => toClubStepFrom(page, BASE);
 
-const failures = [];
-const fail = (msg) => { failures.push(msg); console.log(`  FAIL  ${msg}`); };
-const pass = (msg) => console.log(`  PASS  ${msg}`);
 
-const browser = await chromium.launch(CHROME ? { executablePath: CHROME } : {});
-
-/**
- * One scenario = one fresh browser context, with its own storage, its own
- * console, and its own switch on the content chunk.
- *
- * `mode` decides what happens to a content request: 'abort' fails it,
- * 'hold' parks it until `release()`, 'pass' lets it through. Requests are
- * counted whatever happens to them.
- */
-async function scenario(name, run) {
-  const ctx = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  const page = await ctx.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(`pageerror: ${String(e)}`));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
-
-  const chunk = { mode: 'pass', requests: 0, held: [] };
-  await page.route(CONTENT_CHUNK, (route) => {
-    chunk.requests += 1;
-    if (chunk.mode === 'abort') return route.abort('failed');
-    if (chunk.mode === 'hold') { chunk.held.push(route); return undefined; }
-    return route.continue();
-  });
-  chunk.release = () => { for (const r of chunk.held.splice(0)) void r.continue(); };
-
-  /**
-   * Errors a deliberate content failure is allowed to produce: the browser's
-   * own report of the blocked request, and the loader's one line saying so.
-   * Anything else — an uncaught exception, an unhandled rejection, a React
-   * error — is a bug.
-   */
-  const unexpected = () => errors.filter((e) =>
-    !/favicon|404/i.test(e)
-    && !/net::ERR_FAILED|Failed to fetch dynamically imported module|Failed to load resource|preloadError|\[content\] load failed|Importing a module script failed|error loading dynamically imported module/i.test(e));
-
-  const text = () => page.evaluate(() => document.body.innerText);
-  const notBlank = async (step) => {
-    const body = (await text()).trim();
-    const controls = await page.locator('button:visible, input:visible').count();
-    if (body.length < 20 || controls === 0) fail(`${name}: blank screen at ${step} (${body.length} chars, ${controls} controls)`);
-  };
-
-  try {
-    await run({ page, chunk, errors, unexpected, text, notBlank });
-  } catch (e) {
-    fail(`${name}: ${String(e).split('\n').slice(0, 2).join(' ').slice(0, 240)}`);
-  } finally {
-    await ctx.close();
-  }
-}
-
-const readMeta = (page) => page.evaluate(async () => {
-  const db = await new Promise((resolve, reject) => {
-    const r = indexedDB.open('cf.game', 1);
-    r.onsuccess = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
-  });
-  const get = (key) => new Promise((resolve, reject) => {
-    const rq = db.transaction('kv', 'readonly').objectStore('kv').get(key);
-    rq.onsuccess = () => resolve(rq.result ?? null);
-    rq.onerror = () => reject(rq.error);
-  });
-  const save = await get('cf.save.v1');
-  const meta = await get('cf.save.meta.v1');
-  return { hasSave: save !== null, saveLength: save ? save.length : 0, meta: meta ? JSON.parse(meta) : null };
-});
-
-async function toClubStep(page) {
-  const start = page.getByRole('button', { name: /start your career/i }).first();
-  await start.waitFor({ state: 'visible' });
-  await start.click();
-  await page.waitForURL('**/create/manager');
-  await page.locator(OPTION).first().click();
-  await page.getByRole('button', { name: /next: your club/i }).click();
-  await page.waitForURL('**/create/club');
-}
-
-const errorState = (page) => page.getByRole('alert').filter({ hasText: /could not be prepared/i });
-const retryButton = (page) => page.getByRole('button', { name: /^try again$/i });
-/** What has keyboard focus, described. `body` means focus was lost. */
-const focused = (page) => page.evaluate(() => {
-  const el = document.activeElement;
-  if (!el || el === document.body) return 'body';
-  return `${el.tagName.toLowerCase()}${el.getAttribute('aria-pressed') !== null ? '[aria-pressed]' : ''}${el.getAttribute('role') ? `[role=${el.getAttribute('role')}]` : ''}${el.getAttribute('aria-label') ? `[${el.getAttribute('aria-label')}]` : ''}`;
-});
-
-console.log(`\nBrowser failure journeys against ${BASE}\n`);
 
 // --- A. the club step when the universe never arrives, then a retry that works
 await scenario('club step failure and retry', async ({ page, chunk, unexpected, text, notBlank }) => {
   chunk.mode = 'abort';
-  await page.goto(BASE, { waitUntil: 'networkidle' });
   await toClubStep(page);
 
   await errorState(page).waitFor({ state: 'visible' });
@@ -169,7 +75,6 @@ await scenario('club step failure and retry', async ({ page, chunk, unexpected, 
 // --- B. founding a club: confirming with no universe creates nothing --------
 await scenario('found a club with the universe missing', async ({ page, chunk, unexpected, text, notBlank }) => {
   chunk.mode = 'abort';
-  await page.goto(BASE, { waitUntil: 'networkidle' });
   await toClubStep(page);
   await errorState(page).waitFor({ state: 'visible' });
 
@@ -219,7 +124,6 @@ await scenario('found a club with the universe missing', async ({ page, chunk, u
 // --- C. rapid retries share one request ----------------------------------
 await scenario('rapid retries', async ({ page, chunk, unexpected }) => {
   chunk.mode = 'abort';
-  await page.goto(BASE, { waitUntil: 'networkidle' });
   await toClubStep(page);
   await errorState(page).waitFor({ state: 'visible' });
   const failed = chunk.requests;
@@ -253,7 +157,6 @@ await scenario('rapid retries', async ({ page, chunk, unexpected }) => {
 // --- D. a held request resolving after the player has moved on ------------
 await scenario('late resolution', async ({ page, chunk, unexpected }) => {
   chunk.mode = 'hold';
-  await page.goto(BASE, { waitUntil: 'networkidle' });
   await toClubStep(page);
   // The list is still on its way; the player goes back to the manager step.
   await page.locator('[aria-busy="true"]').first().waitFor({ state: 'visible' });
@@ -282,7 +185,6 @@ await scenario('late resolution', async ({ page, chunk, unexpected }) => {
 // --- E. a returning player whose universe does not arrive -----------------
 await scenario('returning player', async ({ page, chunk, unexpected, text, notBlank }) => {
   // First, a career, created normally.
-  await page.goto(BASE, { waitUntil: 'networkidle' });
   await toClubStep(page);
   await page.locator(OPTION).first().click();
   await page.getByRole('button', { name: /^take over\s/i }).click();
@@ -321,10 +223,4 @@ await scenario('returning player', async ({ page, chunk, unexpected, text, notBl
   pass('returning-player retry continues into the career with the same save');
 });
 
-await browser.close();
-
-if (failures.length > 0) {
-  console.log(`\n[X] ${failures.length} failure journey check(s) failed\n`);
-  process.exit(1);
-}
-console.log('\n[OK] failure journeys passed\n');
+await finish();

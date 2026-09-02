@@ -125,7 +125,7 @@ export function ClubCreationScreen(): ReactNode {
   const [creationFailure, setCreationFailure] = useState<string | null>(null);
   const headingRef = useRef<HTMLDivElement>(null);
 
-  const { status: contentStatus, failure: contentFailure, loaded, retry } = useContent();
+  const { status: contentStatus, failure: contentFailure, failures: contentFailures, loaded, retry } = useContent();
 
   useEffect(() => {
     // `preventScroll` matters: without it the browser scrolls this marker into
@@ -257,7 +257,7 @@ export function ClubCreationScreen(): ReactNode {
 
       {custom
         ? <FoundAClub />
-        : <TakeOneOver briefs={briefs} status={contentStatus} failure={contentFailure} onRetry={retry} />}
+        : <TakeOneOver briefs={briefs} status={contentStatus} failure={contentFailure} failures={contentFailures} onRetry={retry} />}
     </CreationScreen>
   );
 }
@@ -399,10 +399,11 @@ function ClubChoiceCard({ brief, prominent = false }: {
   );
 }
 
-function TakeOneOver({ briefs, status, failure, onRetry }: {
+function TakeOneOver({ briefs, status, failure, failures, onRetry }: {
   briefs: ClubBriefs | null;
   status: ContentStatus;
   failure: ContentError | null;
+  failures: number;
   onRetry: () => void;
 }): ReactNode {
   const state = useCreationStore();
@@ -420,9 +421,21 @@ function TakeOneOver({ briefs, status, failure, onRetry }: {
   const failureRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const retrying = status === 'LOADING' && recovering.current;
+  /**
+   * What the one status line says. It is a single polite live region that
+   * stays mounted across every state below, so a screen reader hears each
+   * change once — "preparing" when a retry starts, "ready" when the player's
+   * own retry brought the clubs — and never a chorus of regions saying the
+   * same thing. A failure is not announced here: the alert does that, and it
+   * is a fresh alert each time (keyed on the failure count), so a second or
+   * tenth failure is a new event rather than the first one with its words
+   * changed. A passive arrival says nothing: nobody asked.
+   */
+  const [announcement, setAnnouncement] = useState<'' | 'preparing' | 'ready'>('');
 
   const retry = (): void => {
     recovering.current = true;
+    setAnnouncement('preparing');
     // Keep focus inside the block the player is acting on while its button
     // is busy; a busy button cannot hold focus, and the body is not a place.
     failureRef.current?.focus({ preventScroll: true });
@@ -430,8 +443,18 @@ function TakeOneOver({ briefs, status, failure, onRetry }: {
   };
 
   useEffect(() => {
+    if (status !== 'FAILED') return;
+    // A retry that failed is over: the next arrival, if nobody presses the
+    // button, is a passive one and must not move focus. The block is still
+    // focused from the retry, so focus is not lost either.
+    recovering.current = false;
+    setAnnouncement('');
+  }, [status, failures]);
+
+  useEffect(() => {
     if (!briefs || !recovering.current) return;
     recovering.current = false;
+    setAnnouncement('ready');
     const first = listRef.current?.querySelector<HTMLElement>('button[aria-pressed]');
     first?.focus({ preventScroll: true });
   }, [briefs]);
@@ -476,8 +499,9 @@ function TakeOneOver({ briefs, status, failure, onRetry }: {
              happening, so nothing jumps and nothing can be pressed twice. */
           <div ref={failureRef} tabIndex={-1} className="outline-none">
             <ErrorState
+              key={failures}
               title="Your league could not be prepared"
-              description={retrying ? 'Preparing your league…' : playerMessageFor(failure)}
+              description={playerMessageFor(failure)}
               onRetry={retry}
               retryLabel="Try again"
               retrying={retrying}
@@ -492,6 +516,17 @@ function TakeOneOver({ briefs, status, failure, onRetry }: {
             {[0, 1, 2].map((i) => <Skeleton key={i} variant="card" height={172} />)}
           </SkeletonRegion>
         )}
+        {/* The one status line. Visible while a retry runs, so the player can
+            see it is happening; heard-only once the clubs are here, because
+            the clubs themselves are the visible proof. Always in the tree. */}
+        <p
+          role="status"
+          className={announcement === 'preparing'
+            ? '-mt-4 pb-2 text-center text-[13px] text-ink-muted'
+            : 'sr-only'}
+        >
+          {announcement === 'preparing' ? 'Preparing your league…' : announcement === 'ready' ? 'Your league is ready.' : ''}
+        </p>
       </div>
 
       <div id={restId}>

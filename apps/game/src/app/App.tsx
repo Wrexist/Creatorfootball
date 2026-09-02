@@ -123,7 +123,18 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     clearEphemeralWarning();
   }, [ephemeralStorage, clearEphemeralWarning, toast]);
 
-  if (phase === 'ERROR') return <SaveRecoveryScreen />;
+  // A retry from the recovery screen boots again, and booting shows the
+  // splash — which would replace the screen the player is looking at, drop
+  // their focus on the floor, and hand them a fresh screen for every failure.
+  // So a boot that started from the recovery screen keeps the recovery screen
+  // up, busy, until it either succeeds or fails again in place.
+  const retryingFromError = useRef(false);
+  const previousPhase = useRef(phase);
+  if (phase !== previousPhase.current) {
+    retryingFromError.current = previousPhase.current === 'ERROR' && phase === 'BOOTING';
+    previousPhase.current = phase;
+  }
+  if (phase === 'ERROR' || (phase === 'BOOTING' && retryingFromError.current)) return <SaveRecoveryScreen />;
   if (phase === 'BOOTING' || splashHeld) return <SplashScreen />;
   return children;
 }

@@ -261,9 +261,15 @@ export const contentRegistry = (): ContentRegistry => content.registry();
 export function useContent(): {
   status: ContentStatus;
   failure: ContentError | null;
+  /**
+   * How many attempts have failed. A screen keys its failure alert on this
+   * so a second failure is a new element — and so a new announcement — rather
+   * than the first one with its words quietly changed.
+   */
+  failures: number;
   loaded: LoadedContent | null;
   retry: () => void;
 } {
   const { status, failure } = content.store();
-  return { status, failure, loaded: content.ready(), retry: content.prefetch };
+  return { status, failure, failures: content.failures(), loaded: content.ready(), retry: content.prefetch };
 }

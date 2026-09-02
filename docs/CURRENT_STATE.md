@@ -18,7 +18,7 @@ it, on the commit that introduced this file. Nothing is estimated.
 | App tests | `pnpm --filter @cf/game test` | **27 files, 279 tests, all passing** |
 | **Total** | `pnpm test` | **1,072 tests, all passing** |
 | Production build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys, against the real bundle |
+| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks, against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
 Earlier documents state 262, 531, 653 and 753 tests. All are historical.
@@ -264,6 +264,25 @@ longer a toast that left before it could be read. Both are asserted in the
 browser suite: where focus is at failure, during the retry and after it, that
 the notice survives longer than a toast would, and that the typed club name
 survives the failure.
+
+**And it holds when the network fails more than once.** Every failure is
+a new event: the club step's alert and the recovery screen's alert are keyed
+on the loader's failure count, so a second or tenth failure is a fresh
+`role="alert"` element (a new announcement) rather than the first one with its
+words changed; the founding notice already remounts per attempt. Progress and
+recovery go through one polite `role="status"` line per screen that stays in
+the tree — "Preparing your league…" while a retry runs, "Your league is
+ready." when the player's own retry brought the clubs — so a screen reader
+hears each change once and never a chorus. Focus is held by the block the
+player acted on through the retry and through another failure, moves to the
+first club only after an explicit retry succeeds, and stays put when content
+arrives on its own. A boot retried from the recovery screen keeps that screen
+up and busy instead of swapping in the splash. `e2e/recovery.mjs` proves the
+loop in Chromium — fail, retry, fail again, retry, recover — for the club
+step, the founding form (name and city survive, no save, one club at the
+end) and a returning player (save byte-identical throughout), by keyboard
+alone as well as by touch, and checks that rapid retries produce one
+request, one alert, one status and one focus destination.
 
 Measured on the built bundle (desktop headless Chromium, medians of three):
 first screen 1738 → 1507 kB of script (−13%), engine chunk 282 → 205 kB

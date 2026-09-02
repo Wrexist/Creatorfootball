@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { GlassButton, GlassPanel, IconWarning, KeyValueRow, useConfirm } from '@/design';
 import { useGameStore } from '@/state/gameStore';
+import { useContent } from '@/state/content';
 
 /**
  * The save could not be read.
@@ -24,8 +25,13 @@ export function SaveRecoveryScreen(): ReactNode {
   const abandon = useGameStore((s) => s.abandon);
   const confirm = useConfirm();
   const [retrying, setRetrying] = useState(false);
+  const { failures } = useContent();
+  const screenRef = useRef<HTMLDivElement>(null);
 
   const retry = async (): Promise<void> => {
+    // The button goes busy and cannot hold focus; the screen can. Focus stays
+    // here through the retry and through another failure, never on the body.
+    screenRef.current?.focus({ preventScroll: true });
     setRetrying(true);
     await boot();
     setRetrying(false);
@@ -45,7 +51,11 @@ export function SaveRecoveryScreen(): ReactNode {
 
   return (
     <div className="scroll-y flex h-full w-full items-center justify-center bg-base px-6 py-[calc(var(--safe-top)+24px)]">
-      <div className="w-full max-w-[420px]" role="alert">
+      {/* The outer box holds focus; the inner alert is keyed on the failure
+          count so a second failure is a new alert — a new announcement — and
+          not the first one silently rewritten. */}
+      <div ref={screenRef} tabIndex={-1} className="w-full max-w-[420px] outline-none">
+      <div key={contentFailed ? failures : 'save'} role="alert">
         <span
           aria-hidden="true"
           className="mb-5 flex size-14 items-center justify-center rounded-pill bg-warning/12 text-warning [&_svg]:size-7"
@@ -71,6 +81,8 @@ export function SaveRecoveryScreen(): ReactNode {
           <KeyValueRow label="What we changed" value="Nothing" />
         </GlassPanel>
 
+      </div>
+
         <div className="mt-6 flex flex-col gap-2.5">
           <GlassButton variant="primary" size="lg" block loading={retrying} onClick={() => void retry()}>
             Try again
@@ -81,6 +93,10 @@ export function SaveRecoveryScreen(): ReactNode {
             </GlassButton>
           )}
         </div>
+        {/* One polite status line: says a retry is under way, and nothing else. */}
+        <p role="status" className={retrying ? 'mt-3 text-center text-[13px] text-ink-muted' : 'sr-only'}>
+          {retrying ? (contentFailed ? 'Preparing your league…' : 'Reading your save…') : ''}
+        </p>
       </div>
     </div>
   );
