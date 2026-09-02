@@ -27,8 +27,8 @@ pnpm monorepo, Node ≥20, TypeScript.
 | Types | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | 60 files / **793** |
-| App tests | `pnpm --filter @cf/game test` | 27 files / **275** |
-| **Total** | `pnpm test` | **1,068** |
+| App tests | `pnpm --filter @cf/game test` | 27 files / **279** |
+| **Total** | `pnpm test` | **1,072** |
 | Build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **9/9** vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |

@@ -15,10 +15,10 @@ it, on the commit that introduced this file. Nothing is estimated.
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | **60 files, 793 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **27 files, 275 tests, all passing** |
-| **Total** | `pnpm test` | **1,068 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **27 files, 279 tests, all passing** |
+| **Total** | `pnpm test` | **1,072 tests, all passing** |
 | Production build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **9/9** against the real bundle (~65 s) |
+| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys, against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
 Earlier documents state 262, 531, 653 and 753 tests. All are historical.
@@ -233,6 +233,23 @@ Now:
 - **Determinism is untouched.** The same registry produces byte-identical
   worlds however it arrived; the three reference world hashes are unchanged
   by this refactor.
+
+**When the universe does not arrive.** A browser remembers a module fetch
+that failed and rejects the next `import()` of the same URL without touching
+the network (Chromium does; measured, not assumed), which would have made
+every "Try again" a lie. So a retry imports the chunk under a fresh query
+string, with the URL taken from the preload link the bundler's helper leaves
+in the document, or from the browser's error message; a browser that offers
+neither falls back to the plain specifier. The loader passes the attempt
+number and the previous failure to its importer and nothing else changed.
+The failure journeys are proven in a real browser by `e2e/failure.mjs`, run
+by `pnpm test:smoke` after the smoke suite: the club step failing and
+recovering on retry, founding a club with no universe (nothing created,
+nothing saved, choices kept), rapid retries sharing one request, a held
+request resolving after the player has moved on, and a returning player
+whose universe fails at boot (save untouched, no "start over" offered, retry
+lands in the career). Failure is simulated by intercepting the chunk's
+request — no app code knows it is being tested.
 
 Measured on the built bundle (desktop headless Chromium, medians of three):
 first screen 1738 → 1507 kB of script (−13%), engine chunk 282 → 205 kB

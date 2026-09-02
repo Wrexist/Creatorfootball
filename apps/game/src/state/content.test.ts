@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createNewGame, type ContentPack } from '@cf/engine';
 import {
-  ContentError, content, createContentLoader, playerMessageFor,
+  ContentError, content, createContentLoader, importBasePack, packChunkUrl, playerMessageFor, retryUrl,
   type BasePackModule,
 } from './content';
 
@@ -190,5 +190,65 @@ describe('content loader', () => {
     expect(loaded.registry.managers().length).toBeGreaterThan(0);
     expect(Object.keys(loaded.lore).length).toBeGreaterThan(0);
     expect(loaded.packs.map((p) => p.manifest.id)).toEqual(['base']);
+  });
+});
+
+describe('retrying for real', () => {
+  it('asks the importer for a fresh attempt each time, telling it what failed before', async () => {
+    const calls: [number, unknown][] = [];
+    const loader = createContentLoader(async (attempt, previous) => {
+      calls.push([attempt, previous]);
+      if (attempt < 2) throw new TypeError(`Failed to fetch dynamically imported module: http://x/assets/content-abc.js (${attempt})`);
+      return realModule();
+    });
+    await loader.load().catch(() => null);
+    await loader.load().catch(() => null);
+    expect(loader.failures()).toBe(2);
+    await loader.load();
+    expect(loader.failures()).toBe(2);
+    expect(calls.map(([a]) => a)).toEqual([0, 1, 2]);
+    expect(calls[0]?.[1]).toBeNull();
+    expect(String(calls[1]?.[1])).toMatch(/\(0\)/);
+    expect(String(calls[2]?.[1])).toMatch(/\(1\)/);
+    expect(loader.store.getState().status).toBe('READY');
+  });
+
+  it('rapid retries after a failure share one attempt', async () => {
+    let imports = 0;
+    const gate = deferred();
+    const loader = createContentLoader(async (attempt) => {
+      imports += 1;
+      if (attempt === 0) throw new Error('offline');
+      return gate.promise;
+    });
+    await loader.load().catch(() => null);
+    loader.prefetch(); loader.prefetch(); loader.prefetch();
+    const a = loader.load();
+    const b = loader.load();
+    expect(imports).toBe(2);
+    gate.resolve(await realModule());
+    expect(await a).toBe(await b);
+    expect(imports).toBe(2);
+  });
+
+  it('finds the chunk in the browser\'s error message when there is no document', () => {
+    expect(packChunkUrl(new TypeError('Failed to fetch dynamically imported module: http://h/assets/content-Bqi15S5f.js')))
+      .toBe('http://h/assets/content-Bqi15S5f.js');
+    expect(packChunkUrl(new Error('error loading dynamically imported module: https://cf.app/assets/content-x1.js')))
+      .toBe('https://cf.app/assets/content-x1.js');
+    expect(packChunkUrl(new Error('Importing a module script failed.'))).toBeNull();
+    expect(packChunkUrl(null)).toBeNull();
+  });
+
+  it('the app importer retries under a URL the browser has not given up on', async () => {
+    // The first attempt is the static specifier and works in Node too.
+    await expect(importBasePack(0, null)).resolves.toMatchObject({ BASE_PACK: expect.anything() });
+    const previous = new TypeError('Failed to fetch dynamically imported module: http://h/assets/content-abc.js');
+    expect(retryUrl(0, previous)).toBeNull();
+    expect(retryUrl(1, previous)).toBe('http://h/assets/content-abc.js?retry=1');
+    expect(retryUrl(3, previous)).toBe('http://h/assets/content-abc.js?retry=3');
+    // With no way to locate the chunk, a retry falls back to the specifier.
+    expect(retryUrl(1, new Error('Importing a module script failed.'))).toBeNull();
+    await expect(importBasePack(1, new Error('Importing a module script failed.'))).resolves.toMatchObject({ BASE_PACK: expect.anything() });
   });
 });

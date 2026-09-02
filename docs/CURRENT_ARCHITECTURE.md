@@ -208,12 +208,19 @@ source and refuses the first import that would recreate the old cycle, and
 `pnpm test:smoke` boots the real bundle, counts the content request (exactly
 one) and refuses a blank creation step.
 
+A retry is a real second request. Browsers remember a failed module fetch
+and reject the next `import()` of that URL without a fetch, so the importer
+(`importBasePack`) retries under `<chunk url>?retry=<n>`, locating the chunk
+through the bundler's preload link or the browser's error message, and falls
+back to the plain specifier when neither exists. `e2e/failure.mjs` intercepts
+the chunk's request to prove the failure and recovery journeys in Chromium.
+
 ## Testing
 
 | Suite | Count | Command |
 |---|---|---|
 | Engine unit/integration | 793 | `pnpm --filter @cf/engine test` |
-| App unit | 275 | `pnpm --filter @cf/game test` |
+| App unit | 279 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 

@@ -40,11 +40,19 @@ believed: the *engine* imported the packs — `newGame.ts` and `cycle.ts` read
 fallbacks, and the engine barrel re-exported all of it. Once those edges were
 removed, the pack's own value imports of engine leaves (listed below) are a
 one-way content → engine dependency, which a bundler orders without trouble.
-The six-leaf recipe was not needed. The remaining risks are operational: a
-failed content fetch on a saved career is a "try again" screen that never
-offers to delete the save, and a failed fetch during creation is an inline
-retry on the club list — both are tested in Node and one of them (the happy
-path) in the browser; the failure paths in a real browser remain unexercised.
+The six-leaf recipe was not needed. The failure paths are now proven in a
+real browser (`e2e/failure.mjs`, run by `pnpm test:smoke`): the club step
+failing and recovering, founding a club with no universe, rapid retries,
+a late arrival, and a returning player whose universe fails at boot. What
+that run found and fixed: Chromium remembers a failed module fetch, so a
+retry has to import the chunk under a fresh query string. The remaining
+risk is Safari: it names no URL in its module-load error, so a retry there
+depends on the bundler's preload link being present (it is, in every Vite
+build, but the polyfilled path on older WebKit is unverified without a
+device). A retry that can find no URL falls back to the plain specifier,
+which is enough in a browser that does not cache failures and is not known
+to be enough in Safari. Real-device work should try airplane mode on the
+club step and on a cold boot with a save.
 
 *The earlier analysis, kept for the record:*
 

@@ -6,8 +6,9 @@
  * Windows command line, so the suite could not run locally there. Polling the
  * port until the server answers is also more honest than a fixed nap.
  *
- * Starts `vite preview`, waits for it to respond, runs e2e/smoke.mjs against
- * it, forwards its exit code, then tears the server down.
+ * Starts `vite preview`, waits for it to respond, runs e2e/smoke.mjs and then
+ * e2e/failure.mjs against it, forwards the first non-zero exit code, then
+ * tears the server down.
  */
 import { spawn } from 'node:child_process';
 
@@ -49,8 +50,12 @@ try {
     console.error(`[X] preview server never answered at ${BASE} within ${READY_TIMEOUT_MS / 1000}s`);
     process.exit(1);
   }
-  const smoke = spawn(`node e2e/smoke.mjs ${BASE}`, { shell: true, stdio: 'inherit' });
-  const code = await new Promise((resolve) => smoke.on('exit', (c) => resolve(c ?? 1)));
+  let code = 0;
+  for (const suite of ['smoke', 'failure']) {
+    const run = spawn(`node e2e/${suite}.mjs ${BASE}`, { shell: true, stdio: 'inherit' });
+    const exit = await new Promise((resolve) => run.on('exit', (c) => resolve(c ?? 1)));
+    if (exit !== 0 && code === 0) code = exit;
+  }
   process.exit(code);
 } finally {
   killPreview();
