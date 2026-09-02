@@ -103,12 +103,20 @@ interface MatchState {
    * 'home' silently made every away fixture substitute the opposition.
    */
   playerSide: Side;
+  /**
+   * What the opposition had worked out about the player *before* kick-off,
+   * captured when the simulator is attached. The result screen recaps it, and
+   * it has to be the pre-match read: by the time the result is shown the cycle
+   * has filed a new observation, so recomputing then would describe a
+   * different, later opponent than the one that was just played.
+   */
+  opponentRecap: readonly string[];
 
   /**
    * `playerSide` defaults to whichever team the simulator reports as
    * player-controlled, so no call site has to remember it.
    */
-  attach: (sim: SimulatorHandle, playerSide?: Side) => void;
+  attach: (sim: SimulatorHandle, playerSide?: Side, opponentRecap?: readonly string[]) => void;
   play: () => void;
   pause: () => void;
   setSpeed: (speed: MatchSpeed) => void;
@@ -220,14 +228,16 @@ export const useMatchStore = create<MatchState>((set, get) => {
     result: null,
     presentation: 'PITCH',
     playerSide: 'home',
+    opponentRecap: [],
 
-    attach: (sim, playerSide) => {
+    attach: (sim, playerSide, opponentRecap = []) => {
       clearTimer();
       simulator = sim;
       const resolvedSide: Side =
         playerSide ?? (sim.setup?.away.isPlayerControlled ? 'away' : 'home');
       set({
         playerSide: resolvedSide,
+        opponentRecap,
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
         frame: sim.frame(), feed: [], highlight: null, decision: null, ratings: {},
         decisionDeadline: null, result: null,
@@ -311,7 +321,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
       set({
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
         frame: null, feed: [], highlight: null, decision: null, ratings: {},
-        decisionDeadline: null, result: null,
+        decisionDeadline: null, result: null, opponentRecap: [],
       });
     },
   };

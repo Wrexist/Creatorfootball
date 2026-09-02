@@ -8,6 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Subpaths first: `@cf/engine/content/packs/base/index` is how the content
+      // loader reaches the pack without going through the engine's barrel.
+      '@cf/engine/': fileURLToPath(new URL('../../packages/engine/src/', import.meta.url)),
       '@cf/engine': fileURLToPath(new URL('../../packages/engine/src/index.ts', import.meta.url)),
     },
   },
@@ -18,16 +21,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // The engine ships as ONE chunk on purpose.
+          // The content packs are their own chunk; the rest of the engine is one.
           //
-          // Splitting the content packs out of it looked like an easy win —
-          // it is a large static payload only read when a save is created —
-          // but the engine's modules and its content data reference each other
-          // at module scope, and Rollup cannot order two chunks that form a
-          // cycle. The result was a build that succeeded, a test suite that
-          // passed (it runs the source in Node, never the bundle), and a
-          // production page that died on load with a temporal-dead-zone error.
-          // A browser smoke test now guards this; do not re-split without one.
+          // This split failed once: the engine's modules and the pack data
+          // referenced each other at module scope, Rollup cannot order two
+          // chunks that form a cycle, and the production page died on load
+          // with a temporal-dead-zone error while every unit test passed. The
+          // cycle is gone now — no engine module imports a pack; the engine's
+          // barrel does not re-export one; content reaches the engine through
+          // a `ContentRegistry` handed to it — and the pack is fetched by one
+          // dynamic import in `state/content.ts`. So the content chunk depends
+          // on the engine chunk and never the other way round. The browser
+          // smoke test still guards it; keep it that way.
+          if (id.includes('packages/engine/src/content/packs/')) return 'content';
           if (id.includes('packages/engine/src')) return 'engine';
           if (!id.includes('node_modules')) return undefined;
           if (/node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)) {

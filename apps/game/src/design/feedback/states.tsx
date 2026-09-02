@@ -71,6 +71,13 @@ export interface ErrorStateProps {
   detail?: string;
   onRetry?: () => void;
   retryLabel?: string;
+  /**
+   * The retry is under way. The button stays where it is, shows it is busy
+   * and cannot be pressed again, so the layout holds and a second tap does
+   * nothing — instead of the button vanishing into a loading state and
+   * taking the player's place on the screen with it.
+   */
+  retrying?: boolean;
   className?: string;
 }
 
@@ -84,6 +91,7 @@ export function ErrorState({
   detail,
   onRetry,
   retryLabel = 'Try again',
+  retrying = false,
   className,
 }: ErrorStateProps): ReactNode {
   return (
@@ -105,7 +113,7 @@ export function ErrorState({
         </code>
       )}
       {onRetry && (
-        <GlassButton variant="secondary" size="md" onClick={onRetry} className="mt-2">
+        <GlassButton variant="secondary" size="md" onClick={onRetry} loading={retrying} className="mt-2">
           {retryLabel}
         </GlassButton>
       )}

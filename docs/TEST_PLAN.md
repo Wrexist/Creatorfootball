@@ -1,5 +1,10 @@
 # Creator Football — Test Plan
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 **Current state, measured:**
 
 | | |

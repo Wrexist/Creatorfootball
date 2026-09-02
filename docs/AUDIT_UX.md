@@ -1,5 +1,10 @@
 # AUDIT THREE — UX AND VISUAL
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 **Product:** Creator Football
 **Method:** the real app, driven with Playwright/Chromium against the Vite dev server and the
 production build. Every screen walked as a new player at 393×852, 375×667, 834×1194 and

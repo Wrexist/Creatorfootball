@@ -24,8 +24,9 @@ import { emptyBonuses } from '../contracts/contract';
 import { updateRivalry, rivalryFor } from '../rivalries/rivalries';
 import { rollObjectives } from '../progression/objectives';
 import { updateLegacy } from '../progression/legacy';
-import { ContentRegistry, BASE_PACK, type CreatorSeasonConfigDef } from '../content';
+import type { ContentRegistry, CreatorSeasonConfigDef } from '../content';
 import { applyMatchResult } from './applyResult';
+import { observeTactics } from '../simulation/opponentModel';
 import { buildMatchSetup } from './matchSetup';
 import { rolloverSeason } from './seasonRollover';
 import { GameEventFactory } from './eventFactory';
@@ -57,7 +58,8 @@ export interface AdvanceCycleOptions {
    * fixture is simulated like any other.
    */
   readonly playerResult?: MatchResult | null;
-  readonly registry?: ContentRegistry;
+  /** The loaded content. Required: the engine never loads a pack on its own. */
+  readonly registry: ContentRegistry;
   readonly ledger?: Ledger;
 }
 
@@ -92,7 +94,7 @@ export interface AdvanceCycleResult {
 const BASE_RECOVERY = 26;
 
 export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): AdvanceCycleResult {
-  const registry = opts.registry ?? defaultRegistry();
+  const registry = opts.registry;
   const config = registry.seasonConfig() as CreatorSeasonConfigDef;
   const ledger = opts.ledger ?? Ledger.restore(state.ledger);
   const events = new GameEventFactory(state, opts.now);
@@ -126,6 +128,20 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
     const applied = applyMatchResult(next, fixture, result, events);
     next = applied.state;
     allEvents.push(...applied.events);
+
+    // The league files a scouting note on the player's own matches only — the
+    // shape they actually walked out with, recorded once the match has been
+    // played. This is the sole source the opponent AI is allowed to read; it
+    // must never look at the tactics screen directly. See opponentModel.ts.
+    if (involvesPlayer) {
+      const playerClub = next.clubs[next.playerClubId];
+      if (playerClub) {
+        next = {
+          ...next,
+          opponentModel: observeTactics(next.opponentModel, playerClub.tactics, next.clock.cycle),
+        };
+      }
+    }
 
     // --- 2. rivalry, which reads the result and feeds next week ---------
     const rivalry = rivalryFor(next, fixture.homeClubId, fixture.awayClubId);
@@ -326,7 +342,7 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   // the feed is still held to what they posted.
   const socialTick = tickSocialWorld(next, {
     at: opts.now,
-    ...(registry ? { registry } : {}),
+    registry,
   });
   next = socialTick.state;
   allEvents.push(...socialTick.events);
@@ -698,15 +714,6 @@ function replenishSquads(
   }
 
   return { state: next, events: emitted };
-}
-
-let cachedRegistry: ContentRegistry | null = null;
-function defaultRegistry(): ContentRegistry {
-  if (!cachedRegistry) {
-    cachedRegistry = new ContentRegistry();
-    cachedRegistry.load(BASE_PACK);
-  }
-  return cachedRegistry;
 }
 
 export const isSeasonComplete = (state: GameState): boolean => {

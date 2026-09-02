@@ -1,17 +1,18 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BASE_CLUBS, PHILOSOPHY_LABELS, playerClub, trackEvent,
+  PHILOSOPHY_LABELS, playerClub, trackEvent,
   type BadgeMotif, type BadgeShape, type ClubIdentityStyle, type ClubTemplate,
   type ClubVisualIdentity, type FanCulture,
 } from '@cf/engine';
 import {
-  Accordion, ClubBadge, FOCUS_RING, GlassButton, GlassIcon, GlassInput, GlassPanel,
-  GlassPill, IconArrowLeft, IconCheck, IconSwap, MoneyLabel, NameText, ProgressBar,
-  SectionHeader, Text, useToast,
+  Accordion, ClubBadge, ErrorState, FOCUS_RING, GlassButton, GlassIcon, GlassInput, GlassPanel,
+  GlassPill, IconArrowLeft, IconCheck, IconSwap, IconWarning, MoneyLabel, NameText, ProgressBar,
+  SectionHeader, Skeleton, SkeletonRegion, Text,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
+import { playerMessageFor, useContent, type ContentError, type ContentStatus } from '@/state/content';
 import { CreationScreen } from './CreationScreen';
 import { ChoiceChips, NumbersDisclosure, SecondaryPath, SelectCard, SwatchRow } from './components';
 import { KitPreview } from './KitPreview';
@@ -22,7 +23,7 @@ import {
   IDENTITY_STYLES, KIT_PATTERNS, PHILOSOPHIES, PHILOSOPHY_PLAY, PRIMARY_COLORS,
   SECONDARY_COLORS, philosophyDescription,
 } from './clubIdentity';
-import { FEATURED_BRIEFS, REMAINING_BRIEFS, type ClubBrief } from './clubBriefs';
+import { buildClubBriefs, type ClubBrief, type ClubBriefs } from './clubBriefs';
 import {
   clubBlocker, toClubChoice, toManagerChoice, useCreationStore,
 } from './creationStore';
@@ -45,6 +46,15 @@ import {
  * The badge at the top is the real `ClubBadge` component fed the real
  * `ClubVisualIdentity` the engine will store, so what the player is looking at
  * while they choose is the artefact itself and not an impression of it.
+ *
+ * The twelve clubs are content, and content is a chunk that arrives on its
+ * own. This screen never waits for it: the header, the two paths and the
+ * whole "found a club" designer are on screen at once, and the takeover list
+ * fills in when the universe is here — usually before the player has read the
+ * title, because the title screen asked for it. Until then the list is three
+ * card-shaped placeholders under a "preparing your league" label; if it does
+ * not arrive, the list says so in football and offers to try again, and
+ * nothing else on the screen is held hostage.
  */
 
 const templateVisual = (t: ClubTemplate): ClubVisualIdentity => ({
@@ -62,28 +72,81 @@ const BUILD_BEAT_MS = 1500;
 
 type Stage = 'FORM' | 'BUILDING' | 'REVEAL';
 
+/**
+ * What the player reads when confirming did not produce a club.
+ *
+ * Three things, in the order they matter: nothing happened to their progress,
+ * what they typed is still here, and what to do next. The store's message
+ * says why; this says what it means for them.
+ */
+function creationFailureCopy(reason: string | null): string {
+  const kept = 'Nothing was saved and everything you entered is still here.';
+  if (!reason || /could not be created/i.test(reason)) return `${kept} Try again when you are ready.`;
+  return `${kept} ${reason}`;
+}
+
+/**
+ * The failed-confirmation notice: inline, above the button that retries, and
+ * it stays until the player acts. A toast here left before it could be read,
+ * and a message about "your details are still here" is only reassuring if it
+ * is still there when the player looks for it.
+ *
+ * It takes focus when it appears, because the button the player pressed has
+ * just come back from behind the building beat and focus would otherwise
+ * have nowhere to be. From here the next tab stop is the button.
+ */
+function CreationFailureNotice({ body }: { body: string }): ReactNode {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { ref.current?.focus({ preventScroll: true }); }, []);
+  return (
+    <div
+      ref={ref}
+      role="alert"
+      tabIndex={-1}
+      className="mb-3 flex items-start gap-3 rounded-[var(--radius-lg)] border border-danger/30 bg-danger/10 px-3.5 py-3 outline-none"
+    >
+      <span aria-hidden="true" className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-pill bg-danger/15 text-danger [&_svg]:size-3.5">
+        <IconWarning />
+      </span>
+      <div className="min-w-0 flex-1">
+        <Text role="bodyStrong" as="p">Your club could not be created</Text>
+        <Text role="caption" className="mt-0.5 text-pretty">{body}</Text>
+      </div>
+    </div>
+  );
+}
+
 export function ClubCreationScreen(): ReactNode {
   const navigate = useNavigate();
-  const toast = useToast();
   const state = useCreationStore();
   const startNewGame = useGameStore((s) => s.startNewGame);
   const gameState = useGameStore((s) => s.state);
   const [stage, setStage] = useState<Stage>('FORM');
+  const [creationFailure, setCreationFailure] = useState<string | null>(null);
   const headingRef = useRef<HTMLDivElement>(null);
+
+  const { status: contentStatus, failure: contentFailure, failures: contentFailures, loaded, retry } = useContent();
 
   useEffect(() => {
     // `preventScroll` matters: without it the browser scrolls this marker into
     // view and the screen's large title is already half collapsed before the
     // player has touched anything. Focus still moves and is still announced.
     headingRef.current?.focus({ preventScroll: true });
-  }, []);
+    // A deep link or a reload lands here without passing the title screen;
+    // make sure the universe is on its way. A no-op when it already is.
+    retry();
+  }, [retry]);
 
   const blocker = clubBlocker(state);
   const custom = state.clubMode === 'CUSTOM';
 
+  const briefs = useMemo(
+    () => (loaded ? buildClubBriefs(loaded.registry.clubs(), loaded.lore) : null),
+    [loaded],
+  );
   const takeover = useMemo(
-    () => BASE_CLUBS.find((c) => c.id === state.takeoverClubId),
-    [state.takeoverClubId],
+    () => briefs?.briefFor(state.takeoverClubId)?.club,
+    [briefs, state.takeoverClubId],
   );
 
   const previewVisual = custom ? state.visual : takeover ? templateVisual(takeover) : state.visual;
@@ -92,6 +155,7 @@ export function ClubCreationScreen(): ReactNode {
   const createdClub = gameState ? playerClub(gameState) : null;
 
   const create = async (): Promise<void> => {
+    setCreationFailure(null);
     setStage('BUILDING');
     const manager = toManagerChoice(state);
     const club = toClubChoice(state);
@@ -118,11 +182,10 @@ export function ClubCreationScreen(): ReactNode {
       setStage('REVEAL');
       return;
     }
+    // Back to the form exactly as it was, with the reason where the player
+    // will look for it: next to the button they pressed.
+    setCreationFailure(creationFailureCopy(useGameStore.getState().error));
     setStage('FORM');
-    toast.error(
-      'Your club could not be created',
-      useGameStore.getState().error ?? 'Nothing has been saved. Try again.',
-    );
   };
 
   if (stage === 'REVEAL' && createdClub) {
@@ -150,15 +213,18 @@ export function ClubCreationScreen(): ReactNode {
       }
       onBack={() => navigate(ROUTES.managerCreation)}
       footer={
-        <GlassButton
-          variant="primary"
-          size="lg"
-          block
-          disabled={blocker !== null}
-          onClick={() => void create()}
-        >
-          {blocker ?? (custom ? `Found ${state.shortName || 'the club'}` : `Take over ${takeover?.shortName ?? ''}`)}
-        </GlassButton>
+        <>
+          {creationFailure !== null && <CreationFailureNotice body={creationFailure} />}
+          <GlassButton
+            variant="primary"
+            size="lg"
+            block
+            disabled={blocker !== null}
+            onClick={() => void create()}
+          >
+            {blocker ?? (custom ? `Found ${state.shortName || 'the club'}` : `Take over ${takeover?.shortName ?? ''}`)}
+          </GlassButton>
+        </>
       }
     >
       <div ref={headingRef} tabIndex={-1} aria-label="Step 2 of 3, club" className="outline-none" />
@@ -189,7 +255,9 @@ export function ClubCreationScreen(): ReactNode {
         </GlassPanel>
       )}
 
-      {custom ? <FoundAClub /> : <TakeOneOver />}
+      {custom
+        ? <FoundAClub />
+        : <TakeOneOver briefs={briefs} status={contentStatus} failure={contentFailure} failures={contentFailures} onRetry={retry} />}
     </CreationScreen>
   );
 }
@@ -331,10 +399,65 @@ function ClubChoiceCard({ brief, prominent = false }: {
   );
 }
 
-function TakeOneOver(): ReactNode {
+function TakeOneOver({ briefs, status, failure, failures, onRetry }: {
+  briefs: ClubBriefs | null;
+  status: ContentStatus;
+  failure: ContentError | null;
+  failures: number;
+  onRetry: () => void;
+}): ReactNode {
   const state = useCreationStore();
   const [showAll, setShowAll] = useState(false);
   const restId = useId();
+  /**
+   * True from the moment the player presses "Try again" until the clubs are
+   * on screen. It decides two things: that the failure block stays put (with
+   * its button busy) while the retry runs, rather than giving way to the
+   * skeletons and taking the player's place with it; and that when the clubs
+   * arrive, focus goes to the first of them — the first thing the player can
+   * now do. A prefetch arriving on its own never moves focus: nobody asked.
+   */
+  const recovering = useRef(false);
+  const failureRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const retrying = status === 'LOADING' && recovering.current;
+  /**
+   * What the one status line says. It is a single polite live region that
+   * stays mounted across every state below, so a screen reader hears each
+   * change once — "preparing" when a retry starts, "ready" when the player's
+   * own retry brought the clubs — and never a chorus of regions saying the
+   * same thing. A failure is not announced here: the alert does that, and it
+   * is a fresh alert each time (keyed on the failure count), so a second or
+   * tenth failure is a new event rather than the first one with its words
+   * changed. A passive arrival says nothing: nobody asked.
+   */
+  const [announcement, setAnnouncement] = useState<'' | 'preparing' | 'ready'>('');
+
+  const retry = (): void => {
+    recovering.current = true;
+    setAnnouncement('preparing');
+    // Keep focus inside the block the player is acting on while its button
+    // is busy; a busy button cannot hold focus, and the body is not a place.
+    failureRef.current?.focus({ preventScroll: true });
+    onRetry();
+  };
+
+  useEffect(() => {
+    if (status !== 'FAILED') return;
+    // A retry that failed is over: the next arrival, if nobody presses the
+    // button, is a passive one and must not move focus. The block is still
+    // focused from the retry, so focus is not lost either.
+    recovering.current = false;
+    setAnnouncement('');
+  }, [status, failures]);
+
+  useEffect(() => {
+    if (!briefs || !recovering.current) return;
+    recovering.current = false;
+    setAnnouncement('ready');
+    const first = listRef.current?.querySelector<HTMLElement>('button[aria-pressed]');
+    first?.focus({ preventScroll: true });
+  }, [briefs]);
 
   return (
     <>
@@ -348,27 +471,66 @@ function TakeOneOver(): ReactNode {
         <SectionHeader
           title="Three ways to start"
           subtitle="Win the league, entertain them, or keep the lights on."
-          action={
-            <button
-              type="button"
-              aria-expanded={showAll}
-              aria-controls={restId}
-              onClick={() => setShowAll((open) => !open)}
-              className={`min-h-11 shrink-0 px-1 text-[13px] font-semibold text-ink-dim hover:text-ink ${FOCUS_RING}`}
-            >
-              {showAll ? 'Show three' : 'All twelve'}
-            </button>
-          }
+          {...(briefs ? {
+            action: (
+              <button
+                type="button"
+                aria-expanded={showAll}
+                aria-controls={restId}
+                onClick={() => setShowAll((open) => !open)}
+                className={`min-h-11 shrink-0 px-1 text-[13px] font-semibold text-ink-dim hover:text-ink ${FOCUS_RING}`}
+              >
+                {showAll ? 'Show three' : 'All twelve'}
+              </button>
+            ),
+          } : {})}
         />
-        <div className="mt-3 flex flex-col gap-2.5">
-          {FEATURED_BRIEFS.map((brief) => (
-            <ClubChoiceCard key={brief.club.id} brief={brief} prominent />
-          ))}
-        </div>
+        {briefs ? (
+          <div ref={listRef} className="mt-3 flex flex-col gap-2.5">
+            {briefs.featured.map((brief) => (
+              <ClubChoiceCard key={brief.club.id} brief={brief} prominent />
+            ))}
+          </div>
+        ) : status === 'FAILED' || retrying ? (
+          /* The list is the only thing that needed the universe, so the list
+             is the only thing that says it is missing. The rest of the screen
+             — and founding a club — carries on. While a retry runs the block
+             stays, the button shows it is busy and the text says what is
+             happening, so nothing jumps and nothing can be pressed twice. */
+          <div ref={failureRef} tabIndex={-1} className="outline-none">
+            <ErrorState
+              key={failures}
+              title="Your league could not be prepared"
+              description={playerMessageFor(failure)}
+              onRetry={retry}
+              retryLabel="Try again"
+              retrying={retrying}
+              className="py-8"
+            />
+          </div>
+        ) : (
+          /* Three card-shaped placeholders where the three clubs will be, so
+             the screen keeps its shape and the arrival is a fill, not a jump.
+             The region announces itself once; the placeholders are silent. */
+          <SkeletonRegion loading label="Preparing your league" className="mt-3 flex flex-col gap-2.5">
+            {[0, 1, 2].map((i) => <Skeleton key={i} variant="card" height={172} />)}
+          </SkeletonRegion>
+        )}
+        {/* The one status line. Visible while a retry runs, so the player can
+            see it is happening; heard-only once the clubs are here, because
+            the clubs themselves are the visible proof. Always in the tree. */}
+        <p
+          role="status"
+          className={announcement === 'preparing'
+            ? '-mt-4 pb-2 text-center text-[13px] text-ink-muted'
+            : 'sr-only'}
+        >
+          {announcement === 'preparing' ? 'Preparing your league…' : announcement === 'ready' ? 'Your league is ready.' : ''}
+        </p>
       </div>
 
       <div id={restId}>
-        {showAll && (
+        {briefs && showAll && (
           <>
             <SectionHeader
               title="The other nine"
@@ -376,7 +538,7 @@ function TakeOneOver(): ReactNode {
               size="sm"
             />
             <div className="mt-3 flex flex-col gap-2.5">
-              {REMAINING_BRIEFS.map((brief) => (
+              {briefs.remaining.map((brief) => (
                 <ClubChoiceCard key={brief.club.id} brief={brief} />
               ))}
             </div>

@@ -9,7 +9,6 @@ import {
 } from '../../creators/creator';
 import type { CreatorTemplate, NameBankDef } from '../schema';
 import { GENERATION_BALANCE } from '../balance';
-import { BASE_NAME_BANK } from '../packs/base/nameBank';
 
 /**
  * Creator generation.
@@ -36,7 +35,8 @@ export interface GenerateCreatorOptions {
   readonly handle?: string;
   readonly displayName?: string;
   readonly bio?: string;
-  readonly nameBank?: NameBankDef;
+  /** Where handles and names come from. Content is handed in; the generator imports none. */
+  readonly nameBank: NameBankDef;
   readonly template?: CreatorTemplate;
   readonly identityKind?: IdentityKind;
   readonly sourcePackId?: string;
@@ -156,9 +156,9 @@ const BIO_CLOSERS: readonly string[] = [
   'Is quietly better at this than anybody gives them credit for.',
 ];
 
-export function generateCreator(rng: Rng, opts: GenerateCreatorOptions = {}): Creator {
+export function generateCreator(rng: Rng, opts: GenerateCreatorOptions): Creator {
   const template = opts.template;
-  const bank = opts.nameBank ?? BASE_NAME_BANK;
+  const bank = opts.nameBank;
 
   const tier = opts.tier ?? (template?.tier as CreatorTier | undefined) ?? rng.weighted(
     CREATOR_TIERS, (_t, i) => [30, 26, 20, 14, 10][i] ?? 10,

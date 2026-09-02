@@ -26,7 +26,7 @@ import { TRIGGER_FALLBACKS } from './templating';
 const registry = new ContentRegistry();
 registry.load(BASE_PACK);
 const templates = registry.clubs();
-const realClubs = () => templates.map((t, i) => clubFromTemplate(new Rng(`club-${i}`), t, asId<ClubId>(`cf_club_${i}`)));
+const realClubs = () => templates.map((t, i) => clubFromTemplate(new Rng(`club-${i}`), t, asId<ClubId>(`cf_club_${i}`), { facilityIds: registry.facilities().map((f) => f.id) }));
 
 describe('AI profiles and the content pack', () => {
   it('shares one vocabulary of profile ids', () => {

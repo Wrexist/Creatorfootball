@@ -5,6 +5,7 @@ import type {
   TacticSetup,
 } from '@cf/engine';
 import { ErrorState, Skeleton, cn, sfx, useConfirm, useIsWide } from '@/design';
+import { scoutingReportAgainst } from '@cf/engine';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import { useMatchdayContext } from '../shared/context';
@@ -113,7 +114,16 @@ export function MatchLiveScreen(): ReactNode {
     if (!sim) { setFailed(true); return; }
 
     simRef.current = sim;
-    useMatchStore.getState().attach(sim);
+    // The opposition's read of us is fixed here, before a ball is kicked. The
+    // cycle files a fresh observation the moment this match is applied, so
+    // this is the only point at which "what they came in knowing" is true.
+    const world = useGameStore.getState().state;
+    const fixture = world?.fixtures[fixtureId];
+    const opponentId = world && fixture
+      ? (fixture.homeClubId === world.playerClubId ? fixture.awayClubId : fixture.homeClubId)
+      : null;
+    const recap = world && opponentId ? scoutingReportAgainst(world, opponentId).recap : [];
+    useMatchStore.getState().attach(sim, undefined, recap);
     setReady(true);
     // Deliberately not `play()` here: the walk-out sequence starts the match
     // when it hands the screen over, and a match already running behind a

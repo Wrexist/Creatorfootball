@@ -1,5 +1,10 @@
 # Creator Football — Architecture
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 **Scope:** the technical architecture as it exists in this repository, plus the extension
 points it was shaped to allow. Where something is contracted but unbuilt it is marked
 `CONTRACTED`; where it is designed only here it is marked `SPEC`.

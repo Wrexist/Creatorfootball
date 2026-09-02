@@ -61,7 +61,7 @@ export function rolloverSeason(
   rng: Rng,
   ledger: Ledger,
   events: GameEventFactory,
-  opts: { now: number; registry?: ContentRegistry },
+  opts: { now: number; registry: ContentRegistry },
 ): RolloverResult {
   let next = state;
   const emitted: AnyDomainEvent[] = [];
@@ -210,12 +210,10 @@ export function rolloverSeason(
   // club takes on a small academy group each summer, and a better academy
   // produces better prospects — which is what makes that facility worth money.
   const intakeRng = rng.fork('intake');
-  const nameBank = opts.registry?.nameBank();
+  const nameBank = opts.registry.nameBank();
 
   for (const club of Object.values(next.clubs)) {
-    const academy = opts.registry
-      ? facilityEffect(club, 'youthQuality', opts.registry)
-      : 0;
+    const academy = facilityEffect(club, 'youthQuality', opts.registry);
     // Roughly one and a half per club, which balances the retirement rate above.
     const intakeSize = 1 + (intakeRng.chance(0.45 + academy * 0.45) ? 1 : 0);
     const takenNumbers = [...club.squad, ...club.youthSquad]
@@ -231,7 +229,7 @@ export function rolloverSeason(
         allowWonderkid: true,
         idPrefix: `y${nextNumber}_${club.id}_${i}`,
         takenShirtNumbers: takenNumbers,
-        ...(nameBank ? { nameBank } : {}),
+        nameBank,
       });
       next = setPlayer(next, prospect);
       next = patchClub(next, club.id, (c) => ({ youthSquad: [...c.youthSquad, prospect.id] }));
@@ -255,7 +253,7 @@ export function rolloverSeason(
       tier,
       idPrefix: `gc${nextNumber}_${i}`,
       spawnedSeason: nextNumber,
-      ...(nameBank ? { nameBank } : {}),
+      nameBank,
     });
     // A player label without a player behind it is a UI lie; fresh voices are
     // media faces, not squad members.
@@ -317,7 +315,10 @@ export function rolloverSeason(
   }, next);
 
   // --- 6. next season's calendar ----------------------------------------
-  const nextSeasonId = asId<SeasonId>(`season_${nextNumber}`);
+  // Scoped to this career, like every other id it creates. A career made
+  // before tokens existed carries its seed here, so its later seasons are
+  // still distinct from another career's.
+  const nextSeasonId = asId<SeasonId>(`${state.idToken}_season_${nextNumber}`);
   const totalWeeks = (clubIds.length - 1) * (competition?.rounds ?? 2);
 
   const rivalPairs: (readonly [ClubId, ClubId])[] = Object.values(next.rivalries)

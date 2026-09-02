@@ -1,5 +1,10 @@
 # AUDIT TWO: GAMEPLAY
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 **Subject:** Creator Football, `packages/engine` + `apps/game` as of this commit.
 **Method:** the real engine, run headless through `tools/sim`. Every number below comes from
 a script that was run against `simulateMatch` / `advanceCycle`, not from reading code and

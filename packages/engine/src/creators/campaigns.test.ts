@@ -1,3 +1,4 @@
+import { BASE_NAME_BANK } from '../content/packs/base/nameBank';
 import { describe, expect, it } from 'vitest';
 import type { ClubId, EventId, MatchId, PlayerId } from '../core/brand';
 import { Rng } from '../core/rng';
@@ -96,7 +97,7 @@ describe('brief eligibility for life-cycle arrivals', () => {
   const OFFER_CYCLE = 10;
 
   const withCreator = (overrides: Partial<Creator>): Creator => ({
-    ...generateCreator(new Rng('elig'), { tier: 'LOCAL', followers: 9_000 }),
+    ...generateCreator(new Rng('elig'), { nameBank: BASE_NAME_BANK, tier: 'LOCAL', followers: 9_000 }),
     ...overrides,
   });
 
@@ -122,6 +123,7 @@ describe('brief eligibility for life-cycle arrivals', () => {
   it('keeps the offer pool free of ineligible freelancers', () => {
     const base = busyWorld();
     const freelancer = generateCreator(new Rng('freelance'), {
+      nameBank: BASE_NAME_BANK,
       tier: 'LOCAL', followers: 8_000, handle: 'spawnedfreelancelad',
       displayName: 'Spawned Freelancer',
     });

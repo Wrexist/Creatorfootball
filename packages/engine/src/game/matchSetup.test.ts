@@ -5,11 +5,13 @@ import type { Fixture } from '../league/types';
 import type { GameState } from '../game/state';
 import type { MatchSetup, MatchTeam } from '../matches/simulator';
 import type { TacticSetup } from '../tactics/tactics';
-import { BASE_PACK, ContentRegistry, type CreatorSeasonConfigDef } from '../content';
+import { ContentRegistry, type CreatorSeasonConfigDef } from '../content';
+import { BASE_PACK } from '../content/packs/base';
 import { DEFAULT_TACTICS } from '../tactics/tactics';
 import { buildTestWorld } from '../simulation/fixtures';
 import { arenaSupportShare } from './selectors';
 import { buildMatchSetup } from './matchSetup';
+import { observeTactics } from '../simulation/opponentModel';
 
 const configOf = (): CreatorSeasonConfigDef => {
   const registry = new ContentRegistry();
@@ -52,15 +54,39 @@ const withPlayerTactics = (state: GameState, over: Partial<TacticSetup>): GameSt
 const sideFor = (setup: Pick<MatchSetup, 'home' | 'away'>, clubId: ClubId): MatchTeam =>
   setup.home.clubId === clubId ? setup.home : setup.away;
 
+/** Play the given shape `times` matches, so the league has actually seen it. */
+const havingPlayed = (state: GameState, over: Partial<TacticSetup>, times: number): GameState => {
+  const played = withPlayerTactics(state, over);
+  let model = played.opponentModel;
+  const club = played.clubs[played.playerClubId];
+  if (!club) throw new Error('fixture club missing');
+  for (let i = 0; i < times; i++) model = observeTactics(model, club.tactics, i + 1);
+  return { ...played, opponentModel: model };
+};
+
 describe('buildMatchSetup counter-lean wiring', () => {
-  it('starts AI sides on a lean that attacks the player\u2019s parked bus', () => {
+  const BUS: Partial<TacticSetup> = { press: 'LOW_BLOCK', line: 'DEEP', counter: 'ALWAYS', risk: 'CAUTIOUS' };
+
+  /**
+   * The counter has to be *earned*. Setting a shape in the tactics screen is
+   * not something any opponent can see; playing it repeatedly is.
+   */
+  it('does not counter a shape the player has never actually played', () => {
     const world = buildTestWorld({ clubCount: 4 });
-    const parked = withPlayerTactics(world.state, {
-      press: 'LOW_BLOCK', line: 'DEEP', counter: 'ALWAYS', risk: 'CAUTIOUS',
-    });
-    // The AI side visits the player's ground.
+    const parked = withPlayerTactics(world.state, BUS);
     const fixture = fixtureBetween('club_1' as ClubId, world.state.playerClubId);
     const setup = buildMatchSetup(parked, fixture, configOf());
+
+    const aiSide = sideFor(setup, 'club_1' as ClubId);
+    expect(aiSide.tactics.press).toBe(DEFAULT_TACTICS.press);
+  });
+
+  it('starts AI sides on a lean that attacks a bus the player keeps parking', () => {
+    const world = buildTestWorld({ clubCount: 4 });
+    const seen = havingPlayed(world.state, BUS, 4);
+    // The AI side visits the player's ground.
+    const fixture = fixtureBetween('club_1' as ClubId, world.state.playerClubId);
+    const setup = buildMatchSetup(seen, fixture, configOf());
 
     const aiSide = sideFor(setup, 'club_1' as ClubId);
     expect(aiSide.tactics.press).toBe('HIGH_PRESS');
@@ -69,7 +95,7 @@ describe('buildMatchSetup counter-lean wiring', () => {
 
   it('leaves the PLAYER\u2019S own tactics untouched', () => {
     const world = buildTestWorld({ clubCount: 4 });
-    const parked = withPlayerTactics(world.state, { press: 'LOW_BLOCK', counter: 'ALWAYS' });
+    const parked = havingPlayed(world.state, { press: 'LOW_BLOCK', counter: 'ALWAYS' }, 4);
     const fixture = fixtureBetween(world.state.playerClubId, 'club_1' as ClubId);
     const setup = buildMatchSetup(parked, fixture, configOf());
 

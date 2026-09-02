@@ -14,6 +14,10 @@
  * Usage: node e2e/smoke.mjs [baseUrl]
  */
 import { chromium } from 'playwright';
+import { execFileSync } from 'node:child_process';
+import { readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:4173';
 // CHROMIUM_PATH pins a specific Chromium (sandboxed machines, pinned builds).
@@ -36,6 +40,91 @@ page.on('console', (m) => { if (m.type() === 'error') pageErrors.push(m.text());
 
 console.log(`\nBrowser smoke test against ${BASE}\n`);
 
+/**
+ * An option card is the only thing on the creation steps carrying aria-pressed.
+ * Matched by attribute rather than by role state, because Playwright's
+ * `pressed: false` also matches buttons with no aria-pressed at all — which
+ * quietly selects the header's back arrow and walks the test out of the flow
+ * it is supposed to be testing.
+ */
+const OPTION = 'button[aria-pressed="false"]';
+
+/** What the app has actually written, read the way the app stores it. */
+const readSave = (target) => target.evaluate(async () => {
+  const db = await new Promise((resolve, reject) => {
+    const r = indexedDB.open('cf.game', 1);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+  const get = (key) => new Promise((resolve, reject) => {
+    const rq = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+    rq.onsuccess = () => resolve(rq.result ?? null);
+    rq.onerror = () => reject(rq.error);
+  });
+  return { save: await get('cf.save.v1'), meta: await get('cf.save.meta.v1') };
+});
+
+/**
+ * Walk a new player through career creation by clicking what a player clicks.
+ *
+ * Every wait is a readiness signal rather than a sleep: each step's forward
+ * button carries its blocker text until the step is satisfied and only then
+ * takes its real label, so waiting for that label is waiting for the step to
+ * be complete.
+ *
+ * Along the way it watches for the two things the content split could break
+ * without any test in Node noticing: a step that renders nothing while the
+ * universe is still arriving, and the universe being fetched more than once.
+ * Both are recorded here and asserted by the caller.
+ */
+async function createCareerThroughUi(target) {
+  const blankSteps = [];
+  const contentRequests = [];
+  const onRequest = (req) => { if (/\/assets\/content-[^/]*\.js/.test(req.url())) contentRequests.push(req.url()); };
+  target.on('request', onRequest);
+  const notBlank = async (step) => {
+    // A screen with a heading and something to press is not blank. Text alone
+    // would pass a spinner; a control alone would pass a stuck form.
+    const text = await target.evaluate(() => document.body.innerText.trim());
+    const controls = await target.locator('button:visible, input:visible').count();
+    if (text.length < 20 || controls === 0) blankSteps.push(`${step}: ${text.length} chars, ${controls} controls`);
+  };
+
+  const start = target.getByRole('button', { name: /start your career/i }).first();
+  await start.waitFor({ state: 'visible' });
+  await start.click();
+
+  await target.waitForURL('**/create/manager');
+  await target.locator(OPTION).first().waitFor({ state: 'visible' });
+  await notBlank('manager step');
+  await target.locator(OPTION).first().click();
+  await target.getByRole('button', { name: /next: your club/i }).click();
+
+  await target.waitForURL('**/create/club');
+  // The step is on screen before its clubs are: the moment the URL changes
+  // there must already be a heading and something to press.
+  await notBlank('club step, on arrival');
+  await target.locator(OPTION).first().waitFor({ state: 'visible' });
+  await notBlank('club step, clubs listed');
+  await target.locator(OPTION).first().click();
+  // Taking a club over is the default path. If that default ever changes this
+  // fails loudly here, which is the right outcome: the journey a new player is
+  // actually walked through would have changed.
+  await target.getByRole('button', { name: /^take over\s/i }).click();
+
+  // The reveal only renders once the career reached READY.
+  await target.getByRole('button', { name: /meet your squad/i }).waitFor({ state: 'visible' });
+  await notBlank('club reveal');
+  await target.getByRole('button', { name: /meet your squad/i }).click();
+  await target.waitForURL('**/create/squad');
+  await target.getByRole('button', { name: /^play\b/i }).waitFor({ state: 'visible' });
+  await notBlank('squad step');
+  await target.getByRole('button', { name: /^play\b/i }).click();
+  await target.waitForURL(/\/matchday/);
+  target.off('request', onRequest);
+  return { blankSteps, contentRequests };
+}
+
 // --- 1. the built app boots at all ------------------------------------
 await page.goto(BASE, { waitUntil: 'networkidle' });
 await page.waitForTimeout(2500);
@@ -56,37 +145,73 @@ if (/could not finish loading|something went wrong/i.test(bodyText)) {
   pass('the app rendered content');
 }
 
-// --- 2. walk into a real game ------------------------------------------
-const footerState = () => page.evaluate(() => {
-  const b = [...document.querySelectorAll('button')].pop();
-  return { txt: b?.innerText.trim().replace(/\n/g, ' ') ?? '', disabled: Boolean(b?.disabled) };
-});
+// --- 2. a career can be created from nothing, and survives -------------
+//
+// The journey every new player makes, and the one nothing else covers: an
+// empty install, through every onboarding step, to a first career that is
+// still there after a reload.
+//
+// It doubles as the setup for the route checks below, which need a game to
+// look at. That is why it asserts rather than merely walking: when creation
+// breaks it now says so here, instead of leaving those checks to fail with
+// something misleading about controls being covered up.
+try {
+  const fresh = await readSave(page);
+  if (fresh.save !== null || fresh.meta !== null) {
+    fail('the run began with a career already in storage, so creation was never exercised');
+  } else {
+    const errorsBefore = pageErrors.length;
+    const journey = await createCareerThroughUi(page);
+    const journeyErrors = pageErrors.slice(errorsBefore).filter((e) => !/favicon|404/i.test(e));
 
-const start = page.getByRole('button', { name: /start your career|continue/i }).first();
-if (await start.count()) { await start.click(); await page.waitForTimeout(1400); }
+    // The universe is a lazy chunk. It must arrive exactly once — a second
+    // request would mean two loaders, or a loader that forgot — and no step
+    // may be a blank screen while it is on its way.
+    if (journey.contentRequests.length !== 1) {
+      fail(`the content chunk was requested ${journey.contentRequests.length} times during creation (expected exactly once)`);
+    } else if (journey.blankSteps.length > 0) {
+      fail(`creation showed a blank screen at: ${journey.blankSteps.join('; ')}`);
+    } else if (journeyErrors.length > 0) {
+      fail(`creation logged ${journeyErrors.length} error(s): ${journeyErrors[0].slice(0, 180)}`);
+    } else {
+      pass('career creation loaded the universe once, showed no blank step and threw nothing');
+    }
 
-for (let step = 0; step < 14; step++) {
-  const s = await footerState();
-  if (!s.disabled) {
-    await page.locator('button').last().click();
-    await page.waitForTimeout(1400);
-    if (page.url().includes('/home') || page.url().includes('/matchday')) break;
-    continue;
+    const born = await readSave(page);
+    const meta = born.meta ? JSON.parse(born.meta) : null;
+    if (!born.save || !meta) {
+      fail('onboarding completed but no career was written to storage');
+    } else {
+      // Reload, and require the career back. The root route is the honest
+      // test of it: it sends a loaded career to /home and everyone else back
+      // to /onboarding, so landing on /home proves both that the save was
+      // read and that onboarding did not restart.
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.goto(BASE, { waitUntil: 'networkidle' });
+
+      let landedInGame = true;
+      try {
+        await page.waitForURL('**/home');
+      } catch {
+        landedInGame = false;
+      }
+      const after = await readSave(page);
+      const afterMeta = after.meta ? JSON.parse(after.meta) : null;
+
+      if (!landedInGame) {
+        fail(
+          `after a reload the app went to ${new URL(page.url()).pathname} instead of the career ` +
+          `it had just created (${meta.clubName}) — onboarding restarted or the save was not read`,
+        );
+      } else if (!afterMeta || afterMeta.saveId !== meta.saveId) {
+        fail(`the career did not survive a reload: saved ${meta.saveId}, found ${afterMeta?.saveId ?? 'nothing'}`);
+      } else {
+        pass(`a career created through onboarding (${meta.clubName}) persists and survives a reload`);
+      }
+    }
   }
-  if (/name your club/i.test(s.txt)) {
-    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke United', { delay: 8 }); }
-  } else if (/city/i.test(s.txt)) {
-    const i = await page.$$('input'); const t = i[1] ?? i[0]; if (t) { await t.click(); await t.type('Smoketon', { delay: 8 }); }
-  } else if (/name/i.test(s.txt)) {
-    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke Tester', { delay: 8 }); }
-  } else if (/archetype|manager/i.test(s.txt)) {
-    const c = page.getByRole('button', { name: /tactician|motivator|showman/i }).first();
-    if (await c.count()) await c.click();
-  } else if (/club|philosoph|culture/i.test(s.txt)) {
-    const c = page.locator('button').nth(4);
-    if (await c.count()) await c.click();
-  } else break;
-  await page.waitForTimeout(600);
+} catch (e) {
+  fail(`the onboarding journey broke: ${String(e).split('\n').slice(0, 2).join(' ').slice(0, 220)}`);
 }
 
 // --- 3. every primary action is actually clickable ---------------------
@@ -191,6 +316,178 @@ if (navErrors.length > bootErrors.length) {
 } else {
   pass('navigating every primary route threw nothing');
 }
+
+// --- 6. a career survives the storage layer ----------------------------
+//
+// The game outgrew localStorage: a plateaued save measures ~3.1 MB and the
+// save layer keeps a backup copy, against a ~5 MB origin budget. Careers now
+// live in IndexedDB, with anything already written to localStorage carried
+// across on first boot. That migration is the riskiest code in the storage
+// path and it only exists in a browser, so it is checked in one — in its own
+// context, so nothing above can have primed it.
+{
+  const ctx2 = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const p2 = await ctx2.newPage();
+  const KEYS = ['cf.save.v1', 'cf.save.backup.v1', 'cf.save.meta.v1'];
+
+  // A career written by a previous version of the app, before IndexedDB.
+  await p2.addInitScript((keys) => {
+    for (const k of keys) window.localStorage.setItem(k, `legacy-value-for-${k}`);
+  }, KEYS);
+
+  await p2.goto(BASE, { waitUntil: 'networkidle' });
+  await p2.waitForTimeout(2500);
+
+  const moved = await p2.evaluate(async (keys) => {
+    const db = await new Promise((resolve, reject) => {
+      const r = indexedDB.open('cf.game', 1);
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const read = (key) => new Promise((resolve, reject) => {
+      const req = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+      req.onsuccess = () => resolve(req.result ?? null);
+      req.onerror = () => reject(req.error);
+    });
+    const out = {};
+    for (const k of keys) out[k] = { idb: await read(k), local: window.localStorage.getItem(k) };
+    return out;
+  }, KEYS).catch((e) => ({ error: String(e) }));
+
+  if (moved.error) {
+    fail(`the storage layer never reached IndexedDB: ${moved.error.slice(0, 160)}`);
+  } else {
+    const notCarried = KEYS.filter((k) => moved[k]?.idb !== `legacy-value-for-${k}`);
+    const notReclaimed = KEYS.filter((k) => moved[k]?.local !== null);
+    if (notCarried.length > 0) {
+      fail(`localStorage career was not carried into IndexedDB: ${notCarried.join(', ')}`);
+    } else if (notReclaimed.length > 0) {
+      fail(`localStorage copies were not reclaimed after migration: ${notReclaimed.join(', ')}`);
+    } else {
+      pass('an existing localStorage career migrates into IndexedDB and frees the old copies');
+    }
+  }
+  await ctx2.close();
+}
+
+// --- 7. a real career survives a reload --------------------------------
+//
+// The loop that matters and that nothing else covered: a genuine save loads
+// out of IndexedDB into the running app, a change made through the interface
+// is persisted, and it is still there after the page is reloaded. Every part
+// of that is real — the built bundle, the real storage layer, the real save
+// queue — except the career itself, which is built by the engine rather than
+// by clicking through three creation screens. Driving those would make this
+// test a hostage to their layout while testing nothing extra about
+// persistence, which is what it is here to check.
+{
+  const fixturePath = join(tmpdir(), `cf-smoke-save-${process.pid}.json`);
+  let fixture = null;
+  try {
+    execFileSync('pnpm', ['--filter', '@cf/sim', 'exec', 'tsx', 'src/saveFixture.ts', fixturePath], {
+      stdio: 'ignore',
+    });
+    fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
+  } catch (e) {
+    fail(`could not build a save fixture: ${String(e).slice(0, 160)}`);
+  }
+
+  if (fixture) {
+    const ctx3 = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const p3 = await ctx3.newPage();
+    const loopErrors = [];
+    p3.on('pageerror', (e) => loopErrors.push(String(e)));
+
+    // First load creates the database; then the career is written into it.
+    await p3.goto(BASE, { waitUntil: 'networkidle' });
+    await p3.waitForTimeout(1500);
+
+    const seeded = await p3.evaluate(async (entries) => {
+      const db = await new Promise((resolve, reject) => {
+        const r = indexedDB.open('cf.game', 1);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('kv', 'readwrite');
+        const store = tx.objectStore('kv');
+        for (const [key, value] of entries) store.put(value, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      return true;
+    }, [['cf.save.v1', fixture['cf.save.v1']], ['cf.save.meta.v1', fixture['cf.save.meta.v1']]])
+      .catch((e) => String(e));
+
+    if (seeded !== true) {
+      fail(`could not seed a career into IndexedDB: ${String(seeded).slice(0, 160)}`);
+    } else {
+      // The app must boot that career, not a fresh world.
+      await p3.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+      await p3.waitForTimeout(2500);
+      const body = (await p3.textContent('body')) ?? '';
+      // The club and the clock come from the loaded save, so seeing both is
+      // proof the app booted this career rather than a fresh world. Checked at
+      // the mobile viewport, where the wide-screen "Your save" aside is
+      // correctly absent — so it deliberately is not part of the assertion.
+      const loadedOurCareer =
+        body.includes(fixture.expect.clubShortName) && body.includes(`Season ${fixture.expect.season}`);
+
+      if (!loadedOurCareer) {
+        fail(`the seeded career did not load: settings showed neither "${fixture.expect.clubShortName}" nor its season`);
+      } else {
+        const motion = p3.getByRole('switch', { name: 'Reduce motion' });
+        if ((await motion.count()) === 0) {
+          fail('could not find the "Reduce motion" control to change a persisted setting');
+        } else {
+          const before = await motion.first().getAttribute('aria-checked');
+          await motion.first().click();
+          await p3.waitForTimeout(1200); // let the save queue drain
+
+          // The whole point: reload the page and see whether it stuck.
+          await p3.reload({ waitUntil: 'networkidle' });
+          await p3.waitForTimeout(2500);
+          const after = await p3.getByRole('switch', { name: 'Reduce motion' }).first().getAttribute('aria-checked');
+          const stillOurs = ((await p3.textContent('body')) ?? '').includes(fixture.expect.clubShortName);
+
+          if (after === before) {
+            fail(`a setting changed in the app did not survive a reload (still ${String(after)})`);
+          } else if (!stillOurs) {
+            fail('the career was lost across a reload');
+          } else {
+            pass('a real career loads from IndexedDB, takes a change, and survives a reload');
+
+            // Two tabs, one career. A second page in the same context shares
+            // this IndexedDB, exactly as a second tab on a phone does. It must
+            // see the change the first tab just made — one store, one career,
+            // never a fork of it.
+            const p3b = await ctx3.newPage();
+            await p3b.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+            const secondTab = await p3b.getByRole('switch', { name: 'Reduce motion' }).first().getAttribute('aria-checked');
+            const secondTabBody = (await p3b.textContent('body')) ?? '';
+            if (secondTab !== after) {
+              fail(`a second tab saw a different setting (${String(secondTab)}) from the one just saved (${String(after)})`);
+            } else if (!secondTabBody.includes(fixture.expect.clubShortName)) {
+              fail('a second tab did not load the same career');
+            } else {
+              pass('a second tab sees the same career and the same change');
+            }
+            await p3b.close();
+          }
+        }
+      }
+    }
+
+    const loopFailures = loopErrors.filter((e) => !/favicon|404/i.test(e));
+    if (loopFailures.length > 0) {
+      fail(`${loopFailures.length} runtime error(s) during the save loop: ${loopFailures[0].slice(0, 180)}`);
+    }
+    await ctx3.close();
+  }
+  rmSync(fixturePath, { force: true });
+}
+
 
 await browser.close();
 

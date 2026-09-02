@@ -9,7 +9,6 @@ import {
 import { DEFAULT_TACTICS, type TacticSetup } from '../../tactics/tactics';
 import type { ClubTemplate } from '../schema';
 import { GENERATION_BALANCE } from '../balance';
-import { BASE_FACILITY_IDS } from '../packs/base/facilities';
 
 /**
  * Turning a ClubTemplate into a live Club.
@@ -76,7 +75,8 @@ const visualFrom = (t: ClubTemplate): ClubVisualIdentity => ({
 
 export interface ClubFromTemplateOptions {
   readonly isPlayerClub?: boolean;
-  readonly facilityIds?: readonly string[];
+  /** Every facility the club gets a level in. Content is handed in; the generator imports none. */
+  readonly facilityIds: readonly string[];
   readonly startingBudget?: number;
 }
 
@@ -84,14 +84,14 @@ export function clubFromTemplate(
   rng: Rng,
   t: ClubTemplate,
   id: ClubId,
-  opts: ClubFromTemplateOptions = {},
+  opts: ClubFromTemplateOptions,
 ): Club {
   const cfg = GENERATION_BALANCE.club;
   const philosophy = asPhilosophy(t.philosophy);
   const fanCulture = asFanCulture(t.fanCulture);
   const profile = FAN_CULTURE_PROFILE[fanCulture];
 
-  const facilityIds = opts.facilityIds ?? BASE_FACILITY_IDS;
+  const facilityIds = opts.facilityIds;
   const baseLevel = cfg.facilityFromReputation(t.reputation);
   const facilityLevels: Record<string, number> = {};
   for (const facilityId of facilityIds) {

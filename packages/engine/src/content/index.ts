@@ -12,25 +12,20 @@ export * from './validate';
 export * from './balance';
 export * from './seasonConfig';
 
-export { BASE_PACK } from './packs/base';
-export {
-  BASE_NAME_BANK, NATIONALITY_NAMES,
-  BASE_CLUBS, CLUB_LORE, BASE_CLUB_IDS, AI_PROFILE_IDS,
-  BASE_PLAYERS, BASE_PLAYER_IDS,
-  BASE_CREATORS, BASE_CREATOR_IDS,
-  BASE_SPONSORS, BASE_SPONSOR_IDS,
-  BASE_FACILITIES, BASE_FACILITY_IDS, FACILITY_EFFECT_KEYS,
-  BASE_OBJECTIVES, BASE_OBJECTIVE_IDS,
-  BASE_OFFERS, BASE_OFFER_SKUS,
-  BASE_COMMENTARY, BASE_SOCIAL_TEMPLATES, BASE_MEDIA_TEMPLATES, MEDIA_OUTLETS,
-} from './packs/base';
-export type { AiProfileId, FacilityEffectKey } from './packs/base';
-
-export { COMMUNITY_EXAMPLE_PACK } from './packs/community/example';
-export {
-  LICENSED_EXAMPLE_PACK, LICENSED_EXAMPLE_PACK_EXPIRED,
-  LICENSED_EXAMPLE_BINDINGS, LICENSED_EXAMPLE_EXPIRES_AT,
-} from './packs/licensed/example';
+/**
+ * The packs themselves are deliberately NOT re-exported here.
+ *
+ * `packs/base` is the game's largest static payload and is only ever read to
+ * build a world. Anything that imports it at module scope drags it into the
+ * engine's own bundle and, worse, closes a cycle (the pack imports engine
+ * modules for its types and constants) that a bundler cannot order. So the
+ * pack is reached by exactly one path — `content/packs/base` — and only by
+ * code that means to load it: the app's content loader, the headless
+ * harness, and tests. The engine receives content through a
+ * `ContentRegistry` handed to it, never by importing a pack.
+ */
+export type { AiProfileId } from './packs/base/clubs';
+export type { FacilityEffectKey } from './packs/base/facilities';
 
 export * from './generators/profiles';
 export * from './generators/playerGenerator';

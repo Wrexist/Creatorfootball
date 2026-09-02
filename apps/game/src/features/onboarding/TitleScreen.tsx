@@ -8,6 +8,7 @@ import {
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
+import { content } from '@/state/content';
 import { BrandMark } from './BrandMark';
 
 /**
@@ -60,6 +61,10 @@ export function TitleScreen(): ReactNode {
       if (!ok) return;
     }
     trackEvent('onboarding_start', { hadSave: canContinue });
+    // The player has said what they are about to do. The universe they will
+    // choose a club from starts arriving now, behind the manager step, so the
+    // club step has it by the time they get there.
+    content.prefetch();
     navigate(ROUTES.managerCreation);
   };
 

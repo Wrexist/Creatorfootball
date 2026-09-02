@@ -3,7 +3,7 @@ import type { GameState } from './state';
 import type { MatchSetup, MatchTeam, MatchConfig, ManagerMatchBonus } from '../matches/simulator';
 import type { Fixture } from '../league/types';
 import { squadOf, clubTotalReach, arenaSupportShare } from './selectors';
-import { aiCounterLeanVsPlayer } from '../simulation/aiClub';
+import { counterPlanVsPlayer } from '../simulation/opponentModel';
 import { rivalryFor } from '../rivalries/rivalries';
 import { attendanceFor } from '../fans/fans';
 import { Rng } from '../core/rng';
@@ -77,10 +77,13 @@ const teamFor = (
   const club = state.clubs[clubId];
   if (!club) throw new Error(`Unknown club in match setup: ${clubId}`);
   // An AI side meeting the player opens with a lean aimed at the shape the
-  // player has been playing all month. Pure derivation from state, so it is
-  // deterministic and costs no save data. AI-vs-AI keeps its own identity.
+  // player has actually been playing — read from filed observations of matches
+  // already played, never from the player's tactics screen. How much evidence
+  // this manager needs before acting on it scales with their adaptability, so
+  // a sharp opponent reads you weeks before a poor one does. AI-vs-AI keeps its
+  // own identity.
   const counterLean = clubId !== state.playerClubId && involvesPlayer
-    ? aiCounterLeanVsPlayer(state) ?? {}
+    ? counterPlanVsPlayer(state, managerBonusFor(state, clubId).adaptability).lean
     : {};
   return {
     clubId,
@@ -140,6 +143,7 @@ export function buildMatchSetup(
     substitutions: config.substitutions,
     liveDecisions: live && involvesPlayer,
     maxDecisions: opts.maxDecisions ?? 4,
+    adaptation: true,
   };
 
   return {

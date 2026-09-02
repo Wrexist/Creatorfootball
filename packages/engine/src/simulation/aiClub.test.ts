@@ -7,7 +7,8 @@ import type { Position } from '../players/positions';
 import { positionGroup } from '../players/positions';
 import { emptyAttributes } from '../players/attributes';
 import { DEFAULT_TACTICS, type TacticSetup } from '../tactics/tactics';
-import { AI_PROFILES, aiClubTurn, aiCounterLeanVsPlayer, counterLeanAgainst, playShapeOf, profileFor, type AiActions } from './aiClub';
+import { AI_PROFILES, aiClubTurn, counterLeanAgainst, playShapeOf, profileFor, type AiActions } from './aiClub';
+import { counterPlanVsPlayer, observeTactics } from './opponentModel';
 import { buildTestWorld, makeTestPlayer } from './fixtures';
 
 const MARKET_POSITIONS: readonly Position[] = ['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST'];
@@ -234,7 +235,14 @@ describe('reading and countering the player\u2019s shape', () => {
     expect(counterLeanAgainst('BALANCED')).toBeNull();
   });
 
-  it('reads the lean from the PLAYER\u2019S setup, not the AI club\u2019s', () => {
+  /**
+   * This used to assert the opposite: that the lean was read from the setup
+   * sitting in the player's tactics screen. That was the bug, not the
+   * contract - no opponent can see that screen. The counter is now earned from
+   * observations of matches actually played, so the assertion is inverted on
+   * purpose rather than relaxed.
+   */
+  it('ignores the player\u2019s tactics screen entirely', () => {
     const { state } = buildTestWorld({ clubCount: 4 });
     const playerClub = state.clubs[state.playerClubId];
     if (!playerClub) throw new Error('fixture club missing');
@@ -245,24 +253,43 @@ describe('reading and countering the player\u2019s shape', () => {
         [state.playerClubId]: { ...playerClub, tactics: tacticsWith({ press: 'LOW_BLOCK', counter: 'ALWAYS', risk: 'CAUTIOUS' }) },
       },
     };
-    const lean = aiCounterLeanVsPlayer(parked);
-    expect(lean?.press).toBe('HIGH_PRESS');
 
-    // A balanced player gives the AI nothing to attack.
-    expect(aiCounterLeanVsPlayer(state)).toBeNull();
+    // Nothing has been observed, so parking the bus in the editor buys the AI
+    // no information at all - even for the sharpest manager in the league.
+    expect(counterPlanVsPlayer(parked, 100).lean).toEqual({});
+    expect(counterPlanVsPlayer(parked, 100).notes).toEqual([]);
+  });
+
+  it('counters only once the shape has been seen repeatedly', () => {
+    const { state } = buildTestWorld({ clubCount: 4 });
+    const bus = tacticsWith({ press: 'LOW_BLOCK', counter: 'ALWAYS', risk: 'CAUTIOUS' });
+
+    let model = state.opponentModel;
+    expect(counterPlanVsPlayer({ ...state, opponentModel: model }, 100).lean).toEqual({});
+
+    // One showing is not a pattern.
+    model = observeTactics(model, bus, 1);
+    expect(counterPlanVsPlayer({ ...state, opponentModel: model }, 100).lean).toEqual({});
+
+    // Two consistent showings is enough for a sharp manager to act.
+    model = observeTactics(model, bus, 2);
+    const plan = counterPlanVsPlayer({ ...state, opponentModel: model }, 100);
+    expect(plan.lean.press).toBe('HIGH_PRESS');
+    expect(plan.lean.line).toBe('HIGH');
+    expect(plan.notes.length).toBeGreaterThan(0);
   });
 
   it('is deterministic for the same world', () => {
     const { state } = buildTestWorld({ clubCount: 4 });
-    const a = JSON.stringify(aiCounterLeanVsPlayer(state));
-    const b = JSON.stringify(aiCounterLeanVsPlayer(state));
+    const a = JSON.stringify(counterPlanVsPlayer(state, 60));
+    const b = JSON.stringify(counterPlanVsPlayer(state, 60));
     expect(a).toBe(b);
   });
 
   it('never mutates the state it reads', () => {
     const { state } = buildTestWorld({ clubCount: 4 });
     const before = JSON.stringify(state);
-    aiCounterLeanVsPlayer(state);
+    counterPlanVsPlayer(state, 60);
     expect(JSON.stringify(state)).toBe(before);
   });
 });

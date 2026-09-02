@@ -1,13 +1,14 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Club, FixtureId, Player } from '@cf/engine';
+import { scoutingReportAgainst } from '@cf/engine';
 import {
   ClubBadge, Divider, EmptyState, ErrorState, FormGuide, GlassButton, GlassPanel, GlassPill,
   IconFans, IconFastForward, IconFlame, IconInjury, IconPlay, KeyValueRow, PlayerPortrait,
   PositionChip, ProgressBar, RatingBadge, Screen, SectionHeader, Skeleton, StatCard, StatGrid,
   cn, haptics, sidesWord, useToast,
 } from '@/design';
-import { useGameStore } from '@/state/gameStore';
+import { useGame, useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
 import { useMatchdayContext, arenaShareLine, type KeyBattle, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitColors } from '../shared/kit';
@@ -144,6 +145,7 @@ export function MatchPreviewScreen(): ReactNode {
       <StakesPanel context={context} />
 
       <OpponentPanel context={context} />
+      <ScoutingReportPanel them={context.them} />
 
       <section>
         <SectionHeader title={`Your predicted ${sidesWord(context.lineup.length)}`} subtitle={context.formation.name} />
@@ -401,6 +403,37 @@ function OpponentPanel({ context }: { context: MatchdayContext }): ReactNode {
         />
       )}
       <KeyValueRow label="Reputation" value={them.reputation} divided />
+    </GlassPanel>
+  );
+}
+
+/**
+ * What they have worked out about you.
+ *
+ * Rendered only when the opposition has actually read something — an empty
+ * briefing is noise, and a panel that is always present stops meaning
+ * anything. When it does appear it is the most important thing on the screen
+ * before kick-off, because it is the one piece of information that should
+ * change the team sheet the player was about to submit.
+ */
+function ScoutingReportPanel({ them }: { them: Club }): ReactNode {
+  const state = useGame();
+  const report = useMemo(() => scoutingReportAgainst(state, them.id), [state, them.id]);
+  if (report.notes.length === 0) return null;
+
+  return (
+    <GlassPanel nested level={2} padding="md" accent="danger" title={`${them.shortName} have done their homework`}>
+      <ul className="space-y-2">
+        {report.notes.map((note) => (
+          <li key={note} className="flex gap-2.5 text-[14px] leading-snug text-ink text-pretty">
+            <span aria-hidden className="mt-[7px] size-1.5 shrink-0 rounded-full bg-danger" />
+            <span>{note}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[13px] leading-snug text-ink-muted text-pretty">
+        Play it anyway and back your players, or change something and give up what you are good at.
+      </p>
     </GlassPanel>
   );
 }

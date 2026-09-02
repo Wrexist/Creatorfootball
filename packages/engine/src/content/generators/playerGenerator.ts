@@ -11,7 +11,6 @@ import { POSITIONS, positionGroup, type Position, type PositionGroup } from '../
 import { TRAITS, type TraitDefinition } from '../../players/traits';
 import type { NameBankDef } from '../schema';
 import { GENERATION_BALANCE, PERSONALITY_ARCHETYPES } from '../balance';
-import { BASE_NAME_BANK } from '../packs/base/nameBank';
 import {
   POSITION_FREQUENCY, POSITION_HEIGHT, POSITION_LEFT_FOOT_CHANCE, POSITION_PROFILES,
   POSITION_SHIRT_PREFERENCE, SECONDARY_CANDIDATES,
@@ -43,7 +42,8 @@ export interface GeneratePlayerOptions {
   /** Weight applied to the club's home nation when picking a nationality, 0-1. */
   readonly homeNation?: string;
   readonly clubId?: ClubId | null;
-  readonly nameBank?: NameBankDef;
+  /** Where names come from. Content is handed in; the generator imports none. */
+  readonly nameBank: NameBankDef;
   /** -1 (bet against him) .. +1 (loaded with headroom). Shifts potential only. */
   readonly potentialBias?: number;
   readonly allowWonderkid?: boolean;
@@ -66,7 +66,7 @@ export interface GenerateSquadOptions {
   readonly targetOverall: number;
   readonly size?: number;
   readonly clubId?: ClubId | null;
-  readonly nameBank?: NameBankDef;
+  readonly nameBank: NameBankDef;
   readonly homeNation?: string;
   readonly identityKind?: IdentityKind;
   readonly sourcePackId?: string;
@@ -299,7 +299,7 @@ const seedMarketValue = (overall: number, age: number, potential: number): numbe
 };
 
 export function generatePlayer(rng: Rng, opts: GeneratePlayerOptions): Player {
-  const bank = opts.nameBank ?? BASE_NAME_BANK;
+  const bank = opts.nameBank;
   const position = opts.position ?? rng.weighted(POSITION_FREQUENCY, (p) => p.weight).position;
 
   const [ageLo, ageHi] = opts.ageRange ?? GENERATION_BALANCE.defaultAgeRange;

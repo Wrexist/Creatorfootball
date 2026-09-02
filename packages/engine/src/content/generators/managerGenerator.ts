@@ -7,9 +7,8 @@ import {
   type Manager, type ManagerAppearance, type ManagerArchetype, type ManagerAttributeKey,
   type ManagerAttributes, type MediaStyle, type SocialPersonality,
 } from '../../creators/manager';
-import type { ManagerTemplate } from '../schema';
+import type { ManagerTemplate, NameBankDef } from '../schema';
 import { GENERATION_BALANCE } from '../balance';
-import { BASE_NAME_BANK } from '../packs/base/nameBank';
 
 /**
  * Managers: archetypes, the pre-made roster the player picks from, and the
@@ -267,6 +266,8 @@ export interface GenerateManagerOptions {
   readonly mediaStyle?: MediaStyle;
   readonly socialPersonality?: SocialPersonality;
   readonly bio?: string;
+  /** Where an unnamed manager's name comes from. Content is handed in; the generator imports none. */
+  readonly nameBank: NameBankDef;
 }
 
 const HAIR_STYLES = ['short_crop', 'buzz', 'swept_back', 'tied_back', 'messy', 'side_part', 'braids', 'short_neat', 'bob', 'thinning', 'curls', 'shaved'];
@@ -310,13 +311,13 @@ function attributesFor(
   return out;
 }
 
-export function generateManager(rng: Rng, opts: GenerateManagerOptions = {}): Manager {
+export function generateManager(rng: Rng, opts: GenerateManagerOptions): Manager {
   const template = opts.template;
   const archetypeId = opts.archetypeId ?? template?.archetypeId
     ?? rng.pick(MANAGER_ARCHETYPES).id;
   const archetype = ARCHETYPE_BY_ID.get(archetypeId);
 
-  const bank = BASE_NAME_BANK;
+  const bank = opts.nameBank;
   const name = opts.name ?? template?.name ?? [
     rng.weighted(bank.firstNames, (n) => n.weight ?? 1).value,
     rng.weighted(bank.lastNames, (n) => n.weight ?? 1).value,

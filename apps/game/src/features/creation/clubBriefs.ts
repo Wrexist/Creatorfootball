@@ -1,5 +1,5 @@
 import {
-  BASE_CLUBS, CLUB_LORE, PHILOSOPHY_LABELS,
+  PHILOSOPHY_LABELS,
   type ClubPhilosophy, type ClubTemplate, type FanCulture,
 } from '@cf/engine';
 import { FAN_CULTURE_LABELS } from './clubIdentity';
@@ -27,6 +27,12 @@ import { FAN_CULTURE_LABELS } from './clubIdentity';
  *
  * This file is deliberately not a component. Every screen in this flow reads
  * the same derived brief, and none of them derives one itself.
+ *
+ * It is also deliberately a function of the clubs it is given rather than a
+ * module-scope read of the base pack: the pack is a lazy chunk, and a module
+ * that imported it at load time would drag it into the screen's own bundle
+ * and quietly undo the split. The screen hands in the clubs once the content
+ * has arrived, and memoises the result.
  */
 
 export type ClubTier = 'FAVOURITE' | 'CONTENDER' | 'MID_TABLE' | 'STRUGGLING';
@@ -125,29 +131,48 @@ const TIER_BY_RANK = (rank: number, total: number): ClubTier => {
   return 'MID_TABLE';
 };
 
-const SHORT_NAME = new Map(BASE_CLUBS.map((c) => [c.id, c.shortName]));
+export interface ClubBriefs {
+  /** Every club, strongest first. */
+  readonly all: readonly ClubBrief[];
+  /** The three the flow opens on. */
+  readonly featured: readonly ClubBrief[];
+  /** Everybody else, strongest first. */
+  readonly remaining: readonly ClubBrief[];
+  readonly briefFor: (clubId: string | null) => ClubBrief | undefined;
+}
 
-const RANKED: readonly ClubTemplate[] = [...BASE_CLUBS].sort((a, b) => b.strength - a.strength);
-
-/** Every club, strongest first, with its framing resolved once at module load. */
-export const CLUB_BRIEFS: readonly ClubBrief[] = RANKED.map((club, rank) => {
-  const tier = TIER_BY_RANK(rank, RANKED.length);
+/** Frame every club in the league from the loaded content. */
+export function buildClubBriefs(
+  clubs: readonly ClubTemplate[],
+  lore: Readonly<Record<string, string>>,
+): ClubBriefs {
+  const shortName = new Map(clubs.map((c) => [c.id, c.shortName]));
+  const ranked: readonly ClubTemplate[] = [...clubs].sort((a, b) => b.strength - a.strength);
+  const all: readonly ClubBrief[] = ranked.map((club, rank) => {
+    const tier = TIER_BY_RANK(rank, ranked.length);
+    return {
+      club,
+      tier,
+      tierCopy: TIER_COPY[tier],
+      honest: HONEST[club.id] ?? '',
+      lore: lore[club.id] ?? '',
+      philosophyLabel:
+        PHILOSOPHY_LABELS[club.philosophy as ClubPhilosophy] ?? club.philosophy,
+      fanCultureLabel:
+        FAN_CULTURE_LABELS[club.fanCulture as FanCulture] ?? club.fanCulture,
+      rivals: (club.rivalOf ?? []).map((id) => shortName.get(id) ?? id),
+    };
+  });
+  const featured = FEATURED_IDS
+    .map((id) => all.find((b) => b.club.id === id))
+    .filter((b): b is ClubBrief => b !== undefined);
   return {
-    club,
-    tier,
-    tierCopy: TIER_COPY[tier],
-    honest: HONEST[club.id] ?? '',
-    lore: CLUB_LORE[club.id] ?? '',
-    philosophyLabel:
-      PHILOSOPHY_LABELS[club.philosophy as ClubPhilosophy] ?? club.philosophy,
-    fanCultureLabel:
-      FAN_CULTURE_LABELS[club.fanCulture as FanCulture] ?? club.fanCulture,
-    rivals: (club.rivalOf ?? []).map((id) => SHORT_NAME.get(id) ?? id),
+    all,
+    featured,
+    remaining: all.filter((b) => !FEATURED_IDS.includes(b.club.id)),
+    briefFor: (clubId) => (clubId ? all.find((b) => b.club.id === clubId) : undefined),
   };
-});
-
-export const briefFor = (clubId: string | null): ClubBrief | undefined =>
-  clubId ? CLUB_BRIEFS.find((b) => b.club.id === clubId) : undefined;
+}
 
 /**
  * The three the flow opens on.
@@ -167,10 +192,3 @@ const FEATURED_IDS: readonly string[] = [
   'club_cinderwick_town',     // underdog — the club holding on
 ];
 
-export const FEATURED_BRIEFS: readonly ClubBrief[] = FEATURED_IDS
-  .map((id) => CLUB_BRIEFS.find((b) => b.club.id === id))
-  .filter((b): b is ClubBrief => b !== undefined);
-
-export const REMAINING_BRIEFS: readonly ClubBrief[] = CLUB_BRIEFS.filter(
-  (b) => !FEATURED_IDS.includes(b.club.id),
-);

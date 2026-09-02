@@ -5,9 +5,11 @@ import {
   type GameState, type NewsStory, type SocialPost, type MatchResult,
   type CycleSummary, type Fixture, type SaveMeta, type ClubChoice, type ManagerChoice,
   type CreatorSeasonConfigDef, type FixtureId,
+  isMatchResultApplied,
 } from '@cf/engine';
 import { storage } from '@/platform/storage';
-import { contentRegistry } from '@/state/content';
+import { ContentError, content, contentRegistry, playerMessageFor } from '@/state/content';
+import { CANCELLED, createSaveQueue } from './saveQueue';
 
 /**
  * The single bridge between the engine and the interface.
@@ -33,6 +35,13 @@ interface GameStoreState {
   state: GameState | null;
   meta: SaveMeta | null;
   error: string | null;
+  /**
+   * What `error` is about when the phase is ERROR. A save that could not be
+   * read and content that could not be loaded look the same to the shell and
+   * need opposite advice: one may be worth starting over from, the other
+   * never is — the save is fine, the connection is not.
+   */
+  errorSource: 'SAVE' | 'CONTENT' | null;
   /** True when the previous save was damaged and we fell back to the backup. */
   recoveredFromBackup: boolean;
   busy: boolean;
@@ -44,9 +53,17 @@ interface GameStoreState {
    * because the failure belongs to persistence, not to whatever button ran it.
    */
   persistFailed: boolean;
+  /**
+   * Storage exists but nothing written to it will survive the session —
+   * private browsing, or a device that has already refused a write and pushed
+   * us to the in-memory fallback. The player is mid-career and has no reason
+   * to suspect it, so this is surfaced once rather than left for them to
+   * discover when they reopen the app to an empty save slot.
+   */
+  ephemeralStorage: boolean;
 
   boot: () => Promise<void>;
-  startNewGame: (opts: { seed?: string; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
+  startNewGame: (opts: { seed?: string; now?: number; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
   advance: (playerResult?: MatchResult | null) => Promise<CycleSummary | null>;
   createSimulator: (fixtureId: FixtureId) => MatchSimulator | null;
   apply: (mutate: (state: GameState) => GameState) => void;
@@ -54,6 +71,7 @@ interface GameStoreState {
   abandon: () => Promise<void>;
   clearCycleFeedback: () => void;
   clearPersistFailed: () => void;
+  clearEphemeralWarning: () => void;
 }
 
 /**
@@ -66,6 +84,13 @@ async function persist(state: GameState): Promise<SaveMeta | null> {
   return result.ok ? result.value : null;
 }
 
+/**
+ * Every write in the app goes through this one queue, so two saves can never
+ * be in flight together and abandoning a career cannot be undone by a save
+ * that was already on its way. See saveQueue.ts.
+ */
+const saveQueue = createSaveQueue(persist, () => null);
+
 export const useGameStore = create<GameStoreState>((set, get) => {
   /**
    * Shared by every write path. `null` means storage rejected the write; the
@@ -73,26 +98,59 @@ export const useGameStore = create<GameStoreState>((set, get) => {
    * make sure the player hears about it.
    */
   const notePersist = async (next: GameState): Promise<SaveMeta | null> => {
-    const meta = await persist(next);
-    if (meta === null) set({ persistFailed: true });
-    return meta;
+    const outcome = await saveQueue.push(next);
+    // The write was dropped because the career was abandoned. Nothing failed,
+    // and there is no longer a save for this state to belong to.
+    if (outcome === CANCELLED) return null;
+    if (outcome === null) set({ persistFailed: true });
+    // A device can fall back to memory *during* a write, so this is re-read
+    // after every save rather than only at boot.
+    if (storage.isEphemeral && !get().ephemeralStorage) set({ ephemeralStorage: true });
+    return outcome;
   };
+
+  /**
+   * Which creation is current. A player can ask for a career, then ask for a
+   * different one before the content the first was waiting on has arrived;
+   * only the latest request may build and save a world. Earlier ones find
+   * they have been superseded when they wake and do nothing.
+   */
+  let creationSerial = 0;
 
   return {
   phase: 'BOOTING',
   state: null,
   meta: null,
   error: null,
+  errorSource: null,
   recoveredFromBackup: false,
   busy: false,
   lastCycle: null,
   persistFailed: false,
+  ephemeralStorage: false,
 
   boot: async () => {
-    set({ phase: 'BOOTING', error: null });
+    set({ phase: 'BOOTING', error: null, errorSource: null });
     try {
       const loaded = await loadGame(storage);
+      // The adapter probes real storage on first access, so by now it knows
+      // whether this session can persist at all.
+      if (storage.isEphemeral) set({ ephemeralStorage: true });
       if (loaded.ok) {
+        // A saved world cannot be shown without the content it was built
+        // from, so READY waits for it. A fresh install does not: the title
+        // screen needs no content, and asking for it here would make the
+        // first screen wait on a download it has no use for yet.
+        try {
+          await content.load();
+        } catch (error) {
+          set({
+            phase: 'ERROR',
+            errorSource: 'CONTENT',
+            error: playerMessageFor(error instanceof ContentError ? error : null),
+          });
+          return;
+        }
         set({
           phase: 'READY',
           state: loaded.value.state,
@@ -109,36 +167,77 @@ export const useGameStore = create<GameStoreState>((set, get) => {
       // the player decides whether to start again.
       set({
         phase: 'ERROR',
+        errorSource: 'SAVE',
         error:
           loaded.error.code === 'UNSUPPORTED_VERSION'
             ? 'This save was created by a newer version of the game.'
             : 'Your save could not be read and no usable backup was found.',
       });
     } catch (error) {
-      set({ phase: 'ERROR', error: String(error) });
+      set({ phase: 'ERROR', errorSource: 'SAVE', error: String(error) });
     }
   },
 
-  startNewGame: async ({ seed, manager, club }) => {
+  /**
+   * Create a career: wait for the content, build the world, put it on disk,
+   * and only then say READY.
+   *
+   * Nothing is created until the content is here, so there is never a
+   * half-built career to save or show. A failure — the chunk did not arrive,
+   * the pack was invalid, the world threw — puts the phase back where it was
+   * (the title screen, or the career the player already had) with a message
+   * they can act on; it never sends them to the save-recovery screen, because
+   * their save is not what failed. And if a newer creation was asked for
+   * while this one waited, this one stands down.
+   */
+  startNewGame: async ({ seed, now, manager, club }) => {
+    const serial = ++creationSerial;
+    const superseded = (): boolean => serial !== creationSerial;
+    const failWith = (message: string): void => {
+      if (superseded()) return;
+      set({ phase: get().state ? 'READY' : 'NO_SAVE', busy: false, error: message });
+    };
     set({ phase: 'CREATING', busy: true, error: null });
+
+    let registry;
+    try {
+      registry = (await content.load()).registry;
+    } catch (error) {
+      failWith(playerMessageFor(error instanceof ContentError ? error : null));
+      return;
+    }
+    if (superseded()) return;
+
     try {
       const state = createNewGame({
+        registry,
         // A player-visible seed makes worlds shareable and bugs reproducible.
         seed: seed ?? Math.floor(Date.now() % 1e9).toString(36),
-        now: Date.now(),
+        now: now ?? Date.now(),
         manager,
         club,
       });
       const meta = await notePersist(state);
-      set({ phase: 'READY', state, meta, busy: false, lastCycle: null });
+      if (superseded()) return;
+      set({ phase: 'READY', state, meta, busy: false, lastCycle: null, error: null });
     } catch (error) {
-      set({ phase: 'ERROR', error: String(error), busy: false });
+      console.error('[game] career creation failed', error);
+      failWith('Your club could not be created. Nothing has been saved. Try again.');
     }
   },
 
   advance: async (playerResult) => {
     const current = get().state;
     if (!current || get().busy) return null;
+    /**
+     * Committing a match result is not idempotent — it advances the week — so
+     * the same result must never be handed over twice. `busy` covers the
+     * in-flight window (a remount while the first call is still awaiting the
+     * save); this covers everything after it, including a reload, by asking
+     * the world whether that match has already been played rather than
+     * trusting a counter that lives only as long as the tab does.
+     */
+    if (playerResult && isMatchResultApplied(current, playerResult.matchId)) return null;
     set({ busy: true });
     try {
       const result = advanceCycle(current, {
@@ -186,13 +285,32 @@ export const useGameStore = create<GameStoreState>((set, get) => {
    * Escape hatch for actions that are a single engine call rather than a whole
    * cycle — accepting a transfer, setting tactics, upgrading a facility. The
    * mutation must still be an engine function; this only owns persistence.
+   *
+   * INVARIANT — snapshot, compute and apply must run synchronously.
+   *
+   * Callers overwhelmingly read state first, compute a result from that
+   * snapshot, then merge the result in here. `mutate` receives the *live*
+   * state, so if execution yields between the snapshot and this call, the
+   * world can move and the merge writes snapshot-derived data over a newer
+   * state — money computed against an older ledger, a squad written over one
+   * that has since changed. It would not throw and it would not fail a test.
+   *
+   * So a module that commits through `apply` must contain no async boundary.
+   * Enforced by `engineInvariant.test.ts`, which finds those modules by
+   * looking for this call rather than from a list. Async work belongs before
+   * the snapshot, never inside it.
    */
   apply: (mutate) => {
     const current = get().state;
     if (!current) return;
     const next = mutate(current);
     set({ state: next });
-    void notePersist(next);
+    // Deliberately not awaited: the mutation is already on screen and blocking
+    // a tap on a disk write would be worse than the write being late. The catch
+    // is a backstop — `saveGame` returns its failures rather than throwing, so
+    // reaching here means something below the adapter broke, and an unhandled
+    // rejection would take the persist-failure toast down with it.
+    void notePersist(next).catch(() => set({ persistFailed: true }));
   },
 
   save: async () => {
@@ -203,12 +321,16 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   },
 
   abandon: async () => {
+    // Stop the writers before deleting, or a save already in flight lands on
+    // top of the delete and the "abandoned" career is back on the next boot.
+    await saveQueue.cancelAndDrain();
     await deleteSave(storage);
     set({ phase: 'NO_SAVE', state: null, meta: null, lastCycle: null, error: null });
   },
 
   clearCycleFeedback: () => set({ lastCycle: null }),
   clearPersistFailed: () => set({ persistFailed: false }),
+  clearEphemeralWarning: () => set({ ephemeralStorage: false }),
   };
 });
 

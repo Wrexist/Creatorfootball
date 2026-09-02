@@ -85,6 +85,7 @@ export * from './media/mediaEngine';
 export * from './social/socialEngine';
 export * from './rivalries/rivalries';
 export * from './simulation/aiClub';
+export * from './simulation/opponentModel';
 export * from './simulation/worldTick';
 export * from './simulation/emergent';
 export * from './simulation/cascade';

@@ -7,6 +7,14 @@ was fixed, what remains, and what I would not ship without.
 Every number here was measured by running the real engine or driving the real
 built app in a browser. Nothing is estimated.
 
+> **Status update.** This audit closed an earlier cycle. Two of its
+> conclusions have since changed materially and are corrected here:
+> persistence has moved from localStorage to IndexedDB, and the opponent AI no
+> longer reads the player's tactics screen. Current verified numbers and status
+> live in [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative
+> wherever this document disagrees. The verdict and findings below stand as the
+> record of that cycle.
+
 ---
 
 ## 1. Verdict

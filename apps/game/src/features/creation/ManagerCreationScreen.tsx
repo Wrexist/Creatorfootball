@@ -16,6 +16,7 @@ import {
   MEDIA_STYLES, MEDIA_STYLE_HINT, OUTFITS, SKIN_TONES,
   SOCIAL_PERSONALITIES, SOCIAL_PERSONALITY_HINT,
 } from './appearance';
+import { content } from '@/state/content';
 import { managerBlocker, useCreationStore } from './creationStore';
 import { ManagerPortrait } from './ManagerPortrait';
 
@@ -132,6 +133,9 @@ export function ManagerCreationScreen(): ReactNode {
     // view and the screen's large title is already half collapsed before the
     // player has touched anything. Focus still moves and is still announced.
     headingRef.current?.focus({ preventScroll: true });
+    // This step needs no content of its own. The next one does, so it starts
+    // arriving now — a no-op if the title screen already asked for it.
+    content.prefetch();
   }, []);
 
   const blocker = managerBlocker(state);

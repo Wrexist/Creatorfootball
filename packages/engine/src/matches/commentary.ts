@@ -235,6 +235,21 @@ export const COMMENTARY_TEMPLATES: readonly CommentaryTemplate[] = [
   t('tac3', 'TACTICAL_CHANGE', 'DRAMATIC', "{club} have gone for it. There is no plan B behind this."),
   t('tac4', 'TACTICAL_CHANGE', 'WRY', "A lot of pointing from the bench. We'll see if anybody was watching."),
   t('tac5', 'TACTICAL_CHANGE', 'HYPE', "{club} are turning the dial up!"),
+  // The other manager solving you. These are chosen exclusively when the
+  // simulator tags an adaptation, so the feed says what actually changed
+  // rather than a generic reshuffle line.
+  t('adaptPress1', 'TACTICAL_CHANGE', 'ANALYTICAL', "{club} have pushed up. They're pressing that block now, full-backs high, everybody forward.", ['adaptPressHigh']),
+  t('adaptPress2', 'TACTICAL_CHANGE', 'NEUTRAL', "{club} have seen enough of the low block. The line goes up and the press goes on.", ['adaptPressHigh']),
+  t('adaptPress3', 'TACTICAL_CHANGE', 'WRY', "{club} are done waiting. They've gone wide and high to drag that back line apart.", ['adaptPressHigh']),
+  t('adaptLong1', 'TACTICAL_CHANGE', 'ANALYTICAL', "{club} have stopped playing through the press. Straight over the top now, into the space behind.", ['adaptGoLong']),
+  t('adaptLong2', 'TACTICAL_CHANGE', 'NEUTRAL', "{club} sit off and go long. They've worked out where the space is.", ['adaptGoLong']),
+  t('adaptLong3', 'TACTICAL_CHANGE', 'WRY', "{club} have had a word about that high press. They're inviting it on and hitting the runners.", ['adaptGoLong']),
+  t('adaptFlank1', 'TACTICAL_CHANGE', 'ANALYTICAL', "{club} have doubled up on that flank. Every time it goes wide there are two on it.", ['adaptFlank']),
+  t('adaptFlank2', 'TACTICAL_CHANGE', 'NEUTRAL', "{club} tuck in and pick up their runners. That side has been closed off.", ['adaptFlank']),
+  t('adaptFlank3', 'TACTICAL_CHANGE', 'WRY', "{club} have noticed which side it keeps coming down. Suddenly there's a body on every touch.", ['adaptFlank']),
+  t('adaptMiddle1', 'TACTICAL_CHANGE', 'ANALYTICAL', "{club} have packed the middle. Nothing through there now.", ['adaptMiddle']),
+  t('adaptMiddle2', 'TACTICAL_CHANGE', 'NEUTRAL', "{club} go man for man in the centre and spread the shape. The ball will have to go round.", ['adaptMiddle']),
+  t('adaptMiddle3', 'TACTICAL_CHANGE', 'WRY', "{club} have seen enough of that through the middle. There's a marker on everyone in there.", ['adaptMiddle']),
 
   // ------------------------------------------------------- format moments ---
   t('rule1', 'SPECIAL_RULE_START', 'HYPE', "Here it comes — {rule}! The closing minutes are live!"),
@@ -361,6 +376,13 @@ function mergePools(
 }
 
 export interface LineOptions {
+  /**
+   * Restrict the pool to templates carrying one of `tags`, instead of merely
+   * preferring them. Used when the line must say a specific football thing —
+   * an adaptation the player is meant to notice — and a generic line would
+   * quietly hide it.
+   */
+  readonly exclusive?: boolean;
   /** Variant filters. Templates tagged with any of these are preferred. */
   readonly tags?: readonly string[];
   /** Bias toward a tone without forbidding the others. */
@@ -389,7 +411,10 @@ export class CommentaryBook {
     if (!pool || pool.length === 0) return fallback(event, ctx);
 
     const tagged = opts.tags?.length
-      ? pool.filter((tpl) => !tpl.tags || tpl.tags.some((tag) => opts.tags?.includes(tag)))
+      ? pool.filter((tpl) =>
+        opts.exclusive
+          ? Boolean(tpl.tags?.some((tag) => opts.tags?.includes(tag)))
+          : !tpl.tags || tpl.tags.some((tag) => opts.tags?.includes(tag)))
       : pool.filter((tpl) => !tpl.tags);
     const candidates = tagged.length > 0 ? tagged : pool;
 

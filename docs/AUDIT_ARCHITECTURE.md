@@ -1,5 +1,10 @@
 # AUDIT ONE: ARCHITECTURE
 
+> **Superseded.** This document records an earlier state of the project and is
+> kept as history. For current architecture, test counts and status see
+> [`CURRENT_STATE.md`](./CURRENT_STATE.md), which is authoritative wherever
+> the two disagree.
+
 **Subject:** Creator Football (`/home/user/Creatorfootball`)
 **Date:** 2026-08-20
 **Method:** full read of `packages/engine/src` (36,137 lines), `apps/game/src`, `tools/sim/src`, all configs; plus

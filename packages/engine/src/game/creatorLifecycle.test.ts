@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BASE_PACK, ContentRegistry } from '../content';
+import { ContentRegistry } from '../content';
+import { BASE_PACK } from '../content/packs/base';
 import { asId, type CreatorId } from '../core/brand';
 import { Rng } from '../core/rng';
 import { Ledger } from '../economy/ledger';
@@ -29,6 +30,7 @@ const registry = (() => {
 const AT = 1_700_000_000_000;
 
 const freshState = () => createNewGame({
+  registry,
   seed: 'creator-lifecycle',
   now: AT,
   manager: {
@@ -64,6 +66,7 @@ const plantCreator = (
   partial: { id: string; tier: 'LOCAL'; followers: number; spawnedSeason?: number },
 ): ReturnType<typeof freshState> => {
   const base = generateCreator(new Rng(`plant:${partial.id}`), {
+    nameBank: registry.nameBank(),
     id: asId<CreatorId>(partial.id),
     tier: partial.tier,
     followers: partial.followers,
