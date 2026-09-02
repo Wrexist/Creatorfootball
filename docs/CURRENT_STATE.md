@@ -251,6 +251,20 @@ whose universe fails at boot (save untouched, no "start over" offered, retry
 lands in the career). Failure is simulated by intercepting the chunk's
 request — no app code knows it is being tested.
 
+**Recovery is designed, not merely functional.** On the club step, "Try
+again" keeps its block on screen with the button busy and the text reading
+"Preparing your league…", so nothing jumps and nothing can be pressed twice;
+when the clubs arrive, focus moves to the first of them — the first thing the
+player can now do. A prefetch arriving on its own never moves focus. A failed
+confirmation on the founding path returns the form exactly as it was with a
+persistent inline notice above the button — "Your club could not be created.
+Nothing was saved and everything you entered is still here." — that takes
+focus, stays until the player acts, and is gone on the next attempt; it is no
+longer a toast that left before it could be read. Both are asserted in the
+browser suite: where focus is at failure, during the retry and after it, that
+the notice survives longer than a toast would, and that the typed club name
+survives the failure.
+
 Measured on the built bundle (desktop headless Chromium, medians of three):
 first screen 1738 → 1507 kB of script (−13%), engine chunk 282 → 205 kB
 gzip, content chunk 77 kB gzip requested exactly once, confirm-to-playable

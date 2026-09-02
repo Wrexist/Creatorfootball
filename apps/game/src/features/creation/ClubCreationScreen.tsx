@@ -7,8 +7,8 @@ import {
 } from '@cf/engine';
 import {
   Accordion, ClubBadge, ErrorState, FOCUS_RING, GlassButton, GlassIcon, GlassInput, GlassPanel,
-  GlassPill, IconArrowLeft, IconCheck, IconSwap, MoneyLabel, NameText, ProgressBar,
-  SectionHeader, Skeleton, SkeletonRegion, Text, useToast,
+  GlassPill, IconArrowLeft, IconCheck, IconSwap, IconWarning, MoneyLabel, NameText, ProgressBar,
+  SectionHeader, Skeleton, SkeletonRegion, Text,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -72,13 +72,57 @@ const BUILD_BEAT_MS = 1500;
 
 type Stage = 'FORM' | 'BUILDING' | 'REVEAL';
 
+/**
+ * What the player reads when confirming did not produce a club.
+ *
+ * Three things, in the order they matter: nothing happened to their progress,
+ * what they typed is still here, and what to do next. The store's message
+ * says why; this says what it means for them.
+ */
+function creationFailureCopy(reason: string | null): string {
+  const kept = 'Nothing was saved and everything you entered is still here.';
+  if (!reason || /could not be created/i.test(reason)) return `${kept} Try again when you are ready.`;
+  return `${kept} ${reason}`;
+}
+
+/**
+ * The failed-confirmation notice: inline, above the button that retries, and
+ * it stays until the player acts. A toast here left before it could be read,
+ * and a message about "your details are still here" is only reassuring if it
+ * is still there when the player looks for it.
+ *
+ * It takes focus when it appears, because the button the player pressed has
+ * just come back from behind the building beat and focus would otherwise
+ * have nowhere to be. From here the next tab stop is the button.
+ */
+function CreationFailureNotice({ body }: { body: string }): ReactNode {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { ref.current?.focus({ preventScroll: true }); }, []);
+  return (
+    <div
+      ref={ref}
+      role="alert"
+      tabIndex={-1}
+      className="mb-3 flex items-start gap-3 rounded-[var(--radius-lg)] border border-danger/30 bg-danger/10 px-3.5 py-3 outline-none"
+    >
+      <span aria-hidden="true" className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-pill bg-danger/15 text-danger [&_svg]:size-3.5">
+        <IconWarning />
+      </span>
+      <div className="min-w-0 flex-1">
+        <Text role="bodyStrong" as="p">Your club could not be created</Text>
+        <Text role="caption" className="mt-0.5 text-pretty">{body}</Text>
+      </div>
+    </div>
+  );
+}
+
 export function ClubCreationScreen(): ReactNode {
   const navigate = useNavigate();
-  const toast = useToast();
   const state = useCreationStore();
   const startNewGame = useGameStore((s) => s.startNewGame);
   const gameState = useGameStore((s) => s.state);
   const [stage, setStage] = useState<Stage>('FORM');
+  const [creationFailure, setCreationFailure] = useState<string | null>(null);
   const headingRef = useRef<HTMLDivElement>(null);
 
   const { status: contentStatus, failure: contentFailure, loaded, retry } = useContent();
@@ -111,6 +155,7 @@ export function ClubCreationScreen(): ReactNode {
   const createdClub = gameState ? playerClub(gameState) : null;
 
   const create = async (): Promise<void> => {
+    setCreationFailure(null);
     setStage('BUILDING');
     const manager = toManagerChoice(state);
     const club = toClubChoice(state);
@@ -137,11 +182,10 @@ export function ClubCreationScreen(): ReactNode {
       setStage('REVEAL');
       return;
     }
+    // Back to the form exactly as it was, with the reason where the player
+    // will look for it: next to the button they pressed.
+    setCreationFailure(creationFailureCopy(useGameStore.getState().error));
     setStage('FORM');
-    toast.error(
-      'Your club could not be created',
-      useGameStore.getState().error ?? 'Nothing has been saved. Try again.',
-    );
   };
 
   if (stage === 'REVEAL' && createdClub) {
@@ -169,15 +213,18 @@ export function ClubCreationScreen(): ReactNode {
       }
       onBack={() => navigate(ROUTES.managerCreation)}
       footer={
-        <GlassButton
-          variant="primary"
-          size="lg"
-          block
-          disabled={blocker !== null}
-          onClick={() => void create()}
-        >
-          {blocker ?? (custom ? `Found ${state.shortName || 'the club'}` : `Take over ${takeover?.shortName ?? ''}`)}
-        </GlassButton>
+        <>
+          {creationFailure !== null && <CreationFailureNotice body={creationFailure} />}
+          <GlassButton
+            variant="primary"
+            size="lg"
+            block
+            disabled={blocker !== null}
+            onClick={() => void create()}
+          >
+            {blocker ?? (custom ? `Found ${state.shortName || 'the club'}` : `Take over ${takeover?.shortName ?? ''}`)}
+          </GlassButton>
+        </>
       }
     >
       <div ref={headingRef} tabIndex={-1} aria-label="Step 2 of 3, club" className="outline-none" />
@@ -361,6 +408,33 @@ function TakeOneOver({ briefs, status, failure, onRetry }: {
   const state = useCreationStore();
   const [showAll, setShowAll] = useState(false);
   const restId = useId();
+  /**
+   * True from the moment the player presses "Try again" until the clubs are
+   * on screen. It decides two things: that the failure block stays put (with
+   * its button busy) while the retry runs, rather than giving way to the
+   * skeletons and taking the player's place with it; and that when the clubs
+   * arrive, focus goes to the first of them — the first thing the player can
+   * now do. A prefetch arriving on its own never moves focus: nobody asked.
+   */
+  const recovering = useRef(false);
+  const failureRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const retrying = status === 'LOADING' && recovering.current;
+
+  const retry = (): void => {
+    recovering.current = true;
+    // Keep focus inside the block the player is acting on while its button
+    // is busy; a busy button cannot hold focus, and the body is not a place.
+    failureRef.current?.focus({ preventScroll: true });
+    onRetry();
+  };
+
+  useEffect(() => {
+    if (!briefs || !recovering.current) return;
+    recovering.current = false;
+    const first = listRef.current?.querySelector<HTMLElement>('button[aria-pressed]');
+    first?.focus({ preventScroll: true });
+  }, [briefs]);
 
   return (
     <>
@@ -389,22 +463,27 @@ function TakeOneOver({ briefs, status, failure, onRetry }: {
           } : {})}
         />
         {briefs ? (
-          <div className="mt-3 flex flex-col gap-2.5">
+          <div ref={listRef} className="mt-3 flex flex-col gap-2.5">
             {briefs.featured.map((brief) => (
               <ClubChoiceCard key={brief.club.id} brief={brief} prominent />
             ))}
           </div>
-        ) : status === 'FAILED' ? (
+        ) : status === 'FAILED' || retrying ? (
           /* The list is the only thing that needed the universe, so the list
              is the only thing that says it is missing. The rest of the screen
-             — and founding a club — carries on. */
-          <ErrorState
-            title="Your league could not be prepared"
-            description={playerMessageFor(failure)}
-            onRetry={onRetry}
-            retryLabel="Try again"
-            className="py-8"
-          />
+             — and founding a club — carries on. While a retry runs the block
+             stays, the button shows it is busy and the text says what is
+             happening, so nothing jumps and nothing can be pressed twice. */
+          <div ref={failureRef} tabIndex={-1} className="outline-none">
+            <ErrorState
+              title="Your league could not be prepared"
+              description={retrying ? 'Preparing your league…' : playerMessageFor(failure)}
+              onRetry={retry}
+              retryLabel="Try again"
+              retrying={retrying}
+              className="py-8"
+            />
+          </div>
         ) : (
           /* Three card-shaped placeholders where the three clubs will be, so
              the screen keeps its shape and the arrival is a fill, not a jump.

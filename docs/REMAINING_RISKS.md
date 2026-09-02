@@ -52,7 +52,11 @@ build, but the polyfilled path on older WebKit is unverified without a
 device). A retry that can find no URL falls back to the plain specifier,
 which is enough in a browser that does not cache failures and is not known
 to be enough in Safari. Real-device work should try airplane mode on the
-club step and on a cold boot with a save.
+club step and on a cold boot with a save. The recovery UX itself — focus
+after a retry, the busy retry button, the persistent inline notice on the
+founding form — is browser-proven in Chromium; VoiceOver's reading of the
+`role="alert"` notice and of focus moving to the first club is a device
+check.
 
 *The earlier analysis, kept for the record:*
 

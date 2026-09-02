@@ -107,6 +107,12 @@ async function toClubStep(page) {
 
 const errorState = (page) => page.getByRole('alert').filter({ hasText: /could not be prepared/i });
 const retryButton = (page) => page.getByRole('button', { name: /^try again$/i });
+/** What has keyboard focus, described. `body` means focus was lost. */
+const focused = (page) => page.evaluate(() => {
+  const el = document.activeElement;
+  if (!el || el === document.body) return 'body';
+  return `${el.tagName.toLowerCase()}${el.getAttribute('aria-pressed') !== null ? '[aria-pressed]' : ''}${el.getAttribute('role') ? `[role=${el.getAttribute('role')}]` : ''}${el.getAttribute('aria-label') ? `[${el.getAttribute('aria-label')}]` : ''}`;
+});
 
 console.log(`\nBrowser failure journeys against ${BASE}\n`);
 
@@ -126,6 +132,9 @@ await scenario('club step failure and retry', async ({ page, chunk, unexpected, 
   // back button. The player is not trapped behind the missing list.
   if (!(await page.getByRole('button', { name: /found your own club/i }).isVisible())) fail('founding a club is not offered while the list is missing');
   if (await page.locator('[aria-busy="true"]').count() > 0) fail('a stale loading region remains after the failure');
+  // The failure does not grab focus: it stays where the step put it.
+  const focusAtFailure = await focused(page);
+  if (!/Step 2 of 3/.test(focusAtFailure)) fail(`the failure moved focus to ${focusAtFailure}`);
   // The manager choice survived the failure.
   if (chunk.requests < 1) fail('the content chunk was never requested');
   const before = unexpected();
@@ -141,6 +150,9 @@ await scenario('club step failure and retry', async ({ page, chunk, unexpected, 
   if (await page.locator('[aria-busy="true"]').count() > 0) fail('skeletons remained after the clubs arrived');
   if (chunk.requests - requestsBeforeRetry !== 1) fail(`retry made ${chunk.requests - requestsBeforeRetry} content request(s), expected 1`);
   if (!(await page.getByRole('button', { name: /next: your club|back/i }).first().isVisible())) fail('navigation controls missing after retry');
+  // Recovery hands the player the first thing they can now do: a club.
+  const focusAfterRetry = await focused(page);
+  if (!/button\[aria-pressed\]/.test(focusAfterRetry)) fail(`after a successful retry focus went to ${focusAfterRetry}, not to the first club`);
 
   // And the career is created exactly once, as normal.
   await page.locator(OPTION).first().click();
@@ -169,12 +181,22 @@ await scenario('found a club with the universe missing', async ({ page, chunk, u
   await confirm.waitFor({ state: 'visible' });
   await confirm.click();
 
-  // The building beat plays, then the form comes back with a message.
-  await page.getByRole('alert').filter({ hasText: /could not be created|could not be prepared/i }).first().waitFor({ state: 'visible', timeout: 15_000 });
+  // The building beat plays, then the form comes back with a message that
+  // stays: it is part of the form, not a toast that leaves before it is read.
+  const notice = page.getByRole('alert').filter({ hasText: /could not be created/i });
+  await notice.waitFor({ state: 'visible', timeout: 15_000 });
   await confirm.waitFor({ state: 'visible' });
   await notBlank('founding form after the failed confirmation');
   const shown = await text();
   if (JARGON.test(shown)) fail(`founding failure shows technical language: "${shown.match(JARGON)?.[0]}"`);
+  const noticeText = (await notice.first().innerText()).trim();
+  if (!/nothing (was|has been) saved/i.test(noticeText)) fail('the notice does not say nothing was saved');
+  if (!/still here|kept|preserved/i.test(noticeText)) fail('the notice does not say the details are kept');
+  const focusAtNotice = await focused(page);
+  if (!/role=alert/.test(focusAtNotice)) fail(`the notice did not take focus (focus is on ${focusAtNotice})`);
+  await page.waitForTimeout(5_000);
+  if (!(await notice.first().isVisible())) fail('the failure notice disappeared on its own before the player could read it');
+  if (await page.locator('[role="region"] [role="alert"]').count() > 0) fail('the failure is still a toast');
   const meta = await readMeta(page);
   if (meta.hasSave || meta.meta) fail('a save was written although the universe never arrived');
   if (await page.getByLabel('Club name').inputValue() !== 'Harbour Lights') fail('the player\'s club name was lost by the failure');
@@ -185,6 +207,7 @@ await scenario('found a club with the universe missing', async ({ page, chunk, u
 
   chunk.mode = 'pass';
   await confirm.click();
+  if (await notice.count() > 0 && await notice.first().isVisible().catch(() => false)) fail('the failure notice stayed while a new attempt was under way');
   await page.getByRole('button', { name: /meet your squad/i }).waitFor({ state: 'visible', timeout: 15_000 });
   await page.getByRole('button', { name: /meet your squad/i }).click();
   await page.waitForURL('**/create/squad');
@@ -210,11 +233,18 @@ await scenario('rapid retries', async ({ page, chunk, unexpected }) => {
   }
   await page.waitForTimeout(300);
   const inFlight = chunk.requests - failed;
+  // While the retry is in flight the button says so and cannot be pressed again.
+  if (await page.locator('button[aria-busy="true"]').count() === 0) fail('the retry gave no sign that it was working');
+  const focusWhileLoading = await focused(page);
+  if (focusWhileLoading === 'body') fail('focus was lost while the retry was loading');
   chunk.mode = 'pass';
   chunk.release();
   await page.locator(OPTION).first().waitFor({ state: 'visible' });
   if (inFlight !== 1) fail(`rapid retries produced ${inFlight} content request(s), expected 1`);
   if (await errorState(page).count() > 0) fail('error state survived a successful retry');
+  if (await page.locator('button[aria-busy="true"]').count() > 0) fail('a busy button survived a successful retry');
+  const focusAfter = await focused(page);
+  if (!/button\[aria-pressed\]/.test(focusAfter)) fail(`after rapid retries focus went to ${focusAfter}, not to the first club`);
   const errs = unexpected();
   if (errs.length > 0) fail(`rapid retries raised ${errs.length} unexpected error(s): ${errs[0].slice(0, 160)}`);
   pass('rapid retries share one request and end in the clubs being listed');
