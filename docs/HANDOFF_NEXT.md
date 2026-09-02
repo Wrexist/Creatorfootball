@@ -30,7 +30,7 @@ pnpm monorepo, Node ≥20, TypeScript.
 | App tests | `pnpm --filter @cf/game test` | 27 files / **279** |
 | **Total** | `pnpm test` | **1,072** |
 | Build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **9/9** vs the real bundle |
+| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |
 
 Key facts: `SAVE_VERSION` 7, careers persist to **IndexedDB**, migrations 1→7
