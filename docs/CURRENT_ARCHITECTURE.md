@@ -227,6 +227,18 @@ and holds through a stoppage. `pitchRenderer.ts` paints what the motion model
 reports. No renderer value is read by the simulation; the render loop's
 timestamps drive presentation only, so frame rate cannot change a result.
 
+The matchday bench is chosen by `selectMatchdayBench` (`tactics/formations.ts`)
+and by nothing else. It is pure and synchronous, takes the squad, the starting
+eleven (as slot/player pairs) and the formation, and returns seats each carrying
+the football reason it was given. `autoLineup` calls it for the team-sheet
+suggestion, `buildMatchdayContext` calls it for the preview, and
+`MatchSimulator.buildTeam` calls it whenever `tactics.bench` is empty — an
+explicit bench is honoured exactly, which is where player agency lives. Cover
+is scored with `selectionFit`, the same function that picks the eleven, so
+there is one position model and one readiness model in the codebase.
+`benchParity.test.ts` in the app asserts the preview and the simulator name the
+same seven in the same order for real careers.
+
 Substitutions go through the simulator's `checkSubstitution` (a verdict with
 a reason) and `substitutionStatus` (used, allowed, remaining, the match-day
 bench). The match store reads the status every tick; the sheet
@@ -238,8 +250,8 @@ turns each refusal into its own sentence.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 800 | `pnpm --filter @cf/engine test` |
-| App unit | 301 | `pnpm --filter @cf/game test` |
+| Engine unit/integration | 820 | `pnpm --filter @cf/engine test` |
+| App unit | 302 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 

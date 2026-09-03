@@ -248,11 +248,22 @@ at under 0.02 of the pitch per frame, the ball within reach of a shirt, a
 clean pause and resume. What that cannot say: how the sheet scrolls under a
 thumb, whether 60 fps holds on an older iPhone with the follow camera and
 the trail, memory over a full match, and whether Safari's rAF timing gives
-the motion model the steady intervals it measures. Every club is still
-created with an empty `tactics.bench` and the simulator fills it from squad
-order; the sheet now shows exactly that bench, but a bench chosen for cover
-(the engine's `pickBench`) would be better for every club, and changing it
-changes simulated results, so it is a deliberate balance decision for later.
+the motion model the steady intervals it measures.
+
+**The bench is no longer squad order.** This entry used to end by deferring
+that: every club was created with an empty `tactics.bench` and the simulator
+filled it from squad order, and fixing it would move simulated results. It is
+done — `selectMatchdayBench` is now the one selector for the suggestion, the
+preview and the simulator (CURRENT_STATE §4c). The balance move was measured
+both ways: world generation is byte-identical, the three reference `after3`
+hashes changed, and pinning the old benches into the new engine reproduces the
+old results hash exactly, so the difference is bench composition alone. What
+is *not* settled is whether the new league is better balanced rather than
+merely differently balanced. The aggregate balance and invariant audits pass
+with it, which bounds the distribution but does not describe it; if the table
+ever looks flatter or steeper than the reference data, the bench distribution
+(now mirroring the shape being played, rather than spreading evenly across
+roles) is the second knob to A/B after `MatchConfig.adaptation`.
 
 ## Documentation overlap (housekeeping)
 

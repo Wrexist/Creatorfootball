@@ -14,8 +14,8 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **61 files, 800 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **29 files, 301 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **63 files, 820 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **30 files, 302 tests, all passing** |
 | **Total** | `pnpm test` | **1,101 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks + **5/5** matchday checks (live motion, pause, resume, goalkeeper substitution), against the real bundle |
@@ -295,8 +295,8 @@ gzip, content chunk 77 kB gzip requested exactly once, confirm-to-playable
 was shown "5 changes left", took their keeper off, tapped the keeper on the
 bench and was told the change was not allowed and to check their remaining
 substitutions. Three defects, none of them the count: every club is created
-with an empty `tactics.bench`, so the simulator quietly picks its own seven
-from squad order; the sheet listed the *whole squad* minus the eleven as
+with an empty `tactics.bench`, so the simulator quietly picked its own seven
+(see *Who is on the bench* below); the sheet listed the *whole squad* minus the eleven as
 "the bench", so four of the names it offered were never on the match bench;
 and `makeSubstitution` returned a bare `false`, which the sheet dressed as a
 substitutions problem. Two more surfaced on the way: the remaining count was
@@ -316,6 +316,47 @@ its own sentence. In a live match the engine no longer spends a human
 manager's changes on tired legs (injury replacements are still made, and a
 fixture nobody is watching is still managed on both benches, so simulated
 worlds are byte-identical). `step()` returns everything since the last step.
+
+**Who is on the bench.** The seven names were chosen three different ways.
+`autoLineup` had a cover-based pick, but it only ran when a club's sheet was
+*incomplete*; a sheet that named an eleven and no substitutes fell through to
+the simulator, which filled the seats from squad order — on a real squad that
+is seven midfielders and no reserve keeper; and the match preview showed the
+seven highest-rated reserves, which across 72 measured benches was never once
+the bench the simulator played with (4/72 even as an unordered set).
+
+There is now one selector, `selectMatchdayBench` in `tactics/formations.ts`,
+called by the team-sheet suggestion, the match preview and the simulator. It
+is pure, synchronous and takes the *starting eleven* as an input, because what
+a bench has to insure depends on the side in front of it. Seats go: one
+reserve goalkeeper, and only ever one, and only a real keeper (a squad with no
+second keeper does not lose the seat to whichever outfielder is least bad in
+goal); then one option for each line, most exposed first, and only somebody
+who can genuinely play there; then the remaining seats to the line with the
+most starters still uncovered; then, once every starter has an answer, the
+best man left. Quality, position familiarity and readiness all enter through
+`selectionFit`, the same score that picks the eleven — there is no second
+position model and no second fitness model. Ties break on player id. **A bench
+the manager named himself is played exactly as named**, in his order, capped
+only by the competition's bench size: nothing is topped up or reordered.
+
+The preview lists each seat with a football reason under the name
+(*Goalkeeper cover*, *Defensive cover*, *Midfield cover*, *Attacking option*)
+and never a score. A bench the manager picked shows no reasons, because the
+reason is that he picked them.
+
+This changed simulated results, which was expected and was measured rather
+than assumed. World *generation* is byte-identical (the `new=` reference
+hashes are unchanged, so existing saves load the same); three seeds played
+three weeks now hash differently. Feeding the old benches back into the new
+engine reproduces the old results hash exactly (`ae00e57f857ab3ec`), so every
+changed scoreline comes from bench composition and nothing else. The new
+system is identical on repeat. Across the same 72 benches, line cover now
+mirrors the shape being played rather than the formation in the abstract:
+defensive options 3.33 → 2.81 per bench, midfield 5.22 → 5.31, attacking
+1.75 → 1.44, against a 2-3-1 starting two, three and one. Every bench in both
+runs answers all four lines; the win is that the selector now runs on every
+club on every matchday, and that the preview and the pitch agree.
 
 **Who comes on.** Tapping the man coming off reorganises the sheet around
 that decision: he sits at the top, then "Recommended" (like-for-like first,

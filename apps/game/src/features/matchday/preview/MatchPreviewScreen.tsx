@@ -10,7 +10,10 @@ import {
 } from '@/design';
 import { useGame, useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
-import { useMatchdayContext, arenaShareLine, type KeyBattle, type MatchdayContext } from '../shared/context';
+import {
+  BENCH_REASON_LABEL, useMatchdayContext, arenaShareLine,
+  type KeyBattle, type MatchdayContext,
+} from '../shared/context';
 import { kitColors, type KitColors } from '../shared/kit';
 import { SPECIAL_RULE_TONE } from '../shared/format';
 import { LineupBoard } from './LineupBoard';
@@ -154,7 +157,12 @@ export function MatchPreviewScreen(): ReactNode {
           <GlassPanel nested level={2} padding="md" title="Bench">
             <ul className="flex flex-col gap-1.5">
               {context.bench.map((player) => (
-                <BenchRow key={player.id} player={player} kit={ourKit} />
+                <BenchRow
+                  key={player.id}
+                  player={player}
+                  kit={ourKit}
+                  reason={BENCH_REASON_LABEL[context.benchReasons[player.id] ?? 'BEST_AVAILABLE']}
+                />
               ))}
               {context.bench.length === 0 && (
                 <li className="py-2 text-[13px] text-ink-dim">No fit players left on the bench.</li>
@@ -631,12 +639,14 @@ function AvailabilityColumn({
   );
 }
 
-function BenchRow({ player, kit }: { player: Player; kit: KitColors }): ReactNode {
+function BenchRow({ player, kit, reason }: { player: Player; kit: KitColors; reason?: string }): ReactNode {
   return (
     <li className="flex items-center gap-2.5">
       <PlayerPortrait seed={player.portraitSeed} size={28} colors={kit} shape="circle" />
       <span className="min-w-0 flex-1 text-[14px] leading-snug text-ink text-pretty">
         {player.displayName}
+        {/* Why he is sitting down, in a coach's words. Never a number. */}
+        {reason && <span className="block text-[11px] text-ink-dim">{reason}</span>}
       </span>
       <PositionChip position={player.position} size="xs" />
       <RatingBadge value={player.overall} scale="overall" size="xs" />

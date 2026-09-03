@@ -73,7 +73,11 @@ export * from './economy/audit';
 // --- Match simulation (Workstream A) ---
 // Formations are re-exported by tactics/vector; DEFAULT_FORMATION_ID comes
 // from the content layer so both sides cannot drift apart silently.
-export { FORMATIONS, formationById, formationsFor, autoLineup, slotFit } from './tactics/formations';
+export {
+  FORMATIONS, formationById, formationsFor, autoLineup, slotFit, selectionFit,
+  selectMatchdayBench, BENCH_SIZE,
+} from './tactics/formations';
+export type { BenchRole, MatchdaySeat, MatchdayStarter, MatchdayBenchOptions } from './tactics/formations';
 export { toTacticVector, applyVectorModifiers } from './tactics/vector';
 export type { TacticVectorContext } from './tactics/vector';
 export * from './matches/simulator';

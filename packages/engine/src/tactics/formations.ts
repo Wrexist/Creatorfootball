@@ -371,8 +371,16 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
     });
   }
 
-  const started = new Set(picked);
-  const bench = pickBench(candidates.filter((p) => !started.has(p)), slots);
+  // The bench answers a different question from the eleven, and one function
+  // answers it everywhere — here, in the match preview and in the simulator.
+  const starters: MatchdayStarter[] = [];
+  for (const s of slots) {
+    const id = lineup[s.id];
+    const player = id ? picked.find((p) => p.id === id) : undefined;
+    if (player) starters.push({ slot: s, player });
+  }
+  const bench = selectMatchdayBench(candidates, starters, formation, { risk: DEFAULT_TACTICS.risk })
+    .map((seat) => seat.player);
 
   const captain = best(picked, (p) => p.mental.leadership * 1.5 + p.overall + p.age);
   const setPiece = best(picked, (p) => p.attributes.crossing + p.attributes.technique + p.attributes.passing * 0.5);
@@ -390,75 +398,242 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
 }
 
 /** How many players sit on the bench. Enough to cover every line once, plus one. */
-const BENCH_SIZE = 7;
+export const BENCH_SIZE = 7;
 
 /**
- * Choose a bench that covers the side, rather than the seven best players left.
- *
- * A bench is not a ranking, it is an insurance policy: its job is to answer
- * "somebody has just gone off, who comes on". Ordering by rating answers a
- * different question and routinely produced a bench of five midfielders and no
- * defender — fine until the twentieth minute.
- *
- * The keeper comes first and unconditionally, because losing yours with no
- * replacement is the one substitution problem with no recovery at all. After
- * that each place goes to whoever raises the *worst-covered* role the most, so
- * cover spreads across the lines before it deepens in any one of them. Any
- * places left over — a bench bigger than the number of roles — go to the best
- * players remaining, which is the right tiebreak once every line has cover.
+ * Familiarity at or above this is "he can play there". Below it he is a body
+ * in the right half of the pitch, which is not cover. The value is the tier the
+ * position table itself uses for a real second position — a centre-back at
+ * left-back is 0.75, a centre-back screening midfield 0.7, a midfielder at
+ * centre-back 0.7 — and one step above the 0.45 fallback for two positions with
+ * nothing in common.
  */
-function pickBench(candidates: readonly Player[], slots: readonly FormationSlot[]): Player[] {
-  // Only players who can actually come on. An injured or suspended name among
-  // the substitutes is not cover, it is a seat — and it reads as cover on the
-  // team sheet, which is worse than an obviously short bench.
-  const available = candidates.filter(isAvailable);
-  if (available.length === 0) return [];
+const COVER_THRESHOLD = 0.7;
 
-  const roles = [...new Set(slots.filter((s) => s.role !== 'GK').map((s) => s.role))];
-  /** The best a player on the bench could do in each role, so far. */
-  const covered = new Map<FormationSlot['role'], number>(roles.map((r) => [r, 0]));
-  /** The best slot of each role, to score cover against. */
-  const slotForRole = new Map<FormationSlot['role'], FormationSlot>();
-  for (const s of slots) if (!slotForRole.has(s.role)) slotForRole.set(s.role, s);
+/**
+ * How much the manager's appetite for risk moves the bench. A thumb, nothing
+ * more: it decides which line gets the next seat when two lines are equally
+ * exposed, and it can never take a line's cover away or beat a clearly better
+ * player. Twelve per cent is smaller than the gap between any two lines that
+ * are not already tied.
+ */
+const TACTICAL_LEAN = 0.12;
 
-  const remaining = new Set(available);
-  const bench: Player[] = [];
+/** Why a man is on the bench, in the order the seats are filled. */
+export type BenchRole =
+  | 'KEEPER_COVER'
+  | 'DEFENSIVE_COVER'
+  | 'MIDFIELD_COVER'
+  | 'ATTACKING_COVER'
+  | 'BEST_AVAILABLE';
 
-  const keeperSlot = slots.find((s) => s.role === 'GK');
+/** One of the starting side, and the slot he is starting in. */
+export interface MatchdayStarter {
+  readonly slot: FormationSlot;
+  readonly player: Player;
+}
+
+export interface MatchdaySeat {
+  readonly player: Player;
+  readonly role: BenchRole;
+}
+
+export interface MatchdayBenchOptions {
+  /** How many seats there are. Defaults to `BENCH_SIZE`. */
+  readonly size?: number;
+  /** The manager's risk setting, for the tactical lean. */
+  readonly risk?: TacticSetup['risk'];
+}
+
+type OutfieldLine = 'DEF' | 'MID' | 'ATT';
+const LINES: readonly OutfieldLine[] = ['DEF', 'MID', 'ATT'];
+const COVER_ROLE: Record<OutfieldLine, BenchRole> = {
+  DEF: 'DEFENSIVE_COVER', MID: 'MIDFIELD_COVER', ATT: 'ATTACKING_COVER',
+};
+const ROLE_ORDER: readonly BenchRole[] = [
+  'KEEPER_COVER', 'DEFENSIVE_COVER', 'MIDFIELD_COVER', 'ATTACKING_COVER', 'BEST_AVAILABLE',
+];
+
+/**
+ * The matchday bench.
+ *
+ * One function, called by everything that needs to know who is sitting down:
+ * the team-sheet suggestion, the match preview, and the simulator itself. There
+ * used to be three answers to this question — a cover-based pick inside
+ * `autoLineup`, the seven highest-rated reserves in the preview, and whatever
+ * squad order gave the simulator when a sheet named a side but no substitutes.
+ * A manager could therefore be shown one bench and given another, and the
+ * benches the league's other eleven clubs played with were the order their
+ * players happened to be stored in.
+ *
+ * A bench is an insurance policy, not a ranking, and what it insures depends on
+ * the side in front of it. So the shape of the starting eleven is an input:
+ * cover is measured against the players who are actually on the pitch, line by
+ * line, rather than against the formation in the abstract.
+ *
+ * The seats go, in order:
+ *
+ *   1. **The reserve goalkeeper.** One, and only one, and only a real keeper —
+ *      losing yours with nobody to replace him is the single substitution
+ *      problem with no recovery. A squad with no second keeper does not have
+ *      the seat taken by whichever outfielder is least bad in goal; the seat
+ *      goes back to the pool, because a defender who cannot keep goal is worth
+ *      more as a defender.
+ *   2. **One option for each line**, most exposed first, and only somebody who
+ *      can genuinely play there (`COVER_THRESHOLD`). A line with nobody able to
+ *      cover it stays uncovered rather than being given a token.
+ *   3. **The rest, by exposure.** Each remaining seat goes to the line with the
+ *      most starters still uncovered, and within it to the best man for the
+ *      job. A pick is credited against every line he can really play, so a
+ *      utility player is cover twice over.
+ *   4. **Best available**, once every starter has cover — quality decides, as
+ *      it should once the insurance is bought.
+ *
+ * Quality, position familiarity and match readiness all enter through
+ * `selectionFit`, the same score that picks the side: they are not weighed
+ * again here, and there is no second position model. Versatility helps a player
+ * reach a seat he would not otherwise be considered for; it never beats a much
+ * better specialist for the same seat, because both are scored by the same fit.
+ *
+ * Nothing here is random, timed or stateful. Ties break on player id.
+ */
+export function selectMatchdayBench(
+  squad: readonly Player[],
+  starters: readonly MatchdayStarter[],
+  formation: Formation,
+  options: MatchdayBenchOptions = {},
+): readonly MatchdaySeat[] {
+  const size = options.size ?? BENCH_SIZE;
+  if (size <= 0) return [];
+
+  // --- squad -> starting eleven -> remaining available ---------------------
+  //
+  // An injured or suspended name among the substitutes is not cover, it is a
+  // seat, and it reads as cover on the team sheet — worse than an obviously
+  // short bench. Candidate order is by id so that the answer cannot depend on
+  // how the squad happens to be stored.
+  const started = new Set<string>(starters.map((s) => s.player.id as string));
+  const remaining = new Set(
+    squad.filter((p) => !started.has(p.id as string) && isAvailable(p))
+      .sort((a, b) => (a.id as string).localeCompare(b.id as string)),
+  );
+  if (remaining.size === 0) return [];
+
+  const seats: MatchdaySeat[] = [];
+  const take = (player: Player, role: BenchRole): void => {
+    seats.push({ player, role });
+    remaining.delete(player);
+  };
+
+  /**
+   * Who is in the running for an outfield seat. A third keeper is not cover for
+   * anything: once one is sitting down, the others are only considered when
+   * there is literally nobody else left, which is a squad crisis rather than a
+   * selection.
+   */
+  const pool = (): Player[] => {
+    const outfield = [...remaining].filter((p) => p.position !== 'GK');
+    return outfield.length > 0 ? outfield : [...remaining];
+  };
+
+  // --- 1. the reserve goalkeeper ------------------------------------------
+  const keeperSlot = formation.slots.find((s) => s.role === 'GK');
   if (keeperSlot) {
-    const keeper = best([...remaining], (p) => selectionFit(p, keeperSlot));
-    if (keeper) { bench.push(keeper); remaining.delete(keeper); }
+    const keeper = pick([...remaining].filter((p) => p.position === 'GK'), (p) => selectionFit(p, keeperSlot));
+    if (keeper) take(keeper, 'KEEPER_COVER');
   }
 
-  while (bench.length < BENCH_SIZE && remaining.size > 0) {
-    // The role most in need of cover right now.
-    let weakestRole: FormationSlot['role'] | null = null;
-    let weakest = Infinity;
-    for (const role of roles) {
-      const value = covered.get(role) ?? 0;
-      if (value < weakest) { weakest = value; weakestRole = role; }
-    }
+  // --- position cover analysis, against the side that is actually playing ---
+  const slotsFor = new Map<OutfieldLine, FormationSlot[]>(
+    LINES.map((line) => [line, formation.slots.filter((s) => s.role === line)]),
+  );
+  /** How well this player would do in the best slot of a line. */
+  const coverValue = (player: Player, line: OutfieldLine): number =>
+    Math.max(0, ...(slotsFor.get(line) ?? []).map((s) => selectionFit(player, s)));
+  /** Whether he can genuinely play there at all. */
+  const covers = (player: Player, line: OutfieldLine): boolean =>
+    (slotsFor.get(line) ?? []).some((s) => Math.min(1,
+      familiarity(player.position, s.position)
+      + (player.secondaryPositions.includes(s.position) ? 0.12 : 0),
+    ) >= COVER_THRESHOLD);
 
-    const target = weakestRole ? slotForRole.get(weakestRole) : undefined;
-    const choice = target
-      ? best([...remaining], (p) => selectionFit(p, target))
-      : best([...remaining], (p) => p.overall);
+  /** Starters in each line: two centre-backs need more cover than one striker. */
+  const exposed = new Map<OutfieldLine, number>(
+    LINES.map((line) => [line, starters.filter((s) => s.slot.role === line).length]),
+  );
+  const creditCover = (player: Player): void => {
+    for (const line of LINES) {
+      if (covers(player, line)) exposed.set(line, (exposed.get(line) ?? 0) - 1);
+    }
+  };
+
+  // The tactical lean. A bold side would rather have another way to score; a
+  // cautious one another way to stop it. Applied to exposure, so it only ever
+  // decides between lines that are already close.
+  const lean: Record<OutfieldLine, number> = { DEF: 0, MID: 0, ATT: 0 };
+  const shape = formation.shape;
+  const bold = options.risk === 'BOLD' || options.risk === 'RECKLESS' || shape === 'ATTACKING';
+  const cautious = options.risk === 'CAUTIOUS' || shape === 'DEFENSIVE';
+  if (bold && !cautious) lean.ATT = TACTICAL_LEAN;
+  if (cautious && !bold) lean.DEF = TACTICAL_LEAN;
+  const pressure = (line: OutfieldLine): number => (exposed.get(line) ?? 0) * (1 + lean[line]);
+
+  // --- 2. one option per line, most exposed first --------------------------
+  const byExposure = [...LINES].sort((a, b) =>
+    pressure(b) - pressure(a) || LINES.indexOf(a) - LINES.indexOf(b));
+  for (const line of byExposure) {
+    if (seats.length >= size) break;
+    if ((exposed.get(line) ?? 0) <= 0) continue;
+    const choice = pick(pool().filter((p) => covers(p, line)), (p) => coverValue(p, line));
+    if (!choice) continue;
+    take(choice, COVER_ROLE[line]);
+    creditCover(choice);
+  }
+
+  // --- 3. the rest, by exposure, then by quality ---------------------------
+  const anyFit = (player: Player): number =>
+    Math.max(0, ...formation.slots.map((s) => selectionFit(player, s)));
+
+  while (seats.length < size && remaining.size > 0) {
+    const line = [...LINES]
+      .filter((l) => (exposed.get(l) ?? 0) > 0)
+      .sort((a, b) => pressure(b) - pressure(a) || LINES.indexOf(a) - LINES.indexOf(b))[0];
+
+    const choice = line
+      ? pick(pool().filter((p) => covers(p, line)), (p) => coverValue(p, line)) ?? pick(pool(), anyFit)
+      : pick(pool(), anyFit);
     if (!choice) break;
 
-    bench.push(choice);
-    remaining.delete(choice);
-    // Credit this player against every role he could actually cover, not only
-    // the one he was picked for: a utility player is cover twice over, and a
-    // bench that ignores that fills up with specialists.
-    for (const role of roles) {
-      const s = slotForRole.get(role);
-      if (!s) continue;
-      const value = selectionFit(choice, s);
-      if (value > (covered.get(role) ?? 0)) covered.set(role, value);
-    }
+    // A seat taken while a line was still exposed is that line's cover; a seat
+    // taken once every starter has an answer is simply the best man left.
+    take(choice, line && covers(choice, line) ? COVER_ROLE[line] : 'BEST_AVAILABLE');
+    creditCover(choice);
   }
 
-  return bench;
+  // --- 4. bench order: keeper, defence, midfield, attack, then the rest -----
+  //
+  // Stable within each group, so the order is the order they were chosen in.
+  return seats
+    .map((seat, index) => ({ seat, index }))
+    .sort((a, b) =>
+      ROLE_ORDER.indexOf(a.seat.role) - ROLE_ORDER.indexOf(b.seat.role) || a.index - b.index)
+    .map(({ seat }) => seat);
+}
+
+/** Highest score wins; an exact tie goes to the lower player id. */
+function pick(players: readonly Player[], score: (p: Player) => number): Player | null {
+  let chosen: Player | null = null;
+  let chosenScore = -Infinity;
+  for (const player of players) {
+    const value = score(player);
+    if (value > chosenScore
+      || (value === chosenScore && chosen !== null
+        && (player.id as string).localeCompare(chosen.id as string) < 0)) {
+      chosen = player;
+      chosenScore = value;
+    }
+  }
+  return chosen;
 }
 
 const slotPriority = (s: FormationSlot): number =>

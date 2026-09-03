@@ -8,7 +8,8 @@ import type { Position } from '../players/positions';
 import type { TraitCondition } from '../players/traits';
 import { traitModifier } from '../players/traits';
 import type { Formation, FormationSlot, TacticSetup, TacticVector } from '../tactics/tactics';
-import { formationById, formationsFor, autoLineup } from '../tactics/formations';
+import { formationById, formationsFor, autoLineup, selectMatchdayBench } from '../tactics/formations';
+import type { MatchdayStarter } from '../tactics/formations';
 import { applyVectorModifiers, toTacticVector } from '../tactics/vector';
 import { decideAdaptation, observeAttack, sampleOf, type AttackSample } from './adaptation';
 import type { MatchEvent, MatchEventType, PitchFrame, PitchPoint, PlayPhase, Side } from './events';
@@ -687,7 +688,7 @@ export class MatchSimulator {
       // A partial team sheet is completed rather than rejected: the sim must
       // never refuse to play a fixture because a slot was left empty.
       const auto = autoLineup(team.players, formation);
-      tactics = { ...tactics, lineup: { ...auto.lineup, ...tactics.lineup }, bench: tactics.bench.length ? tactics.bench : auto.bench };
+      tactics = { ...tactics, lineup: { ...auto.lineup, ...tactics.lineup } };
       if (!tactics.captainId) tactics = { ...tactics, captainId: auto.captainId };
       if (!tactics.penaltyTakerId) tactics = { ...tactics, penaltyTakerId: auto.penaltyTakerId };
       if (!tactics.setPieceTakerId) tactics = { ...tactics, setPieceTakerId: auto.setPieceTakerId };
@@ -709,17 +710,31 @@ export class MatchSimulator {
       onPitch.push(rt);
     }
 
-    const benchIds = tactics.bench.length ? tactics.bench : [];
+    // The bench.
+    //
+    // A manager who named substitutes gets exactly the substitutes he named,
+    // in his order, capped only by the competition's bench size — his sheet is
+    // never quietly topped up or reordered. Everyone else, the player's club on
+    // a matchday he did not open the tactics screen and all eleven AI clubs
+    // alike, gets the same chosen bench, from the same selector the team-sheet
+    // suggestion and the match preview use. It used to be squad order here,
+    // which on an unlucky squad meant seven midfielders and no reserve keeper.
     const benchPlayers: Player[] = [];
-    for (const id of benchIds) {
-      const p = byId.get(id);
-      if (p && !taken.has(p.id)) { benchPlayers.push(p); taken.add(p.id); }
-    }
-    for (const p of team.players) {
-      if (benchPlayers.length >= this.setup.config.benchSize) break;
-      if (taken.has(p.id)) continue;
-      benchPlayers.push(p);
-      taken.add(p.id);
+    if (tactics.bench.length > 0) {
+      for (const id of tactics.bench) {
+        if (benchPlayers.length >= this.setup.config.benchSize) break;
+        const p = byId.get(id);
+        if (p && !taken.has(p.id)) { benchPlayers.push(p); taken.add(p.id); }
+      }
+    } else {
+      const starters: MatchdayStarter[] = onPitch.map((rt) => ({ slot: rt.slot, player: rt.player }));
+      for (const seat of selectMatchdayBench(team.players, starters, formation, {
+        size: this.setup.config.benchSize,
+        risk: tactics.risk,
+      })) {
+        benchPlayers.push(seat.player);
+        taken.add(seat.player.id);
+      }
     }
 
     const bench = benchPlayers.map((p) => {
