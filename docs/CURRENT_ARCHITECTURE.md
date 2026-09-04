@@ -239,6 +239,16 @@ there is one position model and one readiness model in the codebase.
 `benchParity.test.ts` in the app asserts the preview and the simulator name the
 same seven in the same order for real careers.
 
+The selector's two constants are measurable without being changeable in play.
+`MatchdayBenchOptions.tuning`, `MatchConfig.benchTuning`,
+`BuildMatchSetupOptions.benchTuning` and `AdvanceCycleOptions.benchTuning` are
+all optional and all default to the production constants — the same pattern as
+`MatchConfig.adaptation`. Nothing in the game passes one; only
+`tools/sim/src/benchExperiment.ts` does, so a balance experiment drives the real
+selector instead of a copy of it. `benchTuning.test.ts` pins the default path as
+byte-identical to production and pins that a tuning cannot reach world
+generation, player generation, the seed or the fixture list.
+
 Substitutions go through the simulator's `checkSubstitution` (a verdict with
 a reason) and `substitutionStatus` (used, allowed, remaining, the match-day
 bench). The match store reads the status every tick; the sheet
@@ -250,7 +260,7 @@ turns each refusal into its own sentence.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 820 | `pnpm --filter @cf/engine test` |
+| Engine unit/integration | 827 | `pnpm --filter @cf/engine test` |
 | App unit | 302 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |

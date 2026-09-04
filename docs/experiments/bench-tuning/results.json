@@ -1,0 +1,774 @@
+{
+  "experiment": "matchday-bench-tuning",
+  "commit": "3ac29b3e096b56f277eda68cd810f62f858788a3",
+  "generatedFrom": {
+    "worlds": 40,
+    "seasonsPerWorld": 1,
+    "seeds": [
+      "bench-exp-000",
+      "bench-exp-001",
+      "bench-exp-002",
+      "bench-exp-003",
+      "bench-exp-004",
+      "bench-exp-005",
+      "bench-exp-006",
+      "bench-exp-007",
+      "bench-exp-008",
+      "bench-exp-009",
+      "bench-exp-010",
+      "bench-exp-011",
+      "bench-exp-012",
+      "bench-exp-013",
+      "bench-exp-014",
+      "bench-exp-015",
+      "bench-exp-016",
+      "bench-exp-017",
+      "bench-exp-018",
+      "bench-exp-019",
+      "bench-exp-020",
+      "bench-exp-021",
+      "bench-exp-022",
+      "bench-exp-023",
+      "bench-exp-024",
+      "bench-exp-025",
+      "bench-exp-026",
+      "bench-exp-027",
+      "bench-exp-028",
+      "bench-exp-029",
+      "bench-exp-030",
+      "bench-exp-031",
+      "bench-exp-032",
+      "bench-exp-033",
+      "bench-exp-034",
+      "bench-exp-035",
+      "bench-exp-036",
+      "bench-exp-037",
+      "bench-exp-038",
+      "bench-exp-039"
+    ]
+  },
+  "configurations": [
+    {
+      "key": "A_current",
+      "label": "A current (0.70 / 0.12)",
+      "tuning": {
+        "coverThreshold": 0.7,
+        "tacticalLean": 0.12
+      }
+    },
+    {
+      "key": "B_low_cover",
+      "label": "B low cover (0.60 / 0.12)",
+      "tuning": {
+        "coverThreshold": 0.6,
+        "tacticalLean": 0.12
+      }
+    },
+    {
+      "key": "C_high_cover",
+      "label": "C high cover (0.80 / 0.12)",
+      "tuning": {
+        "coverThreshold": 0.8,
+        "tacticalLean": 0.12
+      }
+    },
+    {
+      "key": "D_no_lean",
+      "label": "D no lean (0.70 / 0.00)",
+      "tuning": {
+        "coverThreshold": 0.7,
+        "tacticalLean": 0
+      }
+    },
+    {
+      "key": "E_strong_lean",
+      "label": "E strong lean (0.70 / 0.20)",
+      "tuning": {
+        "coverThreshold": 0.7,
+        "tacticalLean": 0.2
+      }
+    }
+  ],
+  "runtimeMs": 629387,
+  "summaries": {
+    "A_current": {
+      "matches": 5280,
+      "results": {
+        "goalsPerMatch": 8.013,
+        "goals": {
+          "mean": 8.01,
+          "sd": 3.18,
+          "min": 0,
+          "max": 21,
+          "p10": 4,
+          "median": 8,
+          "p90": 12
+        },
+        "goalHistogram": {
+          "0": 8,
+          "1": 43,
+          "2": 106,
+          "3": 174,
+          "4": 378,
+          "5": 452,
+          "6": 589,
+          "7": 660,
+          "8": 682,
+          "9": 632,
+          "10+": 1556
+        },
+        "marginHistogram": {
+          "0": 559,
+          "1": 1038,
+          "2": 948,
+          "3": 787,
+          "4": 629,
+          "5+": 1319
+        },
+        "margin": 3.132,
+        "homeWinShare": 0.46,
+        "drawShare": 0.106,
+        "awayWinShare": 0.434,
+        "bigMarginShare": 0.369,
+        "goallessShare": 0.002
+      },
+      "competitiveness": {
+        "seasonPointsSd": 11.733,
+        "championPoints": 52.75,
+        "strongPpg": 1.911,
+        "middlePpg": 1.437,
+        "weakPpg": 0.993,
+        "strengthGapPpg": 0.918,
+        "strengthPointsCorrelation": 0.802
+      },
+      "depth": {
+        "deepPpg": 1.555,
+        "shallowPpg": 1.339,
+        "depthGapPpg": 0.216,
+        "depthPointsCorrelation": 0.509,
+        "utilityPointsCorrelation": 0.134,
+        "utilityReservesMean": 6.69,
+        "utilityReservesSd": 0.535,
+        "clubsMeasured": 480
+      },
+      "substitutions": {
+        "perTeamPerMatch": 4.63,
+        "perMatch": 9.261,
+        "meanMinute": 19.11,
+        "medianMinute": 18,
+        "lateShare": 0.308,
+        "keeperSubs": 2932,
+        "byGroup": {
+          "GK": 0.06,
+          "DEF": 0.415,
+          "MID": 0.377,
+          "ATT": 0.148
+        }
+      },
+      "bench": {
+        "seatsPerBench": 6.985,
+        "utilisation": 0.663,
+        "bestBenchUnusedShare": 0.013,
+        "roleShare": {
+          "KEEPER_COVER": 0.134,
+          "DEFENSIVE_COVER": 0.251,
+          "MIDFIELD_COVER": 0.183,
+          "ATTACKING_COVER": 0.122,
+          "BEST_AVAILABLE": 0.311
+        },
+        "lineCover": {
+          "GK": 0.933,
+          "DEF": 2.909,
+          "MID": 5.274,
+          "ATT": 1.465
+        },
+        "benchesMissingLine": {
+          "GK": 0.067,
+          "DEF": 0,
+          "MID": 0,
+          "ATT": 0.054
+        },
+        "naturalPositions": {
+          "GK": 0.933,
+          "DEF": 2.334,
+          "MID": 2.735,
+          "ATT": 0.983
+        },
+        "utilitySeatsPerBench": 3.595,
+        "twoKeeperShare": 0,
+        "noKeeperShare": 0.067
+      },
+      "resilience": {
+        "injuriesPerMatch": 0.2161,
+        "redCardsPerMatch": 0.0473
+      },
+      "lateMatch": {
+        "lateGoalShare": 0.325,
+        "comebackShare": 0.122,
+        "halfTimeLeads": 4426
+      },
+      "resultsHash": "6105548b043c716d"
+    },
+    "B_low_cover": {
+      "matches": 5280,
+      "results": {
+        "goalsPerMatch": 8.013,
+        "goals": {
+          "mean": 8.01,
+          "sd": 3.18,
+          "min": 0,
+          "max": 21,
+          "p10": 4,
+          "median": 8,
+          "p90": 12
+        },
+        "goalHistogram": {
+          "0": 8,
+          "1": 43,
+          "2": 106,
+          "3": 174,
+          "4": 378,
+          "5": 452,
+          "6": 589,
+          "7": 660,
+          "8": 682,
+          "9": 632,
+          "10+": 1556
+        },
+        "marginHistogram": {
+          "0": 559,
+          "1": 1038,
+          "2": 948,
+          "3": 787,
+          "4": 629,
+          "5+": 1319
+        },
+        "margin": 3.132,
+        "homeWinShare": 0.46,
+        "drawShare": 0.106,
+        "awayWinShare": 0.434,
+        "bigMarginShare": 0.369,
+        "goallessShare": 0.002
+      },
+      "competitiveness": {
+        "seasonPointsSd": 11.733,
+        "championPoints": 52.75,
+        "strongPpg": 1.911,
+        "middlePpg": 1.437,
+        "weakPpg": 0.993,
+        "strengthGapPpg": 0.918,
+        "strengthPointsCorrelation": 0.802
+      },
+      "depth": {
+        "deepPpg": 1.555,
+        "shallowPpg": 1.339,
+        "depthGapPpg": 0.216,
+        "depthPointsCorrelation": 0.509,
+        "utilityPointsCorrelation": 0.134,
+        "utilityReservesMean": 6.69,
+        "utilityReservesSd": 0.535,
+        "clubsMeasured": 480
+      },
+      "substitutions": {
+        "perTeamPerMatch": 4.63,
+        "perMatch": 9.261,
+        "meanMinute": 19.11,
+        "medianMinute": 18,
+        "lateShare": 0.308,
+        "keeperSubs": 2932,
+        "byGroup": {
+          "GK": 0.06,
+          "DEF": 0.415,
+          "MID": 0.377,
+          "ATT": 0.148
+        }
+      },
+      "bench": {
+        "seatsPerBench": 6.985,
+        "utilisation": 0.663,
+        "bestBenchUnusedShare": 0.013,
+        "roleShare": {
+          "KEEPER_COVER": 0.134,
+          "DEFENSIVE_COVER": 0.251,
+          "MIDFIELD_COVER": 0.183,
+          "ATTACKING_COVER": 0.122,
+          "BEST_AVAILABLE": 0.311
+        },
+        "lineCover": {
+          "GK": 0.933,
+          "DEF": 2.909,
+          "MID": 5.274,
+          "ATT": 1.465
+        },
+        "benchesMissingLine": {
+          "GK": 0.067,
+          "DEF": 0,
+          "MID": 0,
+          "ATT": 0.054
+        },
+        "naturalPositions": {
+          "GK": 0.933,
+          "DEF": 2.334,
+          "MID": 2.735,
+          "ATT": 0.983
+        },
+        "utilitySeatsPerBench": 3.595,
+        "twoKeeperShare": 0,
+        "noKeeperShare": 0.067
+      },
+      "resilience": {
+        "injuriesPerMatch": 0.2161,
+        "redCardsPerMatch": 0.0473
+      },
+      "lateMatch": {
+        "lateGoalShare": 0.325,
+        "comebackShare": 0.122,
+        "halfTimeLeads": 4426
+      },
+      "resultsHash": "6105548b043c716d"
+    },
+    "C_high_cover": {
+      "matches": 5280,
+      "results": {
+        "goalsPerMatch": 8.017,
+        "goals": {
+          "mean": 8.02,
+          "sd": 3.16,
+          "min": 0,
+          "max": 21,
+          "p10": 4,
+          "median": 8,
+          "p90": 12
+        },
+        "goalHistogram": {
+          "0": 9,
+          "1": 31,
+          "2": 102,
+          "3": 208,
+          "4": 341,
+          "5": 465,
+          "6": 611,
+          "7": 646,
+          "8": 652,
+          "9": 603,
+          "10+": 1612
+        },
+        "marginHistogram": {
+          "0": 560,
+          "1": 1036,
+          "2": 935,
+          "3": 802,
+          "4": 622,
+          "5+": 1325
+        },
+        "margin": 3.13,
+        "homeWinShare": 0.453,
+        "drawShare": 0.106,
+        "awayWinShare": 0.441,
+        "bigMarginShare": 0.369,
+        "goallessShare": 0.002
+      },
+      "competitiveness": {
+        "seasonPointsSd": 12.155,
+        "championPoints": 53.98,
+        "strongPpg": 1.905,
+        "middlePpg": 1.465,
+        "weakPpg": 0.971,
+        "strengthGapPpg": 0.934,
+        "strengthPointsCorrelation": 0.795
+      },
+      "depth": {
+        "deepPpg": 1.543,
+        "shallowPpg": 1.351,
+        "depthGapPpg": 0.192,
+        "depthPointsCorrelation": 0.471,
+        "utilityPointsCorrelation": 0.107,
+        "utilityReservesMean": 6.69,
+        "utilityReservesSd": 0.535,
+        "clubsMeasured": 480
+      },
+      "substitutions": {
+        "perTeamPerMatch": 4.563,
+        "perMatch": 9.126,
+        "meanMinute": 19.11,
+        "medianMinute": 18,
+        "lateShare": 0.308,
+        "keeperSubs": 3420,
+        "byGroup": {
+          "GK": 0.071,
+          "DEF": 0.37,
+          "MID": 0.407,
+          "ATT": 0.152
+        }
+      },
+      "bench": {
+        "seatsPerBench": 6.976,
+        "utilisation": 0.654,
+        "bestBenchUnusedShare": 0.017,
+        "roleShare": {
+          "KEEPER_COVER": 0.133,
+          "DEFENSIVE_COVER": 0.213,
+          "MIDFIELD_COVER": 0.3,
+          "ATTACKING_COVER": 0.114,
+          "BEST_AVAILABLE": 0.24
+        },
+        "lineCover": {
+          "GK": 0.926,
+          "DEF": 2.878,
+          "MID": 5.087,
+          "ATT": 1.5
+        },
+        "benchesMissingLine": {
+          "GK": 0.075,
+          "DEF": 0.001,
+          "MID": 0,
+          "ATT": 0.084
+        },
+        "naturalPositions": {
+          "GK": 0.926,
+          "DEF": 2.259,
+          "MID": 2.739,
+          "ATT": 1.052
+        },
+        "utilitySeatsPerBench": 3.415,
+        "twoKeeperShare": 0,
+        "noKeeperShare": 0.075
+      },
+      "resilience": {
+        "injuriesPerMatch": 0.2116,
+        "redCardsPerMatch": 0.0468
+      },
+      "lateMatch": {
+        "lateGoalShare": 0.328,
+        "comebackShare": 0.122,
+        "halfTimeLeads": 4402
+      },
+      "resultsHash": "d1610dec316ff705"
+    },
+    "D_no_lean": {
+      "matches": 5280,
+      "results": {
+        "goalsPerMatch": 8.012,
+        "goals": {
+          "mean": 8.01,
+          "sd": 3.18,
+          "min": 0,
+          "max": 21,
+          "p10": 4,
+          "median": 8,
+          "p90": 12
+        },
+        "goalHistogram": {
+          "0": 8,
+          "1": 43,
+          "2": 106,
+          "3": 174,
+          "4": 382,
+          "5": 452,
+          "6": 582,
+          "7": 661,
+          "8": 685,
+          "9": 631,
+          "10+": 1556
+        },
+        "marginHistogram": {
+          "0": 564,
+          "1": 1032,
+          "2": 943,
+          "3": 782,
+          "4": 636,
+          "5+": 1323
+        },
+        "margin": 3.137,
+        "homeWinShare": 0.459,
+        "drawShare": 0.107,
+        "awayWinShare": 0.434,
+        "bigMarginShare": 0.371,
+        "goallessShare": 0.002
+      },
+      "competitiveness": {
+        "seasonPointsSd": 11.793,
+        "championPoints": 52.77,
+        "strongPpg": 1.911,
+        "middlePpg": 1.438,
+        "weakPpg": 0.991,
+        "strengthGapPpg": 0.92,
+        "strengthPointsCorrelation": 0.802
+      },
+      "depth": {
+        "deepPpg": 1.553,
+        "shallowPpg": 1.34,
+        "depthGapPpg": 0.213,
+        "depthPointsCorrelation": 0.507,
+        "utilityPointsCorrelation": 0.134,
+        "utilityReservesMean": 6.69,
+        "utilityReservesSd": 0.535,
+        "clubsMeasured": 480
+      },
+      "substitutions": {
+        "perTeamPerMatch": 4.63,
+        "perMatch": 9.261,
+        "meanMinute": 19.11,
+        "medianMinute": 18,
+        "lateShare": 0.308,
+        "keeperSubs": 2932,
+        "byGroup": {
+          "GK": 0.06,
+          "DEF": 0.415,
+          "MID": 0.376,
+          "ATT": 0.148
+        }
+      },
+      "bench": {
+        "seatsPerBench": 6.985,
+        "utilisation": 0.663,
+        "bestBenchUnusedShare": 0.013,
+        "roleShare": {
+          "KEEPER_COVER": 0.133,
+          "DEFENSIVE_COVER": 0.253,
+          "MIDFIELD_COVER": 0.185,
+          "ATTACKING_COVER": 0.122,
+          "BEST_AVAILABLE": 0.307
+        },
+        "lineCover": {
+          "GK": 0.932,
+          "DEF": 2.91,
+          "MID": 5.274,
+          "ATT": 1.465
+        },
+        "benchesMissingLine": {
+          "GK": 0.068,
+          "DEF": 0,
+          "MID": 0,
+          "ATT": 0.054
+        },
+        "naturalPositions": {
+          "GK": 0.932,
+          "DEF": 2.336,
+          "MID": 2.734,
+          "ATT": 0.983
+        },
+        "utilitySeatsPerBench": 3.596,
+        "twoKeeperShare": 0,
+        "noKeeperShare": 0.068
+      },
+      "resilience": {
+        "injuriesPerMatch": 0.2152,
+        "redCardsPerMatch": 0.0475
+      },
+      "lateMatch": {
+        "lateGoalShare": 0.325,
+        "comebackShare": 0.123,
+        "halfTimeLeads": 4423
+      },
+      "resultsHash": "fcdbce98d2f43f04"
+    },
+    "E_strong_lean": {
+      "matches": 5280,
+      "results": {
+        "goalsPerMatch": 8.013,
+        "goals": {
+          "mean": 8.01,
+          "sd": 3.18,
+          "min": 0,
+          "max": 21,
+          "p10": 4,
+          "median": 8,
+          "p90": 12
+        },
+        "goalHistogram": {
+          "0": 8,
+          "1": 43,
+          "2": 106,
+          "3": 174,
+          "4": 378,
+          "5": 452,
+          "6": 589,
+          "7": 660,
+          "8": 682,
+          "9": 632,
+          "10+": 1556
+        },
+        "marginHistogram": {
+          "0": 559,
+          "1": 1038,
+          "2": 948,
+          "3": 787,
+          "4": 629,
+          "5+": 1319
+        },
+        "margin": 3.132,
+        "homeWinShare": 0.46,
+        "drawShare": 0.106,
+        "awayWinShare": 0.434,
+        "bigMarginShare": 0.369,
+        "goallessShare": 0.002
+      },
+      "competitiveness": {
+        "seasonPointsSd": 11.733,
+        "championPoints": 52.75,
+        "strongPpg": 1.911,
+        "middlePpg": 1.437,
+        "weakPpg": 0.993,
+        "strengthGapPpg": 0.918,
+        "strengthPointsCorrelation": 0.802
+      },
+      "depth": {
+        "deepPpg": 1.555,
+        "shallowPpg": 1.339,
+        "depthGapPpg": 0.216,
+        "depthPointsCorrelation": 0.509,
+        "utilityPointsCorrelation": 0.134,
+        "utilityReservesMean": 6.69,
+        "utilityReservesSd": 0.535,
+        "clubsMeasured": 480
+      },
+      "substitutions": {
+        "perTeamPerMatch": 4.63,
+        "perMatch": 9.261,
+        "meanMinute": 19.11,
+        "medianMinute": 18,
+        "lateShare": 0.308,
+        "keeperSubs": 2932,
+        "byGroup": {
+          "GK": 0.06,
+          "DEF": 0.415,
+          "MID": 0.377,
+          "ATT": 0.148
+        }
+      },
+      "bench": {
+        "seatsPerBench": 6.985,
+        "utilisation": 0.663,
+        "bestBenchUnusedShare": 0.013,
+        "roleShare": {
+          "KEEPER_COVER": 0.134,
+          "DEFENSIVE_COVER": 0.251,
+          "MIDFIELD_COVER": 0.183,
+          "ATTACKING_COVER": 0.122,
+          "BEST_AVAILABLE": 0.311
+        },
+        "lineCover": {
+          "GK": 0.933,
+          "DEF": 2.909,
+          "MID": 5.274,
+          "ATT": 1.465
+        },
+        "benchesMissingLine": {
+          "GK": 0.067,
+          "DEF": 0,
+          "MID": 0,
+          "ATT": 0.054
+        },
+        "naturalPositions": {
+          "GK": 0.933,
+          "DEF": 2.334,
+          "MID": 2.735,
+          "ATT": 0.983
+        },
+        "utilitySeatsPerBench": 3.595,
+        "twoKeeperShare": 0,
+        "noKeeperShare": 0.067
+      },
+      "resilience": {
+        "injuriesPerMatch": 0.2161,
+        "redCardsPerMatch": 0.0473
+      },
+      "lateMatch": {
+        "lateGoalShare": 0.325,
+        "comebackShare": 0.122,
+        "halfTimeLeads": 4426
+      },
+      "resultsHash": "6105548b043c716d"
+    }
+  },
+  "divergenceFromControl": {
+    "B_low_cover": {
+      "matchesChanged": 0,
+      "share": 0,
+      "winnerChanged": 0,
+      "winnerShare": 0,
+      "meanGoalShift": 0
+    },
+    "C_high_cover": {
+      "matchesChanged": 4486,
+      "share": 0.8496,
+      "winnerChanged": 1917,
+      "winnerShare": 0.3631,
+      "meanGoalShift": 2.49
+    },
+    "D_no_lean": {
+      "matchesChanged": 85,
+      "share": 0.0161,
+      "winnerChanged": 22,
+      "winnerShare": 0.0042,
+      "meanGoalShift": 1.96
+    },
+    "E_strong_lean": {
+      "matchesChanged": 0,
+      "share": 0,
+      "winnerChanged": 0,
+      "winnerShare": 0,
+      "meanGoalShift": 0
+    }
+  },
+  "selectorResponse": {
+    "coverThreshold": {
+      "changed06vs07": 0.379,
+      "changed07vs08": 0.797,
+      "shapesAffectedByLower": {
+        "3-2-1": 234,
+        "2-1-3": 45,
+        "2-2-2": 164,
+        "2-1-2-1": 264,
+        "2-2-1-1": 204,
+        "4-3-3": 104,
+        "3-5-2": 206,
+        "3-3": 17,
+        "3-1-2": 132,
+        "4-4-2": 50
+      },
+      "shapesAffectedByHigher": {
+        "2-3-1": 267,
+        "2-1-3": 281,
+        "3-1-2": 286,
+        "1-3-2": 239,
+        "2-2-2": 283,
+        "2-1-2-1": 234,
+        "2-2-1-1": 264,
+        "2-4": 224,
+        "4-3-3": 181,
+        "3-5-2": 238,
+        "4-4-2": 220,
+        "3-3": 150,
+        "3-2-1": 116
+      },
+      "samples": 3744
+    },
+    "tacticalLean": {
+      "changed0vs012": 0.103,
+      "changed012vs02": 0,
+      "shapesAffected": {
+        "2-1-3": 42,
+        "1-3-2": 134,
+        "4-4-2": 102,
+        "2-2-2": 44,
+        "3-3": 32,
+        "4-3-3": 26,
+        "3-5-2": 4
+      },
+      "samples": 3744
+    },
+    "startingElevenDependence": {
+      "distinctBenchesAcrossShapes": 0.99,
+      "benchTurnoverWhenOneStarterOut": 0.143
+    },
+    "utility": {
+      "utilitySeatShare": 0.318,
+      "benchMeanOverall": 67.26,
+      "bestSevenMeanOverall": 70.06,
+      "qualityForgoneForCover": 2.796,
+      "clubsMeasured": 144
+    }
+  }
+}

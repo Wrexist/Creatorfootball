@@ -407,6 +407,19 @@ export const BENCH_SIZE = 7;
  * left-back is 0.75, a centre-back screening midfield 0.7, a midfielder at
  * centre-back 0.7 — and one step above the 0.45 fallback for two positions with
  * nothing in common.
+ *
+ * MEASURED (see `docs/experiments/bench-tuning/`, 40 worlds x 1 season x 5
+ * configurations, 5,280 matches each). This is a step function, not a dial.
+ * The best player-to-line familiarity that actually occurs takes only these
+ * values: 0.45, 0.70, 0.75, 0.82, 0.87, 0.88, 0.90, 1.00. Nothing lands between
+ * 0.46 and 0.69, so every threshold in (0.45, 0.70] is the same selector —
+ * running the league at 0.60 reproduces 0.70 byte for byte. The next step up is
+ * the only real alternative, and it is worse: at 0.80 the largest band of links
+ * (0.70) stops counting, 85% of matches change, 36% change winner, the league
+ * gets less competitive (season points sd 11.73 -> 12.16), the weakest third of
+ * clubs lose ground (0.993 -> 0.971 points per game), and more benches end up
+ * with no attacking option (5.4% -> 8.4%) or no reserve keeper (6.7% -> 7.5%).
+ * 0.7 is the most permissive value of the only sensible behaviour class.
  */
 const COVER_THRESHOLD = 0.7;
 
@@ -416,8 +429,44 @@ const COVER_THRESHOLD = 0.7;
  * exposed, and it can never take a line's cover away or beat a clearly better
  * player. Twelve per cent is smaller than the gap between any two lines that
  * are not already tied.
+ *
+ * MEASURED (same experiment). The *magnitude* does nothing and cannot be tuned:
+ * exposure counts are integers, so any value in (0, 1) breaks exactly the ties
+ * and nothing else — 0.20 reproduces 0.12 byte for byte across 5,280 matches.
+ * Only its presence matters, and only a little: switching it off changes 1.6%
+ * of matches and 0.4% of winners, and moves no aggregate measure outside noise.
+ * That is not because it is broken. It is because every club this content pack
+ * generates plays 2-3-1, whose lines (2 / 3 / 1) can rarely tie. Asked directly,
+ * across every shape the game ships, the lean changes 10.3% of benches, and the
+ * shapes it reaches are the ones with lines that can level: 1-3-2, 2-2-2, 2-1-3,
+ * 3-3, and the eleven-a-side shapes. It is live for a manager who picks one of
+ * those; it is dormant for the league because of a content decision, not a
+ * selector one. If tactical identity should show on AI benches, the lever is
+ * varied club formations, not a larger number here.
  */
 const TACTICAL_LEAN = 0.12;
+
+/**
+ * The two numbers above, as a value a caller can vary.
+ *
+ * They are implementation choices, not measured gameplay constants, and the
+ * only honest way to ask whether they are right is to run the same league at
+ * different values and compare. That has to drive the real selector — a copy
+ * would answer a question about the copy — so the selector takes them as an
+ * option that defaults to exactly the constants. Nothing in the game passes
+ * one: the default path is the production path, byte for byte.
+ */
+export interface BenchTuning {
+  /** Familiarity at or above which a player counts as cover for a line. */
+  readonly coverThreshold: number;
+  /** How far the manager's appetite for risk can move an already-close call. */
+  readonly tacticalLean: number;
+}
+
+export const DEFAULT_BENCH_TUNING: BenchTuning = {
+  coverThreshold: COVER_THRESHOLD,
+  tacticalLean: TACTICAL_LEAN,
+};
 
 /** Why a man is on the bench, in the order the seats are filled. */
 export type BenchRole =
@@ -443,6 +492,8 @@ export interface MatchdayBenchOptions {
   readonly size?: number;
   /** The manager's risk setting, for the tactical lean. */
   readonly risk?: TacticSetup['risk'];
+  /** Selection constants, for balance experiments. Defaults to production. */
+  readonly tuning?: Partial<BenchTuning>;
 }
 
 type OutfieldLine = 'DEF' | 'MID' | 'ATT';
@@ -505,6 +556,8 @@ export function selectMatchdayBench(
 ): readonly MatchdaySeat[] {
   const size = options.size ?? BENCH_SIZE;
   if (size <= 0) return [];
+  const coverThreshold = options.tuning?.coverThreshold ?? COVER_THRESHOLD;
+  const tacticalLean = options.tuning?.tacticalLean ?? TACTICAL_LEAN;
 
   // --- squad -> starting eleven -> remaining available ---------------------
   //
@@ -555,7 +608,7 @@ export function selectMatchdayBench(
     (slotsFor.get(line) ?? []).some((s) => Math.min(1,
       familiarity(player.position, s.position)
       + (player.secondaryPositions.includes(s.position) ? 0.12 : 0),
-    ) >= COVER_THRESHOLD);
+    ) >= coverThreshold);
 
   /** Starters in each line: two centre-backs need more cover than one striker. */
   const exposed = new Map<OutfieldLine, number>(
@@ -574,8 +627,8 @@ export function selectMatchdayBench(
   const shape = formation.shape;
   const bold = options.risk === 'BOLD' || options.risk === 'RECKLESS' || shape === 'ATTACKING';
   const cautious = options.risk === 'CAUTIOUS' || shape === 'DEFENSIVE';
-  if (bold && !cautious) lean.ATT = TACTICAL_LEAN;
-  if (cautious && !bold) lean.DEF = TACTICAL_LEAN;
+  if (bold && !cautious) lean.ATT = tacticalLean;
+  if (cautious && !bold) lean.DEF = tacticalLean;
   const pressure = (line: OutfieldLine): number => (exposed.get(line) ?? 0) * (1 + lean[line]);
 
   // --- 2. one option per line, most exposed first --------------------------

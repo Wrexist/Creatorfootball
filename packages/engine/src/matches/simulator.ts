@@ -9,7 +9,7 @@ import type { TraitCondition } from '../players/traits';
 import { traitModifier } from '../players/traits';
 import type { Formation, FormationSlot, TacticSetup, TacticVector } from '../tactics/tactics';
 import { formationById, formationsFor, autoLineup, selectMatchdayBench } from '../tactics/formations';
-import type { MatchdayStarter } from '../tactics/formations';
+import type { BenchTuning, MatchdayStarter } from '../tactics/formations';
 import { applyVectorModifiers, toTacticVector } from '../tactics/vector';
 import { decideAdaptation, observeAttack, sampleOf, type AttackSample } from './adaptation';
 import type { MatchEvent, MatchEventType, PitchFrame, PitchPoint, PlayPhase, Side } from './events';
@@ -121,6 +121,12 @@ export interface MatchConfig {
    * changed.
    */
   readonly adaptation: boolean;
+  /**
+   * Bench-selection constants. Absent in every real match, which means the
+   * production defaults; present only when a balance experiment is holding
+   * everything else equal and varying exactly this. Same role as `adaptation`.
+   */
+  readonly benchTuning?: BenchTuning;
 }
 
 export interface ManagerMatchBonus {
@@ -731,6 +737,7 @@ export class MatchSimulator {
       for (const seat of selectMatchdayBench(team.players, starters, formation, {
         size: this.setup.config.benchSize,
         risk: tactics.risk,
+        ...(this.setup.config.benchTuning ? { tuning: this.setup.config.benchTuning } : {}),
       })) {
         benchPlayers.push(seat.player);
         taken.add(seat.player.id);

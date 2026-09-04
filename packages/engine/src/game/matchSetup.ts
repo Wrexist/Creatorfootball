@@ -11,6 +11,7 @@ import { clamp } from '../core/math';
 import type { CreatorSeasonConfigDef } from '../content';
 import type { CommentaryLine } from '../content/schema';
 import type { SpecialRuleId } from '../matches/specialRules';
+import type { BenchTuning } from '../tactics/formations';
 
 /**
  * Translating game state into a match.
@@ -114,6 +115,8 @@ export interface BuildMatchSetupOptions {
   readonly maxDecisions?: number;
   /** Registry commentary for the live book; absent means the built-in bank. */
   readonly commentaryLines?: readonly CommentaryLine[];
+  /** Bench-selection constants for a balance experiment. Absent in real play. */
+  readonly benchTuning?: BenchTuning;
 }
 
 export function buildMatchSetup(
@@ -144,6 +147,7 @@ export function buildMatchSetup(
     liveDecisions: live && involvesPlayer,
     maxDecisions: opts.maxDecisions ?? 4,
     adaptation: true,
+    ...(opts.benchTuning ? { benchTuning: opts.benchTuning } : {}),
   };
 
   return {

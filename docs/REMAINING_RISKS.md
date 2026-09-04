@@ -257,13 +257,16 @@ done — `selectMatchdayBench` is now the one selector for the suggestion, the
 preview and the simulator (CURRENT_STATE §4c). The balance move was measured
 both ways: world generation is byte-identical, the three reference `after3`
 hashes changed, and pinning the old benches into the new engine reproduces the
-old results hash exactly, so the difference is bench composition alone. What
-is *not* settled is whether the new league is better balanced rather than
-merely differently balanced. The aggregate balance and invariant audits pass
-with it, which bounds the distribution but does not describe it; if the table
-ever looks flatter or steeper than the reference data, the bench distribution
-(now mirroring the shape being played, rather than spreading evenly across
-roles) is the second knob to A/B after `MatchConfig.adaptation`.
+old results hash exactly, so the difference is bench composition alone. That is now measured
+(CURRENT_STATE §4c, `docs/experiments/bench-tuning/`): both constants are
+justified, the selector does not disproportionately reward strong clubs, depth
+pays 0.216 points per game without running away, and versatility is not an
+exploit. Two things remain open. The experiment measures one season per world,
+so multi-season compounding — a bench decision that changes a transfer that
+changes a squad — is unmeasured. And the tactical lean is dormant in league play
+only because every generated club plays 2-3-1; a content pack with varied club
+formations would make it live for the AI overnight, which is a content decision
+nobody has taken deliberately.
 
 ## Documentation overlap (housekeeping)
 

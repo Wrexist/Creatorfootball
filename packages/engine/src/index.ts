@@ -75,9 +75,11 @@ export * from './economy/audit';
 // from the content layer so both sides cannot drift apart silently.
 export {
   FORMATIONS, formationById, formationsFor, autoLineup, slotFit, selectionFit,
-  selectMatchdayBench, BENCH_SIZE,
+  selectMatchdayBench, BENCH_SIZE, DEFAULT_BENCH_TUNING,
 } from './tactics/formations';
-export type { BenchRole, MatchdaySeat, MatchdayStarter, MatchdayBenchOptions } from './tactics/formations';
+export type {
+  BenchRole, BenchTuning, MatchdaySeat, MatchdayStarter, MatchdayBenchOptions,
+} from './tactics/formations';
 export { toTacticVector, applyVectorModifiers } from './tactics/vector';
 export type { TacticVectorContext } from './tactics/vector';
 export * from './matches/simulator';

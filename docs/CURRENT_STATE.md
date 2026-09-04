@@ -14,7 +14,7 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **63 files, 820 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **64 files, 827 tests, all passing** |
 | App tests | `pnpm --filter @cf/game test` | **30 files, 302 tests, all passing** |
 | **Total** | `pnpm test` | **1,101 tests, all passing** |
 | Production build | `pnpm build` | pass |
@@ -357,6 +357,49 @@ defensive options 3.33 → 2.81 per bench, midfield 5.22 → 5.31, attacking
 1.75 → 1.44, against a 2-3-1 starting two, three and one. Every bench in both
 runs answers all four lines; the win is that the selector now runs on every
 club on every matchday, and that the preview and the pitch agree.
+
+**Are the bench constants right?** Measured, not asserted. `selectMatchdayBench`
+takes an optional `benchTuning` — the same shape as `MatchConfig.adaptation`,
+absent in every real match, defaulting to the production constants — so a
+balance harness can run the same league at different values through the *real*
+selector rather than a copy. `tools/sim/src/benchExperiment.ts` does that: five
+configurations x 40 worlds x one season, 5,280 matches each, identical seeds,
+clubs, squads, fixtures, injuries and economy throughout. Results in
+`docs/experiments/bench-tuning/`. Byte-identical across three full runs.
+
+The answer is keep both values.
+
+*Cover threshold* is a step function, not a dial. The best player-to-line
+familiarity that actually occurs takes only the values 0.45, 0.70, 0.75, 0.82,
+0.87, 0.88, 0.90 and 1.00 — nothing between 0.46 and 0.69 — so every threshold
+in (0.45, 0.70] is the same selector, and running the league at 0.60 reproduced
+0.70 byte for byte (0 of 5,280 matches changed). The only other behaviour is
+above 0.70, and it is worse: at 0.80, 85% of matches change and 36% change
+winner, the league gets less competitive (season points sd 11.73 -> 12.16), the
+weakest third of clubs lose ground (0.993 -> 0.971 points per game), and more
+benches end up with no attacking option (5.4% -> 8.4%) or no reserve keeper
+(6.7% -> 7.5%). 0.7 is the most permissive value of the only sensible class.
+
+*Tactical lean* cannot be tuned by magnitude at all — exposure counts are
+integers, so any value in (0, 1) breaks exactly the ties and nothing else, and
+0.20 reproduced 0.12 byte for byte. Only its presence matters, and in the league
+only barely: switching it off changes 1.6% of matches and 0.4% of winners and
+moves no aggregate outside noise. That is a content fact, not a dead constant —
+every club this pack generates plays 2-3-1, whose 2/3/1 lines can rarely tie.
+Asked directly across every shape the game ships, the lean changes 10.3% of
+benches, in exactly the shapes with lines that can level (1-3-2, 2-2-2, 2-1-3,
+3-3, and the eleven-a-side shapes). It is live for a manager who picks one of
+those. If tactical identity should show on *AI* benches, the lever is varied
+club formations, not a bigger number.
+
+Two other things the experiment settled. The selector does not disproportionately
+reward strong clubs: the strong-weak gap is 0.918 points per game at 0.70 and
+*wider* at 0.80, so the current setting is the more forgiving one. Depth is
+rewarded but not runaway — deep squads take 0.216 more points per game than
+shallow ones of the same starting strength — and versatility is not an exploit:
+almost every reserve in this content already covers two lines (6.69 of ~11,
+sd 0.53), so utility cannot differentiate clubs, and buying cover costs 2.8
+rating points against a bench picked on rating alone.
 
 **Who comes on.** Tapping the man coming off reorganises the sheet around
 that decision: he sits at the top, then "Recommended" (like-for-like first,
