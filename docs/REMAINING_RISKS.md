@@ -243,12 +243,29 @@ and `adaptation.ts` is written so only `sampleOf` and the sample type change.
 
 The substitution sheet and the live pitch are proven in desktop Chromium
 (`e2e/matchday.mjs`): a goalkeeper change with the keeper recommended first,
-the count from the engine, one change from a double tap, shirts travelling
-at under 0.02 of the pitch per frame, the ball within reach of a shirt, a
-clean pause and resume. What that cannot say: how the sheet scrolls under a
-thumb, whether 60 fps holds on an older iPhone with the follow camera and
-the trail, memory over a full match, and whether Safari's rAF timing gives
-the motion model the steady intervals it measures.
+the count from the engine, one change from a double tap, and — over a whole
+sampling window rather than poll by poll — total shirt travel above a floor,
+no single ball step over the teleport bound, a median ball-to-nearest-shirt
+gap inside reach, and a paused pitch that moves by less than an imperceptible
+epsilon. What that cannot say: how the sheet scrolls under a thumb, whether
+60 fps holds on an older iPhone with the follow camera and the trail, memory
+over a full match, and whether Safari's rAF timing gives the motion model the
+steady intervals it measures.
+
+**The window measurement replaced a poll count, and it found three real
+defects.** Counting individual polls made the check a hostage to scheduling on
+a loaded machine; measuring the window does not. Running it that way exposed
+three things the renderer actually did wrong, each reproduced in a unit test
+before it was fixed: `settled()` used a 0.02 tolerance that was standing in
+for `CARRY_LEAD` while `settle()` lands at 5e-4, so it reported rest 0.02
+early; a still pitch twitched ~0.0025 about three seconds in, because node
+headings kept decaying past 1e-6 and flipped the carry target by `CARRY_LEAD`;
+and the ball could cross 0.124 in one paint, because the exponential ease
+takes 29% of the gap however large the gap is. Fixed by a shared
+`carryTarget()` and one `BALL_LANDING` constant, by freezing a node's heading
+when it stops (speed still decays, so the motion streak fades), and by a
+per-frame travel cap of `BALL_SHOT_SPEED * BALL_FRAME_CAP`. 16 of 16
+consecutive matchday runs, against 9 of 14 before.
 
 **The bench is no longer squad order.** This entry used to end by deferring
 that: every club was created with an empty `tactics.bench` and the simulator
