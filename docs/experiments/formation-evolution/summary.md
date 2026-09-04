@@ -1,6 +1,6 @@
 # Seasonal formation evolution experiment
 
-Commit `acc6647ef582aec77db97357d5215706ef8040f7` (working tree had uncommitted changes) · 12 worlds × 8 seasons × 5 candidates · 12672 matches each · runtime 1831 s.
+Commit `c6a3c9598dba9ba4753d5d4f079d83af13b56a6b` · 12 worlds × 8 seasons × 5 candidates · 12672 matches each · runtime 1830 s.
 
 The same seeds generate the same worlds in every candidate; only the threshold
 a club's current shape must fall behind before it is replaced differs.
@@ -26,7 +26,7 @@ Raw numbers are in `results.json`.
 | season points sd | 11.89 | 12.191 | 12.065 | 12.077 | 11.822 |
 | weak ppg | 1.064 | 0.984 | 1.043 | 1.049 | 1.064 |
 | strong-weak gap | 0.681 | 0.791 | 0.726 | 0.681 | 0.671 |
-| rollover ms | 209.19 | 216.34 | 214.68 | 218.06 | 219.94 |
+| rollover ms | 217.43 | 214.5 | 216.75 | 213.11 | 214.29 |
 
 ## Final-season shape distribution
 

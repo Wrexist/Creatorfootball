@@ -1,7 +1,7 @@
 {
   "experiment": "seasonal-formation-evolution",
-  "commit": "acc6647ef582aec77db97357d5215706ef8040f7",
-  "dirtyTree": true,
+  "commit": "c6a3c9598dba9ba4753d5d4f079d83af13b56a6b",
+  "dirtyTree": false,
   "generatedFrom": {
     "worlds": 12,
     "seasons": 8,
@@ -58,7 +58,7 @@
       }
     }
   ],
-  "runtimeMs": 1831241,
+  "runtimeMs": 1830431,
   "summaries": {
     "A_frozen": {
       "stability": {
@@ -120,7 +120,7 @@
         "strongWeakGap": 0.681
       },
       "performance": {
-        "rolloverMsMean": 209.19,
+        "rolloverMsMean": 217.43,
         "rollovers": 96
       },
       "resultsHash": "90a69e782d334008"
@@ -185,7 +185,7 @@
         "strongWeakGap": 0.791
       },
       "performance": {
-        "rolloverMsMean": 216.34,
+        "rolloverMsMean": 214.5,
         "rollovers": 96
       },
       "resultsHash": "94a202a67eded626"
@@ -250,7 +250,7 @@
         "strongWeakGap": 0.726
       },
       "performance": {
-        "rolloverMsMean": 214.68,
+        "rolloverMsMean": 216.75,
         "rollovers": 96
       },
       "resultsHash": "a3cb79144ce1b985"
@@ -315,7 +315,7 @@
         "strongWeakGap": 0.681
       },
       "performance": {
-        "rolloverMsMean": 218.06,
+        "rolloverMsMean": 213.11,
         "rollovers": 96
       },
       "resultsHash": "0cd7d88a63bcbfce"
@@ -380,7 +380,7 @@
         "strongWeakGap": 0.671
       },
       "performance": {
-        "rolloverMsMean": 219.94,
+        "rolloverMsMean": 214.29,
         "rollovers": 96
       },
       "resultsHash": "ba589301c1ad5241"
