@@ -1,6 +1,6 @@
 # AI formation identity experiment
 
-Commit `d38d463d519f4b6503c457f3974325bfd2009293` (working tree had uncommitted changes) · 24 worlds × 1 season × 4 candidates · 3168 matches each · runtime 282 s.
+Commit `797d70e37f6166ab8344c3431fab2b892d5b59d0` · 24 worlds × 1 season × 4 candidates · 3168 matches each · runtime 281 s.
 
 The same seeds generate the same clubs, squads, fixtures and tactics in every
 candidate; only the formation each club plays differs. Raw numbers are in

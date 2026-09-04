@@ -1,8 +1,8 @@
 # Matchday bench balance experiment
 
-Commit `d38d463d519f4b6503c457f3974325bfd2009293` (working tree had uncommitted changes) · 40 worlds × 1 season × 5 configurations
+Commit `797d70e37f6166ab8344c3431fab2b892d5b59d0` (working tree had uncommitted changes) · 40 worlds × 1 season × 5 configurations
 · 5280 matches per configuration
-· runtime 615 s.
+· runtime 624 s.
 
 Everything except the selector constants is held identical: the same seeds,
 clubs, squads, fixtures, match configuration, opponent adaptation, injuries

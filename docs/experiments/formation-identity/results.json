@@ -1,7 +1,7 @@
 {
   "experiment": "ai-formation-identity",
-  "commit": "d38d463d519f4b6503c457f3974325bfd2009293",
-  "dirtyTree": true,
+  "commit": "797d70e37f6166ab8344c3431fab2b892d5b59d0",
+  "dirtyTree": false,
   "generatedFrom": {
     "worlds": 24,
     "seasonsPerWorld": 1,
@@ -50,8 +50,8 @@
       "label": "C identity-led (0.20 / 0.20)"
     }
   ],
-  "runtimeMs": 282160,
-  "worldGenerationMsPerWorld": 12.59,
+  "runtimeMs": 281233,
+  "worldGenerationMsPerWorld": 12.67,
   "summaries": {
     "control": {
       "formation": {
