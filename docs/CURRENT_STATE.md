@@ -398,9 +398,14 @@ occasionally rather than never, moves twice as many, widens the strong-weak gap
 to 0.726 and *lowers* shape diversity, because a lower bar funnels clubs toward
 the same handful of best-fitting shapes.
 
-Cost: +8.9 ms on a season rollover (209 → 218 ms), once a year. No reference
-hash moved — the pinned worlds cover generation and week-two matches, and a
-rollover fires after week 22.
+Cost: **2.90 ms** to reassess a whole twelve-club league — 241 µs per club, for
+ten shapes each — against a season rollover that costs about 215 ms, once a
+year. That is measured directly; the rollover wall-clock in the experiment
+varies by more between repeat runs (209-217 ms for the frozen candidate alone)
+than the feature costs, so the per-candidate rollover timings in `results.json`
+are noise and should not be read as a cost. No reference hash moved — the
+pinned worlds cover generation and week-two matches, and a rollover fires after
+week 22.
 
 **Every club plays its own shape.** Twelve clubs with eight distinct
 philosophies — low blocks and high presses, cautious and reckless — all walked
