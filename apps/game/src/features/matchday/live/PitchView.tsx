@@ -99,27 +99,31 @@ export const PitchView = memo(function PitchView({
     const observer = new ResizeObserver(applySize);
     observer.observe(host);
 
-    let last = performance.now();
     let raf = 0;
-    let profileAt = last;
+    let profileAt = performance.now();
     const loop = (now: number): void => {
-      renderer.tick(now - last);
-      last = now;
+      renderer.tick(now);
       if (PROFILE && now - profileAt > 500) {
         profileAt = now;
         const s = renderer.stats();
-        setProfile(`${s.avgDrawMs.toFixed(2)}ms/draw · ${s.frames} draws`);
+        setProfile(`${s.avgDrawMs.toFixed(2)}ms/draw · ${s.frames} draws · step ${s.maxStep.toFixed(3)}`);
       }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
+    // The profiler hook the browser suite reads. Only exists when asked for.
+    if (PROFILE) {
+      (window as unknown as { __cfPitch?: unknown }).__cfPitch = {
+        stats: () => renderer.stats(),
+        positions: () => renderer.positions(),
+      };
+    }
 
     // A backgrounded match must not keep a canvas loop alive on a phone.
     const onVisibility = (): void => {
       if (document.hidden) {
         cancelAnimationFrame(raf);
       } else {
-        last = performance.now();
         raf = requestAnimationFrame(loop);
       }
     };
@@ -142,6 +146,7 @@ export const PitchView = memo(function PitchView({
       observer.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       cancelAnimationFrame(raf);
+      if (PROFILE) delete (window as unknown as { __cfPitch?: unknown }).__cfPitch;
       rendererRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

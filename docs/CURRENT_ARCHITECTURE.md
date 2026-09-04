@@ -215,12 +215,87 @@ through the bundler's preload link or the browser's error message, and falls
 back to the plain specifier when neither exists. `e2e/failure.mjs` intercepts
 the chunk's request to prove the failure and recovery journeys in Chromium.
 
+## Matchday presentation
+
+Two layers, one direction. The simulator owns every football fact — where
+the shirts are each tick, who has the ball, what happened — and hands out a
+`PitchFrame` per tick. `features/matchday/live/motion.ts` turns frames into
+motion: shirts travel between snapshots on a measured interval, the ball is
+glued to its carrier (named, or inferred as the man nearest the engine's
+point), flies to a receiver on a change of hands and at the goal on a shot,
+and holds through a stoppage. `pitchRenderer.ts` paints what the motion model
+reports. No renderer value is read by the simulation; the render loop's
+timestamps drive presentation only, so frame rate cannot change a result.
+
+A club's shape is chosen by `selectFormation` (`tactics/formations.ts`), once,
+in `newGame`, from the squad it has just been given and the tactics its
+philosophy carries. `formationSuitability` scores a shape as the mean
+`selectionFit` of the side `assignEleven` would pick for it — the same solver
+`autoLineup` uses, split out so scoring ten shapes per club does not also build
+ten benches. `shapeAffinity` reads an existing `TacticSetup` into a preference
+over `Formation.shape`, a field that already existed on every shape and had no
+consumer in selection. The hierarchy is enforced structurally rather than by
+weighting: only shapes within a 6% suitability band are candidates, and identity
+then moves a candidate by at most 4%, so a preference can only ever decide
+between shapes the squad plays about equally well. The choice is stable for the
+save; nothing re-picks it mid-season.
+
+`reviewFormation` (same module) reconsiders that choice once a season, from
+`seasonRollover.ts` §4d — after §3's retirements and fitness reset and §4's
+academy promotions, which is the only point where the senior squad for the
+coming season is final. It compares the current shape's suitability against the
+best available and keeps unless the shortfall exceeds `FORMATION_CHANGE_THRESHOLD`;
+only then does it call `selectFormation` for a replacement. It zeroes `form`
+before scoring, so the decision cannot see last season's results through
+`slotFit`. It returns a `FormationReview` carrying both suitabilities, the
+shortfall, the threshold and a verdict, so a decision explains itself without a
+persisted history: no Club state was added and `SAVE_VERSION` is untouched. A
+change emits `CLUB_SHAPE_CHANGED` and clears `lineup`/`bench`, whose slot ids
+belong to the shape being left. The player's club is skipped entirely.
+`AdvanceCycleOptions.formationEvolution` injects settings for the balance
+harness, the same pattern as `benchTuning`; production passes none.
+
+Formation is not decoration. `computeAggregates` weights every team aggregate by
+the slot role a player occupies, `SHOOTER_WEIGHT` reads it, `positioning.ts`
+places shirts from slot coordinates, and `selectMatchdayBench` measures cover
+against the lines the shape actually fields — so a 3-1-2 and a 2-1-3 built from
+the same squad genuinely play differently.
+
+The matchday bench is chosen by `selectMatchdayBench` (`tactics/formations.ts`)
+and by nothing else. It is pure and synchronous, takes the squad, the starting
+eleven (as slot/player pairs) and the formation, and returns seats each carrying
+the football reason it was given. `autoLineup` calls it for the team-sheet
+suggestion, `buildMatchdayContext` calls it for the preview, and
+`MatchSimulator.buildTeam` calls it whenever `tactics.bench` is empty — an
+explicit bench is honoured exactly, which is where player agency lives. Cover
+is scored with `selectionFit`, the same function that picks the eleven, so
+there is one position model and one readiness model in the codebase.
+`benchParity.test.ts` in the app asserts the preview and the simulator name the
+same seven in the same order for real careers.
+
+The selector's two constants are measurable without being changeable in play.
+`MatchdayBenchOptions.tuning`, `MatchConfig.benchTuning`,
+`BuildMatchSetupOptions.benchTuning` and `AdvanceCycleOptions.benchTuning` are
+all optional and all default to the production constants — the same pattern as
+`MatchConfig.adaptation`. Nothing in the game passes one; only
+`tools/sim/src/benchExperiment.ts` does, so a balance experiment drives the real
+selector instead of a copy of it. `benchTuning.test.ts` pins the default path as
+byte-identical to production and pins that a tuning cannot reach world
+generation, player generation, the seed or the fixture list.
+
+Substitutions go through the simulator's `checkSubstitution` (a verdict with
+a reason) and `substitutionStatus` (used, allowed, remaining, the match-day
+bench). The match store reads the status every tick; the sheet
+(`MatchSheets.tsx`) lists that bench, ranks replacements with
+`replacements.ts` (quality × familiarity × legs, plus a contextual label) and
+turns each refusal into its own sentence.
+
 ## Testing
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 793 | `pnpm --filter @cf/engine test` |
-| App unit | 279 | `pnpm --filter @cf/game test` |
+| Engine unit/integration | 849 | `pnpm --filter @cf/engine test` |
+| App unit | 302 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |
 

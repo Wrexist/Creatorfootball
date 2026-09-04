@@ -239,6 +239,93 @@ weights. A future balance pass that makes width or directness express more
 strongly in play would let the observable move to what the ball actually did,
 and `adaptation.ts` is written so only `sampleOf` and the sample type change.
 
+## 12. Matchday on a device (hardware blocked)
+
+The substitution sheet and the live pitch are proven in desktop Chromium
+(`e2e/matchday.mjs`): a goalkeeper change with the keeper recommended first,
+the count from the engine, one change from a double tap, and — over a whole
+sampling window rather than poll by poll — total shirt travel above a floor,
+no single ball step over the teleport bound, a median ball-to-nearest-shirt
+gap inside reach, and a paused pitch that moves by less than an imperceptible
+epsilon. What that cannot say: how the sheet scrolls under a thumb, whether
+60 fps holds on an older iPhone with the follow camera and the trail, memory
+over a full match, and whether Safari's rAF timing gives the motion model the
+steady intervals it measures.
+
+**The window measurement replaced a poll count, and it found three real
+defects.** Counting individual polls made the check a hostage to scheduling on
+a loaded machine; measuring the window does not. Running it that way exposed
+three things the renderer actually did wrong, each reproduced in a unit test
+before it was fixed: `settled()` used a 0.02 tolerance that was standing in
+for `CARRY_LEAD` while `settle()` lands at 5e-4, so it reported rest 0.02
+early; a still pitch twitched ~0.0025 about three seconds in, because node
+headings kept decaying past 1e-6 and flipped the carry target by `CARRY_LEAD`;
+and the ball could cross 0.124 in one paint, because the exponential ease
+takes 29% of the gap however large the gap is. Fixed by a shared
+`carryTarget()` and one `BALL_LANDING` constant, by freezing a node's heading
+when it stops (speed still decays, so the motion streak fades), and by a
+per-frame travel cap of `BALL_SHOT_SPEED * BALL_FRAME_CAP`. 16 of 16
+consecutive matchday runs, against 9 of 14 before.
+
+**The bench is no longer squad order.** This entry used to end by deferring
+that: every club was created with an empty `tactics.bench` and the simulator
+filled it from squad order, and fixing it would move simulated results. It is
+done — `selectMatchdayBench` is now the one selector for the suggestion, the
+preview and the simulator (CURRENT_STATE §4c). The balance move was measured
+both ways: world generation is byte-identical, the three reference `after3`
+hashes changed, and pinning the old benches into the new engine reproduces the
+old results hash exactly, so the difference is bench composition alone. That is now measured
+(CURRENT_STATE §4c, `docs/experiments/bench-tuning/`): both constants are
+justified, the selector does not disproportionately reward strong clubs, depth
+pays without running away, and versatility is not an exploit.
+
+**The ground under that measurement has since moved, deliberately.** AI clubs
+now choose their own shape, so the bench experiment was re-run against the new
+world. The headline holds — the current values are still the healthy ones, 0.80
+is still worse for weak clubs, and the lean's magnitude is still inert — but two
+of its supporting facts have expired. The cover threshold's lower direction was
+a no-op when every club played 2-3-1 (0 of 5,280 matches); it now changes 48.4%
+of matches and 20.7% of winners, and at 0.60 the league measures a shade flatter
+than at 0.70 (points sd 11.69 vs 11.82, weakest third 1.010 vs 1.001 points per
+game). That difference is small and inside the noise a single-season sample can
+resolve, so nothing was changed on it — but `COVER_THRESHOLD` has gone from a
+settled constant to a live one and deserves a dedicated re-validation with more
+seasons per world before anyone calls it final. The tactical lean moved the same
+way in the opposite direction: from 1.6% of matches to 14.8%, which strengthens
+rather than weakens the case for keeping it.
+
+**The frozen-formation half of this is now done.** Clubs reassess their shape
+once a season (CURRENT_STATE §4c, `docs/experiments/formation-evolution/`),
+measured over 12 worlds x 8 seasons: three quarters of clubs never change, no
+club in 144 careers ever reverted to a shape it had left, and competitive
+balance is unchanged from the frozen world. What that measurement also exposed
+is listed below.
+
+**MEASURED, NOT RETUNED — `COVER_THRESHOLD`.** Still live rather than settled,
+for the reason recorded above. The evolution experiment did not vary it and this
+phase deliberately did not touch it; it still wants a dedicated re-validation
+with more seasons per world.
+
+**MEASURED, NOT CHANGED — players never change position.** Nothing in the engine
+retrains a player: over two simulated seasons, 0 of 193 surviving players changed
+`position` or `secondaryPositions`, while 146 of them moved in `overall` (by up
+to 4 points) through `worldTick`'s weekly development. So a club's *positional*
+makeup — the thing formation suitability actually reads — moves only through who
+joins and who leaves, never through who a player becomes. That is a coherent
+world model, not a bug, but it bounds tactical evolution: a club can never grow
+into a new shape from within. If positional retraining is ever added, the
+evolution experiment must be re-run, because drift would then have a second
+source.
+
+Two things remain unmeasured. Both the bench and the formation-identity
+experiments run one season per world, so their multi-season compounding is still
+out of scope even though the evolution experiment now runs eight. And a club's
+shape is reassessed only at rollover: a squad gutted mid-season by a January
+window plays on in a shape it may no longer suit until the summer. That is a
+deliberate stability choice, not an oversight — one controlled reassessment a
+season is what keeps the league from churning — but it is the obvious place to
+look if mid-season rebuilds ever feel unresponsive.
+
 ## Documentation overlap (housekeeping)
 
 `docs/` carries several earlier audit and planning documents —

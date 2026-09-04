@@ -26,11 +26,11 @@ pnpm monorepo, Node ≥20, TypeScript.
 |---|---|---|
 | Types | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | 60 files / **793** |
-| App tests | `pnpm --filter @cf/game test` | 27 files / **279** |
-| **Total** | `pnpm test` | **1,072** |
+| Engine tests | `pnpm --filter @cf/engine test` | 61 files / **800** |
+| App tests | `pnpm --filter @cf/game test` | 29 files / **301** |
+| **Total** | `pnpm test` | **1,101** |
 | Build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** failure journeys + **9/9** repeated-failure recovery checks vs the real bundle |
+| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** failure journeys + **9/9** recovery checks + **5/5** matchday checks vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |
 
 Key facts: `SAVE_VERSION` 7, careers persist to **IndexedDB**, migrations 1→7

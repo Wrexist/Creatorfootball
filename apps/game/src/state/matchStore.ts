@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type {
   DecisionPrompt, MatchEvent, MatchResult, PitchFrame, PlayerId, SpecialRuleId, Side,
+  SubstitutionStatus, SubstitutionVerdict,
 } from '@cf/engine';
 
 /**
@@ -65,6 +66,8 @@ export interface SimulatorHandle {
   pendingDecision(): DecisionPrompt | null;
   resolveDecision(promptId: string, optionId: string): void;
   makeSubstitution(side: Side, out: PlayerId, in_: PlayerId): boolean;
+  checkSubstitution(side: Side, out: PlayerId, in_: PlayerId): SubstitutionVerdict;
+  substitutionStatus(side: Side): SubstitutionStatus;
   playRuleCard(side: Side, ruleId: SpecialRuleId): boolean;
   readonly isComplete: boolean;
   result(): MatchResult;
@@ -95,6 +98,13 @@ interface MatchState {
    * by its rating, and churning this per tick would throw that cache away.
    */
   ratings: Readonly<Record<string, number>>;
+  /**
+   * The managed side's bench and remaining changes, as the simulator holds
+   * them. Read from the engine every tick rather than counted here: the engine
+   * makes injury replacements of its own, and a count kept in the interface
+   * once showed "5 changes left" to a manager the engine then refused.
+   */
+  subs: SubstitutionStatus | null;
   result: MatchResult | null;
   presentation: 'PITCH' | 'BROADCAST';
   /**
@@ -123,7 +133,8 @@ interface MatchState {
   setPresentation: (mode: 'PITCH' | 'BROADCAST') => void;
   chooseOption: (optionId: string) => void;
   resolveWithDefault: () => void;
-  substitute: (out: PlayerId, in_: PlayerId) => boolean;
+  /** Make a change. The verdict says why when it is refused; `subs` is refreshed either way. */
+  substitute: (out: PlayerId, in_: PlayerId) => SubstitutionVerdict;
   playRuleCard: (ruleId: SpecialRuleId) => boolean;
   skipToEnd: () => void;
   clearHighlight: () => void;
@@ -161,6 +172,9 @@ export const useMatchStore = create<MatchState>((set, get) => {
 
     const minute = sim.minute();
     const ratingsDue = minute !== state.minute;
+    // Only re-read the bench when a change actually happened: a fresh object
+    // every tick would re-render the sheet for nothing.
+    const subsDue = events.some((e) => e.type === 'SUBSTITUTION' || e.type === 'RED_CARD' || e.type === 'INJURY') || state.subs === null;
 
     set({
       minute,
@@ -171,6 +185,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
       feed: nextFeed,
       ...(ratingsDue ? { ratings: sim.liveRatings() } : {}),
       ...(bigMoment ? { highlight: bigMoment } : {}),
+      ...(subsDue ? { subs: sim.substitutionStatus(state.playerSide) } : {}),
     });
 
     if (sim.isComplete) {
@@ -225,6 +240,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
     decision: null,
     decisionDeadline: null,
     ratings: {},
+    subs: null,
     result: null,
     presentation: 'PITCH',
     playerSide: 'home',
@@ -240,6 +256,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
         opponentRecap,
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
         frame: sim.frame(), feed: [], highlight: null, decision: null, ratings: {},
+        subs: sim.substitutionStatus(resolvedSide),
         decisionDeadline: null, result: null,
       });
     },
@@ -286,8 +303,12 @@ export const useMatchStore = create<MatchState>((set, get) => {
 
     substitute: (out, in_) => {
       const sim = simulator;
-      if (!sim) return false;
-      return sim.makeSubstitution(get().playerSide, out, in_);
+      if (!sim) return { ok: false, reason: 'NOT_ON_PITCH' };
+      const side = get().playerSide;
+      const verdict = sim.checkSubstitution(side, out, in_);
+      if (verdict.ok) sim.makeSubstitution(side, out, in_);
+      set({ subs: sim.substitutionStatus(side) });
+      return verdict;
     },
 
     playRuleCard: (ruleId) => {
@@ -321,7 +342,7 @@ export const useMatchStore = create<MatchState>((set, get) => {
       set({
         playback: 'IDLE', minute: 0, homeScore: 0, awayScore: 0, momentum: 0,
         frame: null, feed: [], highlight: null, decision: null, ratings: {},
-        decisionDeadline: null, result: null, opponentRecap: [],
+        subs: null, decisionDeadline: null, result: null, opponentRecap: [],
       });
     },
   };

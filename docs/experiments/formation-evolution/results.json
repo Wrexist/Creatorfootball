@@ -1,0 +1,389 @@
+{
+  "experiment": "seasonal-formation-evolution",
+  "commit": "c6a3c9598dba9ba4753d5d4f079d83af13b56a6b",
+  "dirtyTree": false,
+  "generatedFrom": {
+    "worlds": 12,
+    "seasons": 8,
+    "seeds": [
+      "evolution-exp-000",
+      "evolution-exp-001",
+      "evolution-exp-002",
+      "evolution-exp-003",
+      "evolution-exp-004",
+      "evolution-exp-005",
+      "evolution-exp-006",
+      "evolution-exp-007",
+      "evolution-exp-008",
+      "evolution-exp-009",
+      "evolution-exp-010",
+      "evolution-exp-011"
+    ]
+  },
+  "candidates": [
+    {
+      "key": "A_frozen",
+      "label": "A frozen (shipped)",
+      "evolution": {
+        "enabled": false
+      }
+    },
+    {
+      "key": "B_greedy",
+      "label": "B greedy (no guard)",
+      "evolution": {
+        "changeThreshold": 0,
+        "band": 0
+      }
+    },
+    {
+      "key": "C_band",
+      "label": "C threshold 0.06",
+      "evolution": {
+        "changeThreshold": 0.06
+      }
+    },
+    {
+      "key": "D_moderate",
+      "label": "D threshold 0.08",
+      "evolution": {
+        "changeThreshold": 0.08
+      }
+    },
+    {
+      "key": "E_patient",
+      "label": "E threshold 0.12",
+      "evolution": {
+        "changeThreshold": 0.12
+      }
+    }
+  ],
+  "runtimeMs": 1830431,
+  "summaries": {
+    "A_frozen": {
+      "stability": {
+        "changesPerClub": 0,
+        "changesPerClubPerSeason": 0,
+        "neverChanged": 1,
+        "changedOnce": 0,
+        "changedTwicePlus": 0,
+        "reversalsPerClub": 0,
+        "clubsWithAnyReversal": 0,
+        "clubsMeasured": 144
+      },
+      "fit": {
+        "shortfallSeason1": 0.0192,
+        "shortfallFinal": 0.0354,
+        "shortfallFinalP90": 0.0745,
+        "shortfallFinalMax": 0.1603,
+        "outOfPositionStarters": 0.778
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.361
+      },
+      "diversity": {
+        "shapesUsed": 10,
+        "dominantShare": 0.278,
+        "entropyBits": 3.032,
+        "distribution": {
+          "3-2-1": 40,
+          "3-3": 22,
+          "1-3-2": 17,
+          "2-2-1-1": 14,
+          "2-4": 12,
+          "2-1-3": 12,
+          "2-3-1": 9,
+          "3-1-2": 8,
+          "2-1-2-1": 6,
+          "2-2-2": 4
+        },
+        "classes": {
+          "BALANCED": 27,
+          "WIDE": 34,
+          "DEFENSIVE": 48,
+          "ATTACKING": 29,
+          "NARROW": 6
+        }
+      },
+      "bench": {
+        "lineCoverGapShare": 0.1005,
+        "noKeeperShare": 0.2639
+      },
+      "league": {
+        "matches": 12672,
+        "goalsPerMatch": 8.154,
+        "drawShare": 0.104,
+        "seasonPointsSd": 11.89,
+        "strongPpg": 1.745,
+        "middlePpg": 1.536,
+        "weakPpg": 1.064,
+        "strongWeakGap": 0.681
+      },
+      "performance": {
+        "rolloverMsMean": 217.43,
+        "rollovers": 96
+      },
+      "resultsHash": "90a69e782d334008"
+    },
+    "B_greedy": {
+      "stability": {
+        "changesPerClub": 3.319,
+        "changesPerClubPerSeason": 0.4149,
+        "neverChanged": 0.09,
+        "changedOnce": 0.118,
+        "changedTwicePlus": 0.792,
+        "reversalsPerClub": 0.3958,
+        "clubsWithAnyReversal": 0.306,
+        "clubsMeasured": 144
+      },
+      "fit": {
+        "shortfallSeason1": 0.0006,
+        "shortfallFinal": 0.0019,
+        "shortfallFinalP90": 0,
+        "shortfallFinalMax": 0.0509,
+        "outOfPositionStarters": 0.396
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.257
+      },
+      "diversity": {
+        "shapesUsed": 10,
+        "dominantShare": 0.264,
+        "entropyBits": 3.02,
+        "distribution": {
+          "3-2-1": 38,
+          "3-3": 27,
+          "2-4": 18,
+          "3-1-2": 13,
+          "2-2-1-1": 11,
+          "2-2-2": 10,
+          "1-3-2": 9,
+          "2-3-1": 7,
+          "2-1-3": 6,
+          "2-1-2-1": 5
+        },
+        "classes": {
+          "BALANCED": 28,
+          "WIDE": 45,
+          "DEFENSIVE": 51,
+          "NARROW": 5,
+          "ATTACKING": 15
+        }
+      },
+      "bench": {
+        "lineCoverGapShare": 0.0801,
+        "noKeeperShare": 0.2847
+      },
+      "league": {
+        "matches": 12672,
+        "goalsPerMatch": 8.287,
+        "drawShare": 0.103,
+        "seasonPointsSd": 12.191,
+        "strongPpg": 1.775,
+        "middlePpg": 1.585,
+        "weakPpg": 0.984,
+        "strongWeakGap": 0.791
+      },
+      "performance": {
+        "rolloverMsMean": 214.5,
+        "rollovers": 96
+      },
+      "resultsHash": "94a202a67eded626"
+    },
+    "C_band": {
+      "stability": {
+        "changesPerClub": 0.493,
+        "changesPerClubPerSeason": 0.0616,
+        "neverChanged": 0.583,
+        "changedOnce": 0.354,
+        "changedTwicePlus": 0.063,
+        "reversalsPerClub": 0.0069,
+        "clubsWithAnyReversal": 0.007,
+        "clubsMeasured": 144
+      },
+      "fit": {
+        "shortfallSeason1": 0.0145,
+        "shortfallFinal": 0.0191,
+        "shortfallFinalP90": 0.043,
+        "shortfallFinalMax": 0.0604,
+        "outOfPositionStarters": 0.597
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.354
+      },
+      "diversity": {
+        "shapesUsed": 10,
+        "dominantShare": 0.319,
+        "entropyBits": 2.868,
+        "distribution": {
+          "3-2-1": 46,
+          "3-3": 30,
+          "2-2-1-1": 14,
+          "1-3-2": 11,
+          "2-1-3": 11,
+          "2-4": 10,
+          "2-2-2": 8,
+          "3-1-2": 6,
+          "2-3-1": 4,
+          "2-1-2-1": 4
+        },
+        "classes": {
+          "BALANCED": 26,
+          "WIDE": 40,
+          "DEFENSIVE": 52,
+          "ATTACKING": 22,
+          "NARROW": 4
+        }
+      },
+      "bench": {
+        "lineCoverGapShare": 0.0918,
+        "noKeeperShare": 0.3056
+      },
+      "league": {
+        "matches": 12672,
+        "goalsPerMatch": 8.191,
+        "drawShare": 0.101,
+        "seasonPointsSd": 12.065,
+        "strongPpg": 1.769,
+        "middlePpg": 1.537,
+        "weakPpg": 1.043,
+        "strongWeakGap": 0.726
+      },
+      "performance": {
+        "rolloverMsMean": 216.75,
+        "rollovers": 96
+      },
+      "resultsHash": "a3cb79144ce1b985"
+    },
+    "D_moderate": {
+      "stability": {
+        "changesPerClub": 0.257,
+        "changesPerClubPerSeason": 0.0321,
+        "neverChanged": 0.764,
+        "changedOnce": 0.215,
+        "changedTwicePlus": 0.021,
+        "reversalsPerClub": 0,
+        "clubsWithAnyReversal": 0,
+        "clubsMeasured": 144
+      },
+      "fit": {
+        "shortfallSeason1": 0.0173,
+        "shortfallFinal": 0.025,
+        "shortfallFinalP90": 0.0579,
+        "shortfallFinalMax": 0.0851,
+        "outOfPositionStarters": 0.639
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.375
+      },
+      "diversity": {
+        "shapesUsed": 10,
+        "dominantShare": 0.264,
+        "entropyBits": 3.015,
+        "distribution": {
+          "3-2-1": 38,
+          "3-3": 26,
+          "2-4": 17,
+          "1-3-2": 15,
+          "2-2-1-1": 12,
+          "2-1-3": 12,
+          "2-2-2": 7,
+          "3-1-2": 7,
+          "2-1-2-1": 5,
+          "2-3-1": 5
+        },
+        "classes": {
+          "BALANCED": 24,
+          "WIDE": 43,
+          "DEFENSIVE": 45,
+          "ATTACKING": 27,
+          "NARROW": 5
+        }
+      },
+      "bench": {
+        "lineCoverGapShare": 0.0848,
+        "noKeeperShare": 0.3125
+      },
+      "league": {
+        "matches": 12672,
+        "goalsPerMatch": 8.157,
+        "drawShare": 0.102,
+        "seasonPointsSd": 12.077,
+        "strongPpg": 1.73,
+        "middlePpg": 1.568,
+        "weakPpg": 1.049,
+        "strongWeakGap": 0.681
+      },
+      "performance": {
+        "rolloverMsMean": 213.11,
+        "rollovers": 96
+      },
+      "resultsHash": "0cd7d88a63bcbfce"
+    },
+    "E_patient": {
+      "stability": {
+        "changesPerClub": 0.049,
+        "changesPerClubPerSeason": 0.0061,
+        "neverChanged": 0.951,
+        "changedOnce": 0.049,
+        "changedTwicePlus": 0,
+        "reversalsPerClub": 0,
+        "clubsWithAnyReversal": 0,
+        "clubsMeasured": 144
+      },
+      "fit": {
+        "shortfallSeason1": 0.0184,
+        "shortfallFinal": 0.0348,
+        "shortfallFinalP90": 0.0762,
+        "shortfallFinalMax": 0.119,
+        "outOfPositionStarters": 0.757
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.361
+      },
+      "diversity": {
+        "shapesUsed": 10,
+        "dominantShare": 0.278,
+        "entropyBits": 2.98,
+        "distribution": {
+          "3-2-1": 40,
+          "3-3": 28,
+          "1-3-2": 15,
+          "2-2-1-1": 13,
+          "2-4": 13,
+          "2-1-3": 10,
+          "2-3-1": 9,
+          "3-1-2": 7,
+          "2-1-2-1": 5,
+          "2-2-2": 4
+        },
+        "classes": {
+          "BALANCED": 26,
+          "WIDE": 41,
+          "DEFENSIVE": 47,
+          "ATTACKING": 25,
+          "NARROW": 5
+        }
+      },
+      "bench": {
+        "lineCoverGapShare": 0.087,
+        "noKeeperShare": 0.2639
+      },
+      "league": {
+        "matches": 12672,
+        "goalsPerMatch": 8.125,
+        "drawShare": 0.104,
+        "seasonPointsSd": 11.822,
+        "strongPpg": 1.735,
+        "middlePpg": 1.545,
+        "weakPpg": 1.064,
+        "strongWeakGap": 0.671
+      },
+      "performance": {
+        "rolloverMsMean": 214.29,
+        "rollovers": 96
+      },
+      "resultsHash": "ba589301c1ad5241"
+    }
+  }
+}

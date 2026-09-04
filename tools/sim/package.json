@@ -9,7 +9,10 @@
     "audit:invariants": "tsx src/invariantAudit.ts",
     "audit:all": "tsx src/runAll.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "echo \"no unit tests; audits run via audit:all\""
+    "test": "echo \"no unit tests; audits run via audit:all\"",
+    "experiment:bench": "tsx src/benchExperiment.ts",
+    "experiment:formation": "tsx src/formationExperiment.ts",
+    "experiment:evolution": "tsx src/evolutionExperiment.ts"
   },
   "dependencies": {
     "@cf/engine": "workspace:*"

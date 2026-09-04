@@ -8,7 +8,8 @@ import type { Position } from '../players/positions';
 import type { TraitCondition } from '../players/traits';
 import { traitModifier } from '../players/traits';
 import type { Formation, FormationSlot, TacticSetup, TacticVector } from '../tactics/tactics';
-import { formationById, formationsFor, autoLineup } from '../tactics/formations';
+import { formationById, formationsFor, autoLineup, selectMatchdayBench } from '../tactics/formations';
+import type { BenchTuning, MatchdayStarter } from '../tactics/formations';
 import { applyVectorModifiers, toTacticVector } from '../tactics/vector';
 import { decideAdaptation, observeAttack, sampleOf, type AttackSample } from './adaptation';
 import type { MatchEvent, MatchEventType, PitchFrame, PitchPoint, PlayPhase, Side } from './events';
@@ -120,6 +121,12 @@ export interface MatchConfig {
    * changed.
    */
   readonly adaptation: boolean;
+  /**
+   * Bench-selection constants. Absent in every real match, which means the
+   * production defaults; present only when a balance experiment is holding
+   * everything else equal and varying exactly this. Same role as `adaptation`.
+   */
+  readonly benchTuning?: BenchTuning;
 }
 
 export interface ManagerMatchBonus {
@@ -251,6 +258,31 @@ const TRAILING_DROP_DEEPER: Partial<TacticSetup> = {
 
 // -------------------------------------------------------------- simulator ---
 
+/** Why a substitution was refused. Each one is a different sentence for the manager. */
+export type SubstitutionRefusal =
+  | 'NO_SUBS_LEFT'
+  | 'NOT_ON_PITCH'
+  | 'NOT_ON_BENCH'
+  | 'ALREADY_USED'
+  | 'SENT_OFF'
+  | 'INJURED'
+  | 'SAME_PLAYER';
+
+export type SubstitutionVerdict = { readonly ok: true } | { readonly ok: false; readonly reason: SubstitutionRefusal };
+
+/** One seat on the bench, and whether the man in it can come on. */
+export type BenchSeat =
+  | { readonly playerId: PlayerId; readonly available: true }
+  | { readonly playerId: PlayerId; readonly available: false; readonly reason: SubstitutionRefusal };
+
+export interface SubstitutionStatus {
+  readonly used: number;
+  readonly allowed: number;
+  readonly remaining: number;
+  /** The match-day bench, in bench order, used players included and marked. */
+  readonly bench: readonly BenchSeat[];
+}
+
 export class MatchSimulator {
   readonly setup: MatchSetup;
 
@@ -293,6 +325,8 @@ export class MatchSimulator {
   private readonly cardsPlayed: { side: Side; ruleId: SpecialRuleId; minute: number }[] = [];
   private pending: DecisionPrompt | null = null;
   private autoResolve = false;
+  /** How many events `step()` has already handed out. */
+  private drained = 0;
   private opponentChangedFor: Side | null = null;
   private creatorMomentFor: Side | null = null;
   private halfTimePrompt = false;
@@ -386,11 +420,19 @@ export class MatchSimulator {
 
   pendingDecision(): DecisionPrompt | null { return this.pending; }
 
+  /**
+   * Advance one tick and return every event since the last step — including
+   * anything emitted *between* steps by a manager's own action, such as a
+   * substitution made from the sheet. Those used to be filed into the record
+   * but never handed to the live feed, so a change the manager had just made
+   * was the one change the feed never mentioned.
+   */
   step(): readonly MatchEvent[] {
     if (this.complete || this.pending) return [];
-    const from = this.events.length;
     this.advance();
-    return this.events.slice(from);
+    const out = this.events.slice(this.drained);
+    this.drained = this.events.length;
+    return out;
   }
 
   frame(): PitchFrame {
@@ -489,14 +531,67 @@ export class MatchSimulator {
     this.refreshAggregates(team, true);
   }
 
-  makeSubstitution(side: Side, out: PlayerId, in_: PlayerId): boolean {
+  /**
+   * Would this change be allowed, and if not, why not.
+   *
+   * The interface used to get a bare `false` for every refusal and had to
+   * invent a reason, and the one it invented — "check your remaining
+   * substitutions" — was wrong most of the time: the usual cause was a player
+   * who was never on the seven-man bench at all. The order of the checks is
+   * the order a manager would think in: is the man coming off actually on the
+   * pitch, is the man coming on actually available, and only then, have we any
+   * changes left. So "no changes left" is said only when it is the whole truth.
+   */
+  checkSubstitution(side: Side, out: PlayerId, in_: PlayerId): SubstitutionVerdict {
     const team = this.teamFor(side);
-    if (team.subsUsed >= this.setup.config.substitutions) return false;
+    if (out === in_) return { ok: false, reason: 'SAME_PLAYER' };
     const off = team.onPitch.find((p) => p.player.id === out);
-    const on = team.bench.find((p) => p.player.id === in_ && !p.used && !p.sentOff);
-    if (!off || !on) return false;
+    if (!off) return { ok: false, reason: 'NOT_ON_PITCH' };
+    const seat = team.all.find((p) => p.player.id === in_);
+    if (!seat || seat.onPitch || !team.bench.includes(seat)) {
+      if (seat?.used && !seat.onPitch) return { ok: false, reason: 'ALREADY_USED' };
+      return { ok: false, reason: 'NOT_ON_BENCH' };
+    }
+    const refusal = this.benchRefusal(seat);
+    if (refusal) return { ok: false, reason: refusal };
+    if (team.subsUsed >= this.setup.config.substitutions) return { ok: false, reason: 'NO_SUBS_LEFT' };
+    return { ok: true };
+  }
+
+  makeSubstitution(side: Side, out: PlayerId, in_: PlayerId): boolean {
+    if (!this.checkSubstitution(side, out, in_).ok) return false;
+    const team = this.teamFor(side);
+    const off = team.onPitch.find((p) => p.player.id === out) as PlayerRuntime;
+    const on = team.bench.find((p) => p.player.id === in_) as PlayerRuntime;
     this.performSub(team, off, on);
     return true;
+  }
+
+  /**
+   * The bench and the count as the simulator holds them — the only version
+   * that is true. The interface reads this rather than counting for itself:
+   * the engine makes injury replacements of its own, and a number kept in a
+   * screen drifts from the one that decides whether a change is allowed.
+   */
+  substitutionStatus(side: Side): SubstitutionStatus {
+    const team = this.teamFor(side);
+    const allowed = this.setup.config.substitutions;
+    return {
+      used: team.subsUsed,
+      allowed,
+      remaining: Math.max(0, allowed - team.subsUsed),
+      bench: team.bench.map((seat) => {
+        const reason = this.benchRefusal(seat);
+        return reason ? { playerId: seat.player.id, available: false, reason } : { playerId: seat.player.id, available: true };
+      }),
+    };
+  }
+
+  private benchRefusal(seat: PlayerRuntime): SubstitutionRefusal | null {
+    if (seat.sentOff) return 'SENT_OFF';
+    if (seat.used) return 'ALREADY_USED';
+    if (seat.injured) return 'INJURED';
+    return null;
   }
 
   playRuleCard(side: Side, ruleId: SpecialRuleId): boolean {
@@ -599,7 +694,7 @@ export class MatchSimulator {
       // A partial team sheet is completed rather than rejected: the sim must
       // never refuse to play a fixture because a slot was left empty.
       const auto = autoLineup(team.players, formation);
-      tactics = { ...tactics, lineup: { ...auto.lineup, ...tactics.lineup }, bench: tactics.bench.length ? tactics.bench : auto.bench };
+      tactics = { ...tactics, lineup: { ...auto.lineup, ...tactics.lineup } };
       if (!tactics.captainId) tactics = { ...tactics, captainId: auto.captainId };
       if (!tactics.penaltyTakerId) tactics = { ...tactics, penaltyTakerId: auto.penaltyTakerId };
       if (!tactics.setPieceTakerId) tactics = { ...tactics, setPieceTakerId: auto.setPieceTakerId };
@@ -621,17 +716,32 @@ export class MatchSimulator {
       onPitch.push(rt);
     }
 
-    const benchIds = tactics.bench.length ? tactics.bench : [];
+    // The bench.
+    //
+    // A manager who named substitutes gets exactly the substitutes he named,
+    // in his order, capped only by the competition's bench size — his sheet is
+    // never quietly topped up or reordered. Everyone else, the player's club on
+    // a matchday he did not open the tactics screen and all eleven AI clubs
+    // alike, gets the same chosen bench, from the same selector the team-sheet
+    // suggestion and the match preview use. It used to be squad order here,
+    // which on an unlucky squad meant seven midfielders and no reserve keeper.
     const benchPlayers: Player[] = [];
-    for (const id of benchIds) {
-      const p = byId.get(id);
-      if (p && !taken.has(p.id)) { benchPlayers.push(p); taken.add(p.id); }
-    }
-    for (const p of team.players) {
-      if (benchPlayers.length >= this.setup.config.benchSize) break;
-      if (taken.has(p.id)) continue;
-      benchPlayers.push(p);
-      taken.add(p.id);
+    if (tactics.bench.length > 0) {
+      for (const id of tactics.bench) {
+        if (benchPlayers.length >= this.setup.config.benchSize) break;
+        const p = byId.get(id);
+        if (p && !taken.has(p.id)) { benchPlayers.push(p); taken.add(p.id); }
+      }
+    } else {
+      const starters: MatchdayStarter[] = onPitch.map((rt) => ({ slot: rt.slot, player: rt.player }));
+      for (const seat of selectMatchdayBench(team.players, starters, formation, {
+        size: this.setup.config.benchSize,
+        risk: tactics.risk,
+        ...(this.setup.config.benchTuning ? { tuning: this.setup.config.benchTuning } : {}),
+      })) {
+        benchPlayers.push(seat.player);
+        taken.add(seat.player.id);
+      }
     }
 
     const bench = benchPlayers.map((p) => {
@@ -1484,6 +1594,12 @@ export class MatchSimulator {
   private maybeSubstitution(minute: number): void {
     if (this.elapsedFraction() < BALANCE.SUB_EARLIEST_FRACTION) return;
     for (const team of [this.home, this.away]) {
+      // A human watching a live match makes their own changes. The engine
+      // spending their substitutions on tired legs, unannounced, is how a
+      // manager comes to be shown five changes left and refused. Injury
+      // replacements are still made for them (see `maybeInjury`), and a
+      // fixture nobody is watching is still managed on both benches.
+      if (team.team.isPlayerControlled && this.setup.config.liveDecisions && !this.autoResolve) continue;
       if (team.subsUsed >= this.setup.config.substitutions) continue;
       if (this.tick - team.lastSubTick < BALANCE.TICKS_PER_MINUTE * 2) continue;
 

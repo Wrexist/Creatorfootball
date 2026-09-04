@@ -339,7 +339,20 @@ export function selectionFit(player: Player, s: FormationSlot): number {
  *     on; the bench is chosen to answer the question "what happens if somebody
  *     goes off", one role at a time.
  */
-export function autoLineup(players: readonly Player[], formation: Formation): TacticSetup {
+/**
+ * The eleven, and nothing else.
+ *
+ * Split out of `autoLineup` because two callers want different halves of it.
+ * A team sheet needs the side, the bench, the captain and the takers; asking
+ * "how well does this squad play this shape" needs only the side, and asking it
+ * of ten shapes per club at world generation while also building ten benches
+ * was most of the cost of doing it at all. One assignment solver, two callers.
+ */
+function assignEleven(players: readonly Player[], formation: Formation): {
+  lineup: Record<string, PlayerId | null>;
+  starters: MatchdayStarter[];
+  picked: Player[];
+} {
   const slots = formation.slots;
   const lineup: Record<string, PlayerId | null> = {};
   for (const s of slots) lineup[s.id] = null;
@@ -351,6 +364,7 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
   const candidates = [...players];
   const fieldable = Math.min(slots.length, candidates.length);
   const picked: Player[] = [];
+  const playerFor = new Map<string, Player>();
 
   if (fieldable > 0) {
     // Only as many slots as we can actually fill, hardest to cover first, so a
@@ -367,12 +381,27 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
       if (player) {
         lineup[s.id] = player.id;
         picked.push(player);
+        playerFor.set(s.id, player);
       }
     });
   }
 
-  const started = new Set(picked);
-  const bench = pickBench(candidates.filter((p) => !started.has(p)), slots);
+  const starters: MatchdayStarter[] = [];
+  for (const s of slots) {
+    const player = playerFor.get(s.id);
+    if (player) starters.push({ slot: s, player });
+  }
+  return { lineup, starters, picked };
+}
+
+export function autoLineup(players: readonly Player[], formation: Formation): TacticSetup {
+  const { lineup, starters, picked } = assignEleven(players, formation);
+
+  // The bench answers a different question from the eleven, and one function
+  // answers it everywhere — here, in the match preview and in the simulator.
+  const candidates = [...players];
+  const bench = selectMatchdayBench(candidates, starters, formation, { risk: DEFAULT_TACTICS.risk })
+    .map((seat) => seat.player);
 
   const captain = best(picked, (p) => p.mental.leadership * 1.5 + p.overall + p.age);
   const setPiece = best(picked, (p) => p.attributes.crossing + p.attributes.technique + p.attributes.passing * 0.5);
@@ -389,76 +418,584 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
   };
 }
 
-/** How many players sit on the bench. Enough to cover every line once, plus one. */
-const BENCH_SIZE = 7;
+/* ------------------------------------------------------ tactical identity ---
 
 /**
- * Choose a bench that covers the side, rather than the seven best players left.
+ * A club's football identity, read as a preference between shapes.
  *
- * A bench is not a ranking, it is an insurance policy: its job is to answer
- * "somebody has just gone off, who comes on". Ordering by rating answers a
- * different question and routinely produced a bench of five midfielders and no
- * defender — fine until the twentieth minute.
+ * Every club already has one. `PHILOSOPHY_TACTICS` gives a defensive rock a low
+ * block, a deep line, a cautious risk setting and a patient tempo; it gives the
+ * entertainers a high press, a high line and width. What no club had was a
+ * *shape* to go with it: the generator wrote `DEFAULT_FORMATION_ID` into all
+ * twelve and nothing ever reconsidered, so a league of eight distinct
+ * philosophies walked out in the same 2-3-1 every week.
  *
- * The keeper comes first and unconditionally, because losing yours with no
- * replacement is the one substitution problem with no recovery at all. After
- * that each place goes to whoever raises the *worst-covered* role the most, so
- * cover spreads across the lines before it deepens in any one of them. Any
- * places left over — a bench bigger than the number of roles — go to the best
- * players remaining, which is the right tiebreak once every line has cover.
+ * `Formation.shape` is the missing link, and it already exists on every shape
+ * the game ships — BALANCED, ATTACKING, DEFENSIVE, WIDE, NARROW — read until
+ * now only by two UI labels. This turns the tactics a club already holds into a
+ * score over exactly those five words. Nothing new is invented: every term
+ * below is an existing `TacticSetup` field, and the reading is a pure function
+ * of it, so the same club always reads the same way.
+ *
+ * The scale is deliberately -1..1 per shape and deliberately coarse. It is a
+ * preference, not a plan.
  */
-function pickBench(candidates: readonly Player[], slots: readonly FormationSlot[]): Player[] {
-  // Only players who can actually come on. An injured or suspended name among
-  // the substitutes is not cover, it is a seat — and it reads as cover on the
-  // team sheet, which is worse than an obviously short bench.
-  const available = candidates.filter(isAvailable);
-  if (available.length === 0) return [];
+export function shapeAffinity(
+  tactics: Pick<TacticSetup, 'press' | 'line' | 'risk' | 'tempo' | 'width' | 'focus' | 'passing' | 'counter' | 'buildUp'>,
+): Record<Formation['shape'], number> {
+  // How far forward this club wants to play, -1 (sit in) .. 1 (go and get it).
+  const forward =
+    (tactics.line === 'HIGH' ? 0.4 : tactics.line === 'DEEP' ? -0.4 : 0)
+    + (tactics.press === 'HIGH_PRESS' ? 0.3 : tactics.press === 'LOW_BLOCK' ? -0.35 : 0)
+    + (tactics.risk === 'RECKLESS' ? 0.3 : tactics.risk === 'BOLD' ? 0.2 : tactics.risk === 'CAUTIOUS' ? -0.25 : 0)
+    + (tactics.tempo === 'FRANTIC' ? 0.2 : tactics.tempo === 'QUICK' ? 0.1 : tactics.tempo === 'PATIENT' ? -0.15 : 0);
 
-  const roles = [...new Set(slots.filter((s) => s.role !== 'GK').map((s) => s.role))];
-  /** The best a player on the bench could do in each role, so far. */
-  const covered = new Map<FormationSlot['role'], number>(roles.map((r) => [r, 0]));
-  /** The best slot of each role, to score cover against. */
-  const slotForRole = new Map<FormationSlot['role'], FormationSlot>();
-  for (const s of slots) if (!slotForRole.has(s.role)) slotForRole.set(s.role, s);
+  // How much of the pitch it wants to use, -1 (through the middle) .. 1 (flanks).
+  const wide =
+    (tactics.width === 'WIDE' ? 0.5 : tactics.width === 'NARROW' ? -0.5 : 0)
+    + (tactics.focus === 'LEFT' || tactics.focus === 'RIGHT' ? 0.25 : tactics.focus === 'CENTRE' ? -0.3 : 0)
+    + (tactics.passing === 'SHORT' ? -0.15 : tactics.passing === 'DIRECT' ? 0.1 : 0)
+    + (tactics.counter === 'ALWAYS' ? 0.1 : 0)
+    + (tactics.buildUp === 'BYPASS' ? 0.1 : 0);
 
-  const remaining = new Set(available);
-  const bench: Player[] = [];
+  const clampAffinity = (v: number): number => clampRange(v, -1, 1);
+  return {
+    ATTACKING: clampAffinity(forward),
+    DEFENSIVE: clampAffinity(-forward),
+    WIDE: clampAffinity(wide),
+    NARROW: clampAffinity(-wide),
+    // A club with no strong lean either way genuinely wants a balanced shape;
+    // one that leans hard in any direction does not.
+    BALANCED: clampAffinity(0.5 - (Math.abs(forward) + Math.abs(wide)) * 0.6),
+  };
+}
 
-  const keeperSlot = slots.find((s) => s.role === 'GK');
-  if (keeperSlot) {
-    const keeper = best([...remaining], (p) => selectionFit(p, keeperSlot));
-    if (keeper) { bench.push(keeper); remaining.delete(keeper); }
+const clampRange = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/**
+ * How well a squad plays a shape: the mean selection value of the side the
+ * engine would actually pick for it. Reuses `autoLineup`, so there is one
+ * answer to "who plays where" in the codebase and this is not a second one.
+ */
+export function formationSuitability(squad: readonly Player[], formation: Formation): number {
+  const { starters } = assignEleven(squad, formation);
+  // A shape the squad cannot even fill is not a shape this squad plays. Scoring
+  // the average of the slots it *did* fill would reward leaving one empty.
+  if (starters.length < formation.slots.length) return 0;
+  let total = 0;
+  for (const entry of starters) total += selectionFit(entry.player, entry.slot);
+  return total / formation.slots.length;
+}
+
+/**
+ * How far below the best-suited shape a club may go to play the shape it wants.
+ * Measured: across generated leagues the ten seven-a-side shapes sit within a
+ * few per cent of each other for a typical squad, and the gap from the best
+ * shape to the forced default averaged 3.5%. A band of 6% therefore keeps the
+ * genuinely competitive alternatives in the running and drops the shapes a
+ * squad is plainly wrong for. See `docs/experiments/formation-identity/`.
+ */
+const SUITABILITY_BAND = 0.06;
+
+/**
+ * How much a club's identity may move a shape inside that band, as a fraction
+ * of the best available suitability. Smaller than the band on purpose: identity
+ * decides between shapes the squad plays about equally well and can never
+ * overturn a shape that is clearly better suited.
+ */
+const IDENTITY_WEIGHT = 0.04;
+
+export interface FormationChoiceOptions {
+  readonly band?: number;
+  readonly identityWeight?: number;
+}
+
+/**
+ * The shape a club walks out in.
+ *
+ * The hierarchy is squad first, identity second, and it is enforced by
+ * construction rather than by weighting: only shapes within `SUITABILITY_BAND`
+ * of the best-suited one are candidates at all, and identity can then move a
+ * candidate by at most `IDENTITY_WEIGHT`, which is smaller than the band. So a
+ * manager's preference chooses between shapes his players can all play, and
+ * never talks him into one they cannot.
+ *
+ * Pure, synchronous and deterministic: no random source, no clock, and an exact
+ * tie goes to the lower formation id.
+ */
+export function selectFormation(
+  squad: readonly Player[],
+  tactics: Parameters<typeof shapeAffinity>[0],
+  candidates: readonly Formation[],
+  options: FormationChoiceOptions = {},
+): Formation {
+  const band = options.band ?? SUITABILITY_BAND;
+  const identityWeight = options.identityWeight ?? IDENTITY_WEIGHT;
+  const fallback = candidates[0] as Formation;
+  if (candidates.length <= 1) return fallback;
+
+  const scored = candidates
+    .map((formation) => ({ formation, suitability: formationSuitability(squad, formation) }))
+    .filter((entry) => entry.suitability > 0);
+  if (scored.length === 0) return fallback;
+
+  const best = Math.max(...scored.map((entry) => entry.suitability));
+  const affinity = shapeAffinity(tactics);
+  const eligible = scored.filter((entry) => entry.suitability >= best * (1 - band));
+
+  let chosen = eligible[0] as { formation: Formation; suitability: number };
+  let chosenScore = -Infinity;
+  for (const entry of eligible) {
+    const score = entry.suitability + best * identityWeight * (affinity[entry.formation.shape] ?? 0);
+    if (score > chosenScore
+      || (score === chosenScore && entry.formation.id.localeCompare(chosen.formation.id) < 0)) {
+      chosen = entry;
+      chosenScore = score;
+    }
+  }
+  return chosen.formation;
+}
+
+/* -------------------------------------------------- seasonal reassessment ---
+
+/**
+ * How far behind the best available shape a club's current one must fall
+ * before changing is worth the loss of continuity.
+ *
+ * MEASURED over 12 worlds x 8 seasons x 5 settings — 144 club careers each,
+ * `docs/experiments/formation-evolution/`. A club's squad turns over 11-23% a
+ * year, and a frozen shape ends 3.5% behind the shape its squad should now be
+ * playing, with the worst tenth 7.5% adrift.
+ *
+ * The two ends of the range are both wrong, and measurably so:
+ *
+ *   - **No stability preference at all** (take the best shape every summer)
+ *     moves 79% of clubs two or more times, flips 31% of them back and forth
+ *     between the same two shapes, and is the only setting that hurts the
+ *     league: the weakest third fall to 0.984 points per game against 1.064
+ *     frozen, and the strong-weak gap widens from 0.681 to 0.791. Perfect
+ *     squad fit, bought with a league of clubs that have no memory.
+ *   - **0.12** leaves 95% of clubs never changing and ends 3.48% adrift, which
+ *     is the frozen world with extra steps.
+ *
+ * At 0.08: three quarters of clubs never change their shape at all, 2% change
+ * more than once in eight seasons, and **no club anywhere in 144 careers ever
+ * reverted to a shape it had left** — the A-B-A signature is zero. It halves
+ * the drift a frozen shape accumulates (3.54% to 2.50%), cuts starters played
+ * out of position from 0.78 to 0.64 per club, and leaves competitive balance
+ * exactly where the frozen world had it (strong-weak gap 0.681, unchanged).
+ * It also fits club identity better than any other setting, frozen included
+ * (37.5% of shapes match the club's own tactical lean, against 36.1%).
+ *
+ * 0.06 was the other serious candidate and loses narrowly on the things this
+ * rule exists to protect: it reverts a club occasionally rather than never,
+ * moves twice as many clubs, widens the strong-weak gap to 0.726, and lowers
+ * shape diversity (entropy 2.87 against 3.02) because a lower bar funnels
+ * clubs toward the same handful of best-fitting shapes.
+ *
+ * It is deliberately at or above `SUITABILITY_BAND`. At or above the band, a
+ * shape that has fallen far enough to justify a change is also outside the set
+ * `selectFormation` will consider, so "the current shape has fallen too far"
+ * and "the current shape is no longer eligible" become the same statement and a
+ * change is guaranteed to actually change something. Below the band the rule
+ * still behaves correctly — the selector may simply hand the same shape back,
+ * which is reported as a keep — but the guarantee is weaker. The experiment
+ * uses lower values as diagnostics; production does not.
+ */
+const FORMATION_CHANGE_THRESHOLD = 0.08;
+
+export type FormationVerdict =
+  /** Nothing to choose between: one candidate was offered. */
+  | 'KEPT_ONLY_CANDIDATE'
+  /** The squad cannot field the current shape at all — it had to move. */
+  | 'CHANGED_SHAPE_UNPLAYABLE'
+  /** The current shape is still close enough to the best available. */
+  | 'KEPT_STILL_SUITS'
+  /** The squad has moved on far enough that a different shape is now right. */
+  | 'CHANGED_SQUAD_OUTGREW_SHAPE';
+
+/** A reassessment, and every number that produced it. */
+export interface FormationReview {
+  readonly current: Formation;
+  readonly chosen: Formation;
+  readonly changed: boolean;
+  readonly currentSuitability: number;
+  readonly bestSuitability: number;
+  /** How far behind the best available shape the current one has fallen, 0-1. */
+  readonly shortfall: number;
+  /** The line `shortfall` had to cross. Reported so a decision explains itself. */
+  readonly threshold: number;
+  readonly verdict: FormationVerdict;
+}
+
+export interface FormationReviewOptions extends FormationChoiceOptions {
+  readonly changeThreshold?: number;
+}
+
+/**
+ * A club's shape, reconsidered.
+ *
+ * Formation is chosen once, when the world is made, from the squad the club has
+ * that day — and then the squad moves. Players retire, the academy sends two up
+ * every summer, the recruitment profile buys the positions it favours, everyone
+ * ages. A shape that fitted a squad in season one can be plainly wrong for the
+ * squad that inherits it in season five.
+ *
+ * The current shape is the default and has to be beaten, not merely matched:
+ * continuity is worth something, and a club that changes its football because a
+ * number moved a tenth of a per cent is not a club. So the question asked here
+ * is never "what is the best shape", it is "has this one fallen too far
+ * behind". Only when it has does `selectFormation` — the same selector that
+ * chose at generation, with the same squad-first hierarchy and the same
+ * identity weighting — pick the replacement.
+ *
+ * The decision is deliberately blind to how the season *went*. Fitness,
+ * injuries and suspensions are already reset by the time a rollover reaches
+ * this point, and form — the one remaining channel by which results reach
+ * `selectionFit` — is zeroed here. What is left is the squad: who is at the
+ * club, how good they are and where they play. A club does not change shape
+ * because it lost; it changes shape because it is a different team.
+ */
+export function reviewFormation(
+  squad: readonly Player[],
+  tactics: Parameters<typeof shapeAffinity>[0] & Pick<TacticSetup, 'formationId'>,
+  candidates: readonly Formation[],
+  options: FormationReviewOptions = {},
+): FormationReview {
+  const threshold = options.changeThreshold ?? FORMATION_CHANGE_THRESHOLD;
+  const current = candidates.find((f) => f.id === tactics.formationId)
+    ?? formationById(tactics.formationId);
+
+  // Results reach selection only through form. Neutralise it, once, and the
+  // reassessment provably cannot see last season's table.
+  const settled = squad.map((player) => (player.form.rating === 0
+    ? player
+    : { ...player, form: { ...player.form, rating: 0 } }));
+
+  const currentSuitability = formationSuitability(settled, current);
+  const bestSuitability = Math.max(currentSuitability,
+    ...candidates.map((formation) => formationSuitability(settled, formation)));
+  const shortfall = bestSuitability > 0
+    ? (bestSuitability - currentSuitability) / bestSuitability
+    : 0;
+
+  const keep = (verdict: FormationVerdict): FormationReview => ({
+    current, chosen: current, changed: false,
+    currentSuitability, bestSuitability, shortfall, threshold, verdict,
+  });
+
+  if (candidates.length <= 1) return keep('KEPT_ONLY_CANDIDATE');
+
+  // A shape the squad can no longer field is not a matter of preference.
+  if (currentSuitability <= 0) {
+    const chosen = selectFormation(settled, tactics, candidates, options);
+    return {
+      current, chosen, changed: chosen.id !== current.id,
+      currentSuitability, bestSuitability, shortfall: 1, threshold,
+      verdict: chosen.id === current.id ? 'KEPT_ONLY_CANDIDATE' : 'CHANGED_SHAPE_UNPLAYABLE',
+    };
   }
 
-  while (bench.length < BENCH_SIZE && remaining.size > 0) {
-    // The role most in need of cover right now.
-    let weakestRole: FormationSlot['role'] | null = null;
-    let weakest = Infinity;
-    for (const role of roles) {
-      const value = covered.get(role) ?? 0;
-      if (value < weakest) { weakest = value; weakestRole = role; }
-    }
+  if (shortfall <= threshold) return keep('KEPT_STILL_SUITS');
 
-    const target = weakestRole ? slotForRole.get(weakestRole) : undefined;
-    const choice = target
-      ? best([...remaining], (p) => selectionFit(p, target))
-      : best([...remaining], (p) => p.overall);
+  const chosen = selectFormation(settled, tactics, candidates, options);
+  return {
+    current, chosen, changed: chosen.id !== current.id,
+    currentSuitability, bestSuitability, shortfall, threshold,
+    verdict: chosen.id === current.id ? 'KEPT_STILL_SUITS' : 'CHANGED_SQUAD_OUTGREW_SHAPE',
+  };
+}
+
+/** How many players sit on the bench. Enough to cover every line once, plus one. */
+export const BENCH_SIZE = 7;
+
+/**
+ * Familiarity at or above this is "he can play there". Below it he is a body
+ * in the right half of the pitch, which is not cover. The value is the tier the
+ * position table itself uses for a real second position — a centre-back at
+ * left-back is 0.75, a centre-back screening midfield 0.7, a midfielder at
+ * centre-back 0.7 — and one step above the 0.45 fallback for two positions with
+ * nothing in common.
+ *
+ * MEASURED (see `docs/experiments/bench-tuning/`, 40 worlds x 1 season x 5
+ * configurations, 5,280 matches each). This is a step function, not a dial.
+ * The best player-to-line familiarity that actually occurs takes only these
+ * values: 0.45, 0.70, 0.75, 0.82, 0.87, 0.88, 0.90, 1.00. Nothing lands between
+ * 0.46 and 0.69, so every threshold in (0.45, 0.70] is the same selector —
+ * running the league at 0.60 reproduces 0.70 byte for byte. The next step up is
+ * the only real alternative, and it is worse: at 0.80 the largest band of links
+ * (0.70) stops counting, 85% of matches change, 36% change winner, the league
+ * gets less competitive (season points sd 11.73 -> 12.16), the weakest third of
+ * clubs lose ground (0.993 -> 0.971 points per game), and more benches end up
+ * with no attacking option (5.4% -> 8.4%) or no reserve keeper (6.7% -> 7.5%).
+ * 0.7 is the most permissive value of the only sensible behaviour class.
+ */
+const COVER_THRESHOLD = 0.7;
+
+/**
+ * How much the manager's appetite for risk moves the bench. A thumb, nothing
+ * more: it decides which line gets the next seat when two lines are equally
+ * exposed, and it can never take a line's cover away or beat a clearly better
+ * player. Twelve per cent is smaller than the gap between any two lines that
+ * are not already tied.
+ *
+ * MEASURED (same experiment). The *magnitude* does nothing and cannot be tuned:
+ * exposure counts are integers, so any value in (0, 1) breaks exactly the ties
+ * and nothing else — 0.20 reproduces 0.12 byte for byte across 5,280 matches.
+ * Only its presence matters, and only a little: switching it off changes 1.6%
+ * of matches and 0.4% of winners, and moves no aggregate measure outside noise.
+ * That is not because it is broken. It is because every club this content pack
+ * generates plays 2-3-1, whose lines (2 / 3 / 1) can rarely tie. Asked directly,
+ * across every shape the game ships, the lean changes 10.3% of benches, and the
+ * shapes it reaches are the ones with lines that can level: 1-3-2, 2-2-2, 2-1-3,
+ * 3-3, and the eleven-a-side shapes. It is live for a manager who picks one of
+ * those; it is dormant for the league because of a content decision, not a
+ * selector one. If tactical identity should show on AI benches, the lever is
+ * varied club formations, not a larger number here.
+ */
+const TACTICAL_LEAN = 0.12;
+
+/**
+ * The two numbers above, as a value a caller can vary.
+ *
+ * They are implementation choices, not measured gameplay constants, and the
+ * only honest way to ask whether they are right is to run the same league at
+ * different values and compare. That has to drive the real selector — a copy
+ * would answer a question about the copy — so the selector takes them as an
+ * option that defaults to exactly the constants. Nothing in the game passes
+ * one: the default path is the production path, byte for byte.
+ */
+export interface BenchTuning {
+  /** Familiarity at or above which a player counts as cover for a line. */
+  readonly coverThreshold: number;
+  /** How far the manager's appetite for risk can move an already-close call. */
+  readonly tacticalLean: number;
+}
+
+export const DEFAULT_BENCH_TUNING: BenchTuning = {
+  coverThreshold: COVER_THRESHOLD,
+  tacticalLean: TACTICAL_LEAN,
+};
+
+/** Why a man is on the bench, in the order the seats are filled. */
+export type BenchRole =
+  | 'KEEPER_COVER'
+  | 'DEFENSIVE_COVER'
+  | 'MIDFIELD_COVER'
+  | 'ATTACKING_COVER'
+  | 'BEST_AVAILABLE';
+
+/** One of the starting side, and the slot he is starting in. */
+export interface MatchdayStarter {
+  readonly slot: FormationSlot;
+  readonly player: Player;
+}
+
+export interface MatchdaySeat {
+  readonly player: Player;
+  readonly role: BenchRole;
+}
+
+export interface MatchdayBenchOptions {
+  /** How many seats there are. Defaults to `BENCH_SIZE`. */
+  readonly size?: number;
+  /** The manager's risk setting, for the tactical lean. */
+  readonly risk?: TacticSetup['risk'];
+  /** Selection constants, for balance experiments. Defaults to production. */
+  readonly tuning?: Partial<BenchTuning>;
+}
+
+type OutfieldLine = 'DEF' | 'MID' | 'ATT';
+const LINES: readonly OutfieldLine[] = ['DEF', 'MID', 'ATT'];
+const COVER_ROLE: Record<OutfieldLine, BenchRole> = {
+  DEF: 'DEFENSIVE_COVER', MID: 'MIDFIELD_COVER', ATT: 'ATTACKING_COVER',
+};
+const ROLE_ORDER: readonly BenchRole[] = [
+  'KEEPER_COVER', 'DEFENSIVE_COVER', 'MIDFIELD_COVER', 'ATTACKING_COVER', 'BEST_AVAILABLE',
+];
+
+/**
+ * The matchday bench.
+ *
+ * One function, called by everything that needs to know who is sitting down:
+ * the team-sheet suggestion, the match preview, and the simulator itself. There
+ * used to be three answers to this question — a cover-based pick inside
+ * `autoLineup`, the seven highest-rated reserves in the preview, and whatever
+ * squad order gave the simulator when a sheet named a side but no substitutes.
+ * A manager could therefore be shown one bench and given another, and the
+ * benches the league's other eleven clubs played with were the order their
+ * players happened to be stored in.
+ *
+ * A bench is an insurance policy, not a ranking, and what it insures depends on
+ * the side in front of it. So the shape of the starting eleven is an input:
+ * cover is measured against the players who are actually on the pitch, line by
+ * line, rather than against the formation in the abstract.
+ *
+ * The seats go, in order:
+ *
+ *   1. **The reserve goalkeeper.** One, and only one, and only a real keeper —
+ *      losing yours with nobody to replace him is the single substitution
+ *      problem with no recovery. A squad with no second keeper does not have
+ *      the seat taken by whichever outfielder is least bad in goal; the seat
+ *      goes back to the pool, because a defender who cannot keep goal is worth
+ *      more as a defender.
+ *   2. **One option for each line**, most exposed first, and only somebody who
+ *      can genuinely play there (`COVER_THRESHOLD`). A line with nobody able to
+ *      cover it stays uncovered rather than being given a token.
+ *   3. **The rest, by exposure.** Each remaining seat goes to the line with the
+ *      most starters still uncovered, and within it to the best man for the
+ *      job. A pick is credited against every line he can really play, so a
+ *      utility player is cover twice over.
+ *   4. **Best available**, once every starter has cover — quality decides, as
+ *      it should once the insurance is bought.
+ *
+ * Quality, position familiarity and match readiness all enter through
+ * `selectionFit`, the same score that picks the side: they are not weighed
+ * again here, and there is no second position model. Versatility helps a player
+ * reach a seat he would not otherwise be considered for; it never beats a much
+ * better specialist for the same seat, because both are scored by the same fit.
+ *
+ * Nothing here is random, timed or stateful. Ties break on player id.
+ */
+export function selectMatchdayBench(
+  squad: readonly Player[],
+  starters: readonly MatchdayStarter[],
+  formation: Formation,
+  options: MatchdayBenchOptions = {},
+): readonly MatchdaySeat[] {
+  const size = options.size ?? BENCH_SIZE;
+  if (size <= 0) return [];
+  const coverThreshold = options.tuning?.coverThreshold ?? COVER_THRESHOLD;
+  const tacticalLean = options.tuning?.tacticalLean ?? TACTICAL_LEAN;
+
+  // --- squad -> starting eleven -> remaining available ---------------------
+  //
+  // An injured or suspended name among the substitutes is not cover, it is a
+  // seat, and it reads as cover on the team sheet — worse than an obviously
+  // short bench. Candidate order is by id so that the answer cannot depend on
+  // how the squad happens to be stored.
+  const started = new Set<string>(starters.map((s) => s.player.id as string));
+  const remaining = new Set(
+    squad.filter((p) => !started.has(p.id as string) && isAvailable(p))
+      .sort((a, b) => (a.id as string).localeCompare(b.id as string)),
+  );
+  if (remaining.size === 0) return [];
+
+  const seats: MatchdaySeat[] = [];
+  const take = (player: Player, role: BenchRole): void => {
+    seats.push({ player, role });
+    remaining.delete(player);
+  };
+
+  /**
+   * Who is in the running for an outfield seat. A third keeper is not cover for
+   * anything: once one is sitting down, the others are only considered when
+   * there is literally nobody else left, which is a squad crisis rather than a
+   * selection.
+   */
+  const pool = (): Player[] => {
+    const outfield = [...remaining].filter((p) => p.position !== 'GK');
+    return outfield.length > 0 ? outfield : [...remaining];
+  };
+
+  // --- 1. the reserve goalkeeper ------------------------------------------
+  const keeperSlot = formation.slots.find((s) => s.role === 'GK');
+  if (keeperSlot) {
+    const keeper = pick([...remaining].filter((p) => p.position === 'GK'), (p) => selectionFit(p, keeperSlot));
+    if (keeper) take(keeper, 'KEEPER_COVER');
+  }
+
+  // --- position cover analysis, against the side that is actually playing ---
+  const slotsFor = new Map<OutfieldLine, FormationSlot[]>(
+    LINES.map((line) => [line, formation.slots.filter((s) => s.role === line)]),
+  );
+  /** How well this player would do in the best slot of a line. */
+  const coverValue = (player: Player, line: OutfieldLine): number =>
+    Math.max(0, ...(slotsFor.get(line) ?? []).map((s) => selectionFit(player, s)));
+  /** Whether he can genuinely play there at all. */
+  const covers = (player: Player, line: OutfieldLine): boolean =>
+    (slotsFor.get(line) ?? []).some((s) => Math.min(1,
+      familiarity(player.position, s.position)
+      + (player.secondaryPositions.includes(s.position) ? 0.12 : 0),
+    ) >= coverThreshold);
+
+  /** Starters in each line: two centre-backs need more cover than one striker. */
+  const exposed = new Map<OutfieldLine, number>(
+    LINES.map((line) => [line, starters.filter((s) => s.slot.role === line).length]),
+  );
+  const creditCover = (player: Player): void => {
+    for (const line of LINES) {
+      if (covers(player, line)) exposed.set(line, (exposed.get(line) ?? 0) - 1);
+    }
+  };
+
+  // The tactical lean. A bold side would rather have another way to score; a
+  // cautious one another way to stop it. Applied to exposure, so it only ever
+  // decides between lines that are already close.
+  const lean: Record<OutfieldLine, number> = { DEF: 0, MID: 0, ATT: 0 };
+  const shape = formation.shape;
+  const bold = options.risk === 'BOLD' || options.risk === 'RECKLESS' || shape === 'ATTACKING';
+  const cautious = options.risk === 'CAUTIOUS' || shape === 'DEFENSIVE';
+  if (bold && !cautious) lean.ATT = tacticalLean;
+  if (cautious && !bold) lean.DEF = tacticalLean;
+  const pressure = (line: OutfieldLine): number => (exposed.get(line) ?? 0) * (1 + lean[line]);
+
+  // --- 2. one option per line, most exposed first --------------------------
+  const byExposure = [...LINES].sort((a, b) =>
+    pressure(b) - pressure(a) || LINES.indexOf(a) - LINES.indexOf(b));
+  for (const line of byExposure) {
+    if (seats.length >= size) break;
+    if ((exposed.get(line) ?? 0) <= 0) continue;
+    const choice = pick(pool().filter((p) => covers(p, line)), (p) => coverValue(p, line));
+    if (!choice) continue;
+    take(choice, COVER_ROLE[line]);
+    creditCover(choice);
+  }
+
+  // --- 3. the rest, by exposure, then by quality ---------------------------
+  const anyFit = (player: Player): number =>
+    Math.max(0, ...formation.slots.map((s) => selectionFit(player, s)));
+
+  while (seats.length < size && remaining.size > 0) {
+    const line = [...LINES]
+      .filter((l) => (exposed.get(l) ?? 0) > 0)
+      .sort((a, b) => pressure(b) - pressure(a) || LINES.indexOf(a) - LINES.indexOf(b))[0];
+
+    const choice = line
+      ? pick(pool().filter((p) => covers(p, line)), (p) => coverValue(p, line)) ?? pick(pool(), anyFit)
+      : pick(pool(), anyFit);
     if (!choice) break;
 
-    bench.push(choice);
-    remaining.delete(choice);
-    // Credit this player against every role he could actually cover, not only
-    // the one he was picked for: a utility player is cover twice over, and a
-    // bench that ignores that fills up with specialists.
-    for (const role of roles) {
-      const s = slotForRole.get(role);
-      if (!s) continue;
-      const value = selectionFit(choice, s);
-      if (value > (covered.get(role) ?? 0)) covered.set(role, value);
-    }
+    // A seat taken while a line was still exposed is that line's cover; a seat
+    // taken once every starter has an answer is simply the best man left.
+    take(choice, line && covers(choice, line) ? COVER_ROLE[line] : 'BEST_AVAILABLE');
+    creditCover(choice);
   }
 
-  return bench;
+  // --- 4. bench order: keeper, defence, midfield, attack, then the rest -----
+  //
+  // Stable within each group, so the order is the order they were chosen in.
+  return seats
+    .map((seat, index) => ({ seat, index }))
+    .sort((a, b) =>
+      ROLE_ORDER.indexOf(a.seat.role) - ROLE_ORDER.indexOf(b.seat.role) || a.index - b.index)
+    .map(({ seat }) => seat);
+}
+
+/** Highest score wins; an exact tie goes to the lower player id. */
+function pick(players: readonly Player[], score: (p: Player) => number): Player | null {
+  let chosen: Player | null = null;
+  let chosenScore = -Infinity;
+  for (const player of players) {
+    const value = score(player);
+    if (value > chosenScore
+      || (value === chosenScore && chosen !== null
+        && (player.id as string).localeCompare(chosen.id as string) < 0)) {
+      chosen = player;
+      chosenScore = value;
+    }
+  }
+  return chosen;
 }
 
 const slotPriority = (s: FormationSlot): number =>

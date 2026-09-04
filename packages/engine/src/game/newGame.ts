@@ -19,10 +19,11 @@ import { seedRivalries } from '../rivalries/rivalries';
 import { emptyBonuses } from '../contracts/contract';
 import { defaultValuationContext, marketValue, wageDemand } from '../transfers/valuation';
 import {
-  DEFAULT_FORMATION_ID, clubFromTemplate, type ContentRegistry,
+  clubFromTemplate, type ContentRegistry,
   generateManager, generateSquad, generateCreator,
   type ClubTemplate, type CreatorSeasonConfigDef,
 } from '../content';
+import { formationsFor, selectFormation } from '../tactics/formations';
 import { generateSponsorOffers, inheritedSponsorDeals } from '../sponsors/sponsors';
 import { saveToken } from '../core/ids';
 
@@ -259,10 +260,19 @@ export function createNewGame(opts: NewGameOptions): GameState {
     );
     const headroom = 1.08 + clamp((template.reputation - 30) / 70, 0, 1) * 0.28;
 
+    // The shape a club plays is a football decision, not an unset field. Every
+    // club used to be written out in `DEFAULT_FORMATION_ID`, so a league of
+    // eight distinct philosophies — low blocks, high presses, cautious and bold
+    // — all lined up identically. The selector reads the squad first (only
+    // shapes these players can actually field are candidates) and the club's
+    // own tactics second, so the shape follows the football rather than a
+    // coin. It runs once, here, and the choice is then stable for the save.
+    const shape = selectFormation(ranked, club.tactics, formationsFor(config.playersOnPitch));
+
     clubs[clubId] = {
       ...club,
       squad: ranked.map((p) => p.id),
-      tactics: { ...club.tactics, formationId: DEFAULT_FORMATION_ID },
+      tactics: { ...club.tactics, formationId: shape.id },
       finance: {
         ...club.finance,
         wageBudgetPerCycle: Math.round(squadWageBill * headroom),

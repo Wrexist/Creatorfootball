@@ -1,7 +1,7 @@
-import { memo, useMemo, useState, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
   DefensiveLine, Player, PlayerId, PressIntensity, RiskLevel, SpecialRuleDefinition,
-  SpecialRuleId, TacticSetup, Tempo, Width, CounterStyle,
+  SpecialRuleId, SubstitutionVerdict, TacticSetup, Tempo, Width, CounterStyle,
 } from '@cf/engine';
 import {
   GlassButton, GlassPill, GlassSegmented, GlassSheet, IconCheck, IconFastForward, PlayerPortrait,
@@ -10,6 +10,10 @@ import {
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import type { KitColors } from '../shared/kit';
 import { SPECIAL_RULE_TONE, SPEED_HINT, SPEED_LABEL } from '../shared/format';
+import {
+  REPLACEMENT_LABEL, rankReplacements, refusalMessage,
+  type BenchSeat, type ReplacementContext, type ReplacementLabel,
+} from './replacements';
 
 /**
  * The three things a manager can actually do while the ball is rolling:
@@ -28,50 +32,116 @@ export interface SubstitutionSheetProps {
   onClose: () => void;
   squad: readonly Player[];
   kit: KitColors;
-  subsRemaining: number;
-  onSubstitute: (out: PlayerId, in_: PlayerId) => boolean;
+  /** Regulation length, for how far into the match the change is being made. */
+  durationMinutes: number;
+  onSubstitute: (out: PlayerId, in_: PlayerId) => SubstitutionVerdict;
 }
 
+const LABEL_TONE: Record<ReplacementLabel, 'positive' | 'info' | 'warning' | 'neutral'> = {
+  BEST_FIT: 'positive',
+  FRESH_LEGS: 'info',
+  ATTACKING: 'warning',
+  DEFENSIVE: 'neutral',
+};
+
+/**
+ * Two taps: who comes off, then who comes on.
+ *
+ * The bench shown here is the simulator's own — the seven it will actually
+ * accept, with the used and the sent-off marked as such — and the count in
+ * the subtitle is the simulator's own too. The interface used to show the
+ * whole squad as "the bench" and keep its own tally, and the manager it lied
+ * to was told to "check your remaining substitutions" with five left.
+ *
+ * Once a man is chosen to come off, the sheet reorganises around the
+ * decision he creates: he sits at the top, the recommended replacements come
+ * next with a word each about why, the rest of the bench follows, and the
+ * eleven still on the pitch drop out of the way — one tap on the man at the
+ * top brings them back. Nobody scrolls past a whole team to find a keeper.
+ */
 export function SubstitutionSheet({
-  open, onClose, squad, kit, subsRemaining, onSubstitute,
+  open, onClose, squad, kit, durationMinutes, onSubstitute,
 }: SubstitutionSheetProps): ReactNode {
   const frame = useMatchStore((s) => s.frame);
+  const subs = useMatchStore((s) => s.subs);
+  const minute = useMatchStore((s) => s.minute);
+  const homeScore = useMatchStore((s) => s.homeScore);
+  const awayScore = useMatchStore((s) => s.awayScore);
+  const playerSide = useMatchStore((s) => s.playerSide);
   const [outId, setOutId] = useState<PlayerId | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** A change is being made. Nothing else is accepted until it has been answered. */
+  const busy = useRef(false);
 
-  const { onPitch, bench, stamina } = useMemo(() => {
-    const byId = new Map(squad.map((p) => [p.id as string, p]));
+  const remaining = subs?.remaining ?? 0;
+  const byId = useMemo(() => new Map(squad.map((p) => [p.id as string, p])), [squad]);
+
+  const { onPitch, stamina } = useMemo(() => {
     const staminaMap = new Map<string, number>();
-    const pitchIds = new Set<string>();
-    for (const p of frame?.players ?? []) {
-      staminaMap.set(p.playerId, p.stamina);
-      pitchIds.add(p.playerId);
-    }
     const on: Player[] = [];
-    for (const id of pitchIds) {
-      const player = byId.get(id);
-      if (player) on.push(player);
+    for (const unit of frame?.players ?? []) {
+      const player = byId.get(unit.playerId);
+      if (!player) continue;
+      staminaMap.set(unit.playerId, unit.stamina);
+      on.push(player);
     }
     on.sort((a, b) => (staminaMap.get(a.id) ?? 100) - (staminaMap.get(b.id) ?? 100));
+    return { onPitch: on, stamina: staminaMap };
+  }, [frame, byId]);
+
+  const bench = useMemo<BenchSeat[]>(() => {
+    const seats: BenchSeat[] = [];
+    for (const seat of subs?.bench ?? []) {
+      const player = byId.get(seat.playerId);
+      if (!player) continue;
+      seats.push(seat.available ? { player, available: true } : { player, available: false, reason: seat.reason });
+    }
+    return seats;
+  }, [subs, byId]);
+
+  const out = outId ? byId.get(outId) : undefined;
+  const context = useMemo<ReplacementContext>(() => {
+    const us = playerSide === 'home' ? homeScore : awayScore;
+    const them = playerSide === 'home' ? awayScore : homeScore;
     return {
-      onPitch: on,
-      bench: squad.filter((p) => !pitchIds.has(p.id) && p.injury === null).sort((a, b) => b.overall - a.overall),
-      stamina: staminaMap,
+      scoreline: us < them ? 'TRAILING' : us > them ? 'LEADING' : 'LEVEL',
+      elapsed: durationMinutes > 0 ? Math.min(1, minute / durationMinutes) : 0,
     };
-  }, [frame, squad]);
+  }, [playerSide, homeScore, awayScore, minute, durationMinutes]);
+  const ranked = useMemo(() => (out ? rankReplacements(out, bench, context) : []), [out, bench, context]);
+  const recommended = ranked.filter((r) => r.available && r.label);
+  const others = ranked.filter((r) => r.available && !r.label);
+  const unavailable = ranked.filter((r) => !r.available);
+
+  // The man chosen to come off may have gone off anyway — an injury
+  // replacement the engine made. The choice is then stale and is dropped.
+  useEffect(() => {
+    if (outId && !onPitch.some((p) => p.id === outId)) setOutId(null);
+  }, [onPitch, outId]);
+
+  const chooseOut = (id: PlayerId): void => {
+    haptics.selection();
+    setError(null);
+    setOutId((current) => (current === id ? null : id));
+  };
 
   const commit = (inId: PlayerId): void => {
-    if (!outId) return;
-    const ok = onSubstitute(outId, inId);
-    if (ok) {
-      haptics.success();
-      sfx.select();
-      setOutId(null);
-      setError(null);
-      onClose();
-    } else {
-      haptics.error();
-      setError('That change is not allowed — check your remaining substitutions.');
+    if (!outId || busy.current) return;
+    busy.current = true;
+    try {
+      const verdict = onSubstitute(outId, inId);
+      if (verdict.ok) {
+        haptics.success();
+        sfx.select();
+        setOutId(null);
+        setError(null);
+        onClose();
+      } else {
+        haptics.error();
+        setError(refusalMessage(verdict.reason));
+      }
+    } finally {
+      busy.current = false;
     }
   };
 
@@ -82,8 +152,8 @@ export function SubstitutionSheet({
       size="tall"
       title="Substitutions"
       subtitle={
-        subsRemaining > 0
-          ? `${subsRemaining} change${subsRemaining === 1 ? '' : 's'} left · tap who comes off, then who comes on`
+        remaining > 0
+          ? `${remaining} change${remaining === 1 ? '' : 's'} left · ${out ? 'tap who comes on' : 'tap who comes off'}`
           : 'No changes left'
       }
       footer={<SheetCloseRow onClose={onClose} label="Done" />}
@@ -94,50 +164,121 @@ export function SubstitutionSheet({
         </p>
       )}
 
-      <h3 className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">On the pitch</h3>
-      <ul className="flex flex-col gap-1.5">
-        {onPitch.map((player) => (
-          <SubRow
-            key={player.id}
-            player={player}
-            kit={kit}
-            stamina={stamina.get(player.id) ?? 100}
-            selected={outId === player.id}
-            mode="OFF"
-            onPress={() => {
-              haptics.selection();
-              setOutId((current) => (current === player.id ? null : player.id));
-            }}
-          />
-        ))}
-      </ul>
+      {out ? (
+        <>
+          <h3 className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">Coming off</h3>
+          <ul className="flex flex-col gap-1.5" data-testid="coming-off">
+            <SubRow
+              player={out}
+              kit={kit}
+              stamina={stamina.get(out.id) ?? 100}
+              selected
+              mode="OFF"
+              note="Tap to choose someone else"
+              onPress={() => chooseOut(out.id)}
+            />
+          </ul>
 
-      <h3 className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
-        Bench{outId ? ' · tap a player to bring him on' : ''}
-      </h3>
-      <ul className="flex flex-col gap-1.5">
-        {bench.map((player) => (
-          <SubRow
-            key={player.id}
-            player={player}
-            kit={kit}
-            stamina={player.fitness}
-            selected={false}
-            mode="ON"
-            disabled={!outId || subsRemaining <= 0}
-            onPress={() => commit(player.id)}
-          />
-        ))}
-        {bench.length === 0 && (
-          <li className="py-4 text-center text-[13px] text-ink-dim">Nobody left on the bench.</li>
-        )}
-      </ul>
+          {remaining <= 0 ? (
+            <p className="mt-4 text-[13px] text-ink-dim">You have used all your changes for this match.</p>
+          ) : (
+            <>
+              {recommended.length > 0 && (
+                <>
+                  <h3 className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">Recommended</h3>
+                  <ul className="flex flex-col gap-1.5" data-testid="recommended">
+                    {recommended.map((r) => (
+                      <SubRow
+                        key={r.player.id}
+                        player={r.player}
+                        kit={kit}
+                        stamina={r.player.fitness}
+                        selected={false}
+                        mode="ON"
+                        label={r.label ? REPLACEMENT_LABEL[r.label] : undefined}
+                        labelTone={r.label ? LABEL_TONE[r.label] : undefined}
+                        onPress={() => commit(r.player.id)}
+                      />
+                    ))}
+                  </ul>
+                </>
+              )}
+              {others.length > 0 && (
+                <>
+                  <h3 className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+                    {recommended.length > 0 ? 'Other bench options' : 'Bench'}
+                  </h3>
+                  <ul className="flex flex-col gap-1.5" data-testid="other-bench">
+                    {others.map((r) => (
+                      <SubRow
+                        key={r.player.id}
+                        player={r.player}
+                        kit={kit}
+                        stamina={r.player.fitness}
+                        selected={false}
+                        mode="ON"
+                        onPress={() => commit(r.player.id)}
+                      />
+                    ))}
+                  </ul>
+                </>
+              )}
+              {recommended.length === 0 && others.length === 0 && (
+                <p className="mt-4 text-[13px] text-ink-dim">Nobody on the bench can come on.</p>
+              )}
+              {unavailable.length > 0 && (
+                <>
+                  <h3 className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">Not available</h3>
+                  <ul className="flex flex-col gap-1.5" data-testid="unavailable">
+                    {unavailable.map((r) => (
+                      <SubRow
+                        key={r.player.id}
+                        player={r.player}
+                        kit={kit}
+                        stamina={r.player.fitness}
+                        selected={false}
+                        mode="ON"
+                        disabled
+                        note={r.reason ? refusalMessage(r.reason) : undefined}
+                        onPress={() => undefined}
+                      />
+                    ))}
+                  </ul>
+                </>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <h3 className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-dim">
+            On the pitch{remaining > 0 ? ' · tap who comes off' : ''}
+          </h3>
+          {remaining <= 0 && (
+            <p className="mb-3 text-[13px] text-ink-dim">You have used all your changes for this match.</p>
+          )}
+          <ul className="flex flex-col gap-1.5" data-testid="on-pitch">
+            {onPitch.map((player) => (
+              <SubRow
+                key={player.id}
+                player={player}
+                kit={kit}
+                stamina={stamina.get(player.id) ?? 100}
+                selected={false}
+                mode="OFF"
+                disabled={remaining <= 0}
+                onPress={() => chooseOut(player.id)}
+              />
+            ))}
+          </ul>
+        </>
+      )}
     </GlassSheet>
   );
 }
 
 const SubRow = memo(function SubRow({
-  player, kit, stamina, selected, mode, disabled, onPress,
+  player, kit, stamina, selected, mode, disabled, label, labelTone, note, onPress,
 }: {
   player: Player;
   kit: KitColors;
@@ -145,6 +286,11 @@ const SubRow = memo(function SubRow({
   selected: boolean;
   mode: 'OFF' | 'ON';
   disabled?: boolean;
+  /** Why he is recommended, in two words. */
+  label?: string;
+  labelTone?: 'positive' | 'info' | 'warning' | 'neutral';
+  /** A line under the name: why he cannot come on, or what tapping does. */
+  note?: string;
   onPress: () => void;
 }): ReactNode {
   const tone = stamina < 35 ? 'danger' : stamina < 62 ? 'warning' : 'positive';
@@ -155,6 +301,7 @@ const SubRow = memo(function SubRow({
         onClick={onPress}
         disabled={disabled}
         aria-pressed={selected}
+        aria-label={`${player.displayName}, ${player.position}${label ? `, ${label}` : ''}${note ? `. ${note}` : ''}`}
         className={cn(
           'flex min-h-14 w-full items-center gap-3 rounded-md border px-3 py-2 text-left',
           'transition-colors duration-[var(--duration-fast)]',
@@ -172,11 +319,13 @@ const SubRow = memo(function SubRow({
               {player.displayName}
             </span>
             <PositionChip position={player.position} size="xs" />
+            {label && labelTone && <GlassPill tone={labelTone} size="xs" filled>{label}</GlassPill>}
           </div>
           <div className="mt-1 flex items-center gap-2">
             <ProgressBar value={stamina} max={100} tone={tone} size="xs" className="w-24" />
             <span className="tnum text-[11px] text-ink-dim">{Math.round(stamina)}%</span>
           </div>
+          {note && <p className="mt-1 text-[12px] text-ink-dim text-pretty">{note}</p>}
         </div>
         <RatingBadge value={player.overall} scale="overall" size="sm" />
         <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-dim">

@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import {
-  aiRuleCards, arenaSupportShare, autoLineup, clubById, computeStandings, currentCompetition,
+  BENCH_SIZE, aiRuleCards, arenaSupportShare, autoLineup, clubById, computeStandings, currentCompetition,
   formationById, injuredPlayers, leaguePosition, positionContext, recentForm, rivalryFor,
+  selectMatchdayBench,
   squadOf, specialRuleById, standings, starPlayer, suspendedPlayers, topScorer,
-  type Club, type ClubId, type Fixture, type FixtureId, type Formation, type FormationSlot,
+  type BenchRole, type Club, type ClubId, type Fixture, type FixtureId, type Formation, type FormationSlot,
   type GameState, type Player, type Rivalry, type SpecialRuleDefinition, type SpecialRuleId,
   type StandingRow, type TacticSetup,
 } from '@cf/engine';
@@ -72,6 +73,12 @@ export interface MatchdayContext {
   readonly formation: Formation;
   readonly lineup: readonly LineupSlot[];
   readonly bench: readonly Player[];
+  /**
+   * Why each man is on the bench, by player id, when the game chose it. Empty
+   * when the manager named his own substitutes: the reason is then that he
+   * picked them, and telling him otherwise would be the game taking credit.
+   */
+  readonly benchReasons: Readonly<Record<string, BenchRole>>;
   readonly keyBattles: readonly KeyBattle[];
 
   readonly ourAvailability: SideAvailability;
@@ -200,8 +207,16 @@ function buildKeyBattles(ourSquad: readonly Player[], theirSquad: readonly Playe
   return battles;
 }
 
+/** A short football word for why a man is sitting down. */
+export const BENCH_REASON_LABEL: Partial<Record<BenchRole, string>> = {
+  KEEPER_COVER: 'Goalkeeper cover',
+  DEFENSIVE_COVER: 'Defensive cover',
+  MIDFIELD_COVER: 'Midfield cover',
+  ATTACKING_COVER: 'Attacking option',
+};
+
 function resolveLineup(club: Club, squad: readonly Player[]): {
-  formation: Formation; lineup: LineupSlot[]; bench: Player[];
+  formation: Formation; lineup: LineupSlot[]; bench: Player[]; benchReasons: Record<string, BenchRole>;
 } {
   const available = squad.filter((p) => p.injury === null && p.suspensionMatches === 0);
   const tactics: TacticSetup = club.tactics;
@@ -222,12 +237,25 @@ function resolveLineup(club: Club, squad: readonly Player[]): {
     return { slot, player };
   });
 
-  const bench = available
-    .filter((p) => !picked.has(p.id))
-    .sort((a, b) => b.overall - a.overall)
-    .slice(0, 7);
+  // The bench the preview shows is the bench the simulator will play with:
+  // the same selector, the same eleven in front of it, the same order. This
+  // used to be the seven highest-rated reserves, which is a different question
+  // and gave a different answer — a manager could study a bench on the preview
+  // and find another one waiting when the whistle went.
+  const starters = lineup
+    .filter((entry): entry is { slot: FormationSlot; player: Player } => entry.player !== null)
+    .map((entry) => ({ slot: entry.slot, player: entry.player }));
+  const benchReasons: Record<string, BenchRole> = {};
+  let bench: Player[];
+  if (tactics.bench.length > 0) {
+    bench = tactics.bench.map((id) => byId.get(id)).filter((p): p is Player => Boolean(p)).slice(0, BENCH_SIZE);
+  } else {
+    const seats = selectMatchdayBench(squad, starters, formation, { size: BENCH_SIZE, risk: tactics.risk });
+    bench = seats.map((seat) => seat.player);
+    for (const seat of seats) benchReasons[seat.player.id as string] = seat.role;
+  }
 
-  return { formation, lineup, bench };
+  return { formation, lineup, bench, benchReasons };
 }
 
 export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): MatchdayContext | null {
@@ -247,7 +275,7 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
   const theirSquad = squadOf(state, them.id);
 
   const rivalry = rivalryFor(state, home.id, away.id);
-  const { formation, lineup, bench } = resolveLineup(us, ourSquad);
+  const { formation, lineup, bench, benchReasons } = resolveLineup(us, ourSquad);
 
   const heldCards = state.inventory.ruleCards
     .filter((card) => card.quantity > 0)
@@ -290,6 +318,7 @@ export function buildMatchdayContext(state: GameState, fixtureId: FixtureId): Ma
     formation,
     lineup,
     bench,
+    benchReasons,
     keyBattles: buildKeyBattles(ourSquad, theirSquad),
 
     ourAvailability: {

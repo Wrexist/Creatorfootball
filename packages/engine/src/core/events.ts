@@ -69,6 +69,8 @@ export interface DomainEventPayloads {
   ATTENDANCE_RECORDED: { clubId: ClubId; matchId: MatchId; attendance: number; capacity: number };
   REPUTATION_CHANGED: { clubId: ClubId; from: number; to: number; reason: string };
   MANAGER_SACKED: { clubId: ClubId; managerName: string };
+  /** A club changed its shape at season rollover because its squad had moved on. */
+  CLUB_SHAPE_CHANGED: { clubId: ClubId; from: string; to: string; season: number };
 
   // --- rivalry / story ---
   RIVALRY_INTENSIFIED: { rivalryId: RivalryId; clubA: ClubId; clubB: ClubId; intensity: number; reason: string };

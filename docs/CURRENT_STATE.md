@@ -14,11 +14,11 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **60 files, 793 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **27 files, 279 tests, all passing** |
-| **Total** | `pnpm test` | **1,072 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **66 files, 849 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **30 files, 302 tests, all passing** |
+| **Total** | `pnpm test` | **1,101 tests, all passing** |
 | Production build | `pnpm build` | pass |
-| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks, against the real bundle |
+| Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks + **5/5** matchday checks (live motion, pause, resume, goalkeeper substitution), against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
 Earlier documents state 262, 531, 653 and 753 tests. All are historical.
@@ -288,6 +288,250 @@ Measured on the built bundle (desktop headless Chromium, medians of three):
 first screen 1738 → 1507 kB of script (−13%), engine chunk 282 → 205 kB
 gzip, content chunk 77 kB gzip requested exactly once, confirm-to-playable
 2390 → 2373 ms, journey bytes unchanged (no duplication).
+
+## 4c. Matchday — changed
+
+**The goalkeeper substitution bug, and what was actually wrong.** A player
+was shown "5 changes left", took their keeper off, tapped the keeper on the
+bench and was told the change was not allowed and to check their remaining
+substitutions. Three defects, none of them the count: every club is created
+with an empty `tactics.bench`, so the simulator quietly picked its own seven
+(see *Who is on the bench* below); the sheet listed the *whole squad* minus the eleven as
+"the bench", so four of the names it offered were never on the match bench;
+and `makeSubstitution` returned a bare `false`, which the sheet dressed as a
+substitutions problem. Two more surfaced on the way: the remaining count was
+a React counter that ignored the substitutions the engine made by itself
+(it made fatigue changes for the human's side too), and a change made from
+the sheet was filed into the record but never handed to the live feed,
+because `step()` only returned events from inside its own tick.
+
+Now: the simulator answers `checkSubstitution` with a verdict and a reason
+(`NO_SUBS_LEFT`, `NOT_ON_PITCH`, `NOT_ON_BENCH`, `ALREADY_USED`, `SENT_OFF`,
+`INJURED`, `SAME_PLAYER`) in the order a manager thinks — the man coming
+off, the man coming on, and only then the count — and exposes
+`substitutionStatus` (used, allowed, remaining, the match-day bench with each
+seat's availability). The store reads it every tick; the sheet lists that
+bench and no other; the count in the rail is the engine's; every refusal is
+its own sentence. In a live match the engine no longer spends a human
+manager's changes on tired legs (injury replacements are still made, and a
+fixture nobody is watching is still managed on both benches, so simulated
+worlds are byte-identical). `step()` returns everything since the last step.
+
+**Who is on the bench.** The seven names were chosen three different ways.
+`autoLineup` had a cover-based pick, but it only ran when a club's sheet was
+*incomplete*; a sheet that named an eleven and no substitutes fell through to
+the simulator, which filled the seats from squad order — on a real squad that
+is seven midfielders and no reserve keeper; and the match preview showed the
+seven highest-rated reserves, which across 72 measured benches was never once
+the bench the simulator played with (4/72 even as an unordered set).
+
+There is now one selector, `selectMatchdayBench` in `tactics/formations.ts`,
+called by the team-sheet suggestion, the match preview and the simulator. It
+is pure, synchronous and takes the *starting eleven* as an input, because what
+a bench has to insure depends on the side in front of it. Seats go: one
+reserve goalkeeper, and only ever one, and only a real keeper (a squad with no
+second keeper does not lose the seat to whichever outfielder is least bad in
+goal); then one option for each line, most exposed first, and only somebody
+who can genuinely play there; then the remaining seats to the line with the
+most starters still uncovered; then, once every starter has an answer, the
+best man left. Quality, position familiarity and readiness all enter through
+`selectionFit`, the same score that picks the eleven — there is no second
+position model and no second fitness model. Ties break on player id. **A bench
+the manager named himself is played exactly as named**, in his order, capped
+only by the competition's bench size: nothing is topped up or reordered.
+
+The preview lists each seat with a football reason under the name
+(*Goalkeeper cover*, *Defensive cover*, *Midfield cover*, *Attacking option*)
+and never a score. A bench the manager picked shows no reasons, because the
+reason is that he picked them.
+
+This changed simulated results, which was expected and was measured rather
+than assumed. World *generation* is byte-identical (the `new=` reference
+hashes are unchanged, so existing saves load the same); three seeds played
+three weeks now hash differently. Feeding the old benches back into the new
+engine reproduces the old results hash exactly (`ae00e57f857ab3ec`), so every
+changed scoreline comes from bench composition and nothing else. The new
+system is identical on repeat. Across the same 72 benches, line cover now
+mirrors the shape being played rather than the formation in the abstract:
+defensive options 3.33 → 2.81 per bench, midfield 5.22 → 5.31, attacking
+1.75 → 1.44, against a 2-3-1 starting two, three and one. Every bench in both
+runs answers all four lines; the win is that the selector now runs on every
+club on every matchday, and that the preview and the pitch agree.
+
+**A club's shape now outlives its squad, but not by a decade.** Formation was
+chosen once, when the world was made, and then frozen for the life of the save
+while the squad underneath it moved. Measured over eight seasons: a club turns
+over 11-23% of its squad a year through retirement, academy graduates and the
+positions its recruitment profile favours, and a frozen shape ends **3.5%
+behind** the shape its squad should now be playing, the worst tenth 7.5% adrift,
+with starters played out of position rising to 0.78 per club.
+
+`reviewFormation` reconsiders once a season, at the one moment in the calendar
+when the squad for the coming year is settled — after retirements and academy
+promotions, and after the rollover has already put everyone back to full fitness
+with injuries and suspensions cleared. The current shape is the default and has
+to be *beaten*, not matched: only when it has fallen more than 8% behind the
+best available does `selectFormation` — the same selector that chose at
+generation — pick the replacement. The player's club is never touched.
+
+The decision is provably blind to how the season went. Fitness, injuries and
+suspensions are already reset by that point, and form — the one remaining
+channel by which results reach `selectionFit` — is zeroed inside the review. A
+club does not change shape because it lost; it changes because it is a different
+team.
+
+Measured over 12 worlds × 8 seasons × 5 settings, 144 club careers each
+(`docs/experiments/formation-evolution/`). Reassessing greedily — taking the
+best shape every summer — moves 79% of clubs two or more times, flips 31% of
+them back and forth between the same two shapes, and is the only setting that
+damages the league: the weakest third fall to 0.984 points per game against
+1.064 frozen, and the strong-weak gap widens from 0.681 to 0.791. At 0.12 the
+rule is inert (95% never change, 3.48% adrift — the frozen world with extra
+steps). At **0.08**: three quarters of clubs never change shape at all, 2%
+change more than once in eight seasons, and **no club in 144 careers ever
+reverted to a shape it had left**. Drift halves (3.54% → 2.50%), out-of-position
+starters fall from 0.78 to 0.64, competitive balance is exactly where the frozen
+world had it (strong-weak gap 0.681, unchanged), and shapes fit club identity
+better than in any other setting including frozen (37.5% against 36.1%). 0.06
+was the other serious candidate and loses narrowly: it reverts a club
+occasionally rather than never, moves twice as many, widens the strong-weak gap
+to 0.726 and *lowers* shape diversity, because a lower bar funnels clubs toward
+the same handful of best-fitting shapes.
+
+Cost: **2.90 ms** to reassess a whole twelve-club league — 241 µs per club, for
+ten shapes each — against a season rollover that costs about 215 ms, once a
+year. That is measured directly; the rollover wall-clock in the experiment
+varies by more between repeat runs (209-217 ms for the frozen candidate alone)
+than the feature costs, so the per-candidate rollover timings in `results.json`
+are noise and should not be read as a cost. No reference hash moved — the
+pinned worlds cover generation and week-two matches, and a rollover fires after
+week 22.
+
+**Every club plays its own shape.** Twelve clubs with eight distinct
+philosophies — low blocks and high presses, cautious and reckless — all walked
+out in 2-3-1, because `newGame` wrote `DEFAULT_FORMATION_ID` into every one of
+them and nothing ever reconsidered. That was the entire cause: not squad
+composition, not the scoring, not a shortage of shapes. Measured before
+changing anything, the ten seven-a-side shapes sit within a few per cent of each
+other for a typical squad, the best-suited shape varied by club (2-3-1 for four,
+3-2-1 for four, 2-2-2 for three, 2-4 for one in a sample league), and forcing
+everyone into 2-3-1 cost 3.7% of the selection value the squads could have
+reached. Diversity was not being suppressed by football logic; it had simply
+never been asked for.
+
+`selectFormation` now asks. It reads the squad first — only shapes within 6% of
+the best-suited one are candidates at all — then the club's own tactics, which
+can move a candidate by at most 4%. `Formation.shape` (BALANCED, ATTACKING,
+DEFENSIVE, WIDE, NARROW) already existed on every shape and was read by two UI
+labels and nothing else; `shapeAffinity` turns the press, line, risk, tempo,
+width, focus, passing, counter and build-up a club already holds into a
+preference over exactly those five words. Nothing new is invented and there is
+no second position model: suitability is the mean `selectionFit` of the side
+`autoLineup` would pick, the same score that picks every team sheet.
+
+Measured over 24 worlds and 288 clubs (`docs/experiments/formation-identity/`),
+against three alternatives. All ten shapes now appear; the commonest holds 28.5%
+of clubs where it used to hold 100%; shape entropy is 2.99 bits of a possible
+3.32. Defensive rocks and veteran cores field a defensive shape every time,
+entertainers an attacking one two thirds of the time, creator clubs a wide one
+60% of the time — while *which* defensive shape depends on the squad, so clubs
+sharing a philosophy do not become copies. The league got better, not just
+noisier: season points spread 12.02 → 11.38, the strong-weak gap 0.910 → 0.794
+points per game, the weakest third 1.000 → 1.071, and starters asked to play out
+of position fell from 0.44 to 0.19 per club. Pure squad suitability with no
+identity (candidate A) was rejected — it widened the strong-weak gap to 0.924,
+worse than the old world — and identity-led selection (candidate C) was rejected
+for tripling the suitability cost and *lowering* diversity, because a heavy
+identity weight collapses clubs of one philosophy onto one shape.
+
+The cost is honest and small: world generation 12.3 → 15.5 ms per career (the
+selector runs the assignment solver once per candidate shape), and 8.5% of
+bench line-cover requirements go unmet against 3.1% before, because a squad plan
+built for one shape does not cover all ten equally. Nothing was weakened to hide
+that.
+
+This also switched on tactical systems that were already there. Re-running the
+bench experiment against the new world: the cover threshold's lower direction
+went from changing **0** matches to changing **48.4%** of them, and the tactical
+lean from 1.6% to **14.8%**. The previous phase predicted exactly that — "if
+tactical identity should show on AI benches, the lever is varied club
+formations" — and it is now measured rather than argued.
+
+**Are the bench constants right?** Measured, not asserted. `selectMatchdayBench`
+takes an optional `benchTuning` — the same shape as `MatchConfig.adaptation`,
+absent in every real match, defaulting to the production constants — so a
+balance harness can run the same league at different values through the *real*
+selector rather than a copy. `tools/sim/src/benchExperiment.ts` does that: five
+configurations x 40 worlds x one season, 5,280 matches each, identical seeds,
+clubs, squads, fixtures, injuries and economy throughout. Results in
+`docs/experiments/bench-tuning/`. Byte-identical across three full runs.
+
+The answer is keep both values.
+
+*Cover threshold* is a step function, not a dial. The best player-to-line
+familiarity that actually occurs takes only the values 0.45, 0.70, 0.75, 0.82,
+0.87, 0.88, 0.90 and 1.00 — nothing between 0.46 and 0.69 — so every threshold
+in (0.45, 0.70] is the same selector *for a given shape*. When every club played
+2-3-1, running the league at 0.60 reproduced 0.70 byte for byte (0 of 5,280
+matches changed). That is no longer true: with clubs playing all ten shapes, the
+0.60 arm now changes 48.4% of matches and 20.7% of winners, because shapes with
+wing-back and wide slots have links in the 0.60 band that 2-3-1 does not. The
+current value still measures well — at 0.60 the league is a shade flatter
+(points sd 11.69 vs 11.82, weakest third 1.010 vs 1.001 points per game) — but
+this is now a live parameter rather than a settled one, and is flagged for
+re-validation in REMAINING_RISKS. The only other behaviour is
+above 0.70, and it is worse: at 0.80, 85% of matches change and 36% change
+winner, the league gets less competitive (season points sd 11.73 -> 12.16), the
+weakest third of clubs lose ground (0.993 -> 0.971 points per game), and more
+benches end up with no attacking option (5.4% -> 8.4%) or no reserve keeper
+(6.7% -> 7.5%). 0.7 is the most permissive value of the only sensible class.
+
+*Tactical lean* cannot be tuned by magnitude at all — exposure counts are
+integers, so any value in (0, 1) breaks exactly the ties and nothing else, and
+0.20 still reproduces 0.12 byte for byte. Only its presence matters. When every
+club played 2-3-1 that presence was worth 1.6% of matches; now that clubs field
+shapes whose lines can level it is worth 14.8% of matches and 6.4% of winners,
+and switching it off measurably costs the weakest clubs (0.995 vs 1.001 points
+per game) and flattens the reward for squad depth (0.128 vs 0.152).
+Asked directly across every shape the game ships, the lean changes 10.3% of
+benches, in exactly the shapes with lines that can level (1-3-2, 2-2-2, 2-1-3,
+3-3, and the eleven-a-side shapes) — which AI clubs now actually play.
+
+Two other things the experiment settled. The selector does not disproportionately
+reward strong clubs: the strong-weak gap is 0.918 points per game at 0.70 and
+*wider* at 0.80, so the current setting is the more forgiving one. Depth is
+rewarded but not runaway — deep squads take 0.216 more points per game than
+shallow ones of the same starting strength — and versatility is not an exploit:
+almost every reserve in this content already covers two lines (6.69 of ~11,
+sd 0.53), so utility cannot differentiate clubs, and buying cover costs 2.8
+rating points against a bench picked on rating alone.
+
+**Who comes on.** Tapping the man coming off reorganises the sheet around
+that decision: he sits at the top, then "Recommended" (like-for-like first,
+labelled *Best fit*; *Fresh legs* when somebody who plays there has clearly
+more left; late and behind, an *Attacking option*; late and ahead, a
+*Defensive option*), then the rest of the bench, then anyone unavailable with
+the reason under his name. The eleven drop out of the way; a tap on the man
+at the top brings them back. Ranking is quality × position familiarity (the
+engine's own table, over natural and secondary positions) × legs; a keeper's
+shirt is only covered by a keeper. A double tap makes one change.
+
+**The live pitch moves.** The renderer already smoothed positions, but it
+chased a coarse per-tick ball point with a short time constant, so the ball
+darted sideways on channel noise, jumped to the centre circle at every
+stoppage (the simulator's "no possession" point) and led its carrier around
+by a length. `motion.ts` is the presentation layer now: every shirt travels
+from where it is drawn to where the new snapshot puts it, timed to arrive as
+the next snapshot is due (the interval is measured from the frames, so it is
+smooth at every match speed, and a paused match finishes its last segment
+and stops); the ball is glued to whoever has it, at his drawn position — the
+named carrier, or when the engine names none, the man nearest its point, with
+a little loyalty — flies to the receiver at a bounded pace when it changes
+hands, flies at the goal on a shot, and stays where play stopped through a
+stoppage. Nothing in it is read by the simulation. Browser-measured on the
+built bundle: largest per-frame shirt movement 0.016–0.019 of the pitch,
+ball within a shirt's reach in 19–20 of 20 samples, zero movement while
+paused, no jump on resume.
 
 ## 5. What is strong
 
