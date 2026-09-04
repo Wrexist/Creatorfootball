@@ -68,6 +68,32 @@ const CARRY_LEAD = 0.012;
 const CARRY_TAU = 0.07;
 /** Time constant for a loose ball drifting to the simulator's point, seconds. */
 const LOOSE_TAU = 0.35;
+/**
+ * How close the ball has to be to its target before it is put there exactly and
+ * stops moving. An exponential ease never actually arrives, and a paused match
+ * would repaint a ball creeping by nothing forever.
+ *
+ * `settled()` reports on the same number. It used to answer a looser 0.02,
+ * which let it call the pitch quiescent while `settle` was still easing the
+ * last two per cent — true for up to three seconds after a pause, because a
+ * loose ball eases at `LOOSE_TAU`. That tolerance was really standing in for
+ * `CARRY_LEAD`: the ball rests *ahead* of its carrier, and `settled` was
+ * measuring to the carrier himself. Both now ask `carryTarget` where the ball
+ * belongs, so the question "has everything stopped" cannot get a different
+ * answer from the code that decides when to stop.
+ */
+const BALL_LANDING = 5e-4;
+/**
+ * The furthest the ball may travel in one paint, whatever put it there.
+ *
+ * Capping the time step is not the same as capping the distance. `travel` is
+ * speed-limited either way, but `settle` eases a fixed *fraction* of the gap —
+ * at `CARRY_TAU` and a full frame, 29% of it. When the first man of a phase
+ * picks up a ball left some way off at a stoppage, that one fraction was a
+ * visible skip of over a tenth of the pitch. This bounds every path by the
+ * fastest the ball is ever meant to move on purpose, so nothing outruns a shot.
+ */
+const BALL_MAX_FRAME_TRAVEL = BALL_SHOT_SPEED * BALL_FRAME_CAP;
 /** Bounds on the measured interval between frames, ms. */
 const MIN_INTERVAL = 60;
 const MAX_INTERVAL = 700;
@@ -254,16 +280,30 @@ export class PitchMotion {
       const ny = node.fromY + (node.toY - node.fromY) * e;
       const stepX = nx - node.x;
       const stepY = ny - node.y;
-      if (stepX !== 0 || stepY !== 0) moved = true;
       node.x = nx;
       node.y = ny;
+      // Speed always decays, so a stopped man's motion streak fades out. His
+      // heading does not: it is only meaningful while he is moving, and letting
+      // it decay toward zero meant `carryTarget` eventually saw a heading below
+      // its epsilon and moved the ball's resting place by CARRY_LEAD — a pitch
+      // that had been still for three seconds starting to twitch on its own.
+      node.speed += (Math.hypot(stepX, stepY) / Math.max(dt, 1e-4) - node.speed) * hk;
+      if (stepX === 0 && stepY === 0) continue;
+      moved = true;
       node.hx += (stepX - node.hx) * hk;
       node.hy += (stepY - node.hy) * hk;
-      node.speed += (Math.hypot(stepX, stepY) / Math.max(dt, 1e-4) - node.speed) * hk;
     }
 
     if (this.stepBall(Math.min(dt, BALL_FRAME_CAP))) moved = true;
     return moved;
+  }
+
+  /** Where the ball belongs when a man has it: just ahead of him, on his heading. */
+  private carryTarget(carrier: MotionNode): MotionPoint {
+    const lead = Math.hypot(carrier.hx, carrier.hy);
+    return lead > 1e-6
+      ? { x: carrier.x + (carrier.hx / lead) * CARRY_LEAD, y: carrier.y + (carrier.hy / lead) * CARRY_LEAD }
+      : { x: carrier.x, y: carrier.y };
   }
 
   private stepBall(dt: number): boolean {
@@ -271,10 +311,7 @@ export class PitchMotion {
     if (this.ballMode === 'CARRY' || (this.ballMode === 'FLIGHT' && this.holder !== null)) {
       const carrier = this.holder ? this.nodes.get(this.holder) : undefined;
       if (carrier) {
-        const lead = Math.hypot(carrier.hx, carrier.hy);
-        const target = lead > 1e-6
-          ? { x: carrier.x + (carrier.hx / lead) * CARRY_LEAD, y: carrier.y + (carrier.hy / lead) * CARRY_LEAD }
-          : { x: carrier.x, y: carrier.y };
+        const target = this.carryTarget(carrier);
         if (this.ballMode === 'FLIGHT') {
           // In flight toward the receiver: straight at him, at pass pace, and
           // it is his once it has arrived.
@@ -288,6 +325,15 @@ export class PitchMotion {
     } else {
       this.settle(this.ballTarget, LOOSE_TAU, dt);
     }
+
+    const dx = this.pos.x - before.x;
+    const dy = this.pos.y - before.y;
+    const step = Math.hypot(dx, dy);
+    if (step > BALL_MAX_FRAME_TRAVEL) {
+      const scale = BALL_MAX_FRAME_TRAVEL / step;
+      this.pos.x = before.x + dx * scale;
+      this.pos.y = before.y + dy * scale;
+    }
     return Math.abs(this.pos.x - before.x) > 1e-7 || Math.abs(this.pos.y - before.y) > 1e-7;
   }
 
@@ -299,7 +345,7 @@ export class PitchMotion {
   private settle(to: MotionPoint, tau: number, dt: number): void {
     const dx = to.x - this.pos.x;
     const dy = to.y - this.pos.y;
-    if (Math.hypot(dx, dy) < 5e-4) { this.pos.x = to.x; this.pos.y = to.y; return; }
+    if (Math.hypot(dx, dy) < BALL_LANDING) { this.pos.x = to.x; this.pos.y = to.y; return; }
     const k = 1 - Math.exp(-dt / tau);
     this.pos.x += dx * k;
     this.pos.y += dy * k;
@@ -330,8 +376,8 @@ export class PitchMotion {
     let target = this.ballTarget;
     if (this.holder) {
       const c = this.nodes.get(this.holder);
-      if (c) target = { x: c.x, y: c.y };
+      if (c) target = this.carryTarget(c);
     }
-    return Math.hypot(this.pos.x - target.x, this.pos.y - target.y) < 0.02;
+    return Math.hypot(this.pos.x - target.x, this.pos.y - target.y) < BALL_LANDING;
   }
 }

@@ -181,6 +181,46 @@ describe('ball motion', () => {
     expect(m.advance(2032)).toBe(false);
   });
 
+  it('no path moves the ball further in one paint than a shot does', () => {
+    // `settle` eases a fraction of the gap, so a man picking up a ball left far
+    // away used to skip it over a tenth of the pitch in a single frame.
+    const m = new PitchMotion();
+    m.setFrame(frame({ tick: 1, ball: { x: 0.1, y: 0.5 }, players: [unit('a', 0.1, 0.5)] }), 0);
+    run(m, 0, 400);
+    m.setFrame(frame({ tick: 2, ballHolder: pid('b'), players: [unit('a', 0.1, 0.5), unit('b', 0.9, 0.5, { hasBall: true })] }), 400);
+    let last = m.ball();
+    for (let t = 416; t <= 2400; t += 16) {
+      m.advance(t);
+      const now = m.ball();
+      const step = Math.hypot(now.x - last.x, now.y - last.y);
+      expect(step, `ball moved ${step.toFixed(4)} in one frame`)
+        .toBeLessThanOrEqual(BALL_SHOT_SPEED * 0.024 + 1e-9);
+      last = now;
+    }
+    // And it still arrives.
+    expect(Math.hypot(m.ball().x - 0.9, m.ball().y - 0.5)).toBeLessThan(0.05);
+  });
+
+  it('a pitch at rest stays at rest — the ball does not twitch seconds later', () => {
+    // A carrier's heading decays exponentially after he stops. `carryTarget`
+    // reads it, so once the heading crossed its epsilon the ball's resting
+    // place used to jump by CARRY_LEAD and it would ease off again — a pitch
+    // that had been still for two seconds starting to move on its own.
+    const m = new PitchMotion();
+    m.setFrame(frame({ tick: 1, ballHolder: pid('a'), players: [unit('a', 0.30, 0.5, { hasBall: true })] }), 0);
+    m.setFrame(frame({ tick: 2, ballHolder: pid('a'), players: [unit('a', 0.36, 0.5, { hasBall: true })] }), 240);
+    run(m, 240, 2000);
+    const atRest = m.ball();
+    expect(m.settled()).toBe(true);
+    // Five more seconds with no new snapshot: nothing may move at all.
+    for (let t = 2016; t <= 7000; t += 16) {
+      m.advance(t);
+      const now = m.ball();
+      expect(Math.hypot(now.x - atRest.x, now.y - atRest.y), `ball moved at ${t}ms`).toBeLessThan(1e-9);
+    }
+    expect(m.settled()).toBe(true);
+  });
+
   it('TEST 20: once the match is over and everything has settled, there is nothing left to animate', () => {
     const m = new PitchMotion();
     m.setFrame(frame({ tick: 1, ballHolder: pid('a'), players: [unit('a', 0.2, 0.5, { hasBall: true })] }), 0);
