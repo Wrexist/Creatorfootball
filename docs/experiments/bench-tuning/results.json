@@ -1,6 +1,7 @@
 {
   "experiment": "matchday-bench-tuning",
-  "commit": "3ac29b3e096b56f277eda68cd810f62f858788a3",
+  "commit": "b4cedf78afc32c9dc13c417673290d9e48abb9aa",
+  "dirtyTree": false,
   "generatedFrom": {
     "worlds": 40,
     "seasonsPerWorld": 1,
@@ -89,7 +90,7 @@
       }
     }
   ],
-  "runtimeMs": 629387,
+  "runtimeMs": 623296,
   "summaries": {
     "A_current": {
       "matches": 5280,
