@@ -64,8 +64,19 @@ await scenario('live pitch motion', async ({ page, check, unexpected }) => {
   await page.waitForTimeout(1500);
 
   // Watch for three seconds: shirts travel, nothing jumps, the ball stays with the play.
+  //
+  // Both of these are measured over the whole window rather than poll by poll,
+  // and that is deliberate. A fixed 150ms sampler is not synchronised with the
+  // engine's snapshots: `PitchMotion` deliberately settles once a snapshot is
+  // fully consumed and stops repainting, so a poll can legitimately land on a
+  // frame where nothing is moving. Counting such polls as failures made these
+  // checks measure the sampler's luck rather than the renderer — they failed on
+  // a loaded machine, and on CI, while the same run reported healthy per-frame
+  // travel. Totals and medians answer the same questions and cannot be
+  // dominated by a handful of settled or in-flight frames.
   await pitch(page); // reset the step maxima
-  let maxStep = 0; let maxBall = 0; let moved = 0; let nearBall = 0; let samples = 0;
+  let maxStep = 0; let maxBall = 0; let travelled = 0; let samples = 0;
+  const nearest = [];
   let previous = null;
   for (let i = 0; i < 20; i++) {
     await page.waitForTimeout(150);
@@ -75,24 +86,35 @@ await scenario('live pitch motion', async ({ page, check, unexpected }) => {
     maxStep = Math.max(maxStep, p.stats.maxStep);
     maxBall = Math.max(maxBall, p.stats.maxBallStep);
     if (previous) {
-      const dist = p.positions.players.reduce((sum, u) => {
+      travelled += p.positions.players.reduce((sum, u) => {
         const q = previous.players.find((v) => v.id === u.id);
         return sum + (q ? Math.hypot(u.x - q.x, u.y - q.y) : 0);
       }, 0);
-      if (dist > 0.01) moved += 1;
     }
-    const nearest = Math.min(...p.positions.players.map((u) => Math.hypot(u.x - p.positions.ball.x, u.y - p.positions.ball.y)));
-    if (nearest < 0.09) nearBall += 1;
+    nearest.push(Math.min(...p.positions.players.map((u) => Math.hypot(u.x - p.positions.ball.x, u.y - p.positions.ball.y))));
     previous = p.positions;
   }
+  // Total ground covered by all fourteen shirts across the window. A frozen
+  // pitch scores 0; three seconds of football scores several pitch-lengths.
+  const MIN_TRAVEL = 0.5;
+  // Typical distance from the ball to the closest man. A pass in flight and a
+  // dead ball at a stoppage are both correct football and both sit far from
+  // everyone for a stretch, so the middle of the distribution is the honest
+  // measure of "the ball is with the play"; a ball drifting on its own moves
+  // the median, not just the tail.
+  const MAX_MEDIAN_BALL_GAP = 0.09;
+  const sortedNear = [...nearest].sort((a, b) => a - b);
+  const medianNear = sortedNear.length
+    ? sortedNear[Math.floor(sortedNear.length / 2)]
+    : Number.POSITIVE_INFINITY;
   check(samples >= 15, `the profiler hook answered ${samples} times`);
-  check(moved >= samples * 0.5, `the shirts moved in only ${moved} of ${samples} samples`);
+  check(travelled > MIN_TRAVEL, `the shirts covered only ${travelled.toFixed(3)} over ${samples} samples`);
   check(maxStep < MAX_FRAME_STEP, `a shirt moved ${maxStep.toFixed(3)} in one frame (teleport)`);
   check(maxBall < MAX_FRAME_STEP, `the ball moved ${maxBall.toFixed(3)} in one frame (teleport)`);
-  check(nearBall >= samples * 0.6, `the ball was near a player in only ${nearBall} of ${samples} samples`);
+  check(medianNear < MAX_MEDIAN_BALL_GAP, `the ball sat ${medianNear.toFixed(3)} from the nearest player on a typical frame`);
   const ids = previous ? previous.players.map((u) => u.id) : [];
   check(new Set(ids).size === ids.length && ids.length === 14, `${ids.length} shirts drawn, ${new Set(ids).size} distinct`);
-  pass(`live pitch: shirts travel (max ${maxStep.toFixed(3)}/frame), ball stays with play (${nearBall}/${samples})`);
+  pass(`live pitch: shirts travel (${travelled.toFixed(2)} covered, max ${maxStep.toFixed(3)}/frame), ball stays with play (median ${medianNear.toFixed(3)})`);
 
   // Pause: the picture settles and then stops.
   await control(page, 'Pause').click();
@@ -106,12 +128,24 @@ await scenario('live pitch motion', async ({ page, check, unexpected }) => {
   pass('pause: motion settles and stops');
 
   // Resume: play carries on from where it stopped, without a jump.
+  //
+  // Waited for rather than slept on. The engine's next snapshot arrives on its
+  // own schedule, and a fixed sleep that lands in the gap before it reads as
+  // "nothing moved" when the truth is "not yet". Poll until the pitch is
+  // moving again, and fail only if it never does.
   await control(page, 'Play').click();
-  await page.waitForTimeout(1200);
-  const r = await pitch(page);
+  let r = null;
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(150);
+    const sample = await pitch(page);
+    if (!sample) continue;
+    r = sample;
+    if (!sample.stats.settled || sample.stats.maxStep > 0) break;
+  }
+  check(r !== null, 'the profiler hook stopped answering after resume');
   check(r.stats.maxStep < MAX_FRAME_STEP, `a shirt jumped ${r.stats.maxStep.toFixed(3)} on resume`);
   check(r.stats.maxBallStep < MAX_FRAME_STEP, `the ball jumped ${r.stats.maxBallStep.toFixed(3)} on resume`);
-  check(!r.stats.settled, 'nothing moved after resume');
+  check(!r.stats.settled || r.stats.maxStep > 0, 'nothing moved after resume');
   check(unexpected().length === 0, `unexpected error: ${unexpected()[0]?.slice(0, 160)}`);
   pass('resume: motion continues without a teleport');
 });
