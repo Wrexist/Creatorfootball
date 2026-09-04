@@ -339,7 +339,20 @@ export function selectionFit(player: Player, s: FormationSlot): number {
  *     on; the bench is chosen to answer the question "what happens if somebody
  *     goes off", one role at a time.
  */
-export function autoLineup(players: readonly Player[], formation: Formation): TacticSetup {
+/**
+ * The eleven, and nothing else.
+ *
+ * Split out of `autoLineup` because two callers want different halves of it.
+ * A team sheet needs the side, the bench, the captain and the takers; asking
+ * "how well does this squad play this shape" needs only the side, and asking it
+ * of ten shapes per club at world generation while also building ten benches
+ * was most of the cost of doing it at all. One assignment solver, two callers.
+ */
+function assignEleven(players: readonly Player[], formation: Formation): {
+  lineup: Record<string, PlayerId | null>;
+  starters: MatchdayStarter[];
+  picked: Player[];
+} {
   const slots = formation.slots;
   const lineup: Record<string, PlayerId | null> = {};
   for (const s of slots) lineup[s.id] = null;
@@ -351,6 +364,7 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
   const candidates = [...players];
   const fieldable = Math.min(slots.length, candidates.length);
   const picked: Player[] = [];
+  const playerFor = new Map<string, Player>();
 
   if (fieldable > 0) {
     // Only as many slots as we can actually fill, hardest to cover first, so a
@@ -367,18 +381,25 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
       if (player) {
         lineup[s.id] = player.id;
         picked.push(player);
+        playerFor.set(s.id, player);
       }
     });
   }
 
-  // The bench answers a different question from the eleven, and one function
-  // answers it everywhere — here, in the match preview and in the simulator.
   const starters: MatchdayStarter[] = [];
   for (const s of slots) {
-    const id = lineup[s.id];
-    const player = id ? picked.find((p) => p.id === id) : undefined;
+    const player = playerFor.get(s.id);
     if (player) starters.push({ slot: s, player });
   }
+  return { lineup, starters, picked };
+}
+
+export function autoLineup(players: readonly Player[], formation: Formation): TacticSetup {
+  const { lineup, starters, picked } = assignEleven(players, formation);
+
+  // The bench answers a different question from the eleven, and one function
+  // answers it everywhere — here, in the match preview and in the simulator.
+  const candidates = [...players];
   const bench = selectMatchdayBench(candidates, starters, formation, { risk: DEFAULT_TACTICS.risk })
     .map((seat) => seat.player);
 
@@ -395,6 +416,144 @@ export function autoLineup(players: readonly Player[], formation: Formation): Ta
     setPieceTakerId: setPiece?.id ?? null,
     penaltyTakerId: penalty?.id ?? null,
   };
+}
+
+/* ------------------------------------------------------ tactical identity ---
+
+/**
+ * A club's football identity, read as a preference between shapes.
+ *
+ * Every club already has one. `PHILOSOPHY_TACTICS` gives a defensive rock a low
+ * block, a deep line, a cautious risk setting and a patient tempo; it gives the
+ * entertainers a high press, a high line and width. What no club had was a
+ * *shape* to go with it: the generator wrote `DEFAULT_FORMATION_ID` into all
+ * twelve and nothing ever reconsidered, so a league of eight distinct
+ * philosophies walked out in the same 2-3-1 every week.
+ *
+ * `Formation.shape` is the missing link, and it already exists on every shape
+ * the game ships — BALANCED, ATTACKING, DEFENSIVE, WIDE, NARROW — read until
+ * now only by two UI labels. This turns the tactics a club already holds into a
+ * score over exactly those five words. Nothing new is invented: every term
+ * below is an existing `TacticSetup` field, and the reading is a pure function
+ * of it, so the same club always reads the same way.
+ *
+ * The scale is deliberately -1..1 per shape and deliberately coarse. It is a
+ * preference, not a plan.
+ */
+export function shapeAffinity(
+  tactics: Pick<TacticSetup, 'press' | 'line' | 'risk' | 'tempo' | 'width' | 'focus' | 'passing' | 'counter' | 'buildUp'>,
+): Record<Formation['shape'], number> {
+  // How far forward this club wants to play, -1 (sit in) .. 1 (go and get it).
+  const forward =
+    (tactics.line === 'HIGH' ? 0.4 : tactics.line === 'DEEP' ? -0.4 : 0)
+    + (tactics.press === 'HIGH_PRESS' ? 0.3 : tactics.press === 'LOW_BLOCK' ? -0.35 : 0)
+    + (tactics.risk === 'RECKLESS' ? 0.3 : tactics.risk === 'BOLD' ? 0.2 : tactics.risk === 'CAUTIOUS' ? -0.25 : 0)
+    + (tactics.tempo === 'FRANTIC' ? 0.2 : tactics.tempo === 'QUICK' ? 0.1 : tactics.tempo === 'PATIENT' ? -0.15 : 0);
+
+  // How much of the pitch it wants to use, -1 (through the middle) .. 1 (flanks).
+  const wide =
+    (tactics.width === 'WIDE' ? 0.5 : tactics.width === 'NARROW' ? -0.5 : 0)
+    + (tactics.focus === 'LEFT' || tactics.focus === 'RIGHT' ? 0.25 : tactics.focus === 'CENTRE' ? -0.3 : 0)
+    + (tactics.passing === 'SHORT' ? -0.15 : tactics.passing === 'DIRECT' ? 0.1 : 0)
+    + (tactics.counter === 'ALWAYS' ? 0.1 : 0)
+    + (tactics.buildUp === 'BYPASS' ? 0.1 : 0);
+
+  const clampAffinity = (v: number): number => clampRange(v, -1, 1);
+  return {
+    ATTACKING: clampAffinity(forward),
+    DEFENSIVE: clampAffinity(-forward),
+    WIDE: clampAffinity(wide),
+    NARROW: clampAffinity(-wide),
+    // A club with no strong lean either way genuinely wants a balanced shape;
+    // one that leans hard in any direction does not.
+    BALANCED: clampAffinity(0.5 - (Math.abs(forward) + Math.abs(wide)) * 0.6),
+  };
+}
+
+const clampRange = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/**
+ * How well a squad plays a shape: the mean selection value of the side the
+ * engine would actually pick for it. Reuses `autoLineup`, so there is one
+ * answer to "who plays where" in the codebase and this is not a second one.
+ */
+export function formationSuitability(squad: readonly Player[], formation: Formation): number {
+  const { starters } = assignEleven(squad, formation);
+  // A shape the squad cannot even fill is not a shape this squad plays. Scoring
+  // the average of the slots it *did* fill would reward leaving one empty.
+  if (starters.length < formation.slots.length) return 0;
+  let total = 0;
+  for (const entry of starters) total += selectionFit(entry.player, entry.slot);
+  return total / formation.slots.length;
+}
+
+/**
+ * How far below the best-suited shape a club may go to play the shape it wants.
+ * Measured: across generated leagues the ten seven-a-side shapes sit within a
+ * few per cent of each other for a typical squad, and the gap from the best
+ * shape to the forced default averaged 3.5%. A band of 6% therefore keeps the
+ * genuinely competitive alternatives in the running and drops the shapes a
+ * squad is plainly wrong for. See `docs/experiments/formation-identity/`.
+ */
+const SUITABILITY_BAND = 0.06;
+
+/**
+ * How much a club's identity may move a shape inside that band, as a fraction
+ * of the best available suitability. Smaller than the band on purpose: identity
+ * decides between shapes the squad plays about equally well and can never
+ * overturn a shape that is clearly better suited.
+ */
+const IDENTITY_WEIGHT = 0.04;
+
+export interface FormationChoiceOptions {
+  readonly band?: number;
+  readonly identityWeight?: number;
+}
+
+/**
+ * The shape a club walks out in.
+ *
+ * The hierarchy is squad first, identity second, and it is enforced by
+ * construction rather than by weighting: only shapes within `SUITABILITY_BAND`
+ * of the best-suited one are candidates at all, and identity can then move a
+ * candidate by at most `IDENTITY_WEIGHT`, which is smaller than the band. So a
+ * manager's preference chooses between shapes his players can all play, and
+ * never talks him into one they cannot.
+ *
+ * Pure, synchronous and deterministic: no random source, no clock, and an exact
+ * tie goes to the lower formation id.
+ */
+export function selectFormation(
+  squad: readonly Player[],
+  tactics: Parameters<typeof shapeAffinity>[0],
+  candidates: readonly Formation[],
+  options: FormationChoiceOptions = {},
+): Formation {
+  const band = options.band ?? SUITABILITY_BAND;
+  const identityWeight = options.identityWeight ?? IDENTITY_WEIGHT;
+  const fallback = candidates[0] as Formation;
+  if (candidates.length <= 1) return fallback;
+
+  const scored = candidates
+    .map((formation) => ({ formation, suitability: formationSuitability(squad, formation) }))
+    .filter((entry) => entry.suitability > 0);
+  if (scored.length === 0) return fallback;
+
+  const best = Math.max(...scored.map((entry) => entry.suitability));
+  const affinity = shapeAffinity(tactics);
+  const eligible = scored.filter((entry) => entry.suitability >= best * (1 - band));
+
+  let chosen = eligible[0] as { formation: Formation; suitability: number };
+  let chosenScore = -Infinity;
+  for (const entry of eligible) {
+    const score = entry.suitability + best * identityWeight * (affinity[entry.formation.shape] ?? 0);
+    if (score > chosenScore
+      || (score === chosenScore && entry.formation.id.localeCompare(chosen.formation.id) < 0)) {
+      chosen = entry;
+      chosenScore = score;
+    }
+  }
+  return chosen.formation;
 }
 
 /** How many players sit on the bench. Enough to cover every line once, plus one. */

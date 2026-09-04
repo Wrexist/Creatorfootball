@@ -10,7 +10,8 @@
     "audit:all": "tsx src/runAll.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "echo \"no unit tests; audits run via audit:all\"",
-    "experiment:bench": "tsx src/benchExperiment.ts"
+    "experiment:bench": "tsx src/benchExperiment.ts",
+    "experiment:formation": "tsx src/formationExperiment.ts"
   },
   "dependencies": {
     "@cf/engine": "workspace:*"

@@ -227,6 +227,25 @@ and holds through a stoppage. `pitchRenderer.ts` paints what the motion model
 reports. No renderer value is read by the simulation; the render loop's
 timestamps drive presentation only, so frame rate cannot change a result.
 
+A club's shape is chosen by `selectFormation` (`tactics/formations.ts`), once,
+in `newGame`, from the squad it has just been given and the tactics its
+philosophy carries. `formationSuitability` scores a shape as the mean
+`selectionFit` of the side `assignEleven` would pick for it — the same solver
+`autoLineup` uses, split out so scoring ten shapes per club does not also build
+ten benches. `shapeAffinity` reads an existing `TacticSetup` into a preference
+over `Formation.shape`, a field that already existed on every shape and had no
+consumer in selection. The hierarchy is enforced structurally rather than by
+weighting: only shapes within a 6% suitability band are candidates, and identity
+then moves a candidate by at most 4%, so a preference can only ever decide
+between shapes the squad plays about equally well. The choice is stable for the
+save; nothing re-picks it mid-season.
+
+Formation is not decoration. `computeAggregates` weights every team aggregate by
+the slot role a player occupies, `SHOOTER_WEIGHT` reads it, `positioning.ts`
+places shirts from slot coordinates, and `selectMatchdayBench` measures cover
+against the lines the shape actually fields — so a 3-1-2 and a 2-1-3 built from
+the same squad genuinely play differently.
+
 The matchday bench is chosen by `selectMatchdayBench` (`tactics/formations.ts`)
 and by nothing else. It is pure and synchronous, takes the squad, the starting
 eleven (as slot/player pairs) and the formation, and returns seats each carrying
@@ -260,7 +279,7 @@ turns each refusal into its own sentence.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 827 | `pnpm --filter @cf/engine test` |
+| Engine unit/integration | 837 | `pnpm --filter @cf/engine test` |
 | App unit | 302 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |

@@ -1,0 +1,575 @@
+{
+  "experiment": "ai-formation-identity",
+  "commit": "d38d463d519f4b6503c457f3974325bfd2009293",
+  "dirtyTree": true,
+  "generatedFrom": {
+    "worlds": 24,
+    "seasonsPerWorld": 1,
+    "seeds": [
+      "formation-exp-000",
+      "formation-exp-001",
+      "formation-exp-002",
+      "formation-exp-003",
+      "formation-exp-004",
+      "formation-exp-005",
+      "formation-exp-006",
+      "formation-exp-007",
+      "formation-exp-008",
+      "formation-exp-009",
+      "formation-exp-010",
+      "formation-exp-011",
+      "formation-exp-012",
+      "formation-exp-013",
+      "formation-exp-014",
+      "formation-exp-015",
+      "formation-exp-016",
+      "formation-exp-017",
+      "formation-exp-018",
+      "formation-exp-019",
+      "formation-exp-020",
+      "formation-exp-021",
+      "formation-exp-022",
+      "formation-exp-023"
+    ]
+  },
+  "candidates": [
+    {
+      "key": "control",
+      "label": "control (every club 2-3-1)"
+    },
+    {
+      "key": "A_squad_only",
+      "label": "A squad suitability only"
+    },
+    {
+      "key": "B_identity",
+      "label": "B squad + identity (0.06 / 0.04)"
+    },
+    {
+      "key": "C_identity_led",
+      "label": "C identity-led (0.20 / 0.20)"
+    }
+  ],
+  "runtimeMs": 282160,
+  "worldGenerationMsPerWorld": 12.59,
+  "summaries": {
+    "control": {
+      "formation": {
+        "distribution": {
+          "2-3-1": 288
+        },
+        "shapeClasses": {
+          "BALANCED": 288
+        },
+        "formationsUsed": 1,
+        "dominantShare": 1,
+        "entropyBits": 0,
+        "byTier": {
+          "strong": {
+            "2-3-1": 96
+          },
+          "middle": {
+            "2-3-1": 96
+          },
+          "weak": {
+            "2-3-1": 96
+          }
+        }
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.083,
+        "shapeClassByPhilosophy": {
+          "BIG_SPENDERS": {
+            "BALANCED": 48
+          },
+          "CREATOR_FIRST": {
+            "BALANCED": 48
+          },
+          "DATA_DRIVEN": {
+            "BALANCED": 24
+          },
+          "DEFENSIVE_ROCK": {
+            "BALANCED": 24
+          },
+          "VETERAN_CORE": {
+            "BALANCED": 24
+          },
+          "ENTERTAINERS": {
+            "BALANCED": 24
+          },
+          "YOUTH_ACADEMY": {
+            "BALANCED": 48
+          },
+          "LOCAL_ROOTS": {
+            "BALANCED": 48
+          }
+        },
+        "clubsMeasured": 288
+      },
+      "squad": {
+        "meanSuitabilityLoss": 0.0374,
+        "maxSuitabilityLoss": 0.1069,
+        "outOfPositionStartersPerClub": 0.438
+      },
+      "bench": {
+        "seatsPerBench": 7,
+        "noKeeperShare": 0,
+        "lineCoverGapShare": 0.0313
+      },
+      "league": {
+        "matches": 3168,
+        "goalsPerMatch": 7.952,
+        "goalSd": 3.161,
+        "marginMean": 3.055,
+        "bigMarginShare": 0.358,
+        "drawShare": 0.111,
+        "seasonPointsSd": 12.017,
+        "championPoints": 53.33,
+        "subsPerMatch": 9.301
+      },
+      "tiers": {
+        "strongPpg": 1.91,
+        "middlePpg": 1.424,
+        "weakPpg": 1,
+        "strongWeakGap": 0.91
+      },
+      "structure": {
+        "meanAttackShare": 0.167,
+        "meanDefenceShare": 0.333,
+        "attackShareSd": 0,
+        "defenceShareSd": 0
+      },
+      "resultsHash": "172b394490763c7b"
+    },
+    "A_squad_only": {
+      "formation": {
+        "distribution": {
+          "3-2-1": 116,
+          "3-1-2": 40,
+          "3-3": 37,
+          "2-4": 25,
+          "1-3-2": 16,
+          "2-2-1-1": 15,
+          "2-1-2-1": 14,
+          "2-3-1": 14,
+          "2-2-2": 7,
+          "2-1-3": 4
+        },
+        "shapeClasses": {
+          "DEFENSIVE": 156,
+          "WIDE": 62,
+          "NARROW": 14,
+          "BALANCED": 36,
+          "ATTACKING": 20
+        },
+        "formationsUsed": 10,
+        "dominantShare": 0.403,
+        "entropyBits": 2.704,
+        "byTier": {
+          "strong": {
+            "3-2-1": 33,
+            "3-3": 16,
+            "2-1-2-1": 7,
+            "2-2-1-1": 7,
+            "2-4": 6,
+            "3-1-2": 14,
+            "2-3-1": 5,
+            "1-3-2": 5,
+            "2-2-2": 2,
+            "2-1-3": 1
+          },
+          "middle": {
+            "2-4": 8,
+            "3-1-2": 17,
+            "3-2-1": 35,
+            "3-3": 11,
+            "2-3-1": 4,
+            "2-1-3": 3,
+            "2-2-2": 5,
+            "2-1-2-1": 4,
+            "2-2-1-1": 3,
+            "1-3-2": 6
+          },
+          "weak": {
+            "3-2-1": 48,
+            "3-3": 10,
+            "3-1-2": 9,
+            "2-3-1": 5,
+            "2-1-2-1": 3,
+            "2-2-1-1": 5,
+            "2-4": 11,
+            "1-3-2": 5
+          }
+        }
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.257,
+        "shapeClassByPhilosophy": {
+          "BIG_SPENDERS": {
+            "DEFENSIVE": 27,
+            "WIDE": 9,
+            "NARROW": 3,
+            "BALANCED": 6,
+            "ATTACKING": 3
+          },
+          "CREATOR_FIRST": {
+            "DEFENSIVE": 23,
+            "BALANCED": 8,
+            "NARROW": 3,
+            "WIDE": 11,
+            "ATTACKING": 3
+          },
+          "DATA_DRIVEN": {
+            "WIDE": 7,
+            "DEFENSIVE": 11,
+            "NARROW": 2,
+            "BALANCED": 2,
+            "ATTACKING": 2
+          },
+          "DEFENSIVE_ROCK": {
+            "WIDE": 3,
+            "DEFENSIVE": 14,
+            "BALANCED": 3,
+            "ATTACKING": 3,
+            "NARROW": 1
+          },
+          "VETERAN_CORE": {
+            "DEFENSIVE": 16,
+            "WIDE": 3,
+            "BALANCED": 2,
+            "ATTACKING": 2,
+            "NARROW": 1
+          },
+          "ENTERTAINERS": {
+            "DEFENSIVE": 14,
+            "BALANCED": 3,
+            "NARROW": 2,
+            "WIDE": 4,
+            "ATTACKING": 1
+          },
+          "YOUTH_ACADEMY": {
+            "DEFENSIVE": 21,
+            "WIDE": 15,
+            "ATTACKING": 5,
+            "BALANCED": 6,
+            "NARROW": 1
+          },
+          "LOCAL_ROOTS": {
+            "DEFENSIVE": 30,
+            "BALANCED": 6,
+            "WIDE": 10,
+            "NARROW": 1,
+            "ATTACKING": 1
+          }
+        },
+        "clubsMeasured": 288
+      },
+      "squad": {
+        "meanSuitabilityLoss": 0,
+        "maxSuitabilityLoss": 0,
+        "outOfPositionStartersPerClub": 0.181
+      },
+      "bench": {
+        "seatsPerBench": 7,
+        "noKeeperShare": 0,
+        "lineCoverGapShare": 0.0698
+      },
+      "league": {
+        "matches": 3168,
+        "goalsPerMatch": 7.965,
+        "goalSd": 3.134,
+        "marginMean": 3.146,
+        "bigMarginShare": 0.372,
+        "drawShare": 0.1,
+        "seasonPointsSd": 11.968,
+        "championPoints": 52.38,
+        "subsPerMatch": 9.009
+      },
+      "tiers": {
+        "strongPpg": 1.944,
+        "middlePpg": 1.386,
+        "weakPpg": 1.02,
+        "strongWeakGap": 0.924
+      },
+      "structure": {
+        "meanAttackShare": 0.236,
+        "meanDefenceShare": 0.436,
+        "attackShareSd": 0.14,
+        "defenceShareSd": 0.098
+      },
+      "resultsHash": "b54e45a97b9e9d2a"
+    },
+    "B_identity": {
+      "formation": {
+        "distribution": {
+          "3-2-1": 82,
+          "3-3": 44,
+          "1-3-2": 37,
+          "2-2-1-1": 28,
+          "3-1-2": 27,
+          "2-1-3": 21,
+          "2-4": 18,
+          "2-3-1": 16,
+          "2-2-2": 9,
+          "2-1-2-1": 6
+        },
+        "shapeClasses": {
+          "BALANCED": 53,
+          "DEFENSIVE": 109,
+          "WIDE": 62,
+          "ATTACKING": 58,
+          "NARROW": 6
+        },
+        "formationsUsed": 10,
+        "dominantShare": 0.285,
+        "entropyBits": 2.987,
+        "byTier": {
+          "strong": {
+            "2-2-1-1": 19,
+            "3-2-1": 13,
+            "2-1-3": 8,
+            "3-3": 12,
+            "2-3-1": 10,
+            "1-3-2": 16,
+            "2-4": 4,
+            "3-1-2": 6,
+            "2-1-2-1": 5,
+            "2-2-2": 3
+          },
+          "middle": {
+            "3-2-1": 35,
+            "3-1-2": 15,
+            "3-3": 11,
+            "1-3-2": 13,
+            "2-1-3": 10,
+            "2-3-1": 2,
+            "2-2-1-1": 3,
+            "2-2-2": 4,
+            "2-4": 3
+          },
+          "weak": {
+            "3-2-1": 34,
+            "3-3": 21,
+            "2-1-3": 3,
+            "3-1-2": 6,
+            "2-3-1": 4,
+            "1-3-2": 8,
+            "2-2-1-1": 6,
+            "2-4": 11,
+            "2-2-2": 2,
+            "2-1-2-1": 1
+          }
+        }
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.521,
+        "shapeClassByPhilosophy": {
+          "BIG_SPENDERS": {
+            "BALANCED": 17,
+            "DEFENSIVE": 8,
+            "ATTACKING": 17,
+            "WIDE": 2,
+            "NARROW": 4
+          },
+          "CREATOR_FIRST": {
+            "DEFENSIVE": 2,
+            "ATTACKING": 12,
+            "WIDE": 29,
+            "BALANCED": 4,
+            "NARROW": 1
+          },
+          "DATA_DRIVEN": {
+            "DEFENSIVE": 10,
+            "BALANCED": 12,
+            "NARROW": 1,
+            "WIDE": 1
+          },
+          "DEFENSIVE_ROCK": {
+            "DEFENSIVE": 24
+          },
+          "VETERAN_CORE": {
+            "DEFENSIVE": 24
+          },
+          "ENTERTAINERS": {
+            "WIDE": 6,
+            "ATTACKING": 16,
+            "BALANCED": 2
+          },
+          "YOUTH_ACADEMY": {
+            "ATTACKING": 13,
+            "WIDE": 15,
+            "BALANCED": 11,
+            "DEFENSIVE": 9
+          },
+          "LOCAL_ROOTS": {
+            "DEFENSIVE": 32,
+            "BALANCED": 7,
+            "WIDE": 9
+          }
+        },
+        "clubsMeasured": 288
+      },
+      "squad": {
+        "meanSuitabilityLoss": 0.0071,
+        "maxSuitabilityLoss": 0.0539,
+        "outOfPositionStartersPerClub": 0.188
+      },
+      "bench": {
+        "seatsPerBench": 7,
+        "noKeeperShare": 0,
+        "lineCoverGapShare": 0.0848
+      },
+      "league": {
+        "matches": 3168,
+        "goalsPerMatch": 7.891,
+        "goalSd": 3.14,
+        "marginMean": 3.08,
+        "bigMarginShare": 0.36,
+        "drawShare": 0.1,
+        "seasonPointsSd": 11.382,
+        "championPoints": 51.29,
+        "subsPerMatch": 9.033
+      },
+      "tiers": {
+        "strongPpg": 1.865,
+        "middlePpg": 1.414,
+        "weakPpg": 1.071,
+        "strongWeakGap": 0.794
+      },
+      "structure": {
+        "meanAttackShare": 0.274,
+        "meanDefenceShare": 0.4,
+        "attackShareSd": 0.15,
+        "defenceShareSd": 0.118
+      },
+      "resultsHash": "872d5938374e65b9"
+    },
+    "C_identity_led": {
+      "formation": {
+        "distribution": {
+          "2-1-3": 76,
+          "3-2-1": 65,
+          "1-3-2": 61,
+          "2-2-1-1": 26,
+          "3-1-2": 19,
+          "2-3-1": 12,
+          "3-3": 12,
+          "2-4": 8,
+          "2-2-2": 8,
+          "2-1-2-1": 1
+        },
+        "shapeClasses": {
+          "ATTACKING": 137,
+          "BALANCED": 46,
+          "DEFENSIVE": 84,
+          "WIDE": 20,
+          "NARROW": 1
+        },
+        "formationsUsed": 10,
+        "dominantShare": 0.264,
+        "entropyBits": 2.736,
+        "byTier": {
+          "strong": {
+            "2-1-3": 35,
+            "1-3-2": 27,
+            "2-3-1": 9,
+            "3-3": 6,
+            "2-2-1-1": 13,
+            "2-4": 1,
+            "2-2-2": 4,
+            "2-1-2-1": 1
+          },
+          "middle": {
+            "3-2-1": 35,
+            "3-1-2": 13,
+            "2-1-3": 26,
+            "1-3-2": 17,
+            "2-2-1-1": 2,
+            "2-2-2": 3
+          },
+          "weak": {
+            "3-2-1": 30,
+            "2-1-3": 15,
+            "3-1-2": 6,
+            "2-3-1": 3,
+            "1-3-2": 17,
+            "3-3": 6,
+            "2-2-1-1": 11,
+            "2-4": 7,
+            "2-2-2": 1
+          }
+        }
+      },
+      "identity": {
+        "shapeMatchesIdentity": 0.851,
+        "shapeClassByPhilosophy": {
+          "BIG_SPENDERS": {
+            "ATTACKING": 45,
+            "BALANCED": 2,
+            "NARROW": 1
+          },
+          "CREATOR_FIRST": {
+            "ATTACKING": 32,
+            "WIDE": 16
+          },
+          "DATA_DRIVEN": {
+            "BALANCED": 24
+          },
+          "DEFENSIVE_ROCK": {
+            "DEFENSIVE": 24
+          },
+          "VETERAN_CORE": {
+            "DEFENSIVE": 24
+          },
+          "ENTERTAINERS": {
+            "ATTACKING": 24
+          },
+          "YOUTH_ACADEMY": {
+            "ATTACKING": 36,
+            "BALANCED": 12
+          },
+          "LOCAL_ROOTS": {
+            "DEFENSIVE": 36,
+            "BALANCED": 8,
+            "WIDE": 4
+          }
+        },
+        "clubsMeasured": 288
+      },
+      "squad": {
+        "meanSuitabilityLoss": 0.019,
+        "maxSuitabilityLoss": 0.0948,
+        "outOfPositionStartersPerClub": 0.26
+      },
+      "bench": {
+        "seatsPerBench": 7,
+        "noKeeperShare": 0,
+        "lineCoverGapShare": 0.1363
+      },
+      "league": {
+        "matches": 3168,
+        "goalsPerMatch": 7.94,
+        "goalSd": 3.088,
+        "marginMean": 3.068,
+        "bigMarginShare": 0.361,
+        "drawShare": 0.101,
+        "seasonPointsSd": 11.751,
+        "championPoints": 52.42,
+        "subsPerMatch": 9.093
+      },
+      "tiers": {
+        "strongPpg": 1.869,
+        "middlePpg": 1.392,
+        "weakPpg": 1.087,
+        "strongWeakGap": 0.782
+      },
+      "structure": {
+        "meanAttackShare": 0.315,
+        "meanDefenceShare": 0.354,
+        "attackShareSd": 0.146,
+        "defenceShareSd": 0.122
+      },
+      "resultsHash": "24fb0acd787e5bd6"
+    }
+  }
+}

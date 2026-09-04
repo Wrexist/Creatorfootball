@@ -76,9 +76,11 @@ export * from './economy/audit';
 export {
   FORMATIONS, formationById, formationsFor, autoLineup, slotFit, selectionFit,
   selectMatchdayBench, BENCH_SIZE, DEFAULT_BENCH_TUNING,
+  selectFormation, shapeAffinity, formationSuitability,
 } from './tactics/formations';
 export type {
   BenchRole, BenchTuning, MatchdaySeat, MatchdayStarter, MatchdayBenchOptions,
+  FormationChoiceOptions,
 } from './tactics/formations';
 export { toTacticVector, applyVectorModifiers } from './tactics/vector';
 export type { TacticVectorContext } from './tactics/vector';

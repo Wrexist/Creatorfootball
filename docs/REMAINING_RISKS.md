@@ -260,13 +260,31 @@ hashes changed, and pinning the old benches into the new engine reproduces the
 old results hash exactly, so the difference is bench composition alone. That is now measured
 (CURRENT_STATE §4c, `docs/experiments/bench-tuning/`): both constants are
 justified, the selector does not disproportionately reward strong clubs, depth
-pays 0.216 points per game without running away, and versatility is not an
-exploit. Two things remain open. The experiment measures one season per world,
-so multi-season compounding — a bench decision that changes a transfer that
-changes a squad — is unmeasured. And the tactical lean is dormant in league play
-only because every generated club plays 2-3-1; a content pack with varied club
-formations would make it live for the AI overnight, which is a content decision
-nobody has taken deliberately.
+pays without running away, and versatility is not an exploit.
+
+**The ground under that measurement has since moved, deliberately.** AI clubs
+now choose their own shape, so the bench experiment was re-run against the new
+world. The headline holds — the current values are still the healthy ones, 0.80
+is still worse for weak clubs, and the lean's magnitude is still inert — but two
+of its supporting facts have expired. The cover threshold's lower direction was
+a no-op when every club played 2-3-1 (0 of 5,280 matches); it now changes 48.4%
+of matches and 20.7% of winners, and at 0.60 the league measures a shade flatter
+than at 0.70 (points sd 11.69 vs 11.82, weakest third 1.010 vs 1.001 points per
+game). That difference is small and inside the noise a single-season sample can
+resolve, so nothing was changed on it — but `COVER_THRESHOLD` has gone from a
+settled constant to a live one and deserves a dedicated re-validation with more
+seasons per world before anyone calls it final. The tactical lean moved the same
+way in the opposite direction: from 1.6% of matches to 14.8%, which strengthens
+rather than weakens the case for keeping it.
+
+Two things remain unmeasured. Both experiments run one season per world, so
+multi-season compounding is out of scope — a bench or a shape that changes a
+result, that changes a transfer, that changes next season's squad. And a club's
+formation is chosen once at world generation and never revisited: as squads drift
+through transfers and youth promotion, a club can end up in a shape its current
+players no longer suit best. Re-selecting on season rollover is the obvious
+extension and was deliberately not taken here, because a shape that changes
+under the player is a different design decision from a shape that is chosen well.
 
 ## Documentation overlap (housekeeping)
 

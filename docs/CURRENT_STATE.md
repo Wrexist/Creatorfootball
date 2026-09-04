@@ -14,7 +14,7 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **64 files, 827 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **65 files, 837 tests, all passing** |
 | App tests | `pnpm --filter @cf/game test` | **30 files, 302 tests, all passing** |
 | **Total** | `pnpm test` | **1,101 tests, all passing** |
 | Production build | `pnpm build` | pass |
@@ -358,6 +358,56 @@ defensive options 3.33 → 2.81 per bench, midfield 5.22 → 5.31, attacking
 runs answers all four lines; the win is that the selector now runs on every
 club on every matchday, and that the preview and the pitch agree.
 
+**Every club plays its own shape.** Twelve clubs with eight distinct
+philosophies — low blocks and high presses, cautious and reckless — all walked
+out in 2-3-1, because `newGame` wrote `DEFAULT_FORMATION_ID` into every one of
+them and nothing ever reconsidered. That was the entire cause: not squad
+composition, not the scoring, not a shortage of shapes. Measured before
+changing anything, the ten seven-a-side shapes sit within a few per cent of each
+other for a typical squad, the best-suited shape varied by club (2-3-1 for four,
+3-2-1 for four, 2-2-2 for three, 2-4 for one in a sample league), and forcing
+everyone into 2-3-1 cost 3.7% of the selection value the squads could have
+reached. Diversity was not being suppressed by football logic; it had simply
+never been asked for.
+
+`selectFormation` now asks. It reads the squad first — only shapes within 6% of
+the best-suited one are candidates at all — then the club's own tactics, which
+can move a candidate by at most 4%. `Formation.shape` (BALANCED, ATTACKING,
+DEFENSIVE, WIDE, NARROW) already existed on every shape and was read by two UI
+labels and nothing else; `shapeAffinity` turns the press, line, risk, tempo,
+width, focus, passing, counter and build-up a club already holds into a
+preference over exactly those five words. Nothing new is invented and there is
+no second position model: suitability is the mean `selectionFit` of the side
+`autoLineup` would pick, the same score that picks every team sheet.
+
+Measured over 24 worlds and 288 clubs (`docs/experiments/formation-identity/`),
+against three alternatives. All ten shapes now appear; the commonest holds 28.5%
+of clubs where it used to hold 100%; shape entropy is 2.99 bits of a possible
+3.32. Defensive rocks and veteran cores field a defensive shape every time,
+entertainers an attacking one two thirds of the time, creator clubs a wide one
+60% of the time — while *which* defensive shape depends on the squad, so clubs
+sharing a philosophy do not become copies. The league got better, not just
+noisier: season points spread 12.02 → 11.38, the strong-weak gap 0.910 → 0.794
+points per game, the weakest third 1.000 → 1.071, and starters asked to play out
+of position fell from 0.44 to 0.19 per club. Pure squad suitability with no
+identity (candidate A) was rejected — it widened the strong-weak gap to 0.924,
+worse than the old world — and identity-led selection (candidate C) was rejected
+for tripling the suitability cost and *lowering* diversity, because a heavy
+identity weight collapses clubs of one philosophy onto one shape.
+
+The cost is honest and small: world generation 12.3 → 15.5 ms per career (the
+selector runs the assignment solver once per candidate shape), and 8.5% of
+bench line-cover requirements go unmet against 3.1% before, because a squad plan
+built for one shape does not cover all ten equally. Nothing was weakened to hide
+that.
+
+This also switched on tactical systems that were already there. Re-running the
+bench experiment against the new world: the cover threshold's lower direction
+went from changing **0** matches to changing **48.4%** of them, and the tactical
+lean from 1.6% to **14.8%**. The previous phase predicted exactly that — "if
+tactical identity should show on AI benches, the lever is varied club
+formations" — and it is now measured rather than argued.
+
 **Are the bench constants right?** Measured, not asserted. `selectMatchdayBench`
 takes an optional `benchTuning` — the same shape as `MatchConfig.adaptation`,
 absent in every real match, defaulting to the production constants — so a
@@ -372,8 +422,15 @@ The answer is keep both values.
 *Cover threshold* is a step function, not a dial. The best player-to-line
 familiarity that actually occurs takes only the values 0.45, 0.70, 0.75, 0.82,
 0.87, 0.88, 0.90 and 1.00 — nothing between 0.46 and 0.69 — so every threshold
-in (0.45, 0.70] is the same selector, and running the league at 0.60 reproduced
-0.70 byte for byte (0 of 5,280 matches changed). The only other behaviour is
+in (0.45, 0.70] is the same selector *for a given shape*. When every club played
+2-3-1, running the league at 0.60 reproduced 0.70 byte for byte (0 of 5,280
+matches changed). That is no longer true: with clubs playing all ten shapes, the
+0.60 arm now changes 48.4% of matches and 20.7% of winners, because shapes with
+wing-back and wide slots have links in the 0.60 band that 2-3-1 does not. The
+current value still measures well — at 0.60 the league is a shade flatter
+(points sd 11.69 vs 11.82, weakest third 1.010 vs 1.001 points per game) — but
+this is now a live parameter rather than a settled one, and is flagged for
+re-validation in REMAINING_RISKS. The only other behaviour is
 above 0.70, and it is worse: at 0.80, 85% of matches change and 36% change
 winner, the league gets less competitive (season points sd 11.73 -> 12.16), the
 weakest third of clubs lose ground (0.993 -> 0.971 points per game), and more
@@ -382,15 +439,14 @@ benches end up with no attacking option (5.4% -> 8.4%) or no reserve keeper
 
 *Tactical lean* cannot be tuned by magnitude at all — exposure counts are
 integers, so any value in (0, 1) breaks exactly the ties and nothing else, and
-0.20 reproduced 0.12 byte for byte. Only its presence matters, and in the league
-only barely: switching it off changes 1.6% of matches and 0.4% of winners and
-moves no aggregate outside noise. That is a content fact, not a dead constant —
-every club this pack generates plays 2-3-1, whose 2/3/1 lines can rarely tie.
+0.20 still reproduces 0.12 byte for byte. Only its presence matters. When every
+club played 2-3-1 that presence was worth 1.6% of matches; now that clubs field
+shapes whose lines can level it is worth 14.8% of matches and 6.4% of winners,
+and switching it off measurably costs the weakest clubs (0.995 vs 1.001 points
+per game) and flattens the reward for squad depth (0.128 vs 0.152).
 Asked directly across every shape the game ships, the lean changes 10.3% of
 benches, in exactly the shapes with lines that can level (1-3-2, 2-2-2, 2-1-3,
-3-3, and the eleven-a-side shapes). It is live for a manager who picks one of
-those. If tactical identity should show on *AI* benches, the lever is varied
-club formations, not a bigger number.
+3-3, and the eleven-a-side shapes) — which AI clubs now actually play.
 
 Two other things the experiment settled. The selector does not disproportionately
 reward strong clubs: the strong-weak gap is 0.918 points per game at 0.70 and

@@ -241,13 +241,16 @@ describe('bench tuning', () => {
         results.push(`${fixture.id} ${r.homeScore}-${r.awayScore}`);
       }
     }
-    // Recorded before bench tuning was made configurable. Only a deliberate
-    // balance change may move these, and never a measurement harness.
+    // Only a deliberate balance change may move these, and never a measurement
+    // harness. They last moved when AI clubs stopped all playing 2-3-1 and
+    // started choosing a shape from their squad and their own tactics, which
+    // rewrites `club.tactics.formationId` in every generated world and with it
+    // every match played there. See docs/experiments/formation-identity/.
     expect(worlds).toEqual([
-      'smoke new=d13155e17f31c6f0',
-      'store-test new=c40b230752fb761d',
-      'hash-b new=a6f759acd46d0e08',
+      'smoke new=b378fb9ce5e26797',
+      'store-test new=79ecbaa490b5117c',
+      'hash-b new=bb9281d22753dcd0',
     ]);
-    expect(hash(results)).toBe('5e1b540e817b35a0');
+    expect(hash(results)).toBe('732f0e5c967232b5');
   });
 });

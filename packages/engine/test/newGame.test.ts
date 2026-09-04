@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { formationById } from '../src/tactics/formations';
 import { createNewGame } from '../src/game/newGame';
 import { ContentRegistry } from '../src/content';
 import { BASE_PACK } from '../src/content/packs/base';
@@ -37,7 +38,14 @@ describe('new game creation', () => {
     for (const club of clubs) {
       expect(club.squad.length).toBeGreaterThanOrEqual(16);
       expect(club.managerId).not.toBeNull();
-      expect(club.tactics.formationId).toBe('2-3-1');
+      // Every club has a real shape for this format. It used to be asserted as
+      // literally '2-3-1', which was true only because the generator wrote the
+      // default into all twelve; clubs now choose from their squad and their
+      // own tactics, so what matters is that the shape is one the competition
+      // fields and one this squad can fill.
+      const formation = formationById(club.tactics.formationId);
+      expect(formation.id).toBe(club.tactics.formationId);
+      expect(formation.slots).toHaveLength(7);
     }
 
     // Every player is owned by exactly one club and has a contract.

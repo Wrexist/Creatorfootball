@@ -29,6 +29,11 @@ reference hashes are unchanged.
 
 It measures one season per world. Multi-season effects — squads that drift
 apart because a bench decision compounded through transfers and development —
-are outside it. It also measures the content pack the game ships, in which
-every generated club plays 2-3-1; a pack with varied club formations would give
-the tactical lean far more to do.
+are outside it.
+
+**These results were re-measured after AI clubs began choosing their own
+shapes.** The earlier run, in which every generated club played 2-3-1, found the
+0.60 cover arm and the tactical lean almost inert; against a league that fields
+all ten shapes they change 48.4% and 14.8% of matches respectively. The
+conclusions held, but see `REMAINING_RISKS.md`: the cover threshold is now a
+live parameter rather than a settled one.
