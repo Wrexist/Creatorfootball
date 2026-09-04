@@ -14,7 +14,7 @@ it, on the commit that introduced this file. Nothing is estimated.
 |---|---|---|
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | **65 files, 837 tests, all passing** |
+| Engine tests | `pnpm --filter @cf/engine test` | **66 files, 849 tests, all passing** |
 | App tests | `pnpm --filter @cf/game test` | **30 files, 302 tests, all passing** |
 | **Total** | `pnpm test` | **1,101 tests, all passing** |
 | Production build | `pnpm build` | pass |
@@ -357,6 +357,50 @@ defensive options 3.33 → 2.81 per bench, midfield 5.22 → 5.31, attacking
 1.75 → 1.44, against a 2-3-1 starting two, three and one. Every bench in both
 runs answers all four lines; the win is that the selector now runs on every
 club on every matchday, and that the preview and the pitch agree.
+
+**A club's shape now outlives its squad, but not by a decade.** Formation was
+chosen once, when the world was made, and then frozen for the life of the save
+while the squad underneath it moved. Measured over eight seasons: a club turns
+over 11-23% of its squad a year through retirement, academy graduates and the
+positions its recruitment profile favours, and a frozen shape ends **3.5%
+behind** the shape its squad should now be playing, the worst tenth 7.5% adrift,
+with starters played out of position rising to 0.78 per club.
+
+`reviewFormation` reconsiders once a season, at the one moment in the calendar
+when the squad for the coming year is settled — after retirements and academy
+promotions, and after the rollover has already put everyone back to full fitness
+with injuries and suspensions cleared. The current shape is the default and has
+to be *beaten*, not matched: only when it has fallen more than 8% behind the
+best available does `selectFormation` — the same selector that chose at
+generation — pick the replacement. The player's club is never touched.
+
+The decision is provably blind to how the season went. Fitness, injuries and
+suspensions are already reset by that point, and form — the one remaining
+channel by which results reach `selectionFit` — is zeroed inside the review. A
+club does not change shape because it lost; it changes because it is a different
+team.
+
+Measured over 12 worlds × 8 seasons × 5 settings, 144 club careers each
+(`docs/experiments/formation-evolution/`). Reassessing greedily — taking the
+best shape every summer — moves 79% of clubs two or more times, flips 31% of
+them back and forth between the same two shapes, and is the only setting that
+damages the league: the weakest third fall to 0.984 points per game against
+1.064 frozen, and the strong-weak gap widens from 0.681 to 0.791. At 0.12 the
+rule is inert (95% never change, 3.48% adrift — the frozen world with extra
+steps). At **0.08**: three quarters of clubs never change shape at all, 2%
+change more than once in eight seasons, and **no club in 144 careers ever
+reverted to a shape it had left**. Drift halves (3.54% → 2.50%), out-of-position
+starters fall from 0.78 to 0.64, competitive balance is exactly where the frozen
+world had it (strong-weak gap 0.681, unchanged), and shapes fit club identity
+better than in any other setting including frozen (37.5% against 36.1%). 0.06
+was the other serious candidate and loses narrowly: it reverts a club
+occasionally rather than never, moves twice as many, widens the strong-weak gap
+to 0.726 and *lowers* shape diversity, because a lower bar funnels clubs toward
+the same handful of best-fitting shapes.
+
+Cost: +8.9 ms on a season rollover (209 → 218 ms), once a year. No reference
+hash moved — the pinned worlds cover generation and week-two matches, and a
+rollover fires after week 22.
 
 **Every club plays its own shape.** Twelve clubs with eight distinct
 philosophies — low blocks and high presses, cautious and reckless — all walked

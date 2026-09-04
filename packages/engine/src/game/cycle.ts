@@ -28,7 +28,7 @@ import type { ContentRegistry, CreatorSeasonConfigDef } from '../content';
 import { applyMatchResult } from './applyResult';
 import { observeTactics } from '../simulation/opponentModel';
 import { buildMatchSetup } from './matchSetup';
-import type { BenchTuning } from '../tactics/formations';
+import type { BenchTuning, FormationReviewOptions } from '../tactics/formations';
 import { rolloverSeason } from './seasonRollover';
 import { GameEventFactory } from './eventFactory';
 import { appendEvents, patchClub, patchPlayer, setContract, transferPlayer } from './mutations';
@@ -68,6 +68,11 @@ export interface AdvanceCycleOptions {
    * run under one configuration with everything else held constant.
    */
   readonly benchTuning?: BenchTuning;
+  /**
+   * Formation-reassessment settings for the season rollover this cycle may
+   * trigger. Absent in real play; set only by the balance harness.
+   */
+  readonly formationEvolution?: FormationReviewOptions & { enabled?: boolean };
 }
 
 export interface CycleSummary {
@@ -432,7 +437,10 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   // the world quietly decays: squads shed players nobody replaces, sponsorship
   // lapses with nothing to renew against, and reputation drains to nothing.
   if (seasonComplete) {
-    const rolled = rolloverSeason(next, rng.fork('rollover'), ledger, events, { now: opts.now, registry });
+    const rolled = rolloverSeason(next, rng.fork('rollover'), ledger, events, {
+      now: opts.now, registry,
+      ...(opts.formationEvolution ? { formationEvolution: opts.formationEvolution } : {}),
+    });
     next = { ...rolled.state, ledger: ledger.snapshot() };
     allEvents.push(...rolled.events);
     notes.push(

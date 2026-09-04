@@ -556,6 +556,156 @@ export function selectFormation(
   return chosen.formation;
 }
 
+/* -------------------------------------------------- seasonal reassessment ---
+
+/**
+ * How far behind the best available shape a club's current one must fall
+ * before changing is worth the loss of continuity.
+ *
+ * MEASURED over 12 worlds x 8 seasons x 5 settings — 144 club careers each,
+ * `docs/experiments/formation-evolution/`. A club's squad turns over 11-23% a
+ * year, and a frozen shape ends 3.5% behind the shape its squad should now be
+ * playing, with the worst tenth 7.5% adrift.
+ *
+ * The two ends of the range are both wrong, and measurably so:
+ *
+ *   - **No stability preference at all** (take the best shape every summer)
+ *     moves 79% of clubs two or more times, flips 31% of them back and forth
+ *     between the same two shapes, and is the only setting that hurts the
+ *     league: the weakest third fall to 0.984 points per game against 1.064
+ *     frozen, and the strong-weak gap widens from 0.681 to 0.791. Perfect
+ *     squad fit, bought with a league of clubs that have no memory.
+ *   - **0.12** leaves 95% of clubs never changing and ends 3.48% adrift, which
+ *     is the frozen world with extra steps.
+ *
+ * At 0.08: three quarters of clubs never change their shape at all, 2% change
+ * more than once in eight seasons, and **no club anywhere in 144 careers ever
+ * reverted to a shape it had left** — the A-B-A signature is zero. It halves
+ * the drift a frozen shape accumulates (3.54% to 2.50%), cuts starters played
+ * out of position from 0.78 to 0.64 per club, and leaves competitive balance
+ * exactly where the frozen world had it (strong-weak gap 0.681, unchanged).
+ * It also fits club identity better than any other setting, frozen included
+ * (37.5% of shapes match the club's own tactical lean, against 36.1%).
+ *
+ * 0.06 was the other serious candidate and loses narrowly on the things this
+ * rule exists to protect: it reverts a club occasionally rather than never,
+ * moves twice as many clubs, widens the strong-weak gap to 0.726, and lowers
+ * shape diversity (entropy 2.87 against 3.02) because a lower bar funnels
+ * clubs toward the same handful of best-fitting shapes.
+ *
+ * It is deliberately at or above `SUITABILITY_BAND`. At or above the band, a
+ * shape that has fallen far enough to justify a change is also outside the set
+ * `selectFormation` will consider, so "the current shape has fallen too far"
+ * and "the current shape is no longer eligible" become the same statement and a
+ * change is guaranteed to actually change something. Below the band the rule
+ * still behaves correctly — the selector may simply hand the same shape back,
+ * which is reported as a keep — but the guarantee is weaker. The experiment
+ * uses lower values as diagnostics; production does not.
+ */
+const FORMATION_CHANGE_THRESHOLD = 0.08;
+
+export type FormationVerdict =
+  /** Nothing to choose between: one candidate was offered. */
+  | 'KEPT_ONLY_CANDIDATE'
+  /** The squad cannot field the current shape at all — it had to move. */
+  | 'CHANGED_SHAPE_UNPLAYABLE'
+  /** The current shape is still close enough to the best available. */
+  | 'KEPT_STILL_SUITS'
+  /** The squad has moved on far enough that a different shape is now right. */
+  | 'CHANGED_SQUAD_OUTGREW_SHAPE';
+
+/** A reassessment, and every number that produced it. */
+export interface FormationReview {
+  readonly current: Formation;
+  readonly chosen: Formation;
+  readonly changed: boolean;
+  readonly currentSuitability: number;
+  readonly bestSuitability: number;
+  /** How far behind the best available shape the current one has fallen, 0-1. */
+  readonly shortfall: number;
+  /** The line `shortfall` had to cross. Reported so a decision explains itself. */
+  readonly threshold: number;
+  readonly verdict: FormationVerdict;
+}
+
+export interface FormationReviewOptions extends FormationChoiceOptions {
+  readonly changeThreshold?: number;
+}
+
+/**
+ * A club's shape, reconsidered.
+ *
+ * Formation is chosen once, when the world is made, from the squad the club has
+ * that day — and then the squad moves. Players retire, the academy sends two up
+ * every summer, the recruitment profile buys the positions it favours, everyone
+ * ages. A shape that fitted a squad in season one can be plainly wrong for the
+ * squad that inherits it in season five.
+ *
+ * The current shape is the default and has to be beaten, not merely matched:
+ * continuity is worth something, and a club that changes its football because a
+ * number moved a tenth of a per cent is not a club. So the question asked here
+ * is never "what is the best shape", it is "has this one fallen too far
+ * behind". Only when it has does `selectFormation` — the same selector that
+ * chose at generation, with the same squad-first hierarchy and the same
+ * identity weighting — pick the replacement.
+ *
+ * The decision is deliberately blind to how the season *went*. Fitness,
+ * injuries and suspensions are already reset by the time a rollover reaches
+ * this point, and form — the one remaining channel by which results reach
+ * `selectionFit` — is zeroed here. What is left is the squad: who is at the
+ * club, how good they are and where they play. A club does not change shape
+ * because it lost; it changes shape because it is a different team.
+ */
+export function reviewFormation(
+  squad: readonly Player[],
+  tactics: Parameters<typeof shapeAffinity>[0] & Pick<TacticSetup, 'formationId'>,
+  candidates: readonly Formation[],
+  options: FormationReviewOptions = {},
+): FormationReview {
+  const threshold = options.changeThreshold ?? FORMATION_CHANGE_THRESHOLD;
+  const current = candidates.find((f) => f.id === tactics.formationId)
+    ?? formationById(tactics.formationId);
+
+  // Results reach selection only through form. Neutralise it, once, and the
+  // reassessment provably cannot see last season's table.
+  const settled = squad.map((player) => (player.form.rating === 0
+    ? player
+    : { ...player, form: { ...player.form, rating: 0 } }));
+
+  const currentSuitability = formationSuitability(settled, current);
+  const bestSuitability = Math.max(currentSuitability,
+    ...candidates.map((formation) => formationSuitability(settled, formation)));
+  const shortfall = bestSuitability > 0
+    ? (bestSuitability - currentSuitability) / bestSuitability
+    : 0;
+
+  const keep = (verdict: FormationVerdict): FormationReview => ({
+    current, chosen: current, changed: false,
+    currentSuitability, bestSuitability, shortfall, threshold, verdict,
+  });
+
+  if (candidates.length <= 1) return keep('KEPT_ONLY_CANDIDATE');
+
+  // A shape the squad can no longer field is not a matter of preference.
+  if (currentSuitability <= 0) {
+    const chosen = selectFormation(settled, tactics, candidates, options);
+    return {
+      current, chosen, changed: chosen.id !== current.id,
+      currentSuitability, bestSuitability, shortfall: 1, threshold,
+      verdict: chosen.id === current.id ? 'KEPT_ONLY_CANDIDATE' : 'CHANGED_SHAPE_UNPLAYABLE',
+    };
+  }
+
+  if (shortfall <= threshold) return keep('KEPT_STILL_SUITS');
+
+  const chosen = selectFormation(settled, tactics, candidates, options);
+  return {
+    current, chosen, changed: chosen.id !== current.id,
+    currentSuitability, bestSuitability, shortfall, threshold,
+    verdict: chosen.id === current.id ? 'KEPT_STILL_SUITS' : 'CHANGED_SQUAD_OUTGREW_SHAPE',
+  };
+}
+
 /** How many players sit on the bench. Enough to cover every line once, plus one. */
 export const BENCH_SIZE = 7;
 

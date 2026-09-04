@@ -18,6 +18,9 @@ import { CREATOR_BALANCE } from '../creators/balance';
 import { facilityEffect } from '../facilities/facilities';
 import type { ContentRegistry } from '../content';
 import type { GameEventFactory } from './eventFactory';
+import { formationsFor, reviewFormation } from '../tactics/formations';
+import type { FormationReviewOptions } from '../tactics/formations';
+import { squadOf } from './selectors';
 
 /**
  * The end of a season, and the start of the next one.
@@ -61,7 +64,17 @@ export function rolloverSeason(
   rng: Rng,
   ledger: Ledger,
   events: GameEventFactory,
-  opts: { now: number; registry: ContentRegistry },
+  opts: {
+    now: number;
+    registry: ContentRegistry;
+    /**
+     * Formation reassessment settings. Absent in every real rollover, which
+     * means the production rule; set only by the balance harness, which needs
+     * whole careers run under one setting with everything else held constant.
+     * `enabled: false` freezes shapes, which is what the world did before.
+     */
+    formationEvolution?: FormationReviewOptions & { enabled?: boolean };
+  },
 ): RolloverResult {
   let next = state;
   const emitted: AnyDomainEvent[] = [];
@@ -287,6 +300,45 @@ export function rolloverSeason(
       followers: spent.followers,
       seasonsActive: nextNumber - (spent.spawnedSeason ?? nextNumber),
     }, { importance: 1, entities: [{ kind: 'creator', id: spent.id, name: spent.displayName }] }));
+  }
+
+  // --- 4d. shapes, reconsidered ----------------------------------------
+  //
+  // This is the one moment in the calendar when a club's squad for the coming
+  // season is final and settled: retirements have been taken (§3), the academy
+  // has sent its graduates up (§4), and §3 has already put everyone back to
+  // full fitness with injuries and suspensions cleared. The new intake (§4b)
+  // joins the youth squad, not the senior one, so nothing below this line moves
+  // a player the shape depends on.
+  //
+  // The current shape is the default and has to be beaten. `reviewFormation`
+  // only reaches for a replacement when the squad has drifted far enough that
+  // the shape is no longer one of the ones this squad plays well — so a stable
+  // club keeps its football, and a club that has genuinely rebuilt changes it.
+  // Nothing about the season just played is an input: form is neutralised
+  // inside the review, so a club never changes shape because it lost.
+  //
+  // The player's club is never touched. Their tactics are theirs.
+  const evolution = opts.formationEvolution;
+  const shapes = formationsFor(opts.registry.seasonConfig().playersOnPitch);
+  // The harness can switch reassessment off entirely to reproduce the world as
+  // it was before shapes could evolve. Tested once, not once per club.
+  const reassessing = evolution?.enabled !== false;
+  for (const club of reassessing ? Object.values(next.clubs) : []) {
+    if (club.isPlayerClub) continue;
+    const review = reviewFormation(squadOf(next, club.id), club.tactics, shapes, evolution ?? {});
+    if (!review.changed) continue;
+    next = patchClub(next, club.id, (c) => ({
+      // The old slot ids do not exist in the new shape, so a sheet written
+      // against them would name players into positions that are gone.
+      tactics: { ...c.tactics, formationId: review.chosen.id, lineup: {}, bench: [] },
+    }));
+    emitted.push(events.make('CLUB_SHAPE_CHANGED', {
+      clubId: club.id,
+      from: review.current.id,
+      to: review.chosen.id,
+      season: nextNumber,
+    }, { importance: 3, entities: [events.clubRef(club.id)] }));
   }
 
   // --- 5. clubs reset, and their standing follows what they achieved ----

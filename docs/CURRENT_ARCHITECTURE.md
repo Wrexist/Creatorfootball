@@ -240,6 +240,21 @@ then moves a candidate by at most 4%, so a preference can only ever decide
 between shapes the squad plays about equally well. The choice is stable for the
 save; nothing re-picks it mid-season.
 
+`reviewFormation` (same module) reconsiders that choice once a season, from
+`seasonRollover.ts` §4d — after §3's retirements and fitness reset and §4's
+academy promotions, which is the only point where the senior squad for the
+coming season is final. It compares the current shape's suitability against the
+best available and keeps unless the shortfall exceeds `FORMATION_CHANGE_THRESHOLD`;
+only then does it call `selectFormation` for a replacement. It zeroes `form`
+before scoring, so the decision cannot see last season's results through
+`slotFit`. It returns a `FormationReview` carrying both suitabilities, the
+shortfall, the threshold and a verdict, so a decision explains itself without a
+persisted history: no Club state was added and `SAVE_VERSION` is untouched. A
+change emits `CLUB_SHAPE_CHANGED` and clears `lineup`/`bench`, whose slot ids
+belong to the shape being left. The player's club is skipped entirely.
+`AdvanceCycleOptions.formationEvolution` injects settings for the balance
+harness, the same pattern as `benchTuning`; production passes none.
+
 Formation is not decoration. `computeAggregates` weights every team aggregate by
 the slot role a player occupies, `SHOOTER_WEIGHT` reads it, `positioning.ts`
 places shirts from slot coordinates, and `selectMatchdayBench` measures cover
@@ -279,7 +294,7 @@ turns each refusal into its own sentence.
 
 | Suite | Count | Command |
 |---|---|---|
-| Engine unit/integration | 837 | `pnpm --filter @cf/engine test` |
+| Engine unit/integration | 849 | `pnpm --filter @cf/engine test` |
 | App unit | 302 | `pnpm --filter @cf/game test` |
 | Browser smoke (real bundle) | 9 checks | `pnpm test:smoke` |
 | Economy / simulation / invariant audits | see below | `pnpm audit:all` |

@@ -277,14 +277,37 @@ seasons per world before anyone calls it final. The tactical lean moved the same
 way in the opposite direction: from 1.6% of matches to 14.8%, which strengthens
 rather than weakens the case for keeping it.
 
-Two things remain unmeasured. Both experiments run one season per world, so
-multi-season compounding is out of scope — a bench or a shape that changes a
-result, that changes a transfer, that changes next season's squad. And a club's
-formation is chosen once at world generation and never revisited: as squads drift
-through transfers and youth promotion, a club can end up in a shape its current
-players no longer suit best. Re-selecting on season rollover is the obvious
-extension and was deliberately not taken here, because a shape that changes
-under the player is a different design decision from a shape that is chosen well.
+**The frozen-formation half of this is now done.** Clubs reassess their shape
+once a season (CURRENT_STATE §4c, `docs/experiments/formation-evolution/`),
+measured over 12 worlds x 8 seasons: three quarters of clubs never change, no
+club in 144 careers ever reverted to a shape it had left, and competitive
+balance is unchanged from the frozen world. What that measurement also exposed
+is listed below.
+
+**MEASURED, NOT RETUNED — `COVER_THRESHOLD`.** Still live rather than settled,
+for the reason recorded above. The evolution experiment did not vary it and this
+phase deliberately did not touch it; it still wants a dedicated re-validation
+with more seasons per world.
+
+**MEASURED, NOT CHANGED — players never change position.** Nothing in the engine
+retrains a player: over two simulated seasons, 0 of 193 surviving players changed
+`position` or `secondaryPositions`, while 146 of them moved in `overall` (by up
+to 4 points) through `worldTick`'s weekly development. So a club's *positional*
+makeup — the thing formation suitability actually reads — moves only through who
+joins and who leaves, never through who a player becomes. That is a coherent
+world model, not a bug, but it bounds tactical evolution: a club can never grow
+into a new shape from within. If positional retraining is ever added, the
+evolution experiment must be re-run, because drift would then have a second
+source.
+
+Two things remain unmeasured. Both the bench and the formation-identity
+experiments run one season per world, so their multi-season compounding is still
+out of scope even though the evolution experiment now runs eight. And a club's
+shape is reassessed only at rollover: a squad gutted mid-season by a January
+window plays on in a shape it may no longer suit until the summer. That is a
+deliberate stability choice, not an oversight — one controlled reassessment a
+season is what keeps the league from churning — but it is the obvious place to
+look if mid-season rebuilds ever feel unresponsive.
 
 ## Documentation overlap (housekeeping)
 
