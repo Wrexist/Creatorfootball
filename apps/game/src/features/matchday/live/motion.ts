@@ -82,7 +82,7 @@ const LOOSE_TAU = 0.35;
  * belongs, so the question "has everything stopped" cannot get a different
  * answer from the code that decides when to stop.
  */
-const BALL_LANDING = 5e-4;
+export const BALL_LANDING = 5e-4;
 /**
  * The furthest the ball may travel in one paint, whatever put it there.
  *

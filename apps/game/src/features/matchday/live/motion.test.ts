@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PitchFrame, PlayerId } from '@cf/engine';
-import { BALL_PASS_SPEED, BALL_SHOT_SPEED, PitchMotion } from './motion';
+import { BALL_LANDING, BALL_PASS_SPEED, BALL_SHOT_SPEED, PitchMotion } from './motion';
 
 /**
  * The presentation layer between the simulator's snapshots and the pixels.
@@ -61,6 +61,38 @@ describe('player motion', () => {
     expect(m.settled()).toBe(true);
     m.advance(30_000);
     expect(m.node('a')!.x).toBeCloseTo(0.4, 6);
+  });
+
+  it('what is left to move once settled() says true is bounded by BALL_LANDING', () => {
+    // `settled()` answers "close enough to stop", and close enough is
+    // `BALL_LANDING`. The ease then puts the ball exactly on its target on the
+    // next frame, which is a real position change *after* the pitch has already
+    // reported itself at rest. That residual is what a paused-pitch check can
+    // catch straddling its two samples, so it is pinned here rather than left
+    // for a browser run on a loaded machine to discover: bounded by the
+    // model's own landing tolerance, and over in a single frame.
+    const m = new PitchMotion();
+    m.setFrame(frame({ tick: 1, ball: { x: 0.2, y: 0.5 }, players: [unit('a', 0.3, 0.4), unit('b', 0.7, 0.6)] }), 0);
+    m.setFrame(frame({ tick: 2, ball: { x: 0.8, y: 0.55 }, players: [unit('a', 0.35, 0.42), unit('b', 0.66, 0.58)] }), 240);
+
+    const where = (): number[] => [m.ballPoint().x, m.ballPoint().y, ...[...m.values()].flatMap((n) => [n.x, n.y])];
+    let atRest: number[] | null = null;
+    let worst = 0;
+    let framesThatMoved = 0;
+
+    for (let t = 16; t <= 20_000; t += 16) {
+      const moved = m.advance(t);
+      if (!atRest) { if (m.settled()) atRest = where(); continue; }
+      const now = where();
+      for (let i = 0; i < now.length; i += 2) {
+        worst = Math.max(worst, Math.hypot(now[i]! - atRest[i]!, now[i + 1]! - atRest[i + 1]!));
+      }
+      if (moved) framesThatMoved += 1;
+    }
+
+    expect(atRest).not.toBeNull();
+    expect(worst).toBeLessThan(BALL_LANDING);
+    expect(framesThatMoved).toBe(1);
   });
 
   it('TEST 16: resuming after a pause continues from where the shirt is, without a teleport', () => {
