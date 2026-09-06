@@ -15,8 +15,8 @@ it, on the commit that introduced this file. Nothing is estimated.
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | **66 files, 849 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **30 files, 304 tests, all passing** |
-| **Total** | `pnpm test` | **1,153 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **30 files, 305 tests, all passing** |
+| **Total** | `pnpm test` | **1,154 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks + **5/5** matchday checks (live motion, pause, resume, goalkeeper substitution), against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |

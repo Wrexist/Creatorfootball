@@ -267,6 +267,20 @@ when it stops (speed still decays, so the motion streak fades), and by a
 per-frame travel cap of `BALL_SHOT_SPEED * BALL_FRAME_CAP`. 16 of 16
 consecutive matchday runs, against 9 of 14 before.
 
+**And then the check itself was wrong, in the other direction.** Measuring the
+window fixed the flakiness; the bound it compared against did not survive CI.
+`settled()` answers "close enough to stop", and close enough is `BALL_LANDING`
+(5e-4) — after which the ease puts the ball exactly on target on the next
+frame, a real move of up to that much *after* the pitch has reported itself at
+rest. The check sampled the instant `settled` turned true and asked for less
+than 1e-4 of drift, five times tighter than the tolerance the model documents,
+so on a slower runner the landing frame fell inside its window and it failed at
+0.000397 with nothing wrong. It now waits for a window in which nothing moved
+at all before it samples, and compares against the model's own constant. The
+residual is pinned as a unit test — after `settled()` first answers true,
+everything together moves 0.00049 and exactly one further frame moves at all —
+so the next person to tighten that number has to argue with a measurement.
+
 **The bench is no longer squad order.** This entry used to end by deferring
 that: every club was created with an empty `tactics.bench` and the simulator
 filled it from squad order, and fixing it would move simulated results. It is
