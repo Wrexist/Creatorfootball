@@ -88,13 +88,13 @@ export function AnalyticsTab({
       </GlassPanel>
 
       <GlassPanel nested level={2} padding="md" title="The numbers">
-        <CompareRow label="Possession" homeValue={result.homeStats.possession * 100} awayValue={result.awayStats.possession * 100} homeColor={homePalette.primary} awayColor={awayPalette.primary} format={(v) => `${Math.round(v)}%`} />
+        <CompareRow label="Possession" homeValue={result.homeStats.possession} awayValue={result.awayStats.possession} homeColor={homePalette.primary} awayColor={awayPalette.primary} format={(v) => `${Math.round(v)}%`} />
         <CompareRow label="Shots" homeValue={result.homeStats.shots} awayValue={result.awayStats.shots} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
         <CompareRow label="On target" homeValue={result.homeStats.shotsOnTarget} awayValue={result.awayStats.shotsOnTarget} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
         <CompareRow label="xG" homeValue={result.homeStats.xg} awayValue={result.awayStats.xg} homeColor={homePalette.primary} awayColor={awayPalette.primary} format={two} />
         <CompareRow label="Big chances" homeValue={result.homeStats.bigChances} awayValue={result.awayStats.bigChances} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
         <CompareRow label="Passes" homeValue={result.homeStats.passes} awayValue={result.awayStats.passes} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
-        <CompareRow label="Pass accuracy" homeValue={result.homeStats.passAccuracy * 100} awayValue={result.awayStats.passAccuracy * 100} homeColor={homePalette.primary} awayColor={awayPalette.primary} format={(v) => `${Math.round(v)}%`} />
+        <CompareRow label="Pass accuracy" homeValue={result.homeStats.passAccuracy} awayValue={result.awayStats.passAccuracy} homeColor={homePalette.primary} awayColor={awayPalette.primary} format={(v) => `${Math.round(v)}%`} />
         <CompareRow label="Tackles" homeValue={result.homeStats.tackles} awayValue={result.awayStats.tackles} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
         <CompareRow label="Interceptions" homeValue={result.homeStats.interceptions} awayValue={result.awayStats.interceptions} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
         <CompareRow label="Corners" homeValue={result.homeStats.corners} awayValue={result.awayStats.corners} homeColor={homePalette.primary} awayColor={awayPalette.primary} />
@@ -238,14 +238,18 @@ function explainResult(
     });
   }
 
+  // Percentage points, not a fraction: `TeamMatchStats.possession` is already
+  // 0-100. Read as a fraction, the threshold below fired on every match that
+  // was not an exact tie and the weight came out sixty times too large, so
+  // this line elbowed every other observation out of the report.
   const possessionGap = ours.possession - theirs.possession;
-  if (Math.abs(possessionGap) > 0.14) {
+  if (Math.abs(possessionGap) > 14) {
     lines.push({
-      weight: Math.abs(possessionGap) * 8,
+      weight: Math.abs(possessionGap) * 0.08,
       text:
         possessionGap > 0
-          ? `You controlled the ball (${Math.round(ours.possession * 100)}%) — the question is what you did with it.`
-          : `You barely saw the ball (${Math.round(ours.possession * 100)}%), and it showed.`,
+          ? `You controlled the ball (${Math.round(ours.possession)}%) — the question is what you did with it.`
+          : `You barely saw the ball (${Math.round(ours.possession)}%), and it showed.`,
     });
   }
 

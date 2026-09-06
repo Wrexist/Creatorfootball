@@ -30,12 +30,18 @@ export interface PlayerMatchStats {
 
 export interface TeamMatchStats {
   readonly clubId: ClubId;
+  /**
+   * Can exceed `shotsOnTarget`: a special rule's `goalMultiplier` makes a goal
+   * worth more than one, which is the point of the rule windows.
+   */
   readonly goals: number;
+  /** **Percent, 0-100**, to one decimal. Not a fraction — do not multiply. */
   readonly possession: number;
   readonly shots: number;
   readonly shotsOnTarget: number;
   readonly xg: number;
   readonly passes: number;
+  /** **Percent, 0-100**, to one decimal. Not a fraction — do not multiply. */
   readonly passAccuracy: number;
   readonly tackles: number;
   readonly interceptions: number;

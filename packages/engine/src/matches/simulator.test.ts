@@ -419,3 +419,25 @@ describe('the AI manager fights back', () => {
     expect(early).toHaveLength(0);
   });
 });
+
+/**
+ * The units the result reports in.
+ *
+ * `possession` and `passAccuracy` are percentages, not fractions, and nothing
+ * in the type system says so. A screen multiplied them by a hundred a second
+ * time and shipped "4510% possession" to a phone. These pin the contract on
+ * the producing side, where a consumer can be pointed at it.
+ */
+describe('team stats units', () => {
+  it('reports possession and pass accuracy as percentages that read as percentages', () => {
+    const result = simulateMatch(fixture('units', 70, 62));
+    for (const team of [result.homeStats, result.awayStats]) {
+      expect(team.possession).toBeGreaterThan(1);
+      expect(team.possession).toBeLessThanOrEqual(100);
+      expect(team.passAccuracy).toBeGreaterThan(1);
+      expect(team.passAccuracy).toBeLessThanOrEqual(100);
+    }
+    // The two sides share one ball, so their shares add up to the whole.
+    expect(result.homeStats.possession + result.awayStats.possession).toBeCloseTo(100, 1);
+  });
+});

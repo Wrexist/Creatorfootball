@@ -9,7 +9,7 @@ import {
   ClubBadge, EmptyState, ErrorState, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
   GlassTabs, HeroScene, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
   RatingBadge, ScoreDisplay, SectionHeader, Skeleton, SocialPost, StatCard, StatGrid,
-  TrendIndicator, cn, sfx, useDesignMotion,
+  TrendIndicator, cn, formatWhole, sfx, useDesignMotion,
 } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore } from '@/state/matchStore';
@@ -128,6 +128,20 @@ export function MatchResultScreen(): ReactNode {
   /* --- guards ---------------------------------------------------------- */
 
   if (!result || !state) {
+    // Not an error, and not the player's doing. Only the *score* of a finished
+    // match is kept in the save — the full report, with its events and its
+    // per-player numbers, lives in memory for as long as the report is open,
+    // because keeping every one of them would cost more than the save can
+    // afford. Reopening the screen later (a relaunch restoring the route, say)
+    // therefore finds nothing. Say so in football, show the scoreline if the
+    // fixture still knows it, and never put an internal id in front of a
+    // player — the previous copy printed the raw match id.
+    const played = state && params.matchId
+      ? Object.values(state.fixtures).find((f) => f.matchId === params.matchId)
+      : undefined;
+    const label = played && state
+      ? `${state.clubs[played.homeClubId]?.shortName ?? '—'} ${played.homeScore ?? 0}–${played.awayScore ?? 0} ${state.clubs[played.awayClubId]?.shortName ?? '—'}`
+      : null;
     return (
       <div className="flex h-full items-center justify-center bg-base p-6">
         {busy ? (
@@ -136,11 +150,14 @@ export function MatchResultScreen(): ReactNode {
             <Skeleton className="h-40 w-full" />
           </div>
         ) : (
-          <ErrorState
-            title="This match report has expired"
-            description={`Result ${params.matchId ?? ''} is no longer in memory. Its consequences have already been applied to your world.`}
-            onRetry={() => navigate('/home')}
-            retryLabel="Back to the club"
+          <EmptyState
+            title={label ? `That match finished ${label}` : 'That match is already played'}
+            description="Full reports are kept only while you have them open. The result itself, and everything it changed, is already part of your season."
+            action={
+              <GlassButton variant="primary" size="lg" onClick={() => navigate('/home')}>
+                Back to the club
+              </GlassButton>
+            }
           />
         )}
       </div>
@@ -200,7 +217,16 @@ export function MatchResultScreen(): ReactNode {
         </div>
       </header>
 
-      <div className="scroll-y relative z-10 min-h-0 flex-1">
+      {/*
+        Before the beats are revealed there is one card on the screen and, on a
+        phone, two thirds of a viewport of empty room under it — which reads as
+        a screen that failed to load rather than as a pause. While the reveal
+        is still short enough to fit, it is centred in the space it has; once
+        the beats fill the viewport the content is taller than the box and
+        `justify-center` stops applying, so the scroll behaves exactly as
+        before. The room stays visible either way, which is the point of it.
+      */}
+      <div className="scroll-y relative z-10 flex min-h-0 flex-1 flex-col justify-center">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-8 pt-4 sm:px-6">
           {tab === 'STORY' && storeError !== null && !busy && (
             <GlassPanel padding="md" accent="danger" className="border border-danger/40">
@@ -346,7 +372,7 @@ function ResultStage({ result, home, away, playerIsHome, state }: StageProps): R
         {headline}
       </p>
       <p className="mt-1 text-center text-[14px] text-ink-muted">
-        {home.shortName} v {away.shortName} · {result.attendance.toLocaleString()} in
+        {home.shortName} v {away.shortName} · {formatWhole(result.attendance)} in,
         {playerIsHome ? ' behind you' : ' against you'}
       </p>
       {recap.length > 0 && (

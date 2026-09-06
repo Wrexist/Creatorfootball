@@ -329,9 +329,23 @@ export function HeroScene({
             <rect x="61" y="252" width="3" height="150" />
             <rect x="338" y="236" width="2.5" height="160" />
           </g>
-          <g fill={rgba(spec.light, Math.min(0.55, spec.lightAlpha * 1.5))}>
-            <rect x="42" y="246" width="42" height="6" rx="2" />
-            <rect x="320" y="230" width="38" height="5.5" rx="2" />
+          {/* The lamp heads. They used to be flat rounded rectangles at up to
+              0.55 alpha, and the comment above was only half right: hiding the
+              masts stopped the *pylons* reading as rectangles floating in the
+              sky, but the heads went on doing it. Seen through the glass of a
+              panel — which is where a player actually meets this drawing — a
+              hard-edged bright bar reads as a grey pill of broken UI rather
+              than as a floodlight, and it was reported as one from a phone.
+              A lamp is light before it is an object, so the glow carries it
+              and the core sits well under the halo. Still one paint, still no
+              filter: the halo is the same radial every other glow here uses. */}
+          <g>
+            <ellipse cx="63" cy="249" rx="30" ry="12" fill={`url(#${id}-glow)`} />
+            <ellipse cx="339" cy="233" rx="27" ry="11" fill={`url(#${id}-glow)`} />
+          </g>
+          <g fill={rgba(spec.light, Math.min(0.3, spec.lightAlpha * 0.8))}>
+            <rect x="46" y="247" width="34" height="4" rx="2" />
+            <rect x="323" y="231" width="31" height="3.6" rx="1.8" />
           </g>
         </g>
 

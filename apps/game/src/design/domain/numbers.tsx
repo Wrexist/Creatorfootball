@@ -147,6 +147,16 @@ export function formatCount(value: number): string {
   return String(Math.round(value));
 }
 
+/**
+ * A whole number with thousands separators, in the language the app is written
+ * in. `toLocaleString()` with no locale follows the *device*, so an attendance
+ * rendered on a Swedish phone came out "3 702" in the middle of an English
+ * sentence. The listing is en-US and every string in the product is written in
+ * English; the numbers should match the words around them.
+ */
+const WHOLE = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+export const formatWhole = (value: number): string => WHOLE.format(Math.round(value));
+
 const SIDE_WORDS = new Map([
   [5, 'five'], [6, 'six'], [7, 'seven'], [8, 'eight'], [9, 'nine'],
   [10, 'ten'], [11, 'eleven'],

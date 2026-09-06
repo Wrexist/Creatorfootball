@@ -150,7 +150,8 @@ export {
 } from './domain/bars';
 export {
   Counter, MoneyLabel, TrendIndicator, ScoreDisplay,
-  formatMoney, formatCount, formatDelta, formatWeeks, ordinal, setCurrencySymbol, sidesWord,
+  formatMoney, formatCount, formatDelta, formatWeeks, formatWhole, ordinal, setCurrencySymbol,
+  sidesWord,
   type CounterProps, type MoneyLabelProps, type TrendIndicatorProps, type ScoreDisplayProps,
 } from './domain/numbers';
 export {
