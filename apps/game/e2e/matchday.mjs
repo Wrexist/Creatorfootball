@@ -91,23 +91,35 @@ await scenario('live pitch motion', async ({ page, check, unexpected }) => {
         return sum + (q ? Math.hypot(u.x - q.x, u.y - q.y) : 0);
       }, 0);
     }
-    nearest.push(Math.min(...p.positions.players.map((u) => Math.hypot(u.x - p.positions.ball.x, u.y - p.positions.ball.y))));
+    // Only frames in which the ball actually moved count toward "the ball is
+    // with the play". A dead ball at a stoppage does not move, and it sits
+    // wherever the referee left it while the players walk away from it — which
+    // is correct football and says nothing about the renderer. Measured over
+    // ten runs, those stretches are long: repeated identical distances of
+    // 0.118 and 0.133 for three samples running, and one window where 8 of 20
+    // frames sat above 0.09. A median cannot survive a stretch that can exceed
+    // half the window, which is how CI reached 0.098 with nothing wrong. Live
+    // frames are the ones the claim is actually about.
+    if (p.stats.maxBallStep > 0) {
+      nearest.push(Math.min(...p.positions.players.map((u) => Math.hypot(u.x - p.positions.ball.x, u.y - p.positions.ball.y))));
+    }
     previous = p.positions;
   }
   // Total ground covered by all fourteen shirts across the window. A frozen
   // pitch scores 0; three seconds of football scores several pitch-lengths.
   const MIN_TRAVEL = 0.5;
-  // Typical distance from the ball to the closest man. A pass in flight and a
-  // dead ball at a stoppage are both correct football and both sit far from
-  // everyone for a stretch, so the middle of the distribution is the honest
-  // measure of "the ball is with the play"; a ball drifting on its own moves
-  // the median, not just the tail.
+  // Typical distance from the ball to the closest man, across the frames in
+  // which the ball was live. A pass in flight is correct football and sits far
+  // from everyone for a stretch, so the middle of the distribution is the
+  // honest measure of "the ball is with the play"; a ball drifting on its own
+  // moves the median, not just the tail.
   const MAX_MEDIAN_BALL_GAP = 0.09;
   const sortedNear = [...nearest].sort((a, b) => a - b);
   const medianNear = sortedNear.length
     ? sortedNear[Math.floor(sortedNear.length / 2)]
     : Number.POSITIVE_INFINITY;
   check(samples >= 15, `the profiler hook answered ${samples} times`);
+  check(nearest.length >= 6, `only ${nearest.length} of ${samples} frames had a live ball`);
   check(travelled > MIN_TRAVEL, `the shirts covered only ${travelled.toFixed(3)} over ${samples} samples`);
   check(maxStep < MAX_FRAME_STEP, `a shirt moved ${maxStep.toFixed(3)} in one frame (teleport)`);
   check(maxBall < MAX_FRAME_STEP, `the ball moved ${maxBall.toFixed(3)} in one frame (teleport)`);
