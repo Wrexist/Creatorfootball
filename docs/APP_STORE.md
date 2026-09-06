@@ -200,21 +200,36 @@ Build side (this repo):
       (`pnpm shots:store`) — drafts ready to curate
 - [x] Archive + TestFlight upload automated: *iOS TestFlight* workflow
       (versions stamped per run, build number resolved against App Store
-      Connect — nothing to bump by hand; see `RELEASE_IOS.md`)
+      Connect — nothing to bump by hand; see `RELEASE_IOS.md`). Exercised
+      three times, all green; the run of 2 Sep archived, exported and
+      **uploaded** to App Store Connect.
+- [ ] **A build of the release candidate in TestFlight.** The uploaded binary
+      is from `2d7fdfd`, which predates the matchday substitution fixes, the
+      one bench selector, per-club formations and seasonal shape evolution.
+      Re-run the workflow on the current `Main` before any device testing —
+      the build on the phone must be the build under review.
 - [ ] **Real-device pass** (FINAL_AUDIT §6 blocking item): glass blur, pitch
       renderer frame rate, haptics feel, keyboard avoidance on iPhone
 
 Store side (App Store Connect):
 
-- [ ] Secrets added + API key created — see `GO_LIVE_GUIDE.md` steps 2–4
-- [ ] App record created with bundle ID above; SKU set
-- [ ] All en-US fields, categories, copyright and review notes pushed by the
+- [x] Secrets added + API key created — see `GO_LIVE_GUIDE.md` steps 2–4.
+      Proven by the runs below, not by inspection: both workflows authenticate
+      with the key, and both have succeeded.
+- [x] App record created with bundle ID above; SKU set. Proven the same way:
+      `deliver` fails with "Could not find app" without the record, and the
+      *App Store metadata* run of 28 Aug pushed successfully.
+- [x] All en-US fields, categories, copyright and review notes pushed by the
       *App Store metadata* workflow (replaces pasting from
-      `fastlane/metadata/en-US/`)
+      `fastlane/metadata/en-US/`) — pushed 28 Aug; nothing under
+      `fastlane/metadata/` has changed since, so the listing text is current.
 - [ ] Age rating questionnaire submitted (section 3 answers)
 - [ ] App Privacy: Data Not Collected
 - [x] URLs reachable — Pages is live; all three return 200
-- [ ] Screenshots uploaded per section 5
+- [ ] **Screenshots uploaded per section 5 — never done.** The one metadata run
+      predates the images by four hours, and the workflow has not run since.
+      Re-run it with *include screenshots* ticked; the committed set was
+      re-shot from the release candidate, so what uploads is the current game
 - [ ] Review notes pushed by the metadata workflow; review contact
       name/email/phone filled in App Store Connect (deliberately not
       committed to the repo) and the email confirmed monitored

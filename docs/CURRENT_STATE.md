@@ -15,14 +15,15 @@ it, on the commit that introduced this file. Nothing is estimated.
 | Types | `pnpm typecheck` | pass (engine, app, sim) |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
 | Engine tests | `pnpm --filter @cf/engine test` | **66 files, 849 tests, all passing** |
-| App tests | `pnpm --filter @cf/game test` | **30 files, 302 tests, all passing** |
-| **Total** | `pnpm test` | **1,101 tests, all passing** |
+| App tests | `pnpm --filter @cf/game test` | **30 files, 304 tests, all passing** |
+| **Total** | `pnpm test` | **1,153 tests, all passing** |
 | Production build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** content-failure journeys + **9/9** repeated-failure recovery checks + **5/5** matchday checks (live motion, pause, resume, goalkeeper substitution), against the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants — all pass |
 
-Earlier documents state 262, 531, 653 and 753 tests. All are historical.
-`pnpm test` is the only source of truth.
+Earlier documents state 262, 531, 653, 753 and 1,101 tests. All are historical.
+`pnpm test` is the only source of truth. The table above was re-measured on the
+release candidate (`Main`, the PR #9 merge) rather than carried forward.
 
 **Tooling note.** Earlier in this cycle `pnpm test` could exit non-zero on a
 loaded machine after every test passed, with `[vitest-worker]: Timeout calling

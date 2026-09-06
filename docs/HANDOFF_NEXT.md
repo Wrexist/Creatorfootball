@@ -26,16 +26,17 @@ pnpm monorepo, Node ≥20, TypeScript.
 |---|---|---|
 | Types | `pnpm typecheck` | pass |
 | Lint | `pnpm lint` | pass, `--max-warnings=0` |
-| Engine tests | `pnpm --filter @cf/engine test` | 61 files / **800** |
-| App tests | `pnpm --filter @cf/game test` | 29 files / **301** |
-| **Total** | `pnpm test` | **1,101** |
+| Engine tests | `pnpm --filter @cf/engine test` | 66 files / **849** |
+| App tests | `pnpm --filter @cf/game test` | 30 files / **304** |
+| **Total** | `pnpm test` | **1,153** |
 | Build | `pnpm build` | pass |
 | Browser smoke | `pnpm test:smoke` | **10/10** happy path + **8/8** failure journeys + **9/9** recovery checks + **5/5** matchday checks vs the real bundle |
 | Balance audits | `pnpm audit:all` | economy, simulation, 9 invariants |
 
 Key facts: `SAVE_VERSION` 7, careers persist to **IndexedDB**, migrations 1→7
 complete. Save plateaus ~3.2 MB (does not grow unbounded). Engine ships as a 205 kB
-gzip chunk; the 77 kB content chunk loads on intent, once. `eventLog` capped at 600.
+gzip chunk (207 kB since the tactics work); the 77 kB content chunk loads on
+intent, once. `eventLog` capped at 600.
 Determinism (seeded RNG, counter ids) is enforced by tests.
 
 ## 4. Done in the last three cycles — do NOT redo
