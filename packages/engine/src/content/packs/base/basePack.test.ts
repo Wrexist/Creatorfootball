@@ -424,6 +424,24 @@ describe('media outlet registry', () => {
  * `saveHistoryFacts` in simulation/cascade.ts publishes the vocabulary.
  */
 describe('templates never assert a history the save does not have', () => {
+  it('keeps match posts venue-neutral when the template has no home/away condition', () => {
+    const triggers = new Set(['MATCH_WON', 'MATCH_LOST', 'MATCH_DRAWN', 'MATCH_STARTED', 'MATCH_SCHEDULED', 'WIN', 'DEFEAT', 'STATEMENT_WIN', 'SHOCK_DEFEAT', 'DERBY_WIN', 'DERBY_DEFEAT', 'GOAL_SCORED']);
+    // "People at {opponent}" names an organisation, not a match venue.
+    const unsupported = /\bat home\b|\baway from home\b|\baway end\b|\baway support\b|\bhome (?:game|dressing room)\b|\bhost \{opponent\}|(?:\{score\}|point|under way) at \{opponent\}/i;
+    const offenders = [...BASE_SOCIAL_TEMPLATES, ...FALLBACK_SOCIAL_TEMPLATES]
+      .filter(t => triggers.has(t.trigger) && unsupported.test(t.text))
+      .filter(t => !Object.keys(t.conditions ?? {}).some(key => /home|away|venue/i.test(key)))
+      .map(t => `${t.id}: ${t.text}`);
+    expect(offenders).toEqual([]);
+  });
+
+  it('does not assume seven- or eleven-a-side player counts after a red card', () => {
+    const offenders = [...BASE_SOCIAL_TEMPLATES, ...FALLBACK_SOCIAL_TEMPLATES]
+      .filter(t => t.trigger === 'RED_CARD' && /\b(?:six|ten) (?:men|against)|down to (?:six|ten)|fifteen minutes left/i.test(t.text))
+      .map(t => `${t.id}: ${t.text}`);
+    expect(offenders).toEqual([]);
+  });
+
   const HISTORY_CLAIMS = [
     /stood for a generation/i,
     /for a generation/i,

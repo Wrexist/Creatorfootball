@@ -20,7 +20,7 @@ This implements the 31 items in [the supplied-media audit](USER_MEDIA_AUDIT_2026
 | R01–R04 | Smaller masked portrait with headroom, explicit team/home-away labels, clear outcome and accurately labelled total attendance. | Win/draw/loss fixtures and actual completed career match. |
 | R05–R06 | Stage count, meaningful Next labels and View full report. Strong narrative imagery stays in the hero; later stages use a calm surface. | Result navigation, Analytics, completed-result reload and single-advance checks. |
 | F01–F02 | Club-linked coverage precedes a labelled league roundup; empty coverage is honest. Read-only engagement is text. Report news opens its actual story; URL-driven selection prevents a render loop. | Club-reference unit tests, story-opening interaction test, empty-feed fixture. |
-| F03–F04 | Rout headlines use actual margin/score. Removed fabricated match sequences, venue assumptions, fixed growth/reach claims and 90-minute claims from relevant copy. Existing published stories in old saves are preserved. | Engine media tests, factual saved-cycle inspection and current report screenshots. |
+| F03–F04 | Rout headlines use actual margin/score. Removed fabricated match sequences, venue assumptions, fixed growth/reach claims and 90-minute claims from relevant copy. The final screenshot pass also corrected home-win posts thanking an away end, fixed player-count claims after red cards and a margin wrongly described as an xG difference. Existing published stories in old saves are preserved. | Engine media tests, template factuality guards, saved-cycle inspection and current report screenshots. |
 | F05–F06 | Weekly income/cost pair plus full-width available transfer budget. Table movement shows previous/current rank when a pre-round snapshot exists; reload shows current position honestly. | Stable finance geometry, unchanged ledger arithmetic and save/reload tests. |
 | Earlier tablet defects | Matchday lineup/bench columns respond to actual content width; predicted lineup uses safe readable rows. Stadium reputation is rounded for display. | 768×1024 and 1024×1366 Matchday captures; fractional-reputation fixture. |
 
@@ -37,7 +37,7 @@ This implements the 31 items in [the supplied-media audit](USER_MEDIA_AUDIT_2026
 The final verification log and screenshot gallery live in `artifacts/media-repair-20260923/`. Browser state and generated source working files are excluded from the portable evidence package.
 
 - Repository lint and typecheck.
-- Full unit suite: 751 engine tests and 245 app tests (996 total).
+- Full unit suite: 753 engine tests and 245 app tests (998 total, including two additional factuality guards).
 - Production build, with the existing large engine/3D chunk warnings retained rather than suppressed.
 - Production browser suite: existing smoke, career and expansion checks plus `media-audit.mjs`, `media-matrix.mjs` and `media-states.mjs`.
 - Existing tests cover real creation, lineup, tactical instructions, training, search, live substitution, match completion, save reload/conflicts/export/import/recovery, unavailable purchases, optional content and 3D imports/controls.

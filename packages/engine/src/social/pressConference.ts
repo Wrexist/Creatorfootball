@@ -426,8 +426,8 @@ const QUESTIONS: readonly QuestionDef[] = [
         warmth: -0.1, credibility: 0.8,
       },
       {
-        id: 'a_credit_fans', label: 'Give it to the away end',
-        line: () => 'The supporters were the best thing on that pitch for the first twenty minutes. We were chasing them, not the other way round.',
+        id: 'a_credit_fans', label: 'Credit the supporters',
+        line: () => 'The supporters give this club its purpose. This result is for everyone who backs us.',
         effect: () => ({ fanSentiment: 3.8, supportersTrust: 4, mediaGoodwill: 0.6 }),
         warmth: 0.9, credibility: 0.3,
       },

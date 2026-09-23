@@ -88,7 +88,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'A word of thanks to everybody who was there. It was noticed.',
     'Quietly proud of this one. Onto the next.',
     'No fuss. Just gratitude, and back to work in the morning.',
-    'To the supporters who travelled: thank you. That is all.',
+    'To the supporters who backed us: thank you. That is all.',
     'A good day for the club. We will let others do the talking.',
     'Grateful, and getting on with it.',
     'Thank you. Genuinely, all of you.',
@@ -154,17 +154,17 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
 
   /* ------------------------------------------------ composer | MATCH_WON */
   ...clubTone('MATCH_WON', 'HYPE', 0.85, [
-    '{score}. {club} away, {club} everywhere, {club} for the rest of the week. 🔊',
-    'THREE POINTS AND THEY WERE NOT CLOSE. {score}.',
+    '{score}. {club} today, {club} everywhere, {club} for the rest of the week. 🔊',
+    'THREE POINTS. EVERY ONE EARNED. {score}.',
     '{opponent} {score}. Read it again.',
   ]),
   ...clubTone('MATCH_WON', 'CLASSY', 0.5, [
-    'Full time: {score}. A hard afternoon, well handled. Thank you to everyone who travelled.',
-    '{score} at {opponent}. A good day, quietly taken.',
+    'Full time: {score}. Thank you to everyone who supported us.',
+    '{score} against {opponent}. A good result, quietly taken.',
   ]),
   ...clubTone('MATCH_WON', 'PROVOCATIVE', 0.2, [
     '{score}. Some of you had a lot to say beforehand. We will wait.',
-    'Enjoy the trip home, {opponent}. {score}.',
+    'Enjoy the highlights, {opponent}. {score}.',
     'We would like to formally thank {opponent} for the motivation.',
   ]),
   ...clubTone('MATCH_WON', 'FUNNY', 0.55, [
@@ -178,12 +178,12 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
 
   /* ----------------------------------------------- composer | MATCH_LOST */
   ...clubTone('MATCH_LOST', 'HYPE', -0.1, [
-    'Not our day. Next one is at home and we are going to make it loud. 💛',
+    'Not our day. We go again, and we will need your backing. 💛',
     '{score}. Wrong result, right group. Watch what happens next.',
   ]),
   ...clubTone('MATCH_LOST', 'CLASSY', -0.2, [
-    'Full time: {score}. Not good enough today. Thank you to the away support, who were.',
-    '{score} at {opponent}. No excuses offered and none available.',
+    'Full time: {score}. Not good enough today. Thank you to our supporters.',
+    '{score} against {opponent}. No excuses offered and none available.',
   ]),
   ...clubTone('MATCH_LOST', 'PROVOCATIVE', -0.5, [
     'Congratulations to {opponent} on the best day some of them will ever have.',
@@ -201,14 +201,14 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
 
   /* ---------------------------------------------- composer | MATCH_DRAWN */
   ...clubTone('MATCH_DRAWN', 'HYPE', 0.35, [
-    'A point at {opponent} and the away end never stopped. 💛',
+    'A point against {opponent}. Thank you for the support. 💛',
   ]),
   ...clubTone('MATCH_DRAWN', 'CLASSY', 0.1, [
     'Full time: {score}. A point taken, and plenty to work on.',
-    '{score} at {opponent}. Thank you to everyone who made the trip.',
+    '{score} against {opponent}. Thank you to everyone backing us.',
   ]),
   ...clubTone('MATCH_DRAWN', 'PROVOCATIVE', -0.2, [
-    'A point at a ground {opponent} keep telling everybody is a fortress.',
+    'A point against {opponent}. Plenty for both clubs to think about.',
   ]),
   ...clubTone('MATCH_DRAWN', 'FUNNY', 0.2, [
     'A draw. The most polite result in sport. Everybody goes home mildly annoyed.',
@@ -223,7 +223,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ...clubTone('MATCH_SCHEDULED', 'HYPE', 0.7, [
     '{opponent}. Saturday. Bring everything you have got. 🔊',
     'One sleep. {club} v {opponent}. We are ready and you should be too.',
-    'Sell out the away end. That is the whole post.',
+    'Back the team. That is the whole post.',
   ]),
   ...clubTone('MATCH_SCHEDULED', 'CLASSY', 0.25, [
     '{opponent} next. A serious side and a serious afternoon. Travel safe, all of you.',
@@ -231,7 +231,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ]),
   ...clubTone('MATCH_SCHEDULED', 'PROVOCATIVE', -0.15, [
     '{opponent} have been talking all week. Saturday is quite a long time to be wrong for.',
-    'We will be at {opponent} on Saturday and we will not be there to make up the numbers.',
+    'We face {opponent} next and we will not be making up the numbers.',
     'A lot of confidence coming out of {opponent} this week. Noted. Saved.',
   ]),
   ...clubTone('MATCH_SCHEDULED', 'FUNNY', 0.4, [
@@ -287,7 +287,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ]),
   ...clubTone('RED_CARD', 'DEFIANT', -0.2, [
     '{player} has our full support. He will be back and he will be better.',
-    'Ten men for half the match. Not one of them stopped. That is the club.',
+    'A player down. Still backing every one of them. That is the club.',
   ]),
   ...clubTone('RED_CARD', 'PROVOCATIVE', -0.5, [
     'We have watched it back {matches} times and we still cannot find it.',
@@ -296,7 +296,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'We are told the {minuteOrdinal}-minute incident is under review. We have already reviewed it. Extensively. Loudly.',
   ]),
   ...clubTone('RED_CARD', 'HYPE', -0.05, [
-    'Ten men. Same noise. Louder if anything. 💛',
+    'A player down. Same support. Louder if anything. 💛',
   ]),
 
   /* ---------------------------------------------- composer | TROPHY_WON */
@@ -708,7 +708,7 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['result']),
   ...post('MATCH_WON', 'CREATOR', 0.65, 4, [
     'Clipping the last fifteen minutes of that and putting it out tonight. Unreal atmosphere.',
-    'Whatever you think about {club}, that away end was the best thing in this league today.',
+    'Whatever you think about {club}, their supporters have a result to celebrate.',
     'A lot of you are asking what comes next for {club}. That is a conversation worth having.',
   ], ['result', 'creator']),
   ...post('MATCH_LOST', 'FAN', -0.8, 3, [
@@ -720,7 +720,7 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'I am fine. I am completely fine. Everything is fine.',
   ], ['result']),
   ...post('MATCH_LOST', 'MEDIA', -0.35, 3, [
-    '{club} beaten {score} at {opponent}. Questions that were quiet a month ago are not quiet now.',
+    '{club} beaten {score} by {opponent}. Plenty for the staff to discuss.',
     'A flat afternoon for {club}, who never looked likely once {opponent} settled.',
     '{score}. On this evidence {club} have work to do and not much time to do it in.',
   ], ['result']),
@@ -744,7 +744,7 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'That finish is going to be on my feed for a week and I am not going to complain once.',
   ], ['goal', 'creator']),
   ...post('RED_CARD', 'FAN', -0.75, 3, [
-    'Ten men, forty minutes, and somehow the longest afternoon of the season.',
+    'A player down, and suddenly the clock feels a lot slower.',
     'You cannot do that. You simply cannot do that there.',
     'He has let everybody down and he knows it, which is the only mitigation available.',
   ], ['discipline']),
@@ -1213,7 +1213,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
   ...clubTone('DERBY_WIN', 'HYPE', 0.95, [
     'THE CITY IS OURS. {score}. 🔊',
     '{opponent} {score}. Sing it until Monday.',
-    'Derby day and the away end has not sat down once. {score}.',
+    'Derby day belongs to our supporters. {score}.',
   ]),
   ...clubTone('DERBY_WIN', 'CLASSY', 0.6, [
     'Full time in the derby: {score}. Thank you to every one of you who made the trip.',
@@ -1233,7 +1233,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
   ]),
   ...clubTone('DERBY_DEFEAT', 'CLASSY', -0.25, [
     'Full time: {score}. Well played to {opponent}. We will see them again.',
-    '{score}. Nothing to say beyond thank you to the away end, who did not deserve that.',
+    '{score}. Nothing to say beyond thank you to our supporters, who deserved better.',
   ]),
   ...clubTone('DERBY_DEFEAT', 'DEFIANT', -0.1, [
     'A derby, and we lost it. This club has lost derbies before and gone on to have the season anyway.',
@@ -1246,7 +1246,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
     'Turning the comments off, going for a lie down, see you all in a week.',
   ]),
   ...clubTone('DERBY_DEFEAT', 'HYPE', -0.05, [
-    'Home game next. Fill it. Make it deafening. 💛',
+    'Next game. Back the team. Make it deafening. 💛',
   ]),
 
   /* ----------------------------------- composer | statement and shock results */
@@ -1257,7 +1257,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
     '{score}. A complete performance. Thank you to everybody who came.',
   ]),
   ...clubTone('STATEMENT_WIN', 'PROVOCATIVE', 0.3, [
-    '{score} away from home. We will let the rest of the division work out what that means.',
+    '{score} against {opponent}. We will let the rest of the division work out what that means.',
   ]),
   ...clubTone('STATEMENT_WIN', 'DEFIANT', 0.45, [
     '{score}. Remember who was saying what in August.',
@@ -1267,7 +1267,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
   ]),
   ...clubTone('SHOCK_DEFEAT', 'CLASSY', -0.4, [
     'Full time: {score}. That was not good enough and everybody in that dressing room knows it.',
-    '{score}. Apologies to everyone who travelled. That is not the standard.',
+    '{score}. Apologies to everyone who supported us. That is not the standard.',
   ]),
   ...clubTone('SHOCK_DEFEAT', 'DEFIANT', -0.2, [
     '{score}. One afternoon. We will be judged on the season, not on this.',
@@ -1279,7 +1279,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
     'Plenty of people are going to enjoy that. Write the names down.',
   ]),
   ...clubTone('SHOCK_DEFEAT', 'HYPE', -0.15, [
-    'Home. Next week. Every seat. We fix this together. 💛',
+    'Next game. Together. We work to put this right. 💛',
   ]),
 
   /* ---------------------------------------- composer | marquee and squad news */
@@ -1575,15 +1575,15 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   /* --------------------------------------------------------- MATCH_WON */
   ...post('MATCH_WON', 'FAN', 0.8, 3, [
     'THREE POINTS. Do not talk to me about anything else today.',
-    'We were awful for twenty minutes and won anyway. That is what good teams do, apparently. {club}.',
+    'Winning feels good. Winning with {club} feels better.',
     '{player} was unplayable today. Genuinely unplayable.',
     'Best I have felt walking out of that ground in two years.',
     'Every one of those points was earned. {score}. Nothing sweeter than that.',
   ], ['result']),
   ...post('MATCH_WON', 'CLUB', 0.7, 2, [
     'Full time: {club} {score} {opponent}. Back to work.',
-    'Job done. Thank you to everyone who travelled.',
-    'Three points, and a word for the away end who were outstanding.',
+    'Job done. Thank you to everyone who supported us.',
+    'Three points, and a word of thanks to our supporters.',
   ], ['result']),
   ...post('MATCH_WON', 'CREATOR', 0.7, 4, [
     'Told you. Told all of you. {club}.',
@@ -1591,7 +1591,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'I have been shouting about {player} for six weeks and now everybody has discovered him.',
   ], ['result']),
   ...post('MATCH_WON', 'RIVAL', -0.5, 2, [
-    'Congratulations to {club} on beating a side with four players out. Historic.',
+    'Congratulations to {club}. Enjoy the points while you can.',
     'Enjoy it. You will not be there in May.',
   ], ['result', 'rivalry']),
   ...post('MATCH_WON', 'MEDIA', 0.2, 2, [
@@ -1605,7 +1605,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ...post('MATCH_LOST', 'FAN', -0.8, 3, [
     'Same story every single week. No idea, no shape, no fight.',
     'I am not angry. I have run out of angry. {club} {score} {opponent}.',
-    'Paid forty quid for that. Forty.',
+    'Came for a result. Left with questions.',
     'We are not good enough and pretending otherwise is how we ended up here.',
     'Genuinely thought we had turned a corner. We had not turned a corner.',
   ], ['result']),
@@ -1614,7 +1614,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'A disappointing afternoon. Thank you to the supporters who stayed to the end.',
   ], ['result']),
   ...post('MATCH_LOST', 'RIVAL', 0.7, 3, [
-    'Comfortable. Genuinely comfortable. Thanks for the hospitality, {club}.',
+    'Another defeat for {club}. Enjoy the highlights.',
     'Some of you were very confident before this. Where did you go?',
     'Every year. Every single year.',
   ], ['result', 'rivalry']),
@@ -1627,7 +1627,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     // nine" — a specific claim about a run the template has no way of knowing.
     // A press account may only assert what the event carries.
     'Defeat for {club}, beaten {score} by {opponent}. Report and ratings to follow.',
-    'FULL TIME: {club} {score} {opponent}. Questions for the home dressing room.',
+    'FULL TIME: {club} {score} {opponent}. Questions for the {club} dressing room.',
     '{opponent} take all three at the expense of {club}. Reaction shortly.',
     'Another one gets away from {club}. {score} the final score against {opponent}.',
   ], ['result']),
@@ -1635,7 +1635,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   /* -------------------------------------------------------- MATCH_DRAWN */
   ...post('MATCH_DRAWN', 'FAN', 0, 2, [
     'A point. Somehow both a good result and an insult.',
-    'Drew that having been outplayed for the whole thing. I will take it.',
+    'A draw. Still deciding how I feel about it.',
     'Two points dropped, and everyone in that ground knows it.',
   ], ['result']),
   ...post('MATCH_DRAWN', 'MEDIA', 0, 2, [
@@ -1658,22 +1658,22 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['goal']),
   ...post('GOAL_SCORED', 'CREATOR', 0.8, 4, [
     'THE CLIP. THE CLIP. {player} you absolute menace.',
-    '{player} scoring in front of the away end is exactly why I bought into this club.',
+    '{player} scoring is exactly why I bought into this club.',
   ], ['goal']),
   ...post('GOAL_SCORED', 'PLAYER', 0.7, 3, [
-    'For the fans who travelled. 🙏',
-    'Three points was all that mattered today.',
+    'For everyone backing us. 🙏',
+    'Proud to get on the scoresheet. Back to work.',
   ], ['goal']),
 
   /* --------------------------------------------------------- RED_CARD */
   ...post('RED_CARD', 'FAN', -0.7, 4, [
     '{player} has to think. He has to THINK.',
-    'Down to six with fifteen minutes left. Every week something.',
+    'A player down. Exactly what we did not need.',
     'That is not passion, that is stupidity, and it has cost us.',
   ], ['discipline']),
   ...post('RED_CARD', 'RIVAL', 0.6, 3, [
     'Predictable from {player}. Absolutely predictable.',
-    'Six against seven and they still could not manage it.',
+    'A red card. Just when {club} needed some discipline.',
   ], ['discipline', 'rivalry']),
   ...post('RED_CARD', 'MEDIA', -0.3, 3, [
     '{player} is sent off in the {minuteOrdinal} minute. He will now serve a suspension.',
@@ -2080,7 +2080,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
 
   /* ------------------------------------------------------- MATCH_STARTED */
   ...post('MATCH_STARTED', 'CLUB', 0.3, 1, [
-    'We are under way at home to {opponent}. ⚪️',
+    'We are under way against {opponent}. ⚪️',
   ], ['matchday']),
   ...post('MATCH_STARTED', 'FAN', 0.3, 1, [
     'In the ground, in the seat, in absolute pieces already.',
@@ -2088,7 +2088,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
 
   /* ----------------------------------------------------- MATCH_SCHEDULED */
   ...post('MATCH_SCHEDULED', 'MEDIA', 0, 1, [
-    '{club} host {opponent} in what is already being framed as a defining fixture.',
+    '{club} face {opponent} in what is already being framed as a defining fixture.',
   ], ['fixture']),
 
   /* -------------------------------------------------- TRANSFER_BID_MADE */
