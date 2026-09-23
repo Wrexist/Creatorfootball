@@ -38,16 +38,20 @@ This implements the 31 items in [the supplied-media audit](USER_MEDIA_AUDIT_2026
 
 The final verification log and screenshot gallery live in `artifacts/media-repair-20260923/`. Browser state and generated source working files are excluded from the portable evidence package.
 
+Implementation source: `2a926c3`. Reproducible remote evidence: [CI and simulation audits](https://github.com/Wrexist/Creatorfootball/actions/runs/35864913779) and [iOS 1.0.16 archive workflow](https://github.com/Wrexist/Creatorfootball/actions/runs/35864912564). The iOS run uses `submit=false`: building an IPA does not replace the existing TestFlight upload. Run completion and native artifact checksums are recorded with the local evidence package.
+
 - Repository lint and typecheck.
 - Full unit suite: 753 engine tests and 245 app tests (998 total, including two additional factuality guards).
 - Production build, with the existing large engine/3D chunk warnings retained rather than suppressed.
 - Production browser suite: existing smoke, career and expansion checks plus `media-audit.mjs`, `media-matrix.mjs` and `media-states.mjs`.
 - Existing tests cover real creation, lineup, tactical instructions, training, search, live substitution, match completion, save reload/conflicts/export/import/recovery, unavailable purchases, optional content and 3D imports/controls.
 - Added checks cover 130 formation/viewport/text combinations, stable author/card geometry, modal focus, bench exchange, portrait swiping, cancelled drag, story deep links, unavailable players, missing images, empty states, three result outcomes, simulated safe areas and tablet preparation.
+- Android `1.0.16 (3)` debug APK and unsigned release bundle compile with `assembleDebug bundleRelease lintDebug lintRelease`. App lint retains five existing warnings and zero errors. On the dedicated Android 15 emulator, the packaged app preserves an existing career, saves a lineup swap through reload, confirms a content-pack choice only after storage, runs/pauses/finishes a match and reloads its result. The reduced-effects portrait and finance geometry also pass.
+- Evidence includes 44 phone/tablet/native captures and artwork sheets, a short production-browser report recording, a changed-file list and manifests. The Android binaries are separate from the screenshot ZIP; the AAB is unsigned qualification output, not a store upload.
 - No standalone formatter command exists in this repository. Lint and whitespace checks use the project's existing configuration.
 
 ## Qualification limits
 
-The screenshots and touch simulations are Chromium/browser evidence. Physical iPhone/Android scrolling, heat/memory, VoiceOver/TalkBack and signed-build purchase flows require device qualification. Browser tests are not a claim that those physical checks passed. Newly generated artwork does not change purchase products or entitlements.
+The phone/tablet web captures are Chromium evidence, and the separately labelled Android captures come from the installed APK in an emulator. Physical iPhone/Android scrolling, heat/memory, VoiceOver/TalkBack and signed-build purchase flows require device qualification. Browser/emulator tests are not a claim that those physical checks passed. Newly generated artwork does not change purchase products or entitlements.
 
 Store submission, the publisher's children-law certification, native purchase/refund qualification and Google closed-test requirements remain separate launch gates. This repair pass does not override the publisher's compliance hold or submit either app publicly.

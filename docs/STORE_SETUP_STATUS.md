@@ -47,6 +47,8 @@ Nine tablet QA captures are saved separately under `artifacts/store-launch/scree
 
 The [mobile repair report](MEDIA_REPAIR_REPORT_2026-09-23.md) records these corrections and the 31 supplied-media findings. New evidence is in `artifacts/media-repair-20260923/`; the existing TestFlight/internal-track binaries and console galleries do **not** yet contain this repair pass. The old iPad gallery still requires replacement after native qualification.
 
+Repair source `2a926c3` also corrects content-pack save confirmation and reduced-effects portrait rendering. Android `1.0.16 (3)` debug/unsigned qualification binaries build and pass the documented emulator gameplay checks. The [iOS 1.0.16 archive workflow](https://github.com/Wrexist/Creatorfootball/actions/runs/35864912564) is explicitly build-only (`submit=false`). These qualification outputs do not change either store's existing test-track release or the compliance hold.
+
 ### Compliance hold and reviewer access
 
 The owner answered **"Hold for compliance review"** to Google's separate publisher certification covering the app, every API/SDK and applicable children's laws. Leave that checkbox unchecked. Do not change the intended audience or submit a public release dependent on this certification. No ads/ad ID and local career saves are technical facts, not a legal compliance determination. Review the startup RevenueCat data flow, processor terms, lawful basis/consent where applicable, deletion operation and child-appropriate purchase presentation against the signed artifacts; see [Play declarations](PLAY_CONTENT_DECLARATIONS.md).
