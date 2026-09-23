@@ -23,6 +23,7 @@ This implements the 31 items in [the supplied-media audit](USER_MEDIA_AUDIT_2026
 | F03–F04 | Rout headlines use actual margin/score. Removed fabricated match sequences, venue assumptions, fixed growth/reach claims and 90-minute claims from relevant copy. The final screenshot pass also corrected home-win posts thanking an away end, fixed player-count claims after red cards and a margin wrongly described as an xG difference. Existing published stories in old saves are preserved. | Engine media tests, template factuality guards, saved-cycle inspection and current report screenshots. |
 | F05–F06 | Weekly income/cost pair plus full-width available transfer budget. Table movement shows previous/current rank when a pre-round snapshot exists; reload shows current position honestly. | Stable finance geometry, unchanged ledger arithmetic and save/reload tests. |
 | Earlier tablet defects | Matchday lineup/bench columns respond to actual content width; predicted lineup uses safe readable rows. Stadium reputation is rounded for display. | 768×1024 and 1024×1366 Matchday captures; fractional-reputation fixture. |
+| Native follow-up | Reduced-effects Home previously made the manager translucent. It now uses an opaque portrait with a simple rounded surface. The injury fixture explicitly selects the pitch token even when that player is also captain. | Reduced-effects opacity assertion, Android emulator inspection and release-workflow regression. |
 
 ## Assets and ownership
 

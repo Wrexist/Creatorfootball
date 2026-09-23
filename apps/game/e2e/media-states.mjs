@@ -35,7 +35,7 @@ try {
     const pitch=page.locator('.cf-tactic-pitch');await pitch.scrollIntoViewIfNeeded();
     const bounds=await pitch.evaluate(el=>{const p=el.getBoundingClientRect();return [...el.querySelectorAll('[data-drop-slot]')].every(t=>{const r=t.getBoundingClientRect();return r.bottom<=p.bottom&&r.top>=p.top&&r.left>=p.left&&r.right<=p.right;});});
     assert.equal(bounds,true,'long name tokens stay in pitch');await shot(page,'state-long-names-injury-suspension');
-    await page.getByRole('button',{name:/Aleksander AlexandrovichMacAllister/}).click();await shot(page,'state-player-selection');
+    await pitch.getByRole('button',{name:/Aleksander AlexandrovichMacAllister/}).click();await shot(page,'state-player-selection');
   },{viewport:{width:360,height:800}});
   await fixture('empty bench and social feed',s=>{s.clubs[s.playerClubId].tactics.bench=[];s.social.posts=[];},async(page)=>{
     await go(page,'/squad/tactics');await page.getByRole('heading',{name:'Match bench · 0',exact:true}).scrollIntoViewIfNeeded();await shot(page,'state-empty-bench');
@@ -59,6 +59,9 @@ try {
     });
   }
   await fixture('safe areas and reduced effects',s=>{s.settings.reducedEffects=true;s.settings.reducedMotion=true;s.settings.textSize='LARGE';},async(page)=>{
+    await go(page,'/home');await page.locator('.cf-home-manager').waitFor();
+    assert.equal(await page.locator('.cf-home-manager').evaluate(el=>getComputedStyle(el).opacity),'1','reduced effects keeps the manager opaque');
+    await shot(page,'state-home-reduced-effects');
     await go(page,'/squad/tactics');await page.evaluate(()=>{document.documentElement.style.setProperty('--safe-top','47px');document.documentElement.style.setProperty('--safe-bottom','34px');});
     await page.getByRole('heading',{name:'Not selected',exact:false}).scrollIntoViewIfNeeded();await shot(page,'state-safe-area-large-text');
     const blur=await page.locator('.cf-edge-blur-layer').evaluateAll(els=>els.map(el=>{const style=getComputedStyle(el);return style.display==='none'||style.backdropFilter==='none';}));assert.ok(blur.every(Boolean),'reduced effects removes rendered blur layers');
