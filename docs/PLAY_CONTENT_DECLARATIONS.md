@@ -1,6 +1,10 @@
 # Google Play launch declarations
 
-Prepared September 22, 2026 for `com.creatorfootball.app`. These are evidence-backed draft answers, **not a record of saved console forms or a compliance certification**. The owner selected all ages, including children, and public support `deeplifesimulator@gmail.com`.
+Prepared September 22 and updated September 23, 2026 for `com.creatorfootball.app`. The owner selected all ages, including children, and public support `deeplifesimulator@gmail.com`.
+
+**Current hold:** the owner explicitly requested compliance review before Google's publisher certification for applicable children's laws. That checkbox remains unchecked; no certification is made. Keep the intended audience unchanged and do not submit a public release dependent on it. The console is on step 2 of the audience form. See [current launch checkpoint](STORE_SETUP_STATUS.md) for signed builds and console evidence.
+
+IARC and app-access forms are now saved. IARC assigned ESRB Everyone, PEGI 3 and Brazil 14+ among its regional ratings; intended audience does not override these ratings. Paid-pack review instructions contain approved free promo codes and backups in Google's restricted form. Codes are kept outside the repository. Data safety is a saved draft, blocked from final Save by the incomplete audience declaration. These saved forms do not establish children's compliance or native transaction correctness.
 
 ## Evidence in this build
 
@@ -10,7 +14,7 @@ Prepared September 22, 2026 for `com.creatorfootball.app`. These are evidence-ba
 - The checked Android merged manifests include billing and internet access. No advertising-ID permission was found. Recheck the exact signed release artifact after SDK changes.
 - Store packs are optional, one-time and non-random, with full contents shown before checkout. They do not sell currency, stat boosts or match outcomes.
 
-## Forms to finish in the console
+## Console answers and remaining verification
 
 | Form | Prepared answer / evidence |
 | --- | --- |
@@ -18,11 +22,11 @@ Prepared September 22, 2026 for `com.creatorfootball.app`. These are evidence-ba
 | Privacy | `https://wrexist.github.io/Creatorfootball/privacy.html` |
 | Ads | No; already saved |
 | Advertising ID | No; already saved |
-| App access | No game login. Base career unrestricted. Explain optional store purchases, restoration and Content packs; do not claim paid features are freely accessible to every reviewer. |
-| Intended audience | Owner selected all ages, including children. Still not saved; complete the Families questions against the release artifact. |
+| App access | Saved: no game login, base career unrestricted, restricted paid packs with free reviewer codes, restoration and enable-pack instructions. Code redemption is still untested; refresh access before expiry. |
+| Intended audience | All six age groups selected; not finally saved. Publisher children's-law certification explicitly held for compliance review by the owner. |
 | Data safety | Data collected: purchase history, for app functionality and analytics; encrypted in transit, not ephemeral. No non-service-provider integrations configured. Collection begins at native startup and cannot currently be disabled. |
 | Deletion | Public privacy page provides email requests. Verify a real anonymous record can be located and deleted before claiming the operational process has been tested. Career deletion and purchase-record deletion are separate. |
-| Content rating | Complete the actual IARC questionnaire. In-app purchases exist; the social feed is fictional. Do not equate an intended all-ages audience with an assigned content rating. |
+| Content rating | IARC agreement approved and questionnaire saved. In-app purchases disclosed; no random paid items, gambling or user communication. Preserve assigned regional ratings. |
 
 RevenueCat's [Google data-safety guidance](https://www.revenuecat.com/docs/platform-resources/google-platform-resources/google-plays-data-safety) requires purchase-history disclosure for functionality and analytics. Its default guidance does not require advertising/device identifiers without relevant integrations. Reconcile that guidance with the exact SDK and any project integrations before submitting.
 

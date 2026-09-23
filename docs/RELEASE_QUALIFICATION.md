@@ -2,6 +2,12 @@
 
 Continuation of the expansion work, 22 September 2026. Careers remain local; RevenueCat is the only purchase service. No Supabase, accounts or cloud saves are being added.
 
+## Current distribution checkpoint - September 23, 2026
+
+The qualification record below describes the earlier local pass. Since then, signed iOS `1.0.15 (8)` is on TestFlight and signed Android `1.0.15 (2)` is active on the internal track. RevenueCat store credentials and both-platform product/entitlement/offering wiring are complete. The latest iOS workflow passed lint, typecheck, 974 tests, production build and browser smoke before archive/upload. See [STORE_SETUP_STATUS.md](STORE_SETUP_STATUS.md) for artifact hashes, current listing evidence and unresolved gates.
+
+**Public release remains blocked.** The owner explicitly held Google's children's compliance certification for review. Native purchase/restore/refund verification, Apple IAP review assets, tablet layout corrections and Google's required closed testing remain outstanding. Earlier missing-key/unsigned-only statements below are historical; real transactions remain unqualified.
+
 ## Audit and scope
 
 - Android embeds the production Vite build in Capacitor. `android/app/build.gradle` owns signing; `capacitor.config.ts` owns bridge configuration. Java 21, SDK 36 and the pinned Gradle wrapper are required.

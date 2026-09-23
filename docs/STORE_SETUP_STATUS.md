@@ -1,5 +1,60 @@
 # Store launch setup status
 
+## Current launch checkpoint - September 23, 2026
+
+This checkpoint supersedes all historical pending notes below. **The game is not publicly launched. The owner has explicitly held the children's compliance certification for review.**
+
+| Area | Verified state | Remaining gate |
+| --- | --- | --- |
+| iOS | `1.0.15 (8)` uploaded by successful [workflow 35841115481](https://github.com/Wrexist/Creatorfootball/actions/runs/35841115481); internal TestFlight groups and instructions saved; build 8 attached; App Store version added to a **Ready for Review draft**, not submitted | Native IAP review screenshots and purchase/restore/refund checks; tablet polish and replacement gallery; complete app + first IAP submission after release gates |
+| Android | Signed `1.0.15 (2)` is **active on the internal track**; only the approved `deeplifesimulator@gmail.com` tester list is enabled | Native purchase tests; held audience certification and Data safety; required 12 testers / 14 days closed test |
+| Google listing | Icon, 1024 x 500 feature graphic, eight current phone screenshots, English text and public contact saved; **Ready to send for review** | App-content release gates remain |
+| Google content | IARC questionnaire and reviewer access saved. Ratings include ESRB Everyone, PEGI 3 and Brazil 14+ as assigned by IARC. Free codes cover all three packs, with two backups per pack | Intended all-ages audience remains unchanged, but step 2 publisher certification is **unchecked and on owner-requested hold** |
+| Google Data safety | Complete draft saved: purchase history collected for functionality and analytics, required, non-ephemeral, encrypted in transit; no third-party sharing beyond service-provider processing; no game accounts; public deletion-request URL | Final Save blocked until audience/content is completed; operational deletion test outstanding |
+| RevenueCat | Both apps show **Valid credentials**; three non-consumables, three matching entitlements, and both-platform default offering packages configured; Google test notification received | Real native transactions, cancellation, pending approval, restoration and refunds unqualified |
+
+[Android internal-test invitation](https://play.google.com/apps/internaltest/4701630808819754067) requires the approved tester Google account. No public rollout or closed-test completion is claimed.
+
+### Latest source and verification
+
+- Source branch: `codex/launch-candidate-20260923`; release code `1469e54` follows the full redesign/native release commit `45827a0`.
+- A real fresh-career walkthrough completed lineup selection, a played first match, post-match finances/fan effects and week-two progression. Screenshot inspection caught home/away score order being reused in club-first social posts. `1469e54` fixes only story formatting and adds four home/away win/loss regression cases; simulation and recorded scores are unchanged. Posts already saved before the fix retain their original text.
+- Targeted cascade tests: 18 passed. The iOS workflow passed repository lint, typecheck, all 974 tests (750 engine + 224 app), production build, browser smoke, archive, signing and upload.
+- Local Android production-key gate, `bundleRelease lintRelease` and strict signature verification passed. Five pre-existing app lint warnings, zero errors. Existing large web-chunk advisories remain. No formatter is configured.
+- The signed Android workflow is committed but cannot be manually dispatched until its workflow file exists on the default branch. The qualified build 2 was produced locally with the retained upload key instead.
+- iOS IPA: `artifacts/store-launch/ios-1.0.15-8/creator-football.ipa`, SHA-256 `F9FF796E1747AD98A57A6D3B037A2451A0983AE7450A09421E7248A283A284CE`.
+- Android AAB: `artifacts/store-launch/android-1.0.15-2/creator-football-1.0.15-2.aab`, SHA-256 `52A475C52809CB5F82D0F3249D98E4DE0C72DEB1D6C12FD66BDB1FE4B04A6912`.
+- No physical-device performance certification, paid transaction, refund, restoration, deletion-operation test or children's compliance certification is claimed.
+
+### Apple listing and review preparation
+
+- Owner-approved replacement completed: eight current 6.9-inch screenshots in order Home, Stadium, Live Match, Tactics, Market, Squad, Social, Training. The old 6.5-inch set was removed and now uses the current 6.9-inch images.
+- Content rights saved as no third-party content, based on the original fictional game assets. China mainland and Vietnam excluded because the required game licences were not supplied; 173 app territories remain available.
+- Corrected review instructions saved. Private reviewer contact remains confined to App Store Connect and is not recorded here.
+- A separate 13-inch iPad gallery still contains eight old images. Tablet captures are prepared locally, but that gallery was not deleted: the earlier deletion approval covered only iPhone sets. Resolve the visual findings below before requesting its replacement.
+- The version is in a review draft, not submitted. Apple's draft-submission item list displayed a transient error; complete validation again before final submission. First-release IAP review images and inclusion of all three packs remain outstanding.
+
+### Current screenshot evidence
+
+`artifacts/store-launch/creator-football-current-screenshots.zip` contains fourteen actual phone captures plus the Play icon/feature image and `screenshot-manifest.json`. Screens: Home, Squad, Tactics, Training, Market, Matchday, Live Match, Result, Club, Stadium, Facilities, Finances, Social and its empty state.
+
+Phone captures use the real production web UI in Chrome at 430 x 932 CSS pixels rendered at 3x (1290 x 2796). They use a fresh career and real match progression, not injected game state. They demonstrate shared UI, **not native purchase sheets**. The Play gallery accepted eight captures. The feature graphic source is `tools/brand/play-feature.html`, using original generated stadium art and code-rendered typography. Serve the production game on `127.0.0.1:4175` and the HTML through a local server to reproduce it. Google AI labels were applied to the feature image and seven screenshots containing generated artwork; the procedural stadium scene and original vector icon were not labelled as generated raster artwork.
+
+Nine tablet QA captures are saved separately under `artifacts/store-launch/screenshots/ipad-*.jpg` at 2048 x 2732 (1024 x 1366 CSS, 2x): Home, Squad, Tactics, Training, Market, Matchday, Club, Stadium and Facilities. They are browser responsive-layout evidence, not physical iPad certification. Inspection found two issues to correct before tablet listing replacement and final release:
+
+1. Matchday predicted lineup and bench switch to side-by-side based on viewport width even when the surrounding desktop sidebar leaves a narrow content column. Player names wrap excessively and overlap position labels. Use the actual available content width for this split, then recheck phone and tablet layouts.
+2. The stadium header renders the full floating-point reputation after a real match (`67.29025931707635`) instead of a rounded display value. Keep saved precision; format only the visible metric.
+
+### Compliance hold and reviewer access
+
+The owner answered **"Hold for compliance review"** to Google's separate publisher certification covering the app, every API/SDK and applicable children's laws. Leave that checkbox unchecked. Do not change the intended audience or submit a public release dependent on this certification. No ads/ad ID and local career saves are technical facts, not a legal compliance determination. Review the startup RevenueCat data flow, processor terms, lawful basis/consent where applicable, deletion operation and child-appropriate purchase presentation against the signed artifacts; see [Play declarations](PLAY_CONTENT_DECLARATIONS.md).
+
+The owner-approved promo-code and IARC agreements were accepted. Three free review codes per pack were created and placed in Google's restricted reviewer instructions (no game login); optional reuse for partner feedback was disabled. Campaigns: Club Nights `131118650`, Heritage `131123679`, Creator Stories `131123578`, scheduled September 23 to December 22, 2026. Codes and their CSV backups remain outside Git in the private credentials directory. They have not been redeemed or verified on a test phone. Do not copy them into public documentation. Renew reviewer access before those codes expire if review is delayed.
+
+The approved Cloud/API/topic configuration remains intact. No new credential or broader access is needed. Native commerce qualification, compliance review, tablet corrections and the mandatory closed-test duration are the remaining substantive release gates.
+
+## Historical setup record
+
 ## Approved launch configuration
 
 - Free game: Creator Football: Club Manager, `com.creatorfootball.app`.
@@ -112,3 +167,17 @@ This section supersedes the earlier interruption and pending-configuration notes
 - Release manifest confirms `com.creatorfootball.app`, target API 36, Billing Library 8.3.0, no advertising-ID permission and automatic backup disabled.
 - AAB SHA-256: `DB20153BBC542B38073149E0E71F89ED8BC5FAF02C4BB212075BD839C044208B`. Artifact is retained locally under `artifacts/store-launch/android-1.0.15-1/`.
 - Source is being preserved on `codex/launch-candidate-20260923`. Play upload, current TestFlight processing and native transaction qualification are still pending; no public launch has occurred.
+
+## Launch candidate uploaded and product wiring complete - September 23, 2026
+
+This section supersedes the earlier pending-build and pending-product notes.
+
+- Source commit `45827a0` is pushed on `codex/launch-candidate-20260923`. The staged source/assets were checked for private keys and reviewer contact data before committing; neither is included.
+- iOS workflow [35837277259](https://github.com/Wrexist/Creatorfootball/actions/runs/35837277259) succeeded: lint, typecheck, all 970 tests, production build, browser smoke, macOS archive/sign/export and TestFlight upload. Apple processed **1.0.15 (7)** successfully. Test instructions are saved and existing internal groups remain attached.
+- App Store distribution draft is now **1.0.15**, with build **7** attached and saved. It has not been submitted for review. Store screenshots, IAP review assets, rights/territory reconciliation and actual StoreKit purchase qualification remain open.
+- IPA SHA-256: `1CD640075FCBC24DAE51641C7DE3150039CF2EAA8DC1B1ECD619DD2BDA813EEC`; local artifact `artifacts/store-launch/ios-1.0.15-7/creator-football.ipa`.
+- Play accepted signed Android **1.0.15 (1)**. The internal release is saved as a draft; no rollout or tester list has been configured. The owner has been asked which Google account should receive internal-test access.
+- All three Play one-time products are **Active** in 173 regions with a backwards-compatible `standard` purchase option. Approved USD base prices: Club Nights $1.99, Heritage $2.99, Creator Stories $1.99. Local prices are generated by Google. Multi-quantity purchases are disabled.
+- RevenueCat imported these as **non-consumables**: Club Nights `prodaab0c3aa41`, Heritage `prod61a26cf2d2`, Creator Stories `prode02e0ee7e2`. Each product is attached to its matching entitlement. The default offering's three packages now each include both their Apple and Google products; saved console state verified.
+- Google catalog-read validation and notification transport pass. The last purchase-validation check still reported package-name propagation trouble; product import succeeding does not qualify transactions. Recheck after the Play testing release is available.
+- No public launch, native store purchase/restore/refund qualification, Families certification or required 12-testers/14-days closed-test completion is claimed.
