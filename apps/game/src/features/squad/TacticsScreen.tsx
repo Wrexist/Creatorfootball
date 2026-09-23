@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   autoLineup, familiarity, formationById, formationsFor, isAvailable, patchClub,
@@ -16,6 +16,9 @@ import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
 import { SETTINGS, VECTOR_TERMS, type SettingKey } from './tacticsCopy';
+import { pitchRows } from './pitchLayout';
+import { placeInLineup } from './lineupSelection';
+import { contentRegistry } from '@/state/content';
 
 /**
  * Tactics.
@@ -69,10 +72,10 @@ const Token = memo(function Token({
       data-drop-slot={dropTarget}
       onPointerDown={onPointerDown}
       onClick={onClick}
-      aria-label={label}
+      aria-label={player ? `${label} Overall ${player.overall}. Fitness ${Math.round(player.fitness)} percent.${!isAvailable(player) ? player.injury ? ' Injured.' : ' Suspended.' : ''}${fit < 1 ? ' Out of position.' : ''}` : label}
       aria-pressed={selected}
       className={cn(
-        'flex min-h-11 w-full touch-none select-none flex-col items-center gap-1 rounded-md px-1 py-1.5',
+        'cf-lineup-token relative flex min-h-11 w-full touch-pan-y select-none flex-col items-center gap-0.5 rounded-md px-1 py-1',
         'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
         selected && 'bg-volt/16 ring-2 ring-volt',
       )}
@@ -80,10 +83,10 @@ const Token = memo(function Token({
       {player ? (
         <>
           <span className="relative">
-            <PlayerPortrait seed={player.portraitSeed} size={34} shape="circle" colors={colors} />
+            <PlayerPortrait seed={player.portraitSeed} size={36} shape="circle" colors={colors} />
             {!isAvailable(player) && (
               <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-pill bg-danger text-ink [&_svg]:size-2.5">
-                <IconInjury />
+                {player.injury ? <IconInjury /> : <IconWarning />}
               </span>
             )}
             {fit < 1 && (
@@ -100,24 +103,28 @@ const Token = memo(function Token({
               fitted rather than cut: it shrinks to the type floor, then falls
               back to the first part of a double-barrelled name. */}
           <FitText
-            size={11}
-            min={9}
+            size={12}
+            min={11}
             lines={2}
             alternates={[player.lastName.split(/[\s-]/)[0] ?? player.lastName]}
-            className="max-w-full text-center font-semibold leading-tight text-ink"
+            className="flex min-h-7 max-w-full items-center justify-center text-center font-semibold leading-tight text-ink"
           >
             {player.lastName}
           </FitText>
-          <span className="tnum text-[10px] font-bold leading-none text-volt">{player.overall}</span>
+          <span className="tnum text-[11px] font-bold leading-tight text-ink">{player.position} · {player.overall}</span>
+          <span className={cn('tnum text-[11px] leading-tight', !isAvailable(player) ? 'text-danger' : player.fitness < 60 ? 'text-warning' : 'text-ink-muted')}>
+            {!isAvailable(player) ? player.injury ? 'Injured' : 'Suspended' : fit < 0.8 ? 'Out of role' : `${Math.round(player.fitness)}% fit`}
+          </span>
         </>
       ) : (
         <>
           <span className="flex size-[34px] items-center justify-center rounded-pill border border-dashed border-white/25 text-ink-dim [&_svg]:size-4">
             <IconStar />
           </span>
-          <span className="text-[10px] uppercase tracking-[0.1em] text-ink-dim">{slot?.position ?? 'Empty'}</span>
+          <span className="text-[11px] uppercase tracking-[0.1em] text-ink-dim">{slot?.position ?? 'Empty'}</span>
         </>
       )}
+      <span data-drag-handle aria-hidden="true" title="Drag player" className="absolute right-0 top-0 flex h-11 w-6 touch-none items-start justify-end pt-1 text-ink-muted"><IconSwap size={12}/></span>
     </button>
   );
 });
@@ -145,9 +152,12 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   const apply = useGameStore((s) => s.apply);
   const [selection, setSelection] = useState<Selection>(null);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
-  const [shapeSize, setShapeSize] = useState<'7' | '11'>('7');
+  const [shapeSize, setShapeSize] = useState<'7' | '11'>(() => formationById(playerClub(state).tactics.formationId).slots.length > 7 ? '11' : '7');
   const [duty, setDuty] = useState<null | 'captainId' | 'penaltyTakerId' | 'setPieceTakerId'>(null);
   const drag = useRef<DragState | null>(null);
+  const cleanupDrag = useRef<() => void>(() => undefined);
+  const suppressClickUntil = useRef(0);
+  useEffect(() => () => cleanupDrag.current(), []);
 
   const data = useMemo(() => {
     const club = playerClub(state);
@@ -230,6 +240,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   }, [state]);
 
   const { club, tactics, formation, byId } = data;
+  const rows = useMemo(() => pitchRows(formation.slots), [formation]);
 
   const colors = useMemo(
     () => ({ primary: club.visual.primary, secondary: club.visual.secondary }),
@@ -244,23 +255,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
 
   /** Move a player into a slot, sending whoever was there to the bench. */
   const place = useCallback((slotId: string, playerId: PlayerId) => {
-    const outgoing = tactics.lineup[slotId] ?? null;
-    const fromSlot = Object.keys(tactics.lineup).find((id) => tactics.lineup[id] === playerId);
-    const lineup: Record<string, PlayerId | null> = { ...tactics.lineup };
-
-    if (fromSlot) {
-      lineup[fromSlot] = outgoing;
-      lineup[slotId] = playerId;
-      setTactics({ lineup });
-      return;
-    }
-
-    lineup[slotId] = playerId;
-    const bench = tactics.bench.filter((id) => id !== playerId);
-    setTactics({
-      lineup,
-      bench: outgoing ? [outgoing, ...bench] : bench,
-    });
+    setTactics(placeInLineup(tactics, slotId, playerId, contentRegistry().seasonConfig().benchSize));
   }, [tactics, setTactics]);
 
   const commitDrop = useCallback((source: Exclude<Selection, null>, slotId: string) => {
@@ -281,6 +276,9 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
    */
   const startDrag = useCallback((event: React.PointerEvent<HTMLElement>, source: Exclude<Selection, null>) => {
     if (event.button !== 0 && event.pointerType === 'mouse') return;
+    // Touch scrolling works over the token; its explicit grip retains dragging.
+    if (event.pointerType === 'touch' && !(event.target as HTMLElement).closest('[data-drag-handle]')) return;
+    cleanupDrag.current();
     const node = event.currentTarget;
     const record: DragState = { source, node, startX: event.clientX, startY: event.clientY, moved: false };
     drag.current = record;
@@ -312,6 +310,8 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       current.node.style.zIndex = '';
       current.node.style.opacity = '';
       if (!current.moved) return;
+      suppressClickUntil.current = performance.now() + 350;
+      if (up.type === 'pointercancel') return;
       const target = document.elementFromPoint(up.clientX, up.clientY);
       const slotId = target?.closest<HTMLElement>('[data-drop-slot]')?.dataset['dropSlot'];
       if (slotId) {
@@ -323,29 +323,46 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
+    cleanupDrag.current = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      const current = drag.current;
+      if (current) {
+        current.node.style.transform = '';
+        current.node.style.pointerEvents = '';
+        current.node.style.zIndex = '';
+        current.node.style.opacity = '';
+      }
+      drag.current = null;
+    };
   }, [commitDrop]);
 
   const tapSlot = useCallback((slotId: string) => {
-    if (drag.current?.moved) return;
-    setSelection((current) => {
-      if (!current) return { kind: 'slot', slotId };
-      if (current.kind === 'slot' && current.slotId === slotId) return null;
-      commitDrop(current, slotId);
-      return null;
-    });
-  }, [commitDrop]);
+    if (drag.current?.moved || performance.now() < suppressClickUntil.current) return;
+    if (!selection) setSelection({ kind: 'slot', slotId });
+    else {
+      if (selection.kind !== 'slot' || selection.slotId !== slotId) commitDrop(selection, slotId);
+      setSelection(null);
+    }
+  }, [commitDrop, selection]);
 
   const tapBench = useCallback((playerId: PlayerId) => {
-    if (drag.current?.moved) return;
-    setSelection((current) => {
+    if (drag.current?.moved || performance.now() < suppressClickUntil.current) return;
+    const current = selection;
       if (current && current.kind === 'slot') {
         place(current.slotId, playerId);
-        return null;
+        setSelection(null); return;
       }
-      if (current && current.kind === 'bench' && current.playerId === playerId) return null;
-      return { kind: 'bench', playerId };
-    });
-  }, [place]);
+      if (current && current.kind === 'bench' && current.playerId === playerId) { setSelection(null); return; }
+      if (current?.kind === 'bench' && tactics.bench.includes(current.playerId) !== tactics.bench.includes(playerId)) {
+        const incoming = tactics.bench.includes(playerId) ? current.playerId : playerId;
+        const outgoing = tactics.bench.includes(playerId) ? playerId : current.playerId;
+        setTactics({bench:tactics.bench.map(id => id === outgoing ? incoming : id)});
+        setSelection(null); return;
+      }
+      setSelection({ kind: 'bench', playerId });
+  }, [place, selection, setTactics, tactics.bench]);
 
   const pickFormation = useCallback((next: Formation) => {
     const suggestion = autoLineup(data.squad, next);
@@ -375,10 +392,13 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   );
 
   const dutyPlayer = (id: PlayerId | null): Player | undefined => (id ? byId.get(id) : undefined);
+  const selectedId = selection?.kind === 'bench' ? selection.playerId : selection ? tactics.lineup[selection.slotId] : null;
+  const selectedPlayer = selectedId ? byId.get(selectedId) : undefined;
 
   return (
     <Screen
       title="Tactics"
+      className="cf-tactics-screen"
       asideOnMobile
       subtitle={`${formation.name} · ${formation.shape.toLowerCase()}`}
       onBack={() => navigate(ROUTES.squad)}
@@ -386,9 +406,10 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
         selection ? (
           <div className="flex items-center gap-3">
             <p className="min-w-0 flex-1 text-[13px] text-ink-muted text-pretty">
+              {selectedPlayer && <strong className="mb-1 block text-ink">{selectedPlayer.displayName} · {selectedPlayer.position} · {Math.round(selectedPlayer.fitness)}% fit</strong>}
               {selection.kind === 'slot'
                 ? 'Tap another position to swap, or a bench player to bring them on.'
-                : 'Tap a position on the pitch to put them there.'}
+                : tactics.bench.includes(selection.playerId) ? 'Tap a position to start, or a reserve to exchange bench places.' : 'Tap a substitute to exchange bench places, or a position to start. If the bench is full, the replaced starter joins reserves.'}
             </p>
             <GlassButton variant="ghost" size="sm" onClick={() => setSelection(null)}>Cancel</GlassButton>
           </div>
@@ -462,14 +483,19 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
         </GlassPanel>
       )}
 
-      <GlassButton variant="secondary" block icon={<IconTactics size={18}/>} onClick={() => setInstructionsOpen(true)}>Formation & instructions</GlassButton>
+      <div className="cf-tactics-toolbar flex flex-wrap gap-2">
+        <GlassButton variant="secondary" size="sm" aria-label="Formation & instructions" icon={<IconTactics size={16}/>} onClick={() => setInstructionsOpen(true)}>Formation</GlassButton>
+        <GlassButton variant="secondary" size="sm" icon={<IconSwap size={16}/>} onClick={autoPick}>Auto pick</GlassButton>
+        <GlassButton variant="ghost" size="sm" onClick={() => navigate(ROUTES.squad)}>Squad list</GlassButton>
+      </div>
+      <p className="text-caption text-ink-muted">{formation.name} · Tap a player, then a position to swap. Use the grip to drag.</p>
       {/* --- the pitch ------------------------------------------------ */}
       <div className="relative mx-auto w-full max-w-[420px]">
         <div
-          className="cf-tactic-pitch relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-white/[0.08]"
-          style={{ background: 'linear-gradient(180deg, var(--color-pitch-mid) 0%, var(--color-pitch-deep) 100%)' }}
+          className={cn('cf-tactic-pitch relative w-full overflow-hidden rounded-xl border border-white/[0.08]', formation.slots.length > 7 && 'cf-tactic-pitch-eleven')}
+          style={{ height: 'auto', background: 'linear-gradient(180deg, var(--color-pitch-mid) 0%, var(--color-pitch-deep) 100%)' }}
         >
-          <svg viewBox="0 0 100 133" className="absolute inset-0 size-full" aria-hidden="true">
+          <svg viewBox="0 0 100 133" preserveAspectRatio="none" className="absolute inset-0 size-full" aria-hidden="true">
             <g fill="none" stroke="var(--color-pitch-line)" strokeWidth="0.6">
               <rect x="4" y="4" width="92" height="125" rx="2" />
               <line x1="4" y1="66.5" x2="96" y2="66.5" />
@@ -481,14 +507,15 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
             </g>
           </svg>
 
-          {formation.slots.map((slot) => {
+          <div className="relative flex flex-col gap-2 p-4">
+          {rows.map((row, rowIndex) => <div key={rowIndex} className="grid items-center gap-1" style={{gridTemplateColumns:`repeat(${row.length}, minmax(0, 1fr))`, minHeight:'var(--lineup-row-height, 104px)'}}>
+          {row.map((slot) => {
             const playerId = tactics.lineup[slot.id] ?? null;
             const player = playerId ? byId.get(playerId) : undefined;
             return (
               <div
                 key={slot.id}
-                className="absolute w-[72px] -translate-x-1/2 translate-y-1/2"
-                style={{ left: `${slot.y * 100}%`, bottom: `${slot.x * 100}%` }}
+                className="mx-auto w-full max-w-[76px]"
               >
                 <Token
                   player={player}
@@ -505,26 +532,21 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
               </div>
             );
           })}
+          </div>)}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <GlassButton variant="secondary" size="sm" icon={<IconSwap size={16} />} onClick={autoPick}>
-          Auto pick
-        </GlassButton>
-        <GlassButton variant="ghost" size="sm" icon={<IconTactics size={16} />} onClick={() => navigate(ROUTES.squad)}>
-          Squad list
-        </GlassButton>
-      </div>
-
       {/* --- bench ---------------------------------------------------- */}
-      <SectionHeader title="Bench" subtitle={`${data.bench.length} named · ${data.reserves.length} not involved`} />
+      <SectionHeader title="Match bench" subtitle={`${data.bench.length} named substitutes`} />
       {data.bench.length === 0 && data.reserves.length === 0 ? (
         <EmptyState size="sm" title="Nobody left" description="Every fit player is in the starting side." />
-      ) : (
-        <GlassPanel padding="sm">
+      ) : ([{title:'Match bench', players:data.bench}, {title:'Not selected', players:data.reserves}].map((group) => (
+        <GlassPanel key={group.title} padding="sm">
+          <h3 className="mb-3 text-body font-bold">{group.title} · {group.players.length}</h3>
+          {group.title === 'Not selected' && <p className="mb-3 text-caption text-ink-muted">Outside the match squad. Select a player to bring them into the team.</p>}
           <div className="grid grid-cols-4 gap-1 sm:grid-cols-6">
-            {[...data.bench, ...data.reserves].map((player) => (
+            {group.players.map((player) => (
               <Token
                 key={player.id}
                 player={player}
@@ -537,7 +559,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
             ))}
           </div>
         </GlassPanel>
-      )}
+      )))}
 
       <GlassSheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} title="Formation & instructions">
       {/* --- formation ------------------------------------------------ */}

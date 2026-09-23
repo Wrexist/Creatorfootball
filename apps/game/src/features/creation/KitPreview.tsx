@@ -16,6 +16,8 @@ export function KitPreview({
 }: { visual: ClubVisualIdentity; size?: number; label?: string }): ReactNode {
   const clipId = useSvgId('cf-kit-clip');
   const gradientId = useSvgId('cf-kit-grad');
+  const shadeId = useSvgId('cf-kit-shade');
+  const lightId = useSvgId('cf-kit-light');
   const { primary, secondary, accent, kitPattern } = visual;
 
   const shirt =
@@ -38,6 +40,12 @@ export function KitPreview({
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={primary} />
           <stop offset="100%" stopColor={secondary} />
+        </linearGradient>
+        <linearGradient id={shadeId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#000" stopOpacity=".55"/><stop offset=".28" stopColor="#fff" stopOpacity=".14"/><stop offset=".53" stopColor="#fff" stopOpacity="0"/><stop offset=".82" stopColor="#000" stopOpacity=".28"/><stop offset="1" stopColor="#000" stopOpacity=".55"/>
+        </linearGradient>
+        <linearGradient id={lightId} x1="0" y1="0" x2=".4" y2="1">
+          <stop stopColor="#fff" stopOpacity=".3"/><stop offset=".38" stopColor="#fff" stopOpacity="0"/><stop offset="1" stopColor="#000" stopOpacity=".36"/>
         </linearGradient>
       </defs>
 
@@ -77,9 +85,11 @@ export function KitPreview({
           style={{ mixBlendMode: 'overlay' }}
           aria-hidden="true"
         />
+        <rect width="96" height="96" fill={`url(#${shadeId})`}/><rect width="96" height="96" fill={`url(#${lightId})`}/>
+        <path d="M25 24 L28 81 M70 24 L67 81 M29 84 Q48 88 67 84" fill="none" stroke="#fff" strokeOpacity=".16" strokeWidth=".7"/>
       </g>
 
-      <path d={shirt} fill="none" stroke={accent} strokeWidth="2.5" strokeLinejoin="round" opacity="0.9" />
+      <path d={shirt} fill="none" stroke={accent} strokeWidth="1" strokeLinejoin="round" opacity="0.6" />
       <path
         d="M36 8 C40 14 56 14 60 8"
         fill="none"

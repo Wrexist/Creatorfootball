@@ -16,6 +16,7 @@ import { installAnalytics } from './analytics';
 import { preloadHome } from './featureModules';
 import { ExpansionBridge } from '@/commerce/ExpansionBridge';
 import { ROUTES } from './routes';
+import { LargeTextContext } from '@/design/typography/FitText';
 
 /**
  * The application root: providers, boot, and nothing else.
@@ -143,7 +144,7 @@ function Preferences({ children }: { children: ReactNode }): ReactNode {
     // `null` defers to the operating system; `true` is the in-game override
     // forcing it on. There is deliberately no way to force it *off*.
     <ReducedMotionOverrideContext.Provider value={reducedMotion ? true : null}>
-      {children}
+      <LargeTextContext.Provider value={textSize === 'LARGE'}>{children}</LargeTextContext.Provider>
     </ReducedMotionOverrideContext.Provider>
   );
 }

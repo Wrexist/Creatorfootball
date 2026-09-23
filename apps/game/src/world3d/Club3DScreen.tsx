@@ -37,7 +37,7 @@ export function Club3DScreen(): ReactNode {
   const project=pendingProjects(club).find(item=>item.facilityId==='facility_stadium');
   return <Screen title="The home we’re building" subtitle={club.name} onBack={()=>navigate(ROUTES.club)} className="cf-campus-screen">
     <div className="cf-campus-stats" aria-label="Your current club">
-      <div><strong>{club.reputation}</strong><span>Reputation</span></div>
+      <div><strong>{Math.round(club.reputation)}</strong><span>Reputation</span></div>
       <div><strong>{club.stadium.capacity.toLocaleString()}</strong><span>Capacity</span></div>
       <div><strong>Level {level}</strong><span>Your stadium</span></div>
     </div>

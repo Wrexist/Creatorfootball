@@ -6085,5 +6085,2651 @@
         "sha256": "1185787d224f129de7aebc1cbc13277048b18730a4cc60d86fc601e94e792f2b"
       }
     }
+  },
+  {
+    "key": "manager.dez-neutral",
+    "name": "manager-dez-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Dez Kavanagh. One original fictional adult male football coach, age 52, very fair skin, grey buzz-cut hair and grey stubble, broad sturdy build, strong expressive eyebrows, approachable determined neutral expression. Plain charcoal technical training jacket with restrained emerald piping, a small unbranded whistle around his neck. Premium stylized semi-realistic 3D character render, subtle realistic skin and satin fabric, warm soft key light from left and cool blue rim from right. Centered head and upper torso with both shoulders completely visible, eyes at upper third, generous space above hair, portrait 2:3 aspect. Clean uniform deep charcoal-forest background #17221d, no setting or props beyond whistle. Calm confident mouth closed; no smile or frown. Same production universe as a premium football management game. No real person likeness, logos, crests, letters, text, watermark, interface, border or frame. This is character art only.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "sourceSha256": "08176075c183e9d36a2b87039b151cb7237bd5748f2502cba4f536a2bd13a898",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 33028,
+        "sha256": "73af14bbbd6b53c4aab42f0a141624db432eef10a5884582957eb7192823f396"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 4880,
+        "sha256": "254654cedd2425efd340572ae25ab39696ce845481e47cdcb3e1324a57fcbf91"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1252,
+        "sha256": "2a8e796c6d91a864a49d389f77e58e43332d68fb54ab0994d12280ebc895190f"
+      }
+    }
+  },
+  {
+    "key": "manager.bobby-neutral",
+    "name": "manager-bobby-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Bobby Sarkis. Exactly one original fictional adult man aged 43, medium olive skin, swept-back black hair, neat goatee, charcoal designer coat with restrained magenta lining and stylish lightly tinted glasses. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "sourceSha256": "d0a564259efe928eb02212d388e3e88abeb1902963481b3c3e8250664ca07a15",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 42602,
+        "sha256": "6384bfe54366be93c8b80e1491a8c227ebc13f914fe7e384477635a6cbd75cde"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6004,
+        "sha256": "6cac91c5cf78e728d43d9230b854f24e78e58a11fdff923c32e2122b498d0f0e"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1634,
+        "sha256": "40eeb7ab343face8dcd031cab4bfd0061ecbc3e667c747d3878ca4a1370ba606"
+      }
+    }
+  },
+  {
+    "key": "manager.ines-neutral",
+    "name": "manager-ines-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Ines Moreau. Exactly one original fictional adult woman aged 38, light warm skin, auburn hair tied back, charcoal quarter-zip sports top with restrained royal-blue piping, holding a plain dark tablet low against her torso. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "sourceSha256": "f54808ed423e658e72cbb1f8eb3be487f1998aa8363f56bf50db941607a728fb",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 31654,
+        "sha256": "add605f094267c006f87b398dceafdee2a903a8665990ca0d6b6a02e024aa400"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5250,
+        "sha256": "fd2cf797b504e7c0584ba25a12cc830a3209c69c38c43bcf50c8a8cc2c4e14db"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1242,
+        "sha256": "f62d40d131f5cf4c3352c8ae4a32d4f564a9b8099a9981449997c9dc5f9ccb74"
+      }
+    }
+  },
+  {
+    "key": "manager.kit-neutral",
+    "name": "manager-kit-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Kit Marlow. Exactly one original fictional adult man aged 35, very fair skin, messy blond hair, light stubble, charcoal bomber jacket with restrained muted red trim, confident slightly mischievous expression with mouth closed. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "sourceSha256": "64182bc90f32b3b5efdb244a8139f0a3eb5fe940a0fdeb5099e93a56b424d667",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 41560,
+        "sha256": "034d7c44e710756632b3b14cfd8519b7c27e61ac82fa8eece60c39cc0a992f92"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 7462,
+        "sha256": "f9886a055192bd6b85d336f53df4df5c733ab61c8f3066659fcd1260c09da8a5"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1964,
+        "sha256": "ba94b079d87d02a33089edcec8e6cfab3587b1c8b8be334f0dc44d5bda1bbca9"
+      }
+    }
+  },
+  {
+    "key": "manager.aurel-neutral",
+    "name": "manager-aurel-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Aurel Stanek. Exactly one original fictional adult man aged 56, fair warm skin, dark side-parted hair, clean-shaven, charcoal suit with light grey shirt, holding a plain blank clipboard low against his torso, disciplined composed expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "sourceSha256": "11fe967977b6a913f20d89ae0990036ed0537768fe64bd7abe37b087b3346600",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 30476,
+        "sha256": "ce4c2b76638cc41b7f459b707d2293bfc753787fe61a9d3882be8751825b0647"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5038,
+        "sha256": "eb0ddafcd75e93f607bf65178c52c5c4cdbe4f6cb631dea98c7c955e9b06729b"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1318,
+        "sha256": "8a3a11e89fd9e4564679c1e8a6d0f56acf3c4bb0a50e2b98ed79811b77914a12"
+      }
+    }
+  },
+  {
+    "key": "manager.mabel-neutral",
+    "name": "manager-mabel-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Mabel Osei. Exactly one original fictional adult woman aged 49, rich dark brown skin, black braids pulled back, charcoal club sports jacket with restrained warm-gold piping, plain blank lanyard, warm composed expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "sourceSha256": "f592701869bc2c5d97d94f688bc00ac1339bc0caea0071d584142f5677d9462b",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 38828,
+        "sha256": "e2a035e4b8615fc14204b669d76dcdd9d92770b3e47138c3d4bc3dd26ec8a6da"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6416,
+        "sha256": "887a593936cceafaf4ed80a1e93694f7b314faddd888b55cd2d73ed3207365f3"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1278,
+        "sha256": "85db0747968fa8d2ea006553b31ca1271473899ed21c3dddca40bdd4a07764e1"
+      }
+    }
+  },
+  {
+    "key": "manager.rafe-neutral",
+    "name": "manager-rafe-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Rafe Dunmore. Exactly one original fictional adult man aged 45, fair warm skin, neat short brown hair, clean-shaven, tailored charcoal coat with subtle muted gold detail, one hand resting low with a simple signet ring, poised expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "sourceSha256": "97179a799b9cbc69579041c5c7e1039ed39047ebd224f499debd1b8925d4d350",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 44556,
+        "sha256": "0e56d89baae1615d7bfa2df135eee1e010e162f6988e1a6efceeaf1e8a9f1d70"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5770,
+        "sha256": "798f8fb172d788de0c5fe1c3627a3ce73556e18f3d381e0925c4d91dc47ff171"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1466,
+        "sha256": "22d866e81a5065a21b3eafc77a73ba32a5a09a2dc15ea3291bfc1cdb69f5b726"
+      }
+    }
+  },
+  {
+    "key": "manager.noor-neutral",
+    "name": "manager-noor-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Noor Latimer. Exactly one original fictional adult woman aged 29, medium olive skin, clean black bob haircut, charcoal technical coat with restrained mint piping and a small discrete earpiece, analytical composed expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "sourceSha256": "1b11a20282750cc16ad77ee945d61766797c45546d55433f94e448450af2986d",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 27132,
+        "sha256": "1558b72dfc7e4907fcb5d1779f3987713423e5d4019394486c6bfdd16569d91b"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 4964,
+        "sha256": "0717b9476ad7a7b61cd910e46214576a153350e395ade77cb194637a2239b9f5"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1282,
+        "sha256": "da5982fd7e344098c97c1e6d7367b79385bfd60fd833a7ad41b3505bbdf6d0ac"
+      }
+    }
+  },
+  {
+    "key": "manager.sten-neutral",
+    "name": "manager-sten-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Sten Bjornsen. Exactly one original fictional adult man aged 65, very fair skin, thinning white hair, neatly kept white beard, charcoal padded stadium coat with cool silver-grey trim, holding a small plain dark thermos low against his torso, calm firm expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "sourceSha256": "ca397bc1ea8113f62873bef23409737a077b10a8aec08668fb63e14e8c9aaa0e",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-neutral-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 41022,
+        "sha256": "51271e746b903bef582094a82f63979419879115466b5215422b0770ee552a8a"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-neutral-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6602,
+        "sha256": "8a49570aa53c90ef2459c77a4b0dbdbe78a0ab802e3a6d4ec36f3f9d8dd223b6"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-neutral-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1454,
+        "sha256": "fb15e0ee36fc9d44dcfbd7640bd56c7e2649f096d7f264109cbc1a3700750885"
+      }
+    }
+  },
+  {
+    "key": "manager.dez-focused",
+    "name": "manager-dez-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d4528dc4-f5d1-4e97-831a-282a73a5b46b.png",
+    "sourceSha256": "00f1756be1f77f042cbe61306d78a5b17371ab250f54ea1ca57abc93a1491ca8",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 32708,
+        "sha256": "1ca941cd0dfc3a52c493ab0a3404d8ee2bae82775842726b1460f2b8eff147a9"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5182,
+        "sha256": "a656a4d3434e48e6ad713e2902c437d6f5141126759991f330b3dbe6d01261d0"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1322,
+        "sha256": "488d8d4a1822fac58b2b50c733be04dfc1855d0d51a8ae3b4e8e5c3a25daae1d"
+      }
+    }
+  },
+  {
+    "key": "manager.dez-happy",
+    "name": "manager-dez-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-1c831288-2642-4ead-92fe-ac63dccac1ad.png",
+    "sourceSha256": "3825c87a18f431caa434aa288060d7111c3ef6c65c9a7ff95161c684a6e17d99",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 31640,
+        "sha256": "e45b77d51c3608fc13b60993045109d2ff002661d6caba4880206342a3f474f2"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5116,
+        "sha256": "d302562dbcb9f550acad737e6b23de8f417c0570048ce1f7ce7b4d2713d29f04"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1276,
+        "sha256": "b1c48528a645adc59612548dddaae44382adea683622eab13d57bc1142bb4d08"
+      }
+    }
+  },
+  {
+    "key": "manager.dez-disappointed",
+    "name": "manager-dez-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8a850e97-3814-47ce-9d96-4fa7875e739f.png",
+    "sourceSha256": "ca19dc2dc6d44a803d35b665e46624f87528aef453c2c68e215d7da04baa1247",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 31538,
+        "sha256": "d023d78aeee17f6c58e425a3f1526c29ed4a177ad3414214c061b23b27f89efe"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5130,
+        "sha256": "d8e40b8152b4234806f83740009241d78858e648e66c22ae0f75329ce3261836"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1274,
+        "sha256": "2791df5afb045803394564709e792920f42423e823798ecb8ceeea0d85a2e9bb"
+      }
+    }
+  },
+  {
+    "key": "manager.dez-celebrating",
+    "name": "manager-dez-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4d074acb-f8e8-4844-90e9-49a8a16ecd0c.png",
+    "sourceSha256": "7b7b354c73324cbc81d9503a82587dcdfb667424a5887aa06f607418b1c3189e",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 31874,
+        "sha256": "fa14164691f7e5c9bda2a296c110da7a12a04f17ea4bd3b7715619f81311c351"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5564,
+        "sha256": "13e73eab56ae9657c6eac2e6192db3d828ce99e91a7663f4963e5dc54fd420bf"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1272,
+        "sha256": "23d94c105c7f513d5dd6571f099b45678513a3f6343b7ea13a6239e6b2007cc5"
+      }
+    }
+  },
+  {
+    "key": "manager.bobby-focused",
+    "name": "manager-bobby-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-01174591-c42d-4a0b-aa11-a3d3709c6569.png",
+    "sourceSha256": "09ac907a1bbf15c3e0dff1579cefb15a75fbde852df9a732bc489990dc4af296",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 40400,
+        "sha256": "87b96773a56c4d2f8d9681bf1c25349d11af263a2f86c0f333f31caab59c425a"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6324,
+        "sha256": "8eb96e83f66e292d715c73d986751ad619aa07948b280ba39455e052e106c635"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1736,
+        "sha256": "d80cdd1d3528c2b6138b8dc05b107bfa1f9ec6be50e4b8a2ef0b59fa3a4fd714"
+      }
+    }
+  },
+  {
+    "key": "manager.bobby-happy",
+    "name": "manager-bobby-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-cc7fb77c-346a-4621-a67e-bb2923fc43b9.png",
+    "sourceSha256": "8a7f453eaa46134837e5d0ce65d978fa2df68e54c4cff213722e8ae2a394defc",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 30214,
+        "sha256": "bdfec73716f64730a1bfb697d3c307712eca8799d9b3f0ecf84a1a0a017cc96a"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5618,
+        "sha256": "a5a4285aa8975c4a4c6f538d575d4986c53fcaf44c093ddf8d1c299cc40a8492"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1638,
+        "sha256": "c17b854efabd03aa01fb2ee0f4e7e392ded99f4d625150bd1b11ed77b130d99a"
+      }
+    }
+  },
+  {
+    "key": "manager.bobby-disappointed",
+    "name": "manager-bobby-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6093af22-0438-4cea-aba3-31fab26f88d0.png",
+    "sourceSha256": "32676ad0da7619826f9b96cd036fa257b1650498c5cf57542fc8284d51bee0d9",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 38656,
+        "sha256": "1c6aea3195cdaf39b51312f77f05e6b59f1e93ae9ea5906b5c1190abcd4fd3b4"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5946,
+        "sha256": "4f725385a645b1bb9d9e48660ad44f7c20d9a0a3d6e1f2dc8c7823a6ef8400af"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1636,
+        "sha256": "c0462125bb0461b0e42e33affeac2639cdb4de4c1b8d870c7411b5a065eb09f8"
+      }
+    }
+  },
+  {
+    "key": "manager.bobby-celebrating",
+    "name": "manager-bobby-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-dcb4743e-c478-4001-8633-59d3d08765f0.png",
+    "sourceSha256": "b262a75ae152ae08e9c77e3658af841d33aa68f4dcc6fad9ae7b193a20407ad6",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 36842,
+        "sha256": "87c8abc264c7a3d6ef2ba188ee4e647e902e5c7371d6f5a5a9afb138f972df9a"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6472,
+        "sha256": "58ae37f1c4d9bc5babf5940a5cfb0083b9dc11e1f946d3dcdd5b088417dab933"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1716,
+        "sha256": "9219824506817e5091630d3cabedc675ebde486a27289d8c57160412d5b26515"
+      }
+    }
+  },
+  {
+    "key": "manager.ines-focused",
+    "name": "manager-ines-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ebe59eb7-7dc2-4c02-825b-2ffa1483af02.png",
+    "sourceSha256": "bde665acb199a9d1d400be0e5b41f6b45923d32fcc6ea01901a350de1ac0cb46",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 29306,
+        "sha256": "22388cbad6c41e4baed1f5e7f377365949cb795f898daae838994d896a50c5fd"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5318,
+        "sha256": "7f0f523ce921fdcfa35a42bc1ebacd9ac7aabace9865c9a8559e102de715c047"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1296,
+        "sha256": "b1413b1aa9cbcfeb9946a2b9a2303c1bb603ad9eac32697242b080908129a99b"
+      }
+    }
+  },
+  {
+    "key": "manager.ines-happy",
+    "name": "manager-ines-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e8519135-6565-4c27-922f-14e71758e789.png",
+    "sourceSha256": "8448501a05a96dfb3bc0f1b785d5357f1fc507138763330b53960c5ebd5909ce",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 29934,
+        "sha256": "3dd6125e2bafad63e207f1efbb985a0f950a60ce11996ef29ce6d4b63387c1fd"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5352,
+        "sha256": "15c1c4e468e1d5a260d00e9c6bc4794e891886cca49df3eecb473618c74c3272"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1286,
+        "sha256": "464634f2943989837a44732dba7b63b547a346a27ee569a8b89a830a43cf03e4"
+      }
+    }
+  },
+  {
+    "key": "manager.ines-disappointed",
+    "name": "manager-ines-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-28c2590a-12e7-435a-a192-330220d0cd8e.png",
+    "sourceSha256": "c41b3fac7094c4d72fcc17042717d65d533bb4dcaf79a4bfb492a89218ef060f",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 32286,
+        "sha256": "e5bab7d816f001f9081f37e95a391e5b66dfc742886ab7a6be50d409bc41dc30"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5576,
+        "sha256": "246f6c15af48dd169cba91eb29534638f2327a320a8877918f9d7a830528246d"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1310,
+        "sha256": "b0d1a9dea4b7a1d1a17216e350a68f446a60b0d40a265a2841aa9cc5092cc2fc"
+      }
+    }
+  },
+  {
+    "key": "manager.ines-celebrating",
+    "name": "manager-ines-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e22f5204-6d04-4270-b778-5b72c99f8fe8.png",
+    "sourceSha256": "c490a93924a99b2c55bf14beb10e94235ab02a84c2fdd8d54764b65c0ff1127a",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 29246,
+        "sha256": "15517e5e9328e80a04c21b8cc52885c1797cdf48f3e213e4b427593518e64d7e"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5820,
+        "sha256": "0cab6b18c2b5523d48cd3863ea1eb36e39980059ac64be9e42016941a5adac3f"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1320,
+        "sha256": "1ff8f44b48d688cf17b50e2eb55ae64cc53f8209c67023c5205e003c5333e77c"
+      }
+    }
+  },
+  {
+    "key": "manager.kit-focused",
+    "name": "manager-kit-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3fc01e60-495b-4076-b7ef-5a33e2ad04c6.png",
+    "sourceSha256": "b8f6fd7206d4b857de5cdd63211eeabafb5495cab53c47d01aad27c0f6ba79a6",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 38138,
+        "sha256": "211de00ed61d0fdf47fdc767b7b20492f097ac817ca7672f956bf24c3728237e"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 7304,
+        "sha256": "d3c831bb86e79e3b70e83518d3531c9ec764c2c38ecab5c3055f481eb8a2870a"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1990,
+        "sha256": "fc9a7d4b1f911043fed3515f9c63e562ea72f7deff4b2a9328491b002de7fa49"
+      }
+    }
+  },
+  {
+    "key": "manager.kit-happy",
+    "name": "manager-kit-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-98ce1fc0-c685-44b6-85ce-29f0ef56b56d.png",
+    "sourceSha256": "ecf18c460d268d9636351354dd57e3402a8f10acf2af9e38e6f5634fe3e5070a",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 40026,
+        "sha256": "ff403b5328c3094e48ab98b4b1226f8ca7d9498dbee1e158a652edabbb6fb89b"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 7554,
+        "sha256": "08617f0e5b16b3876d1dd65099c5e6f958bb15e9de4edfb6ec70b0b809c21ee8"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 2012,
+        "sha256": "898947e13ee24baaa9cce9857aa1e81752e76bccbd30651a120e50bee9d7ea97"
+      }
+    }
+  },
+  {
+    "key": "manager.kit-disappointed",
+    "name": "manager-kit-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-924d3228-61c6-4bb6-a1db-0970b299873d.png",
+    "sourceSha256": "7a6cad0c0e0b07630ffa72274d5d0941f1d17c8bf749330b051be444bec096a8",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 41974,
+        "sha256": "4c1fde4fed56dfc3d15fa3ae8bdedcc30f47230c146457c0275d25746ae90067"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 7726,
+        "sha256": "a6f4756ba0d95d22c7c0a5e999e44a8d651ef8d3008d35a93240fa0e48bb1b6f"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 2048,
+        "sha256": "7963df3f184a693904993b07f0037091d8d07868ac5d7ffe05466a49feabb13b"
+      }
+    }
+  },
+  {
+    "key": "manager.kit-celebrating",
+    "name": "manager-kit-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-969757a1-5365-47b7-86ae-08018b722a60.png",
+    "sourceSha256": "5e42188df07b633980311f934dbd5256ee71c232e93dc8847dea70618e90be1e",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 43034,
+        "sha256": "41f1df46f0735d35bb9b8c0295036010f8adbc8c8ce8a2690287ec9033f9e090"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 8288,
+        "sha256": "78c03ed95dd07c45f3515cc627eb51bfda8c5dfccd396c3b14767f7d81a9546f"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 2066,
+        "sha256": "301be6ac88effd033c318d2e9f239399fadbdd84250d37ffa9748efe95c4e198"
+      }
+    }
+  },
+  {
+    "key": "manager.aurel-focused",
+    "name": "manager-aurel-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7c33e107-92b2-49b0-b140-84b4844311b6.png",
+    "sourceSha256": "8241a09107475704ee8952492d4130510dc02f9a6180f99d2b09d508c7995876",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 31050,
+        "sha256": "35eee4798fa4909ea5cfa18cf440f183f2a9b281e9db368b7e682477d54db7d9"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5374,
+        "sha256": "6d726f5e2b32749775544a6729f5360fe592b3f264999b6eef80882669e8b12a"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1398,
+        "sha256": "aee1f6d46c49ef2bcc572e692512a463e36ba9bfac053604c3582d365e7bf6a0"
+      }
+    }
+  },
+  {
+    "key": "manager.aurel-happy",
+    "name": "manager-aurel-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3522ad8c-6ade-4a8b-bf29-6a5e21c6d454.png",
+    "sourceSha256": "f106cb878398563f44960c1b47a954139c95047ee5e7e5a6cfa999cb3e5af957",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 27320,
+        "sha256": "baa8ecc477bbc80c577248fb63c27160f3f32089e1e1069124087f9f0b592b31"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 4950,
+        "sha256": "cb8bc7e266d44db8fcd1df441fff581ca1ad5673739b2a0aae027983eedc68c9"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1310,
+        "sha256": "5bb1c11baf49676438cac2c37d06fff82a3df226598873255bbdebf6927c31ab"
+      }
+    }
+  },
+  {
+    "key": "manager.aurel-disappointed",
+    "name": "manager-aurel-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-dfff55aa-3db0-449b-9afb-c1f618c52b1e.png",
+    "sourceSha256": "3966cfb55c786636a70a9bba9c16541ddda3b19e98a2c9ac4f8cf1f0bbfd7f08",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 26860,
+        "sha256": "9a7a2ef2f950f55ecfc75468e35255feed3798b9de35ca829744fb80edc0d22f"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 4978,
+        "sha256": "c8da981bb1d50b0a87da9dc7df492337626d812a5fdc29d2a12e6a555f60873a"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1312,
+        "sha256": "3472f85fcc5e930474fde19abdf1548f11e2ea540e8ac39f72eff9f573198076"
+      }
+    }
+  },
+  {
+    "key": "manager.aurel-celebrating",
+    "name": "manager-aurel-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e91f0885-bb3f-4115-a47d-495fce9b6c83.png",
+    "sourceSha256": "a8a7fb2ec78fdb1082e0da18896ca6c3c13672ff8db936d0a444be99248fe825",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 29508,
+        "sha256": "08c89fc892b354e56c342b69b9802ce0d2e6b4a829fdf99494d027e2fdf5bc47"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5698,
+        "sha256": "6e17a522300c3d41d677f8034588b5e51873e6b3827c5c93644560ad80502d00"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1366,
+        "sha256": "20406d600e1dbcc69c9400a9b9dc8e2e911e759e21a6ffda589dd8fff125b6b8"
+      }
+    }
+  },
+  {
+    "key": "manager.mabel-focused",
+    "name": "manager-mabel-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3ae1befc-4fb1-4afc-aa87-0e81064f7fe8.png",
+    "sourceSha256": "ce62873e384cb38e533d47133af064ef5ba4260112955cfde35652a452b4548d",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 36956,
+        "sha256": "1afda14cd6018358387ed34251efbd371b266b815783067ec8a75bae5de579f0"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6648,
+        "sha256": "e3a399c3a4623d690f93cd8360af965b3bbfdfbfa165508aecc97dbc67049c52"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1376,
+        "sha256": "a646c9ba8638c1bb595f3db4d6e2fff2cfe73bd83beb527eaa0b814b0d9a27e7"
+      }
+    }
+  },
+  {
+    "key": "manager.mabel-happy",
+    "name": "manager-mabel-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-00f3cae8-2839-4583-b10f-83332953df80.png",
+    "sourceSha256": "820539426a161d3ef5af558c99740269849fcd8bbf5f89cb9a648ab3e33f4905",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 34104,
+        "sha256": "a33adcf859db349422cb845a599c58d27c0b2129d316cb723620f18564f83225"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6554,
+        "sha256": "4f48dc638ee04cbe7c7b6344b2252ae053c89a60864c7599f077a146161cb4fd"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1358,
+        "sha256": "e54393a7caf263b180ea3c418c91f2f04c1d8c482decc2abd3231d78984548d7"
+      }
+    }
+  },
+  {
+    "key": "manager.mabel-disappointed",
+    "name": "manager-mabel-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-213fc133-2967-4e92-bce6-ab585e3375b5.png",
+    "sourceSha256": "aa2f31320217e571a8c674e1a97f995188efba3ca44051e60b20080b778df12e",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 37530,
+        "sha256": "9093a7fed9a4e1705c0ee9a6e8bafb60712d0b7481ff29c1a43700c8e46c39a6"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6594,
+        "sha256": "88c5c11f0778f0fb2f37858ff17866b3968e373f9f2c006bd29d3b376d7d2da5"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1320,
+        "sha256": "cf69ac13c4a288330d12c595431eee22db71b90a897397dc953c893394953b5e"
+      }
+    }
+  },
+  {
+    "key": "manager.mabel-celebrating",
+    "name": "manager-mabel-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4a42e4b7-249e-47ed-804b-0f9eea8d06a9.png",
+    "sourceSha256": "02cc5abbab161d658fad09b6b7da9b56ace16e267d603b00a673837de53b756b",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 37650,
+        "sha256": "36f8dc564baf70461caf1d1738c2541109dd977e55022bb484109db6d9e7a7b5"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 7362,
+        "sha256": "037b2b6df21ffb527b62070b292804213e5f1aac42c88972c61ca9896674a8fb"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1384,
+        "sha256": "6bd721c0397d70e2b7963f8d809f2856f1d33b54fdd07821a9f3c18176498279"
+      }
+    }
+  },
+  {
+    "key": "manager.rafe-focused",
+    "name": "manager-rafe-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-a09a4664-1272-48fc-8a6c-e654ca8a1141.png",
+    "sourceSha256": "9556d62abc7d8f7b39a59b212f032f36f217257b9c18a7acc1c0bd91fe477a43",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 40190,
+        "sha256": "a35708573f5c9bfaae788f7ad3bb1ad7e07e685120ee0e89b5a0ab6cd4863996"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5964,
+        "sha256": "8cd0881c8ec835100252dfecd49c1f7997a525312bc76508a04a1ad5fed6ded1"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1496,
+        "sha256": "fa89fc407a118ba35b837b852894d5969e5b03120b0c10f1b2278c1d39a06b3d"
+      }
+    }
+  },
+  {
+    "key": "manager.rafe-happy",
+    "name": "manager-rafe-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-53f8319f-1a14-42f0-8056-c73a8fd4f898.png",
+    "sourceSha256": "0fc7e101c1c3d4d5f48febcd54bf67a77cf7deb32af91db5241192f7eaaf714c",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 30696,
+        "sha256": "272bc9645b980bb1b75f3afe646a8f3e7251f67c738b796b8478be81e7e6d5c5"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5580,
+        "sha256": "b6536dc222c811ecce56a78df48d3f6bdfb0fd19896828a1dd9360094dfe8aba"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1478,
+        "sha256": "a6decd053bf644e87fab181c1937c55041879d61cacd99ba8f73a5ee7315fdbd"
+      }
+    }
+  },
+  {
+    "key": "manager.rafe-disappointed",
+    "name": "manager-rafe-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-442327e4-2ab7-4ad5-8d56-8f42be28facb.png",
+    "sourceSha256": "f7130ab09950960e87460068dfa231b393dd49520b8a7ad309a70eca10dd4e8a",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 34440,
+        "sha256": "9eb743197bdd20a49b202877fac714d8dcbc53c6c26d841571a0ade035b1b76d"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5736,
+        "sha256": "275cb5a6aa76c362abcad694df734dc9d71005e829fd4197c089a72d1b8955a4"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1520,
+        "sha256": "a6fbca956b67a23e3dd80b5526f1a7fd939c922a457a22110c5f4ad90ff0e2af"
+      }
+    }
+  },
+  {
+    "key": "manager.rafe-celebrating",
+    "name": "manager-rafe-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7bf52e15-ed24-4188-8b68-21fb719bb7b1.png",
+    "sourceSha256": "8676cc88f73fef7966f6eea19b8ddc3e26e0313dc8868a57eab672d9a9303b26",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 41638,
+        "sha256": "5e48c89a3de8d5e88c046ca8e08933242c396ccb858009eeebd922329fc1f30b"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6492,
+        "sha256": "83913d92d40960a3b4b541d6ab626d685a287ed3a4ef2b1dcd5a0c634b030a2d"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1508,
+        "sha256": "36d77b848df8d86d1556418de108d88e0717751f15b4ff519bbc4933922fe3a3"
+      }
+    }
+  },
+  {
+    "key": "manager.noor-focused",
+    "name": "manager-noor-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8bfac3bc-1e0f-4e99-b8c4-80caa9949dcf.png",
+    "sourceSha256": "bdbeab88e402391ff7046d87273d00e24190c0fdc5e66dcf73330a4b1a385045",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 25990,
+        "sha256": "afc34ed554344896e2547fc3b03c99ba4caf46d736dbdae1556673d8304497a2"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5250,
+        "sha256": "993e7c3b3c10af7f143b41b88b1780c6d983d31446febd958b94bbd394c9ff78"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1346,
+        "sha256": "554868c722aaca47139281f7c6214a04ce34c55f78e21c22bfccdd0cc79006b6"
+      }
+    }
+  },
+  {
+    "key": "manager.noor-happy",
+    "name": "manager-noor-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8533854b-3f06-46b4-a3d7-2a5220fdbc78.png",
+    "sourceSha256": "cd56698b3253c80567cf753c94c4b87f8aae6fa4601118a580236d156a49c8b0",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 26322,
+        "sha256": "7b2922c18d49d4c901c65bdf9224db04276e9d5ea32a6944131e5fb662eb8463"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5358,
+        "sha256": "6aa02e5271f4d661d6cdda41c42c9d41c008039445124f17eec38db60ce24a25"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1338,
+        "sha256": "1231ee445538fccbec31cade70f050638a4b794623d27dc49b565c6439b8c61c"
+      }
+    }
+  },
+  {
+    "key": "manager.noor-disappointed",
+    "name": "manager-noor-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-00249352-7b64-4d49-81a7-dc9d75b8ad17.png",
+    "sourceSha256": "b2315ad66fcb0f02b47ca80939d6679cf312b96e781a32191f94406b6cd8e9b1",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 28520,
+        "sha256": "63cd4c5369987ebb8f8a22c8a029e8c7364ca4adfb5a5690ee6e42a1c14e12e3"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5216,
+        "sha256": "490967bc9f5aa8faae57064bb0c7a9e4d3c7e534e9c2869ffb63e963d8e99fe7"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1320,
+        "sha256": "9f90256d5e99d51363129cbcc639d90b16bdc615c6e0a5fe0de73b1cd087a752"
+      }
+    }
+  },
+  {
+    "key": "manager.noor-celebrating",
+    "name": "manager-noor-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b4bf2e23-52bd-4add-a495-2795d4f514d0.png",
+    "sourceSha256": "f0d2185498b7607b19fcff89c661c8d7460d8b69b4544e1e4fec62aa042a301e",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 31428,
+        "sha256": "7a923acb450fcb72a82a73524fde0d724f65b0b22e3f7803a519433003bc719e"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 5900,
+        "sha256": "bb655d56480636df26faa84c0f57ed5837fb5bcc6d511f9f557f6cead5ced35e"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1396,
+        "sha256": "4b95565e1917f09432f75c8e0b16f22ec41527d6f64af86720d7ac54d1557708"
+      }
+    }
+  },
+  {
+    "key": "manager.sten-focused",
+    "name": "manager-sten-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-731aa434-6bd6-4302-b1d4-e972a63e4f44.png",
+    "sourceSha256": "61615850127baf15eeafdbb26b96a6b4c69e745403d930f8ba94c3d895d9f36d",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-focused-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 39528,
+        "sha256": "0f9058b698f057572387ffeaecfd85927273ce76ecf192d9bf64b6ac761a339f"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-focused-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6704,
+        "sha256": "0d834f8e1ec461036085157afea5d29c49298fcdf5e2389be96744281126fb13"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-focused-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1518,
+        "sha256": "6383cb822b3eb78494340dcdbebc014f7dbd57b7b2c6fef34f61889d674b3a1d"
+      }
+    }
+  },
+  {
+    "key": "manager.sten-happy",
+    "name": "manager-sten-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7427e3a0-0cac-4e44-ab26-3cff57ab9601.png",
+    "sourceSha256": "f60c51c92a7766a90c8fa83d51cd194afc5a84c9fa6e7fe12244f4206764d0ea",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-happy-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 39960,
+        "sha256": "21a0538472251ce100fce78dc0f21931382474474769d558507282e7022dfbb4"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-happy-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6962,
+        "sha256": "362c54e1e4abc724d83668a96976813d9f8e333faf660bd4a74ee1ca997d9d4b"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-happy-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1584,
+        "sha256": "f97bf891c015692f62ed39027ef549034fc8a6a0506cac583bbb116767c8739b"
+      }
+    }
+  },
+  {
+    "key": "manager.sten-disappointed",
+    "name": "manager-sten-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-fb6fecd8-bb43-40af-8d15-7a2cc0257968.png",
+    "sourceSha256": "f015c7de2ce4c6fc2fb052e6c9ef6cc137f802df0fecd955dcce59dd3ee41b62",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-disappointed-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 40148,
+        "sha256": "5bc9e10fac05d3f0859f7dcea4421fae27ca39954d9d5a39b9d5ee1182fc6778"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-disappointed-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6592,
+        "sha256": "85e1cfed049f16a3ab242b1257927486916565356a437e25008b449e17a47896"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-disappointed-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1426,
+        "sha256": "d8a9248c29679ced52229c3366d38aa9e8249b09d52bafe84e6090a8f3fa9f99"
+      }
+    }
+  },
+  {
+    "key": "manager.sten-celebrating",
+    "name": "manager-sten-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b611ea98-cbf0-42c6-9465-11e8f7c7fde4.png",
+    "sourceSha256": "fc84545e10548ee741d76f993bd03e3dbfffde52e8e3150c8ebaccacb6c1af57",
+    "generator": "OpenAI image_gen",
+    "provenance": "Original fictional generated artwork; user-directed production. No third-party brands or likenesses requested.",
+    "runtime3D": false,
+    "crop": "upper-centre",
+    "fallback": "Code-native gradient / existing deterministic SVG",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-celebrating-hero.webp",
+        "width": 640,
+        "height": 960,
+        "bytes": 38184,
+        "sha256": "670d316c6106e0c7595162639da34cd4f0eca115d6f39a3500486bdee973ac79"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-celebrating-card.webp",
+        "width": 240,
+        "height": 320,
+        "bytes": 6872,
+        "sha256": "cf9ba570db5925574b7e5ffbf6f2fb6c2624eb43ec4ba89c1a464fc7e69a2e73"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-celebrating-thumb.webp",
+        "width": 96,
+        "height": 96,
+        "bytes": 1554,
+        "sha256": "35b67f8052872caa4c021b9dd50f56aa94ca1aada358d594607d8b9c867a3ef0"
+      }
+    }
   }
 ]

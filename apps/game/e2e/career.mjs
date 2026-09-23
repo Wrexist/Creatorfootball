@@ -56,11 +56,11 @@ try {
   await page.getByRole('button', { name: /Match speed/ }).click();
   await page.getByRole('button', { name: 'Jump to the final whistle', exact: true }).click();
   await page.waitForURL(/result/, { timeout: 30000 });
-  await page.getByRole('button', { name: 'Continue', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Next: Key moment', exact: true }).waitFor();
   state = await snapshot();
   assert.equal(state.clock.week, 1); assert.ok(state.latestMatchReport);
   const reportId = state.latestMatchReport.matchId;
-  await page.reload(); await page.getByRole('button', { name: 'Continue', exact: true }).waitFor();
+  await page.reload(); await page.getByRole('button', { name: 'Next: Key moment', exact: true }).waitFor();
   state = await snapshot(); assert.equal(state.clock.week, 1); assert.equal(state.latestMatchReport.matchId, reportId);
   console.log('Result persisted and reloaded');
 

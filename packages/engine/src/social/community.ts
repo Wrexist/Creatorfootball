@@ -803,7 +803,7 @@ export function respondToCampaign(
 const FAN_REASONS: readonly string[] = [
   'Four hundred miles on a Tuesday night for a goalless draw, and was singing at the end of it.',
   'Has not missed a home game since the ground had a terrace at one end.',
-  'Took her grandson to his first away game and spent the whole ninety minutes explaining the offside rule.',
+  'Took her grandson to his first away game and spent the whole match explaining the offside rule.',
   'Ran the supporters’ coach for eleven years and has never once put his own name on the list.',
   'Held a hand-painted sign up for the entire second half. Nobody could read it. Everybody appreciated it.',
   'Drove three of the away support home after the last train went, and refused the petrol money.',

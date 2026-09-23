@@ -61,12 +61,11 @@ export function useFocusTrap(active: boolean, ref: React.RefObject<HTMLElement |
 
   useEffect(() => {
     if (!active) return;
-    const container = ref.current;
-    if (!container) return;
-
     previouslyFocused.current = document.activeElement as HTMLElement | null;
 
     const focusFirst = (): void => {
+      const container = ref.current;
+      if (!container) return;
       const first = container.querySelector<HTMLElement>(FOCUSABLE);
       (first ?? container).focus({ preventScroll: true });
     };
@@ -76,6 +75,8 @@ export function useFocusTrap(active: boolean, ref: React.RefObject<HTMLElement |
 
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Tab') return;
+      const container = ref.current;
+      if (!container) return;
       const items = Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
         (el) => el.offsetParent !== null || el === document.activeElement,
       );
@@ -89,7 +90,7 @@ export function useFocusTrap(active: boolean, ref: React.RefObject<HTMLElement |
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if ((!event.shiftKey && document.activeElement === last) || !container.contains(document.activeElement)) {
         event.preventDefault();
         first.focus();
       }

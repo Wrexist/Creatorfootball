@@ -396,7 +396,7 @@ const QUESTIONS: readonly QuestionDef[] = [
       },
       {
         id: 'a_furious', label: 'Be visibly furious',
-        line: () => 'Embarrassing. That is the word. If any of them are unhappy about hearing it out here, they had ninety minutes to stop me saying it.',
+        line: () => 'Embarrassing. That is the word. If any of them are unhappy about hearing it out here, they had the whole match to stop me saying it.',
         effect: () => ({ squadMorale: -3.6, fanSentiment: 3.2, mediaGoodwill: 2, fanExcitement: 1.4 }),
         warmth: -0.8, credibility: 0.5,
       },
@@ -912,7 +912,7 @@ const QUESTIONS: readonly QuestionDef[] = [
       },
       {
         id: 'a_louder', label: 'Ask for even more',
-        line: () => 'It can be better. The day that place is full and ugly for ninety minutes, somebody will get beaten by the noise before they are beaten by us.',
+        line: () => 'It can be better. The day that place is full and loud from kick-off to the final whistle, somebody will get beaten by the noise before they are beaten by us.',
         variants: [
           () => 'Fill it. Every week. The players hear the difference before kick-off and so do the opposition.',
         ],
@@ -1057,7 +1057,7 @@ const QUESTIONS: readonly QuestionDef[] = [
       },
       {
         id: 'a_no_messages', label: 'Refuse the framing',
-        line: () => 'Messages are for phones. We were good at football for ninety minutes, which is the entire story I recognise.',
+        line: () => 'Messages are for phones. We were good at football throughout the match, which is the entire story I recognise.',
         variants: [
           () => 'I have never worked out what a statement win is. We scored more goals than they did. Next question.',
         ],

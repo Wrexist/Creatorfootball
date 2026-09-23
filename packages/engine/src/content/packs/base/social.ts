@@ -461,7 +461,7 @@ const INTERACTIVE_REACTION_TEMPLATES: readonly SocialTemplate[] = [
   ...post('MANAGER_REPLY', 'CLUB', 0.65, 5, [
     '{player} plays on Saturday. He plays the week after as well. That is the end of it.',
     'I will say this once. {player} has my complete backing and anybody who does not like it can take it up with me.',
-    'Every one of you has had a bad month at work. Not many of you had forty thousand people watching.',
+    'Every one of you has had a bad month at work. Not many of you had a stadium watching.',
     '{player} is one of ours. We do not do this to our own.',
     'I have been in that dressing room every day. You have not. {player} is fine.',
   ], ['dressing-room', 'authored'], { stance: 'BACK_HIM' }),
@@ -556,7 +556,7 @@ const INTERACTIVE_REACTION_TEMPLATES: readonly SocialTemplate[] = [
     '{title} — a full day inside {club} and about nine minutes of it was legally usable.',
   ], ['creator', 'content-drop'], { format: 'TRAINING_DAY', flopped: false }),
   ...post('CONTENT_DROP', 'CREATOR', 0.6, 4, [
-    'Wired one of them up for the whole ninety. {title}. I am not going to tell you who.',
+    'Wired one of them up for the whole match. {title}. I am not going to tell you who.',
   ], ['creator', 'content-drop'], { format: 'MIC_UP', flopped: false }),
   ...post('CONTENT_DROP', 'CREATOR', 0.75, 5, [
     '{title}. The long one. This is why I started doing this in the first place.',
@@ -700,7 +700,7 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ...post('MATCH_WON', 'FAN', 0.8, 3, [
     'Walked out of there and could not tell you a single thing about the second half. Superb.',
     'Six of us in the car and not one word said until junction 14.',
-    'Ninety minutes of absolute nonsense and three points at the end of it. Take it.',
+    'A match full of absolute nonsense and a win at the end of it. Take it.',
     'That is the first time this season I have enjoyed the last ten minutes.',
     'My dad has phoned me twice. He never phones me.',
     'Sunburnt, hoarse, three points. Perfect.',
@@ -709,12 +709,12 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ...post('MATCH_WON', 'CREATOR', 0.65, 4, [
     'Clipping the last fifteen minutes of that and putting it out tonight. Unreal atmosphere.',
     'Whatever you think about {club}, that away end was the best thing in this league today.',
-    'The number of you asking me about {club} has gone up about four hundred percent this month.',
+    'A lot of you are asking what comes next for {club}. That is a conversation worth having.',
   ], ['result', 'creator']),
   ...post('MATCH_LOST', 'FAN', -0.8, 3, [
     'Left on 78 and I have never left early in my life.',
     'It is not the losing. It is that none of them looked like they minded.',
-    'That is comfortably the worst ninety minutes I have paid for this season.',
+    'That was painful to watch. We need a response next time.',
     'The bloke next to me did not say a word for an hour and then just left.',
     'Two hundred miles for that. Two hundred.',
     'I am fine. I am completely fine. Everything is fine.',
@@ -725,9 +725,9 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     '{score}. On this evidence {club} have work to do and not much time to do it in.',
   ], ['result']),
   ...post('MATCH_DRAWN', 'FAN', -0.1, 3, [
-    'A point. Nobody is happy. Nobody is furious. The most forgettable ninety minutes of my life.',
+    'A point. Nobody is happy. Nobody is furious. The most forgettable match of my life.',
     'Drew that having been better for an hour, which is the most us thing imaginable.',
-    'Away end sang for the full ninety for a 1-1. Best supporters in this league, no debate.',
+    'A draw, and I am still proud to support this club. Best supporters in this league, no debate.',
   ], ['result']),
   ...post('MATCH_DRAWN', 'CREATOR', 0, 3, [
     'A draw that told you almost nothing about either side. I will still make a video about it.',
@@ -783,7 +783,7 @@ const DEPTH_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
     'Nobody at {club} is saying it out loud yet. Everybody at {club} is thinking it.',
   ], ['manager']),
   ...post('CREATOR_MOMENT', 'FAN', 0.55, 3, [
-    'That clip has been in front of about four million people who could not name this league.',
+    'That clip is reaching people who could not name this league. That is how new fans find us.',
     'Our club is on timelines that have never seen a football match. Strange feeling.',
   ], ['creator']),
   ...post('SPONSOR_SIGNED', 'FAN', 0.2, 3, [
@@ -944,7 +944,7 @@ const TRIGGER_TOPUP_TEMPLATES: readonly SocialTemplate[] = [
     'Under way against {opponent}. Stay loud.',
   ], ['matchday']),
   ...post('MATCH_STARTED', 'FAN', 0.35, 2, [
-    'Kick-off. Ninety minutes of irrational confidence ahead of us.',
+    'Kick-off. A whole match of irrational confidence ahead of us.',
   ], ['matchday']),
 
   /* -------------------------------------------------- LIVE_DECISION_MADE */
@@ -1004,7 +1004,7 @@ const SPONSOR_SECTOR_TEMPLATES: readonly SocialTemplate[] = [
   /* ------------------------------------------------------------- ENERGY */
   ...post('WIN', 'SPONSOR', 0.65, 2, [
     'FULL VOLTAGE. That is how you finish a game, {club}.',
-    'Ninety minutes at maximum output. Charged right through, just like we said.',
+    'A full match at maximum output. Charged right through, just like we said.',
     'High performance has a look. We just watched it.',
   ], ['commercial'], { sector: 'ENERGY' }),
   ...post('STATEMENT_WIN', 'SPONSOR', 0.7, 3, [
@@ -1436,7 +1436,7 @@ const INTERACTIVE_SOCIAL_TEMPLATES_2: readonly SocialTemplate[] = [
     'Still up. Still there. Still wrong.',
     'We would never normally do this. We are doing this.',
     'Sorry — could you say that again for the room?',
-    'This has been sent to us four hundred times so here it is officially.',
+    'You keep sending us this, so here it is officially.',
     'One for the archive.',
   ], ['authored']),
 
@@ -1615,7 +1615,7 @@ export const BASE_SOCIAL_TEMPLATES: readonly SocialTemplate[] = [
   ], ['result']),
   ...post('MATCH_LOST', 'RIVAL', 0.7, 3, [
     'Comfortable. Genuinely comfortable. Thanks for the hospitality, {club}.',
-    'Some of you were very loud at 1-0. Where did you go?',
+    'Some of you were very confident before this. Where did you go?',
     'Every year. Every single year.',
   ], ['result', 'rivalry']),
   ...post('MATCH_LOST', 'CREATOR', -0.6, 4, [

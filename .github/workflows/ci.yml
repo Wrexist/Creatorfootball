@@ -53,6 +53,19 @@ jobs:
 
       - name: Browser smoke test
         run: pnpm test:smoke
+      - name: Mobile repair evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mobile-repair-evidence
+          path: |
+            artifacts/media-repair-20260923/*.png
+            artifacts/media-repair-20260923/metrics.json
+            artifacts/media-repair-20260923/matrix.json
+            artifacts/media-repair-20260923/states.json
+            artifacts/media-repair-20260923/failure.json
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Optional content presentation qualification
         run: node apps/game/e2e/paid-packs.mjs
 

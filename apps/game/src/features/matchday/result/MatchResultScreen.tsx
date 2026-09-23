@@ -7,7 +7,7 @@ import {
 } from '@cf/engine';
 import {
   ClubBadge, EmptyState, ErrorState, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
-  GlassTabs, HeroScene, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
+  GlassTabs, IconChevronRight, IconFans, IconMoney, MoneyLabel, NewsCard, PlayerPortrait,
   RatingBadge, ScoreDisplay, SectionHeader, Skeleton, SocialPost, StatCard, StatGrid,
   TrendIndicator, cn, sfx, useDesignMotion,
 } from '@/design';
@@ -21,6 +21,8 @@ import { AnalyticsTab } from './AnalyticsTab';
 import { concernRoute } from './concernRoute';
 import { masteryLines } from './mastery';
 import { ArtImage, CharacterHero } from '@/design/premium/components';
+import { GradualBlur } from '@/design/glass/GradualBlur';
+import { partitionClubCoverage } from './reportContent';
 
 /**
  * The post-match sequence.
@@ -40,6 +42,7 @@ const STAGES = [
   'RESULT', 'KEY_MOMENT', 'PERFORMANCE', 'FANS', 'SOCIAL', 'MONEY', 'STANDINGS', 'NEXT',
 ] as const;
 type Stage = (typeof STAGES)[number];
+const STAGE_LABELS: Record<Stage, string> = {RESULT:'Result', KEY_MOMENT:'Key moment', PERFORMANCE:'Player ratings', FANS:'Fan response', SOCIAL:'Club reaction', MONEY:'Finances', STANDINGS:'League position', NEXT:'What comes next'};
 
 /** Matches already handed to `advance()`. Survives a remount of this screen. */
 
@@ -65,6 +68,7 @@ export function MatchResultScreen(): ReactNode {
   const before = useRef<Snapshot | null>(null);
   const [tab, setTab] = useState<'STORY' | 'ANALYTICS'>('STORY');
   const [revealed, setRevealed] = useState(1);
+  const revealingAll = useRef(false);
 
   /* --- commit the result to the world, once ---------------------------- */
 
@@ -104,7 +108,8 @@ export function MatchResultScreen(): ReactNode {
   // ref so the scroll fires once per reveal instead of on every render.
   useEffect(() => {
     if (revealed <= 1) return;
-    const stage = STAGES[revealed - 1];
+    const stage = revealingAll.current ? 'RESULT' : STAGES[revealed - 1];
+    revealingAll.current = false;
     if (!stage) return;
     document
       .getElementById(`stage-${stage}`)
@@ -171,27 +176,11 @@ export function MatchResultScreen(): ReactNode {
 
   return (
     <div className="cf-result-screen relative flex h-full flex-col overflow-hidden bg-base">
-      {/*
-        The room the result was got in. A win warms the ground and lifts light
-        off it; a defeat cools it and puts rain through it; a draw gets the
-        neutral dusk, because a shared point is neither a celebration nor a
-        wake and inventing a mood for it would be the product telling the
-        player how to feel about something it does not know.
-
-        It sits behind everything and carries no information: every panel below
-        is glass, and the scene's own scrim is what keeps the type on them
-        clear of the brightest part of the drawing.
-      */}
-      <HeroScene
-        variant={outcome === 'W' ? 'triumph' : outcome === 'L' ? 'consolation' : 'title'}
-        seed={result.matchId}
-      />
-      <ArtImage asset={outcome === 'W' ? 'story.victory' : outcome === 'L' ? 'story.defeat' : 'environment.tunnel'} crop="hero" className="cf-result-backdrop" eager />
-
-      <header className="glass-3 relative z-20 shrink-0 pt-[var(--safe-top)]">
-        <div className="mx-auto w-full max-w-[1180px] px-4 pb-2.5 pt-2 sm:px-6">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-dim">
-            Full time
+      {/* Narrative art stays in the result hero; later report stages stay calm. */}
+      <header className="relative z-20 shrink-0 bg-base pt-[var(--safe-top)]">
+        <div className="mx-auto w-full max-w-[1180px] px-4 pb-1 pt-3 sm:px-6">
+          <p className="text-center text-caption font-semibold text-ink-muted">
+            Full time · {home.shortName} {result.homeScore}–{result.awayScore} {away.shortName}
           </p>
           <div className="mt-1">
             <GlassTabs
@@ -202,9 +191,10 @@ export function MatchResultScreen(): ReactNode {
             />
           </div>
         </div>
+        <GradualBlur side="top" height={12} strength={8} className="cf-result-top-edge" />
       </header>
 
-      <div className="scroll-y relative z-10 min-h-0 flex-1">
+      <div className="scroll-y relative z-10 min-h-0 flex-1 scroll-pt-5 scroll-pb-5">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-8 pt-4 sm:px-6">
           {tab === 'STORY' && storeError !== null && !busy && (
             <GlassPanel padding="md" accent="danger" className="border border-danger/40">
@@ -235,7 +225,7 @@ export function MatchResultScreen(): ReactNode {
             STAGES.slice(0, revealed).map((stage) => (
               <motion.section
                 key={stage}
-                initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: 26 }}
+                initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={m.spring.gentle}
                 id={`stage-${stage}`}
@@ -252,23 +242,25 @@ export function MatchResultScreen(): ReactNode {
           className="relative z-20 shrink-0 border-t border-white/[0.07] bg-surface-2/95"
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
+          <GradualBlur side="bottom" height={12} strength={8} className="cf-footer-edge" />
           <div className="mx-auto w-full max-w-[1180px] px-4 py-3 sm:px-6">
+            <p className="mb-2 text-center text-caption text-ink-muted" aria-live="polite">{revealed} of {STAGES.length} · {STAGE_LABELS[STAGES[revealed - 1] ?? 'RESULT']}</p>
             {lastStage ? (
               <GlassButton variant="primary" size="lg" block iconRight={<IconChevronRight />} onClick={finish}>
                 {nextFixture(state) ? 'On to the next one' : 'Back to the club'}
               </GlassButton>
             ) : (
-              <div className="flex items-center gap-2">
-                <GlassButton variant="primary" size="lg" block onClick={advanceStage} className="flex-[3]">
-                  Continue
+              <div className="flex flex-col items-stretch gap-1 sm:flex-row sm:gap-2">
+                <GlassButton variant="primary" size="md" block onClick={advanceStage} className="flex-[3]">
+                  Next: {STAGE_LABELS[STAGES[revealed] ?? 'NEXT']}
                 </GlassButton>
                 <GlassButton
                   variant="ghost"
-                  size="lg"
+                  size="sm"
                   className="flex-1"
-                  onClick={() => setRevealed(STAGES.length)}
+                  onClick={() => { revealingAll.current = true; setRevealed(STAGES.length); }}
                 >
-                  Skip
+                  View full report
                 </GlassButton>
               </div>
             )}
@@ -315,34 +307,31 @@ function StageBody({ stage, ...props }: StageProps & { stage: Stage }): ReactNod
   }
 }
 
-function ResultStage({ result, home, away, playerIsHome, state }: StageProps): ReactNode {
+function ResultStage({ result, home, away, state }: StageProps): ReactNode {
   const outcome = resultFor(result, state.playerClubId);
   const tone = outcome === 'W' ? 'positive' : outcome === 'D' ? 'neutral' : 'danger';
-  const headline = outcome === 'W' ? 'Won it' : outcome === 'D' ? 'Shared it' : 'Lost it';
+  const headline = outcome === 'W' ? 'Victory' : outcome === 'D' ? 'Honours even' : 'Defeat';
 
   return (
     <GlassPanel nested level={2} padding="lg" className="cf-result-hero" accent={tone === 'positive' ? 'positive' : tone === 'danger' ? 'danger' : 'none'}>
       <div className="cf-result-character">
+        <ArtImage asset="environment.tunnel" crop="card" className="cf-result-hero-scene" eager />
+        <div className="cf-result-outcome"><span className="cf-eyebrow">Full time</span><h2>{headline}</h2><p>{outcome === 'W' ? 'A moment to remember.' : outcome === 'L' ? 'Regroup. Recover. Go again.' : 'Every point matters.'}</p></div>
         <CharacterHero manager={state.managers[state.playerManagerId]} expression={outcome === 'W' ? 'celebrating' : outcome === 'L' ? 'disappointed' : 'focused'} />
-        <span className="cf-eyebrow">{outcome === 'W' ? 'A moment to remember' : outcome === 'L' ? 'The work continues' : 'Every point matters'}</span>
       </div>
-      <div className="flex items-center justify-center gap-5">
-        <ClubBadge visual={home.visual} size={52} flat label={home.name} />
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+        <div className="flex min-w-0 flex-col items-center gap-2"><ClubBadge visual={home.visual} size={44} flat label={home.name} /><p className="text-center text-caption font-semibold [overflow-wrap:anywhere]">{home.name}</p><span className="text-caption text-ink-muted">Home</span></div>
         <ScoreDisplay
           home={result.homeScore}
           away={result.awayScore}
-          size="hero"
+          size="lg"
           homeLabel={home.shortName}
           awayLabel={away.shortName}
         />
-        <ClubBadge visual={away.visual} size={52} flat label={away.name} />
+        <div className="flex min-w-0 flex-col items-center gap-2"><ClubBadge visual={away.visual} size={44} flat label={away.name} /><p className="text-center text-caption font-semibold [overflow-wrap:anywhere]">{away.name}</p><span className="text-caption text-ink-muted">Away</span></div>
       </div>
-      <p className="mt-4 text-center font-display text-[26px] font-bold tracking-[-0.03em] text-ink">
-        {headline}
-      </p>
-      <p className="mt-1 text-center text-[14px] text-ink-muted">
-        {home.shortName} v {away.shortName} · {result.attendance.toLocaleString()} in
-        {playerIsHome ? ' behind you' : ' against you'}
+      <p className="mt-5 border-t border-white/10 pt-3 text-center text-caption text-ink-muted">
+        {home.stadium.name} · Attendance {result.attendance.toLocaleString()}
       </p>
     </GlassPanel>
   );
@@ -587,13 +576,17 @@ function FansStage({ state, before }: StageProps): ReactNode {
   );
 }
 
-function SocialStage({ lastCycle }: StageProps): ReactNode {
-  const posts = lastCycle?.posts.slice(0, 4) ?? [];
-  const stories = lastCycle?.stories.slice(0, 2) ?? [];
+function SocialStage({ lastCycle, state }: StageProps): ReactNode {
+  const navigate = useNavigate();
+  const postCoverage = partitionClubCoverage(lastCycle?.posts ?? [], state.playerClubId);
+  const storyCoverage = partitionClubCoverage(lastCycle?.stories ?? [], state.playerClubId);
+  const posts = postCoverage.club.slice(0, 4);
+  const stories = storyCoverage.club.slice(0, 2);
+  const roundup = storyCoverage.world.slice(0, 2);
 
   return (
     <>
-      <SectionHeader title="The reaction" subtitle="Straight from the timeline" />
+      <SectionHeader title="The club reaction" subtitle="Your club, this round" />
       {posts.length === 0 && stories.length === 0 ? (
         <div className="mt-3">
           <EmptyState size="sm" title="Quiet out there" description="Nobody has posted about it yet." />
@@ -604,10 +597,12 @@ function SocialStage({ lastCycle }: StageProps): ReactNode {
             <SocialPost key={post.id} post={post} />
           ))}
           {stories.map((story) => (
-            <NewsCard key={story.id} story={story} variant="compact" />
+            <NewsCard key={story.id} story={story} variant="compact" onPress={() => navigate(`/social/media?story=${encodeURIComponent(story.id)}`)} />
           ))}
         </div>
       )}
+      {roundup.length > 0 && <div className="mt-5"><SectionHeader title="Around the league" subtitle="Elsewhere this round"/>{roundup.map(story => <NewsCard key={story.id} story={story} variant="compact" onPress={() => navigate(`/social/media?story=${encodeURIComponent(story.id)}`)}/>)}</div>}
+      <GlassButton className="mt-3" variant="secondary" size="sm" onClick={() => navigate('/social')}>Open the club timeline</GlassButton>
     </>
   );
 }
@@ -633,14 +628,16 @@ function MoneyStage({ lastCycle, state }: StageProps): ReactNode {
           <MoneyLabel amount={net} signed size="lg" />
         </div>
 
-        <StatGrid columns={3} gap="sm" className="mt-3">
-          <StatCard nested level={1} size="sm" label="In" value={<MoneyLabel amount={income} size="md" />} />
-          <StatCard nested level={1} size="sm" label="Out" value={<MoneyLabel amount={-expenditure} size="md" />} />
+        <StatGrid columns={2} gap="sm" className="mt-3">
+          <StatCard nested level={1} size="sm" label="Weekly income" value={<MoneyLabel amount={income} size="md" />} />
+          <StatCard nested level={1} size="sm" label="Weekly costs" value={<MoneyLabel amount={-expenditure} size="md" />} />
           <StatCard
             nested
             level={1}
             size="sm"
             label="Transfer budget"
+            footnote="Available to spend now"
+            className="col-span-2"
             value={<MoneyLabel amount={club?.finance.transferBudget ?? 0} size="md" />}
           />
         </StatGrid>
@@ -661,9 +658,9 @@ function StandingsStage({ state, before }: StageProps): ReactNode {
       <SectionHeader
         title="The table"
         subtitle={
-          moved > 0 ? `Up ${moved} place${moved === 1 ? '' : 's'}`
+          before?.position == null ? `Current position: ${position ?? 'Unranked'}` : `Position ${before.position} → ${position ?? 'Unranked'} · ${moved > 0 ? `Up ${moved} place${moved === 1 ? '' : 's'}`
             : moved < 0 ? `Down ${-moved} place${moved === -1 ? '' : 's'}`
-              : 'No change'
+              : 'No change'}`
         }
       />
       <GlassPanel nested level={2} padding="sm" className="mt-3">

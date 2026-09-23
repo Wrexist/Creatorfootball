@@ -126,7 +126,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           'transition-colors duration-[var(--duration-fast)] ease-out-quint',
         )}
       >
-        <div className="mx-auto flex w-full max-w-[1180px] items-center gap-2 px-4 sm:px-6" style={{ minHeight: 52 }}>
+        <div className="mx-auto flex w-full max-w-[1180px] items-center gap-2 px-4 sm:px-6" style={{ minHeight: 44 }}>
           <div className="flex min-w-11 items-center">
             {onBack ? (
               <GlassIcon label="Back" icon={<IconChevronLeft />} variant="ghost" size="md" onClick={onBack} />
@@ -161,17 +161,17 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
         )}
 
         {headerAccessory !== undefined && headerAccessory !== null && (
-          <div className="mx-auto w-full max-w-[1180px] px-4 pb-2.5 pt-2.5 sm:px-6">
+          <div className="mx-auto w-full max-w-[1180px] px-4 py-2 sm:px-6">
             {headerAccessory}
           </div>
         )}
-        <GradualBlur side="top" height={36} className={cn('cf-screen-edge-top',!scrolled&&'cf-edge-at-rest')} />
+        <GradualBlur side="top" height={12} strength={8} className={cn('cf-screen-edge-top',!scrolled&&'cf-edge-at-rest')} />
       </header>
 
       <div
         ref={scrollRef}
         className={cn(
-          'scroll-y relative flex-1',
+          'scroll-y relative flex-1 scroll-pt-5 scroll-pb-6',
           withTabBar && !wide && 'pb-nav-safe',
           withTabBar && wide && 'pb-8',
         )}
@@ -230,7 +230,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
             paddingBottom: withTabBar || wide ? undefined : 'var(--safe-bottom)',
           }}
         >
-          <GradualBlur side="bottom" height={32} className="cf-footer-edge" />
+          <GradualBlur side="bottom" height={12} strength={8} className="cf-footer-edge" />
           <div className="mx-auto w-full max-w-[1180px] px-4 py-3 sm:px-6">{footer}</div>
         </div>
       )}

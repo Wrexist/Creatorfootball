@@ -114,7 +114,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(funct
         SIZE[size],
         VARIANT[variant],
         block && 'w-full',
-        inert && 'pointer-events-none opacity-45',
+        inert && 'pointer-events-none border border-white/10 bg-surface-2 text-ink-dim shadow-none',
         FOCUS_RING,
         className,
       )}

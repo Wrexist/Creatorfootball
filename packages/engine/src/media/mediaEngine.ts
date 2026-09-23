@@ -16,6 +16,7 @@ import { FALLBACK_MEDIA_TEMPLATES } from './fallbackTemplates';
 import { SOCIAL_ACTION_BALANCE as A } from '../social/balance';
 import { socialWorld } from '../social/worldState';
 import { socialStanding, standingFacts } from '../social/standing';
+import { routCopy } from './matchCopy';
 
 /**
  * The media engine.
@@ -214,6 +215,7 @@ export function generateStories(
     const hook = candidate.hook;
     const local = rng.fork(`media:${hook.sourceEventId}:${hook.trigger}`);
     const facts = { ...hook.facts, ...standingVocabulary };
+    const factualRout = routCopy(hook);
     const pool = templatesForTrigger((key) => byTrigger.get(key), hook.trigger).filter(
       (t) => matchesConditions(t.conditions, facts) && renderTemplate(t.headline, hook.tokens) !== null && renderTemplate(t.body, hook.tokens) !== null,
     );
@@ -224,13 +226,13 @@ export function generateStories(
     for (let attempt = 0; attempt < M.rerollAttempts; attempt++) {
       const pick = pickTemplate(local, pool, recency);
       if (!pick) break;
-      const rendered = renderTemplate(pick.headline, hook.tokens);
+      const rendered = factualRout?.headline ?? renderTemplate(pick.headline, hook.tokens);
       template = pick;
       headline = rendered;
       if (rendered && !usedHeadlines.has(rendered)) break;
     }
     if (!template || !headline) continue;
-    const body = renderTemplate(template.body, hook.tokens);
+    const body = factualRout?.body ?? renderTemplate(template.body, hook.tokens);
     if (!body) continue;
 
     const outlet = chooseOutlet(template, hook, local);

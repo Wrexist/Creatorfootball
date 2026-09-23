@@ -1,5 +1,5 @@
 import {
-  useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode,
+  createContext, useContext, useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode,
 } from 'react';
 import { cn } from '../cn';
 import { snapToScale, TYPE_FLOOR, TYPE_SIZE, type TypeRole } from './type';
@@ -91,6 +91,7 @@ interface Fitted {
 }
 
 const SEP = '\u001F';
+export const LargeTextContext = createContext(false);
 
 export function FitText({
   children,
@@ -107,9 +108,10 @@ export function FitText({
   style,
 }: FitTextProps): ReactNode {
   // Ceiling from an explicit size, else from the role, else the body step.
-  const ceiling = size ?? (role ? TYPE_SIZE[role] : TYPE_SIZE.body);
+  const largeText = useContext(LargeTextContext);
   // The floor can be raised by a caller but never lowered past the scale's own.
-  const floor = Math.max(TYPE_FLOOR, min);
+  const floor = Math.max(largeText ? 15 : TYPE_FLOOR, min);
+  const ceiling = Math.max(floor, size ?? (role ? TYPE_SIZE[role] : TYPE_SIZE.body));
   const quantise = useCallback(
     (value: number): number => (snap ? snapToScale(value) : Math.floor(value * 2) / 2),
     [snap],
@@ -142,14 +144,14 @@ export function FitText({
     const pool = candidateKey.split(SEP);
     const floorText = pool[pool.length - 1] ?? '';
 
-    // Measure at a known reference size and scale arithmetically. One write and
-    // one read per candidate, no binary search.
+    // Measure off the visible DOM. Mutating this span while its flex parent
+    // shrinks to its contents made names alternate with their short forms.
     const REFERENCE = 100;
-    const previousWhiteSpace = node.style.whiteSpace;
-    const previousFontSize = node.style.fontSize;
-    const previousText = node.textContent;
-    node.style.whiteSpace = 'nowrap';
-    node.style.fontSize = `${REFERENCE}px`;
+    const font = getComputedStyle(node);
+    const context = document.createElement('canvas').getContext('2d');
+    if (!context) return;
+    context.font = `${font.fontStyle} ${font.fontWeight} ${REFERENCE}px ${font.fontFamily}`;
+    const tracking = (parseFloat(font.letterSpacing) || 0) * REFERENCE / (parseFloat(font.fontSize) || ceiling);
 
     let result: Fitted | null = null;
 
@@ -162,8 +164,7 @@ export function FitText({
     // as 11px and be accepted while still overflowing by 140px.
     const RAG_LOSS = 0.86; // ragged right-hand edge; a wrapped line is never full
     for (const candidate of pool) {
-      node.textContent = candidate;
-      const naturalAtReference = node.scrollWidth;
+      const naturalAtReference = context.measureText(candidate).width + Math.max(0, candidate.length - 1) * tracking;
       if (naturalAtReference <= 0) continue;
 
       const oneLine = ((available - 0.5) / naturalAtReference) * REFERENCE;
@@ -189,10 +190,6 @@ export function FitText({
       }
     }
 
-    node.style.whiteSpace = previousWhiteSpace;
-    node.style.fontSize = previousFontSize;
-    node.textContent = previousText;
-
     // Last resort: the shortest candidate, at the floor, wrapped and allowed to
     // break mid-word. Wrapping is forced here even when the caller asked for one
     // line, because the alternative is horizontal overflow - and between a name
@@ -200,7 +197,7 @@ export function FitText({
     const next = result ?? { text: floorText, size: floor, wrap: true, breakAnywhere: true };
 
     setFitted((current) =>
-      current.text === next.text && current.size === next.size && current.wrap === next.wrap
+      current.text === next.text && current.size === next.size && current.wrap === next.wrap && current.breakAnywhere === next.breakAnywhere
         ? current
         : next,
     );
@@ -209,6 +206,10 @@ export function FitText({
   useLayoutEffect(() => {
     lastWidth.current = -1;
     measure();
+    let active = true;
+    void document.fonts?.ready.then(() => { if (active) measure(); });
+    document.fonts?.addEventListener('loadingdone', measure);
+    return () => { active = false; document.fonts?.removeEventListener('loadingdone', measure); };
   }, [measure]);
 
   useLayoutEffect(() => {
@@ -233,8 +234,8 @@ export function FitText({
   return (
     <Host
       ref={hostRef as React.Ref<never>}
-      className={cn('name-safe block min-w-0 max-w-full', className)}
-      style={style}
+      className={cn('name-safe block w-full min-w-0 max-w-full', className)}
+      style={{ contain: 'inline-size', ...style }}
       {...(abbreviated ? { title: accessible } : {})}
     >
       <span
@@ -304,38 +305,37 @@ export interface FitBoxProps {
  * there is no string to measure ahead of time. `FitBox` measures whatever ended
  * up inside it and scales the whole box down to fit.
  *
- * It re-measures on every render and on every resize. That is affordable
- * because the measurement always starts from the ceiling size, so the result
- * does not depend on the current state and cannot oscillate - and because a
- * stat card only re-renders when its value changes. An idle screen does no
- * work here at all.
+ * A detached-from-layout clone measures the ceiling size. Only content, fonts,
+ * and available width can trigger fitting; height changes never reset it.
  */
 export function FitBox({
   children, size, role, min = TYPE_FLOOR, snap = true, as = 'div', className,
 }: FitBoxProps): ReactNode {
-  const ceiling = size ?? (role ? TYPE_SIZE[role] : TYPE_SIZE.body);
-  const floor = Math.max(TYPE_FLOOR, min);
+  const largeText = useContext(LargeTextContext);
+  const floor = Math.max(largeText ? 15 : TYPE_FLOOR, min);
+  const ceiling = Math.max(floor, size ?? (role ? TYPE_SIZE[role] : TYPE_SIZE.body));
   const hostRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLSpanElement | null>(null);
   const [fontSize, setFontSize] = useState(ceiling);
+  const lastWidth = useRef(-1);
 
-  // Deliberately no dependency array: the box re-measures whenever its children
-  // change, and those children are arbitrary nodes with no stable identity to
-  // depend on. It cannot loop - the measurement resets to `ceiling` before
-  // reading, so the result is a pure function of the container width and the
-  // content, never of the current state, and the setter bails out when the
-  // answer is unchanged.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
+  const measure = useCallback(() => {
     const host = hostRef.current;
     const inner = innerRef.current;
     if (!host || !inner) return;
     const available = host.clientWidth;
     if (available <= 0) return;
 
-    inner.style.fontSize = `${ceiling}px`;
-    const natural = inner.scrollWidth;
-    inner.style.fontSize = `${fontSize}px`;
+    const probe = inner.cloneNode(true) as HTMLSpanElement;
+    probe.setAttribute('aria-hidden', 'true');
+    Object.assign(probe.style, {
+      position: 'fixed', visibility: 'hidden', pointerEvents: 'none',
+      inset: 'auto', left: '-100000px', width: 'max-content', maxWidth: 'none',
+      fontSize: `${ceiling}px`, contain: 'layout style',
+    });
+    host.append(probe);
+    const natural = probe.getBoundingClientRect().width;
+    probe.remove();
     if (natural <= 0) return;
 
     const required = ((available - 0.5) / natural) * ceiling;
@@ -343,19 +343,29 @@ export function FitBox({
       ? ceiling
       : Math.max(floor, snap ? snapToScale(required) : Math.floor(required * 2) / 2);
     setFontSize((current) => (current === next ? current : next));
-  });
+  }, [ceiling, floor, snap]);
+
+  useLayoutEffect(() => { measure(); }, [children, measure]);
 
   useLayoutEffect(() => {
     const host = hostRef.current;
     if (!host || typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(() => setFontSize(ceiling));
+    const observer = new ResizeObserver(([entry]) => {
+      const width = entry?.contentRect.width ?? 0;
+      if (Math.abs(width - lastWidth.current) < 0.5) return;
+      lastWidth.current = width;
+      measure();
+    });
     observer.observe(host);
-    return () => observer.disconnect();
-  }, [ceiling]);
+    let active = true;
+    void document.fonts?.ready.then(() => { if (active) measure(); });
+    document.fonts?.addEventListener('loadingdone', measure);
+    return () => { active = false; observer.disconnect(); document.fonts?.removeEventListener('loadingdone', measure); };
+  }, [measure]);
 
   const Host = as;
   return (
-    <Host ref={hostRef as React.Ref<never>} className={cn('block min-w-0 max-w-full', className)}>
+    <Host ref={hostRef as React.Ref<never>} className={cn('block min-w-0 max-w-full', className)} style={{ contain: 'inline-size' }}>
       <span
         ref={innerRef}
         className="block whitespace-nowrap"

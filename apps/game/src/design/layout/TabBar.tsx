@@ -78,7 +78,7 @@ export function TabBar({
       )}
       style={{ paddingBottom: 'var(--safe-bottom)' }}
     >
-      <GradualBlur side="bottom" height="calc(var(--nav-height) + var(--safe-bottom) + 44px)" strength={16} className="cf-nav-edge" />
+      <GradualBlur side="bottom" height="calc(var(--nav-height) + var(--safe-bottom) + 12px)" strength={12} className="cf-nav-edge" />
       <div
         className={cn(
           'pointer-events-auto mx-auto flex w-full max-w-lg items-stretch',

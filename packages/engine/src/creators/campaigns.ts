@@ -99,7 +99,7 @@ export const TITLES: Readonly<Record<CampaignFormat, readonly string[]>> = {
     'Boots, cones and opinions',
     'Where the work actually happens',
   ],
-  MIC_UP: ['Wired up', 'Mic up and pray', 'Everything he said, unedited', 'Ninety minutes of sound'],
+  MIC_UP: ['Wired up', 'Mic up and pray', 'Everything he said, unedited', 'Every word from the pitch'],
   COLLAB: ['Two audiences, one take', 'Invite the rival fan', 'Two creators, one argument', 'The crossover episode'],
   SPONSORED_DROP: ['Presented by somebody', 'The paid-for drop', 'Money in, content out', 'The ad read, kept tasteful'],
   DOCUMENTARY: ['The long version', 'Four weeks in forty minutes', 'The club, examined', 'Bigger than a highlight'],
@@ -134,7 +134,7 @@ export const BRIEFS: Readonly<
     () => 'Drills, diet and dressing-room chatter, exactly as the week went.',
   ],
   MIC_UP: [
-    () => 'One player wired for sound for ninety minutes. Nobody knows what comes back.',
+    () => 'One player wired for sound for the whole match. Nobody knows what comes back.',
     () => 'A microphone on the loudest player in the squad. Legal will review it. Eventually.',
     () => 'Wire him up, roll tape, apologise later.',
   ],

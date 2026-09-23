@@ -158,40 +158,40 @@ const INTERACTIVE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
 const DEPTH_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ...story('MATCH_WON', 3, 0.45, 9, ['Matchday Wire', 'Bootroom Digest', 'Pitchside Weekly'], [
     {
-      headline: '{club} find a way past {opponent}',
-      body: 'It was not pretty and for a long spell it was not likely, but {club} have three points and a considerably calmer week ahead of them. {opponent} will feel they gave it away; {club} will not care in the slightest.',
+      headline: '{club} beat {opponent}, {score}',
+      body: '{club} finish on the winning side against {opponent}. The final score is {score}; attention now turns to what both clubs do next.',
     },
     {
       headline: 'Three points and a bit of belief for {club}',
-      body: '{score}. The performance will not be studied in years to come, but the reaction at full time told you what it meant to a squad that had been asked a lot of questions lately.',
+      body: '{score}. A win gives {club} something to build on, while {opponent} face the work of responding.',
     },
     {
       headline: '{club} take the points, and the argument',
-      body: 'For an hour this was a match nobody deserved to win. Then {club} did something about it. {opponent} had no answer and, in truth, had not looked like finding one.',
+      body: 'The result belongs to {club}: {score} against {opponent}. The next fixture will offer a fresh test of both teams.',
     },
   ]),
   ...story('MATCH_LOST', 3, -0.5, 9, ['The Terrace', 'Kickback Daily', 'The Touchline'], [
     {
-      headline: '{club} come up short at {opponent}',
-      body: '{score}. The margin flatters nobody and the manner will worry a support that has watched several versions of this already. {opponent} did not have to be excellent, which is the part that will sting.',
+      headline: '{club} come up short against {opponent}',
+      body: '{score}. {club} finish with a defeat against {opponent}. The review begins with the match itself and the decisions that come next.',
     },
     {
-      headline: 'Familiar problems, familiar afternoon for {club}',
-      body: 'There is nothing new in the way {club} lost this. That is precisely the problem, and it is now a problem with a growing audience.',
+      headline: '{club} look for a response after defeat',
+      body: 'A {score} loss against {opponent} gives {club} plenty to review. Supporters will be watching how the squad responds.',
     },
     {
-      headline: '{opponent} take it as {club} fade',
-      body: 'A bright twenty minutes, an hour of nothing, and a scoreline that will be quoted at {club} all week.',
+      headline: '{opponent} take the result against {club}',
+      body: 'The match ends {score}. {club} leave with a defeat and the work of preparing for the next fixture.',
     },
   ]),
   ...story('MATCH_DRAWN', 2, 0, 8, ['Counter Press', 'The Long Ball', 'Pitchside Weekly'], [
     {
       headline: 'Honours even between {club} and {opponent}',
-      body: 'A point each, and two managers who will both privately believe they should have had three. On the balance of chances, neither is wrong.',
+      body: 'The teams finish level at {score}. Both managers now have a draw to assess before the next match.',
     },
     {
       headline: '{club} and {opponent} cancel each other out',
-      body: 'A tactical afternoon in the least flattering sense of the phrase. Whatever the plan was on both benches, it worked, which is why nothing happened.',
+      body: '{score} is the final score, with neither side taking the win. The match report has the detail behind the result.',
     },
   ]),
   ...story('MANAGER_PRESSURE', 4, -0.6, 9, ['Kickback Daily', 'Frontline Football'], [
@@ -484,52 +484,52 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ...story('MATCH_WON', 3, 0.5, 10, ['Matchday Wire', 'The Touchline', 'Frontline Football'], [
     {
       headline: '{club} see off {opponent} to build momentum',
-      body: 'A {score} win at a ground that has not been kind to them lifts {club} and settles, for a week at least, a conversation that had been getting louder. {player} was the difference and knew it.',
+      body: '{club} beat {opponent} {score}. The result gives the squad a win to build on, with attention now turning to the next fixture.',
     },
     {
-      headline: 'Ruthless {club} punish a passive {opponent}',
-      body: 'This was not close, whatever the scoreline suggests. {club} pressed from the first whistle, took the two chances that mattered and were never seriously threatened after.',
+      headline: '{club} claim victory against {opponent}',
+      body: 'The final score was {score}. {club} take the win against {opponent}; the match report has the goals, chances and individual performances behind it.',
     },
   ]),
   ...story('MATCH_WON', 4, 0.6, 8, ['The Terrace', 'Standing Room'], [
     {
-      headline: 'A win that changes the shape of the season for {club}',
-      body: 'Results like this are how a mid-table club stops being a mid-table club. Whether {club} can repeat it in eleven days against far better opposition is the only question that now matters.',
+      headline: 'What comes next for {club} after victory?',
+      body: 'A {score} win over {opponent} is a result to build on. The challenge for {club} is carrying that result into the next match.',
     },
   ]),
 
   ...story('MATCH_LOST', 3, -0.5, 10, ['Pressbox', 'The Touchline', 'The Long Ball'], [
     {
-      headline: '{club} beaten again as familiar problems resurface',
-      body: 'The same weaknesses, in the same areas, against a side who did nothing unexpected. {club} were second to everything for twenty minutes and the game was gone before they noticed.',
+      headline: '{club} reflect on defeat against {opponent}',
+      body: 'A {score} defeat leaves {club} with a performance to review. The squad must recover and prepare for its next opportunity.',
     },
     {
       headline: 'Questions for {club} after {score} defeat',
-      body: 'Nobody is calling this a crisis yet. Everybody in the ground was thinking about the word. {opponent} did not have to be good; they only had to turn up.',
+      body: '{opponent} take the win, with the final score {score}. For {club}, the post-match review turns to what needs to improve.',
     },
   ]),
   ...story('MATCH_LOST', 4, -0.7, 7, ['The Away End', 'The Chalkboard'], [
     {
-      headline: 'The performance that will define {manager}\'s reign at {club}',
-      body: 'There is a difference between losing and looking like a side who no longer believe the plan. This was the second, and the away support said so loudly enough that everybody heard it.',
+      headline: '{manager} faces the response after defeat',
+      body: '{club} lost {score} against {opponent}. The next decisions on training and selection give {manager} a chance to shape the response.',
     },
   ]),
 
   ...story('MATCH_DRAWN', 2, 0, 10, ['Matchday Wire', 'Frontline Football'], [
     {
       headline: 'Honours even as {club} and {opponent} cancel each other out',
-      body: 'A cautious, tightly-refereed {score} in which both managers appeared happier with a point than either would admit publicly.',
+      body: '{club} and {opponent} finished level at {score}. Neither side found a winning margin; both now turn their attention to the next fixture.',
     },
     {
-      headline: '{club} rescue a point they barely deserved',
-      body: 'Late, scrappy and entirely necessary. {club} were outplayed for long spells and will regard this as a night survived rather than a night enjoyed.',
+      headline: 'No winner between {club} and {opponent}',
+      body: 'The final score was {score}. The full match report records the chances, goals and performances from the draw.',
     },
   ]),
 
   ...story('GOAL_SCORED', 3, 0.5, 6, ['Frontline Football', 'Bootroom Digest'], [
     {
       headline: '{player} produces the moment of the round',
-      body: 'It is the kind of finish that ends up detached from its match entirely, watched by people who could not name either side. {player} has now scored in consecutive fixtures.',
+      body: '{player} is on the scoresheet for {club}. It is a moment the supporters will want to see again.',
     },
   ]),
 
@@ -539,8 +539,8 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
       body: 'A dismissal that was coming from the moment the fixture kicked off. {player} will now miss the next match, and the club will spend the week explaining a decision that had no explanation.',
     },
     {
-      headline: 'Discipline the story again for {club}',
-      body: 'This is not an isolated incident and the numbers say so. {club} have now had more players sent off than any side in the competition, which is a record nobody wanted to be near.',
+      headline: 'Discipline in focus for {club}',
+      body: '{player} has been sent off for {club}. The dismissal gives the manager another selection decision to consider.',
     },
   ]),
 
@@ -709,7 +709,7 @@ export const BASE_MEDIA_TEMPLATES: readonly MediaTemplate[] = [
   ...story('RECORD_BROKEN', 4, 0.7, 8, ['Bootroom Digest', 'The Signal Box Review'], [
     {
       headline: '{player} breaks a record that stood for a generation',
-      body: 'It had stood for {recordAge} seasons, through everything this club has been through since. It did not survive {player}, and the ovation when it fell lasted a full two minutes.',
+      body: 'It had stood for {recordAge} seasons. {player} has now set a new mark, giving the supporters another moment for the club history books.',
     },
   ], { recordAgeSeasons_gte: 3 }),
   ...story('RECORD_BROKEN', 3, 0.7, 8, ['The Signal Box Review', 'Pressbox', 'The Chalkboard'], [

@@ -42,8 +42,10 @@ Phone captures use the real production web UI in Chrome at 430 x 932 CSS pixels 
 
 Nine tablet QA captures are saved separately under `artifacts/store-launch/screenshots/ipad-*.jpg` at 2048 x 2732 (1024 x 1366 CSS, 2x): Home, Squad, Tactics, Training, Market, Matchday, Club, Stadium and Facilities. They are browser responsive-layout evidence, not physical iPad certification. Inspection found two issues to correct before tablet listing replacement and final release:
 
-1. Matchday predicted lineup and bench switch to side-by-side based on viewport width even when the surrounding desktop sidebar leaves a narrow content column. Player names wrap excessively and overlap position labels. Use the actual available content width for this split, then recheck phone and tablet layouts.
-2. The stadium header renders the full floating-point reputation after a real match (`67.29025931707635`) instead of a rounded display value. Keep saved precision; format only the visible metric.
+1. **Repaired September 23:** Matchday lineup/bench columns now respond to their actual available width. Schematic player rows reserve space for names and positions; 768×1024 and 1024×1366 browser fixtures pass.
+2. **Repaired September 23:** Stadium reputation is rounded for display while saved precision remains intact. A fractional-reputation fixture verifies the visible value.
+
+The [mobile repair report](MEDIA_REPAIR_REPORT_2026-09-23.md) records these corrections and the 31 supplied-media findings. New evidence is in `artifacts/media-repair-20260923/`; the existing TestFlight/internal-track binaries and console galleries do **not** yet contain this repair pass. The old iPad gallery still requires replacement after native qualification.
 
 ### Compliance hold and reviewer access
 
@@ -51,7 +53,7 @@ The owner answered **"Hold for compliance review"** to Google's separate publish
 
 The owner-approved promo-code and IARC agreements were accepted. Three free review codes per pack were created and placed in Google's restricted reviewer instructions (no game login); optional reuse for partner feedback was disabled. Campaigns: Club Nights `131118650`, Heritage `131123679`, Creator Stories `131123578`, scheduled September 23 to December 22, 2026. Codes and their CSV backups remain outside Git in the private credentials directory. They have not been redeemed or verified on a test phone. Do not copy them into public documentation. Renew reviewer access before those codes expire if review is delayed.
 
-The approved Cloud/API/topic configuration remains intact. No new credential or broader access is needed. Native commerce qualification, compliance review, tablet corrections and the mandatory closed-test duration are the remaining substantive release gates.
+The approved Cloud/API/topic configuration remains intact. No new credential or broader access is needed. Updated signed binaries, native commerce/device qualification, compliance review, replacement tablet listing images and the mandatory closed-test duration remain release gates.
 
 ## Historical setup record
 

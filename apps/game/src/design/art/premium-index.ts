@@ -1805,6 +1805,636 @@ export const PREMIUM_ASSETS = {
         "src": "/art/premium/environment-stadium-day-elite-thumb.webp"
       }
     }
+  },
+  "manager.dez-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.bobby-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.ines-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.kit-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.aurel-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.mabel-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.rafe-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.noor-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.sten-neutral": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-neutral-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-neutral-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-neutral-thumb.webp"
+      }
+    }
+  },
+  "manager.dez-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.dez-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.dez-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.dez-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-dez-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-dez-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-dez-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.bobby-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.bobby-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.bobby-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.bobby-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-bobby-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-bobby-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-bobby-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.ines-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.ines-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.ines-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.ines-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-ines-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-ines-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-ines-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.kit-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.kit-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.kit-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.kit-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-kit-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-kit-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-kit-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.aurel-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.aurel-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.aurel-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.aurel-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-aurel-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-aurel-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-aurel-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.mabel-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.mabel-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.mabel-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.mabel-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-mabel-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-mabel-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-mabel-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.rafe-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.rafe-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.rafe-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.rafe-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-rafe-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-rafe-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-rafe-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.noor-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.noor-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.noor-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.noor-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-noor-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-noor-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-noor-celebrating-thumb.webp"
+      }
+    }
+  },
+  "manager.sten-focused": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-focused-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-focused-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-focused-thumb.webp"
+      }
+    }
+  },
+  "manager.sten-happy": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-happy-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-happy-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-happy-thumb.webp"
+      }
+    }
+  },
+  "manager.sten-disappointed": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-disappointed-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-disappointed-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-disappointed-thumb.webp"
+      }
+    }
+  },
+  "manager.sten-celebrating": {
+    "kind": "character",
+    "variants": {
+      "hero": {
+        "src": "/art/premium/manager-sten-celebrating-hero.webp"
+      },
+      "card": {
+        "src": "/art/premium/manager-sten-celebrating-card.webp"
+      },
+      "thumb": {
+        "src": "/art/premium/manager-sten-celebrating-thumb.webp"
+      }
+    }
   }
 } as const;
 export type AssetKey = keyof typeof PREMIUM_ASSETS;

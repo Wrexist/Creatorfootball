@@ -1,5 +1,5 @@
 import { PREMIUM_ASSETS, type AssetKey } from './premium-index';
-import type { ManagerAppearance } from '@cf/engine';
+import { PREMADE_MANAGERS, type ManagerAppearance } from '@cf/engine';
 
 export { type AssetKey };
 export type AssetCrop = 'hero' | 'card' | 'thumb';
@@ -80,7 +80,9 @@ export function stadiumAmbience(time:string,weather:string): string {
 
 /** Exact authored appearance match: custom choices keep their vector portrait. */
 export function managerAssetFor(appearance: ManagerAppearance): string | undefined {
-  if (appearance.skinTone === 2 && appearance.hairStyle === 'short_crop' && appearance.hairColor === 'ash' && appearance.facialHair === 'none' && appearance.outfit === 'technical_coat' && appearance.accessory === 'notebook') return 'manager.vera-neutral';
+  const match = PREMADE_MANAGERS.find(manager => manager.appearance &&
+    (['skinTone','hairStyle','hairColor','facialHair','outfit','accessory','accentColor'] as const).every(field => manager.appearance?.[field] === appearance[field]));
+  if (match) return `manager.${match.id.split('_')[1]}-neutral`;
   if (appearance.skinTone === 3 && appearance.hairStyle === 'waves' && appearance.hairColor === '#2e2119' && appearance.facialHair === 'beard' && appearance.outfit === 'training_kit' && appearance.accessory === 'none') return 'manager.neutral';
   return undefined;
 }

@@ -363,12 +363,18 @@ function ActionButton({
   icon: ReactNode; count?: number; label: string; active?: boolean; activeClass?: string; onClick?: () => void;
 }): ReactNode {
   const disabled = !onClick;
+  if (disabled) {
+    if (count === undefined) return null;
+    return <span className="inline-flex min-h-11 items-center gap-1.5 px-1 text-label text-ink-muted" aria-label={`${label}: ${count.toLocaleString()}`}>
+      <span aria-hidden="true">{icon}</span><span className="tnum" aria-hidden="true">{formatCount(count)}</span>
+    </span>;
+  }
   return (
     <button
       type="button"
       disabled={disabled}
       aria-label={label}
-      aria-pressed={onClick ? Boolean(active) : undefined}
+      aria-pressed={Boolean(active)}
       onClick={(event) => {
         event.stopPropagation();
         haptics.selection();
@@ -434,16 +440,9 @@ export const SocialPost = memo(function SocialPost({
       <div className="flex gap-3">
         <CreatorAvatar seed={post.avatarSeed} size={40} verified={false} />
         <div className="min-w-0 flex-1">
-          <div className={cn(TYPE_CLASS.caption, 'flex items-center gap-1.5')}>
-            <NameText
-              name={post.authorName}
-              short={post.authorHandle}
-              role="bodyStrong"
-              floor={0.82}
-              className="min-w-0 shrink text-body"
-            />
+          <div className={cn(TYPE_CLASS.caption, 'flex items-start gap-1.5')}>
+            <span className="min-w-0 flex-1 text-body font-bold leading-snug [overflow-wrap:anywhere]">{post.authorName}</span>
             {post.verified && <IconVerified size={14} className="shrink-0 text-info" label="Verified" />}
-            <NameText name={post.authorHandle} role="caption" floor={0.85} className="min-w-0 shrink text-caption text-ink-dim" />
             {timeLabel !== undefined && (
               <>
                 <span className="text-ink-dim" aria-hidden="true">·</span>
@@ -456,6 +455,7 @@ export const SocialPost = memo(function SocialPost({
               </GlassPill>
             )}
           </div>
+          <p className="mt-0.5 text-caption text-ink-muted [overflow-wrap:anywhere]">{post.authorHandle}</p>
 
           <p
             className={cn(

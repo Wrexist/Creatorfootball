@@ -2344,5 +2344,1346 @@
     "prompt": "Create the elite upgraded level-four version of this exact original fictional football club campus. Preserve the same elevated camera, forest lake setting, warm afternoon light, dark forest/gold/charcoal materials, original distinctive architecture, front courtyard and football sculpture. Show visible completed expansion: add a second tier of seating inside the main stadium, a larger clean satin-metal cantilever roof, upgraded glass hospitality facade, and a connected academy pavilion. Premium stylized semi-realistic 3D game environment, polished but believable club growth. Landscape 3:2. No labels, lettering, numbers, logos, ads, brands, signs or UI anywhere; all facades blank. This is environmental art, not a functional interface or runtime model.",
     "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-1fdbc594-967d-4924-a1a7-98b49a4e49b2.png",
     "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-011b7cff-a154-4036-b4ae-8601c6a34482.png"
+  },
+  {
+    "key": "manager.dez-neutral",
+    "name": "manager-dez-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Dez Kavanagh. One original fictional adult male football coach, age 52, very fair skin, grey buzz-cut hair and grey stubble, broad sturdy build, strong expressive eyebrows, approachable determined neutral expression. Plain charcoal technical training jacket with restrained emerald piping, a small unbranded whistle around his neck. Premium stylized semi-realistic 3D character render, subtle realistic skin and satin fabric, warm soft key light from left and cool blue rim from right. Centered head and upper torso with both shoulders completely visible, eyes at upper third, generous space above hair, portrait 2:3 aspect. Clean uniform deep charcoal-forest background #17221d, no setting or props beyond whistle. Calm confident mouth closed; no smile or frown. Same production universe as a premium football management game. No real person likeness, logos, crests, letters, text, watermark, interface, border or frame. This is character art only.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png"
+  },
+  {
+    "key": "manager.bobby-neutral",
+    "name": "manager-bobby-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Bobby Sarkis. Exactly one original fictional adult man aged 43, medium olive skin, swept-back black hair, neat goatee, charcoal designer coat with restrained magenta lining and stylish lightly tinted glasses. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png"
+  },
+  {
+    "key": "manager.ines-neutral",
+    "name": "manager-ines-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Ines Moreau. Exactly one original fictional adult woman aged 38, light warm skin, auburn hair tied back, charcoal quarter-zip sports top with restrained royal-blue piping, holding a plain dark tablet low against her torso. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png"
+  },
+  {
+    "key": "manager.kit-neutral",
+    "name": "manager-kit-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Kit Marlow. Exactly one original fictional adult man aged 35, very fair skin, messy blond hair, light stubble, charcoal bomber jacket with restrained muted red trim, confident slightly mischievous expression with mouth closed. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png"
+  },
+  {
+    "key": "manager.aurel-neutral",
+    "name": "manager-aurel-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Aurel Stanek. Exactly one original fictional adult man aged 56, fair warm skin, dark side-parted hair, clean-shaven, charcoal suit with light grey shirt, holding a plain blank clipboard low against his torso, disciplined composed expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png"
+  },
+  {
+    "key": "manager.mabel-neutral",
+    "name": "manager-mabel-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Mabel Osei. Exactly one original fictional adult woman aged 49, rich dark brown skin, black braids pulled back, charcoal club sports jacket with restrained warm-gold piping, plain blank lanyard, warm composed expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png"
+  },
+  {
+    "key": "manager.rafe-neutral",
+    "name": "manager-rafe-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Rafe Dunmore. Exactly one original fictional adult man aged 45, fair warm skin, neat short brown hair, clean-shaven, tailored charcoal coat with subtle muted gold detail, one hand resting low with a simple signet ring, poised expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png"
+  },
+  {
+    "key": "manager.noor-neutral",
+    "name": "manager-noor-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Noor Latimer. Exactly one original fictional adult woman aged 29, medium olive skin, clean black bob haircut, charcoal technical coat with restrained mint piping and a small discrete earpiece, analytical composed expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png"
+  },
+  {
+    "key": "manager.sten-neutral",
+    "name": "manager-sten-neutral",
+    "prompt": "Use case: stylized-concept. Asset: Creator Football persistent manager portrait, Sten Bjornsen. Exactly one original fictional adult man aged 65, very fair skin, thinning white hair, neatly kept white beard, charcoal padded stadium coat with cool silver-grey trim, holding a small plain dark thermos low against his torso, calm firm expression. Premium stylized semi-realistic 3D character render, lifelike subtle skin and satin technical fabric, warm soft key light from left, cool blue rim light from right, same premium football management character universe. Centered head and upper torso, both shoulders visible, eyes near upper third, generous space above hair. Portrait 2:3. Clean uniform deep charcoal forest background #17221d, no scenery. Neutral closed mouth; no exaggerated emotion. No real-person likeness, logos, brands, crests, letters, text, numbers, watermark, interface, border or frame. Character art only. Keep hands and accessories below the chest so the face remains clear in a square thumbnail.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-neutral.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png"
+  },
+  {
+    "key": "manager.dez-focused",
+    "name": "manager-dez-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d4528dc4-f5d1-4e97-831a-282a73a5b46b.png"
+  },
+  {
+    "key": "manager.dez-happy",
+    "name": "manager-dez-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-1c831288-2642-4ead-92fe-ac63dccac1ad.png"
+  },
+  {
+    "key": "manager.dez-disappointed",
+    "name": "manager-dez-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8a850e97-3814-47ce-9d96-4fa7875e739f.png"
+  },
+  {
+    "key": "manager.dez-celebrating",
+    "name": "manager-dez-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-dez-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7ef1754-8c63-49c5-aa71-a4209c7b9356.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4d074acb-f8e8-4844-90e9-49a8a16ecd0c.png"
+  },
+  {
+    "key": "manager.bobby-focused",
+    "name": "manager-bobby-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-01174591-c42d-4a0b-aa11-a3d3709c6569.png"
+  },
+  {
+    "key": "manager.bobby-happy",
+    "name": "manager-bobby-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-cc7fb77c-346a-4621-a67e-bb2923fc43b9.png"
+  },
+  {
+    "key": "manager.bobby-disappointed",
+    "name": "manager-bobby-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6093af22-0438-4cea-aba3-31fab26f88d0.png"
+  },
+  {
+    "key": "manager.bobby-celebrating",
+    "name": "manager-bobby-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-bobby-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-32b80fb8-dbf6-41d2-a5ce-422d98713469.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-dcb4743e-c478-4001-8633-59d3d08765f0.png"
+  },
+  {
+    "key": "manager.ines-focused",
+    "name": "manager-ines-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ebe59eb7-7dc2-4c02-825b-2ffa1483af02.png"
+  },
+  {
+    "key": "manager.ines-happy",
+    "name": "manager-ines-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e8519135-6565-4c27-922f-14e71758e789.png"
+  },
+  {
+    "key": "manager.ines-disappointed",
+    "name": "manager-ines-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-28c2590a-12e7-435a-a192-330220d0cd8e.png"
+  },
+  {
+    "key": "manager.ines-celebrating",
+    "name": "manager-ines-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-ines-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-117e078e-b85b-4a5a-a87a-9cb728896e0d.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e22f5204-6d04-4270-b778-5b72c99f8fe8.png"
+  },
+  {
+    "key": "manager.kit-focused",
+    "name": "manager-kit-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3fc01e60-495b-4076-b7ef-5a33e2ad04c6.png"
+  },
+  {
+    "key": "manager.kit-happy",
+    "name": "manager-kit-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-98ce1fc0-c685-44b6-85ce-29f0ef56b56d.png"
+  },
+  {
+    "key": "manager.kit-disappointed",
+    "name": "manager-kit-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-924d3228-61c6-4bb6-a1db-0970b299873d.png"
+  },
+  {
+    "key": "manager.kit-celebrating",
+    "name": "manager-kit-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-kit-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-323cb113-32e8-4fea-a8b2-496b5edcfbb9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-969757a1-5365-47b7-86ae-08018b722a60.png"
+  },
+  {
+    "key": "manager.aurel-focused",
+    "name": "manager-aurel-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7c33e107-92b2-49b0-b140-84b4844311b6.png"
+  },
+  {
+    "key": "manager.aurel-happy",
+    "name": "manager-aurel-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3522ad8c-6ade-4a8b-bf29-6a5e21c6d454.png"
+  },
+  {
+    "key": "manager.aurel-disappointed",
+    "name": "manager-aurel-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-dfff55aa-3db0-449b-9afb-c1f618c52b1e.png"
+  },
+  {
+    "key": "manager.aurel-celebrating",
+    "name": "manager-aurel-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-aurel-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b7cfa050-ce19-4583-bcce-57c184f589eb.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e91f0885-bb3f-4115-a47d-495fce9b6c83.png"
+  },
+  {
+    "key": "manager.mabel-focused",
+    "name": "manager-mabel-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3ae1befc-4fb1-4afc-aa87-0e81064f7fe8.png"
+  },
+  {
+    "key": "manager.mabel-happy",
+    "name": "manager-mabel-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-00f3cae8-2839-4583-b10f-83332953df80.png"
+  },
+  {
+    "key": "manager.mabel-disappointed",
+    "name": "manager-mabel-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-213fc133-2967-4e92-bce6-ab585e3375b5.png"
+  },
+  {
+    "key": "manager.mabel-celebrating",
+    "name": "manager-mabel-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-mabel-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f6db89a2-f419-43a2-8cc9-08699e007622.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4a42e4b7-249e-47ed-804b-0f9eea8d06a9.png"
+  },
+  {
+    "key": "manager.rafe-focused",
+    "name": "manager-rafe-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-a09a4664-1272-48fc-8a6c-e654ca8a1141.png"
+  },
+  {
+    "key": "manager.rafe-happy",
+    "name": "manager-rafe-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-53f8319f-1a14-42f0-8056-c73a8fd4f898.png"
+  },
+  {
+    "key": "manager.rafe-disappointed",
+    "name": "manager-rafe-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-442327e4-2ab7-4ad5-8d56-8f42be28facb.png"
+  },
+  {
+    "key": "manager.rafe-celebrating",
+    "name": "manager-rafe-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-rafe-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-05ff8b23-d98f-4588-86d1-e91c70912002.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7bf52e15-ed24-4188-8b68-21fb719bb7b1.png"
+  },
+  {
+    "key": "manager.noor-focused",
+    "name": "manager-noor-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8bfac3bc-1e0f-4e99-b8c4-80caa9949dcf.png"
+  },
+  {
+    "key": "manager.noor-happy",
+    "name": "manager-noor-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8533854b-3f06-46b4-a3d7-2a5220fdbc78.png"
+  },
+  {
+    "key": "manager.noor-disappointed",
+    "name": "manager-noor-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-00249352-7b64-4d49-81a7-dc9d75b8ad17.png"
+  },
+  {
+    "key": "manager.noor-celebrating",
+    "name": "manager-noor-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-noor-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ddf7a522-3197-451e-9d27-b8594bb985f9.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b4bf2e23-52bd-4add-a495-2795d4f514d0.png"
+  },
+  {
+    "key": "manager.sten-focused",
+    "name": "manager-sten-focused",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: focused concentration, slightly knit brow, eyes forward, mouth composed. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-focused.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-731aa434-6bd6-4302-b1d4-e972a63e4f44.png"
+  },
+  {
+    "key": "manager.sten-happy",
+    "name": "manager-sten-happy",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a warm pleased smile with relaxed brows, restrained satisfaction. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-happy.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7427e3a0-0cac-4e44-ab26-3cff57ab9601.png"
+  },
+  {
+    "key": "manager.sten-disappointed",
+    "name": "manager-sten-disappointed",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: thoughtful disappointment, eyes slightly lowered, mouth closed, calm and dignified. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-disappointed.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-fb6fecd8-bb43-40af-8d15-7a2cc0257968.png"
+  },
+  {
+    "key": "manager.sten-celebrating",
+    "name": "manager-sten-celebrating",
+    "prompt": "Use case: identity-preserve. Edit target: the attached original fictional manager portrait. Preserve this exact person's facial identity, age, skin tone, hair, clothing, accessories, lighting, uniform dark forest background, camera and portrait 2:3 crop. Change ONLY expression and restrained pose to: a proud joyful smile, raised eyebrows, a small victorious fist held low near the chest. Same stylized semi-realistic 3D game character material treatment. Full head and both shoulders visible with generous headroom, accessories and hands below chest, clear at 96px. No new people, real-person likenesses, logos, brands, writing, letters, numbers, watermarks, interface or borders.",
+    "source": "C:/Users/IsacC/Creatorfootball/artifacts/manager-art-sources/manager-sten-celebrating.png",
+    "kind": "character",
+    "screens": [
+      "Manager selection",
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "cropRegions": {
+      "thumb": [
+        0.2,
+        0.06,
+        0.6,
+        0.4
+      ],
+      "card": [
+        0.1,
+        0.03,
+        0.8,
+        0.72
+      ]
+    },
+    "reference": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-188202fd-7f8a-4707-ab6f-7f7aca78eb5f.png",
+    "generationSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b611ea98-cbf0-42c6-9465-11e8f7c7fde4.png"
   }
 ]

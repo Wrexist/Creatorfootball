@@ -28,9 +28,12 @@ export function withVisualIdentity(state: GameState): IllustratedGameState {
     if (!p || players[id]) continue;
     // Junior faces retain their existing age-appropriate vector identity.
     const pool = roleSlots[positionGroup(p.position)];
-    const available = index < own.length ? pool.find(slot=>!assigned.has(`character.player-${String(slot).padStart(2,'0')}`)) : undefined;
+    // Prefer the role's art, then any unused adult portrait. Exhausting a role
+    // must not give two teammates the same face while other portraits are free.
+    const ownPool = [...pool, ...Array.from({length:24},(_,i)=>i+1).filter(slot=>!pool.includes(slot))];
+    const available = index < own.length ? ownPool.find(slot=>!assigned.has(`character.player-${String(slot).padStart(2,'0')}`)) : undefined;
     const slot = available ?? pool[hash(id)%pool.length] ?? 1;
-    players[id] = p.age < 18 ? 'procedural' : `character.player-${String(slot).padStart(2,'0')}`;
+    players[id] = p.age < 18 || (index < own.length && available === undefined) ? 'procedural' : `character.player-${String(slot).padStart(2,'0')}`;
     if (index < own.length) assigned.add(players[id]);
     changed = true;
   }

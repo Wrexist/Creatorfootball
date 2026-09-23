@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '../cn';
 import { useDesignMotion } from '../motion';
@@ -11,14 +11,13 @@ import { ShinyText } from './effects';
 import { Silverware, type SilverwareVariant } from '../domain/silverware';
 import { ArtLayer, useArtAsset } from '../art/ArtLayer';
 import { ART_ASSETS } from '../art/assets';
+import { useEscapeKey, useFocusTrap, useScrollLock } from '../glass/useOverlay';
 
 /**
  * Hero moments: full-screen, interruptive, and rationed.
  *
- * Each of these takes over the screen, so each is also dismissible by tap, by
- * Escape, and by an explicit button — a celebration the player cannot skip
- * becomes an obstacle by the third season. They auto-dismiss on a timer unless
- * `persist` is set.
+ * Celebrations can dismiss on their backdrop, Escape, or a timer. Onboarding
+ * opts out of incidental dismissal and keeps its explicit continuation button.
  *
  * Under reduced motion every one of these collapses to a plain cross-fade of
  * the same content: the *information* (you scored, you won it) is never carried
@@ -32,10 +31,16 @@ export interface HeroOverlayProps {
   autoDismiss?: number;
   children?: ReactNode;
   className?: string;
+  dismissOnBackdrop?: boolean;
+  dialogLabel?: string;
 }
 
-function HeroOverlay({ open, onDismiss, autoDismiss = 0, children, className }: HeroOverlayProps): ReactNode {
+function HeroOverlay({ open, onDismiss, autoDismiss = 0, children, className, dismissOnBackdrop = true, dialogLabel = 'Club moment' }: HeroOverlayProps): ReactNode {
   const m = useDesignMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useScrollLock(open);
+  useFocusTrap(open, panelRef);
+  useEscapeKey(open && dismissOnBackdrop, onDismiss);
 
   useEffect(() => {
     if (!open || autoDismiss <= 0) return;
@@ -43,39 +48,35 @@ function HeroOverlay({ open, onDismiss, autoDismiss = 0, children, className }: 
     return () => clearTimeout(timer);
   }, [open, autoDismiss, onDismiss]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') onDismiss();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, onDismiss]);
-
   return (
     <Portal>
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
             variants={m.variants.backdrop}
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={onDismiss}
+            onClick={event => { if (dismissOnBackdrop && event.target === event.currentTarget) onDismiss(); }}
             className={cn(
               // Opaque, not near-opaque. At 92% the match feed read straight
               // through the goal takeover, so the one moment the product asks
               // you to stop and look at competed with a list of events behind
               // it. A hero moment either owns the screen or is not a hero
               // moment.
-              'fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden bg-void px-6 text-center',
+              'fixed inset-0 z-[70] flex flex-col items-center overflow-x-hidden overflow-y-auto bg-void px-6 text-center outline-none',
               className,
             )}
-            style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}
+            style={{ paddingTop: 'max(24px, var(--safe-top))', paddingBottom: 'max(24px, var(--safe-bottom))' }}
           >
+            <div className="my-auto flex w-full shrink-0 flex-col items-center py-5">
             {children}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -132,6 +133,8 @@ export interface HeroRevealProps extends Omit<HeroOverlayProps, 'children'> {
   visual?: ReactNode;
   action?: ReactNode;
   tone?: 'volt' | 'gold' | 'ink';
+  calm?: boolean;
+  backdrop?: ReactNode;
 }
 
 /**
@@ -140,7 +143,7 @@ export interface HeroRevealProps extends Omit<HeroOverlayProps, 'children'> {
  * which reads as "presented" rather than "popped in".
  */
 export function HeroReveal({
-  eyebrow, title, subtitle, visual, action, tone = 'volt', ...overlay
+  eyebrow, title, subtitle, visual, action, tone = 'volt', calm = false, backdrop, ...overlay
 }: HeroRevealProps): ReactNode {
   const m = useDesignMotion();
 
@@ -157,19 +160,20 @@ export function HeroReveal({
   const burst = useArtAsset(ART_ASSETS.revealBurst);
 
   return (
-    <HeroOverlay {...overlay}>
-      <span
+    <HeroOverlay {...overlay} dialogLabel={typeof title === 'string' ? title : overlay.dialogLabel}>
+      {backdrop}
+      {!calm && <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{ opacity: burst === 'ready' ? 0.42 : 1 }}
       >
         <Rays color={tone === 'gold' ? 'rgb(255 215 106 / 0.5)' : 'rgb(200 255 46 / 0.35)'} seed={String(title)} />
-      </span>
+      </span>}
 
       {/* Motes are ambient: a full-frame layer over the whole moment. */}
-      <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {!calm && <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <ArtLayer src={ART_ASSETS.revealMotes} opacity={0.26} blend="screen" fade={0.9} />
-      </span>
+      </span>}
 
       {visual !== undefined && (
         <motion.div
@@ -184,12 +188,12 @@ export function HeroReveal({
               instead, the hole lands behind the headline and the composition
               reads as a blurred ring around the text. Sized in vmin because a
               vmax square renders ~1400px on a 430px-wide phone. */}
-          <span
+          {!calm && <span
             aria-hidden="true"
             className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(132vmin,820px)] -translate-x-1/2 -translate-y-1/2"
           >
             <ArtLayer src={ART_ASSETS.revealBurst} opacity={0.55} blend="screen" fade={0.5} />
-          </span>
+          </span>}
           <span className="relative block">{visual}</span>
         </motion.div>
       )}
@@ -209,9 +213,9 @@ export function HeroReveal({
           </motion.p>
         )}
         <motion.h2 variants={m.variants.rise} className="max-w-[18ch] text-balance">
-          <ShinyText as="span" tone={tone === 'ink' ? 'ink' : tone} className="font-display text-display font-bold leading-[1.05] tracking-[-0.04em]">
+          {calm ? <span className="cf-reveal-title text-ink">{title}</span> : <ShinyText as="span" tone={tone === 'ink' ? 'ink' : tone} className="font-display text-display font-bold leading-[1.05] tracking-[-0.04em]">
             {title}
-          </ShinyText>
+          </ShinyText>}
         </motion.h2>
         {subtitle !== undefined && (
           <motion.p variants={m.variants.rise} className="max-w-[32ch] text-body leading-relaxed text-ink-muted text-pretty">

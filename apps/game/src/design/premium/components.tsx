@@ -8,12 +8,12 @@ import { IconChevronRight, IconSocial, IconSettings } from '../icons';
 import { assetFor, art, managerAssetFor, type AssetCrop } from '../art/manifest';
 import { ManagerPortrait } from '@/features/creation/ManagerPortrait';
 
-export function ArtImage({asset, crop = 'card', className = '', eager = false, alt = ''}: {
-  asset: string; crop?: AssetCrop; className?: string; eager?: boolean; alt?: string;
+export function ArtImage({asset, crop = 'card', className = '', eager = false, alt = '', fallback}: {
+  asset: string; crop?: AssetCrop; className?: string; eager?: boolean; alt?: string; fallback?: ReactNode;
 }): ReactNode {
   const src = assetFor(asset, crop);
   const [failed, setFailed] = useState<string>();
-  if (!src || failed === src) return <span className={`cf-art-fallback ${className}`} role={alt ? 'img' : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true} />;
+  if (!src || failed === src) return <span className={`cf-art-fallback ${className}`} role={alt ? 'img' : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true}>{fallback}</span>;
   return <img className={className} src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" onError={() => setFailed(src)} />;
 }
 
@@ -34,8 +34,8 @@ export function TopClubBar({state, club, onNavigate}: {state: GameState; club: C
 export function CharacterHero({manager, expression = 'neutral', className = ''}: {manager?: Manager | undefined; expression?: string; className?: string}): ReactNode {
   const base = manager ? managerAssetFor(manager.appearance) : art.manager;
   if (!base && manager) return <div className={`cf-character ${className}`}><ManagerPortrait appearance={manager.appearance} size={172} label={manager.name}/></div>;
-  const asset = base === 'manager.vera-neutral' ? `manager.vera-${expression}` : `manager.${expression}`;
-  return <ArtImage asset={assetFor(asset) ? asset : base ?? art.manager} crop="hero" eager className={`cf-character ${className}`} />;
+  const asset = base?.replace(/neutral$/, expression) ?? `manager.${expression}`;
+  return <ArtImage asset={assetFor(asset) ? asset : base ?? art.manager} crop="hero" eager className={`cf-character ${className}`} fallback={manager ? <ManagerPortrait appearance={manager.appearance} size={144} label={manager.name}/> : undefined} />;
 }
 
 export function ProgressRing({value, label, tone = 'lime'}: {value: number; label: string; tone?: 'lime' | 'gold'}): ReactNode {

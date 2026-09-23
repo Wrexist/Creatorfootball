@@ -18,6 +18,7 @@ import {
 } from './appearance';
 import { managerBlocker, useCreationStore } from './creationStore';
 import { ManagerPortrait } from './ManagerPortrait';
+import { lighten, pickReadable } from '@/design/color';
 
 /**
  * Minute 0-1: identity.
@@ -48,14 +49,6 @@ const skinHex = (tone: number): string =>
  * complete thought that ends where the author ended it, and the rest arrives
  * the moment the card is chosen.
  */
-function firstSentence(text: string): string {
-  const end = text.search(/\.\s/);
-  return end === -1 ? text : text.slice(0, end + 1);
-}
-
-const restAfterFirstSentence = (text: string): string =>
-  text.slice(firstSentence(text).length).trim();
-
 /** The two biggest gains and the two biggest costs, in the engine's own numbers. */
 function modifierSummary(archetype: ManagerArchetype): {
   gains: readonly [string, number][];
@@ -164,6 +157,8 @@ export function ManagerCreationScreen(): ReactNode {
       }
       onBack={() => navigate(ROUTES.onboarding)}
       footer={
+        <div>
+        {blocker && <p className="mb-2 text-center text-caption text-ink-muted">Select a manager to continue.</p>}
         <GlassButton
           variant="primary"
           size="lg"
@@ -173,6 +168,7 @@ export function ManagerCreationScreen(): ReactNode {
         >
           {blocker ?? 'Next: your club'}
         </GlassButton>
+        </div>
       }
     >
       <div ref={headingRef} tabIndex={-1} aria-label="Step 1 of 3, manager" className="outline-none" />
@@ -203,7 +199,7 @@ function PickOne({
               label={`${manager.name}, ${archetype?.name ?? 'manager'}. ${archetype?.strength ?? ''} ${archetype?.weakness ?? ''}`}
               selected={selected}
               onSelect={() => state.choosePremade(manager.id)}
-              accent={archetype?.accent ?? '#C8FF2E'}
+              {...(selected ? {accent:'#BEFF1F'} : {})}
               {...(archetype && selected
                 ? {
                     extra: (
@@ -217,7 +213,7 @@ function PickOne({
               <div className="flex gap-3.5 pl-2">
                 <ManagerPortrait
                   appearance={premadeAppearance.get(manager.id) ?? state.appearance}
-                  size={52}
+                  size={64}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
@@ -228,26 +224,26 @@ function PickOne({
                   </div>
                   {archetype && (
                     <p
-                      className="mt-0.5 text-[12px] font-semibold uppercase tracking-[0.14em]"
-                      style={{ color: archetype.accent }}
+                      className="mt-0.5 text-caption font-semibold"
+                      style={{ color: pickReadable('#26312b', [archetype.accent, lighten(archetype.accent, 0.35), '#BDC5BC'], 4.5) }}
                     >
                       {archetype.name}
                     </p>
                   )}
-                  <Text role="caption" className="mt-1 leading-snug text-pretty">
-                    {firstSentence(manager.bio)}
-                  </Text>
-                  {selected && restAfterFirstSentence(manager.bio) !== '' && (
+                  {selected && (
                     <Text role="caption" className="mt-1.5 leading-relaxed text-pretty">
-                      {restAfterFirstSentence(manager.bio)}
+                      {manager.bio}
                     </Text>
                   )}
-                  {archetype && (
+                  {archetype && (selected ? (
                     <>
                       <TradeLine tone="good">{archetype.strength}</TradeLine>
                       <TradeLine tone="bad">{archetype.weakness}</TradeLine>
                     </>
-                  )}
+                  ) : <div className="mt-2 flex flex-col gap-1 text-caption">
+                    <span className="text-ink">Strength: {modifierSummary(archetype).gains[0]?.[0] ?? archetype.name}</span>
+                    <span className="text-ink-muted">Tradeoff: {modifierSummary(archetype).costs[0]?.[0] ?? 'Balanced approach'}</span>
+                  </div>)}
                 </div>
               </div>
             </SelectCard>

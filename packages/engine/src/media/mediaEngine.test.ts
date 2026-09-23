@@ -24,6 +24,13 @@ const withManager = (state: GameState, over: Partial<Manager>): GameState => {
 
 describe('story importance reflects the stakes', () => {
   const { state } = buildTestWorld();
+  it('reports a rout as a rout without inventing the venue or a close contest', () => {
+    const stories = generateStories([won('ten-goal-win', 10, 'club_4')], state, new Rng('rout-copy'), null);
+    const report = stories.find(story => story.headline.includes('sweep past'));
+    expect(report).toBeDefined();
+    expect(report!.body).toContain('10-goal win');
+    expect(report!.headline).not.toMatch(/find a way| at /);
+  });
 
   it('sizes a derby rout above a routine win', () => {
     const rout = generateStories([won('ev_rout', 6, 'club_1')], state, new Rng('m1'), null);

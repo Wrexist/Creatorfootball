@@ -1,5 +1,5 @@
-import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { storyReach, type GameState, type NewsStory } from '@cf/engine';
 import {
   Divider, EmptyState, GlassButton, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
@@ -54,11 +54,12 @@ const StoryRow = memo(function StoryRow({
 
 function MediaView({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const apply = useGameStore((s) => s.apply);
   useSocialWorld(state);
   const [scope, setScope] = useState<'ALL' | 'UNREAD'>('ALL');
   const [limit, setLimit] = useState(PAGE);
-  const [open, setOpen] = useState<string | null>(null);
+  const open = searchParams.get('story');
 
   const stories = useStories(state, scope === 'UNREAD', limit);
   const unread = useMemo(() => state.media.stories.filter((s) => !s.read).length, [state.media.stories]);
@@ -90,12 +91,17 @@ function MediaView({ state }: { state: GameState }): ReactNode {
     }));
   }, [apply]);
 
+  useEffect(() => {
+    if (opened && !opened.read) markRead(opened.id);
+  }, [opened, markRead]);
+
   const openStory = useCallback(
     (id: string) => {
-      setOpen(id);
-      markRead(id);
+      const next = new URLSearchParams(searchParams);
+      next.set('story', id);
+      setSearchParams(next);
     },
-    [markRead],
+    [searchParams, setSearchParams],
   );
 
   const sentiment = opened ? SENTIMENT(opened.sentiment) : null;
@@ -181,7 +187,7 @@ function MediaView({ state }: { state: GameState }): ReactNode {
 
       <GlassSheet
         open={open !== null}
-        onClose={() => setOpen(null)}
+        onClose={() => { const next = new URLSearchParams(searchParams); next.delete('story'); setSearchParams(next, {replace:true}); }}
         title={opened?.headline ?? 'Story'}
         subtitle={opened ? `${opened.outlet} · ${relative(state.clock.cycle, opened.cycle)}` : undefined}
         size="tall"
@@ -217,7 +223,7 @@ function MediaView({ state }: { state: GameState }): ReactNode {
               divided={false}
             />
           </div>
-        ) : null}
+        ) : <EmptyState title="Story unavailable" description="This story is no longer in the current save. Close this sheet to browse the latest coverage." />}
       </GlassSheet>
     </Screen>
   );

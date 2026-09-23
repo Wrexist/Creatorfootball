@@ -39,7 +39,7 @@ export interface TrendTopic {
 }
 
 const TAG_TOPICS: readonly { tag: string; label: string; kind: TrendTopic['kind']; blurb: string }[] = [
-  { tag: 'result', label: 'The result', kind: 'RESULT', blurb: 'Ninety minutes that everybody has an opinion about.' },
+  { tag: 'result', label: 'The result', kind: 'RESULT', blurb: 'A match that everybody has an opinion about.' },
   { tag: 'discipline', label: 'The red card', kind: 'ROW', blurb: 'One decision, replayed from four angles, still argued about.' },
   { tag: 'rivalry', label: 'The derby', kind: 'ROW', blurb: 'Two sets of supporters who cannot let each other alone.' },
   { tag: 'transfer', label: 'The transfer', kind: 'PLAYER', blurb: 'Somebody is moving, or somebody would like you to think so.' },

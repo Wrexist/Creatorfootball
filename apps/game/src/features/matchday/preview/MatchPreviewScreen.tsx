@@ -151,7 +151,7 @@ export function MatchPreviewScreen(): ReactNode {
 
       <section>
         <SectionHeader title={`Your predicted ${sidesWord(context.lineup.length)}`} subtitle={context.formation.name} />
-        <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="mt-3 grid gap-3" style={{gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,280px),1fr))'}}>
           <LineupBoard slots={context.lineup} kit={ourKit} />
           <GlassPanel nested level={2} padding="md" title="Bench">
             <ul className="flex flex-col gap-1.5">

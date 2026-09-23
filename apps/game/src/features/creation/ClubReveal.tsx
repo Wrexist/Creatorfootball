@@ -4,6 +4,7 @@ import { PHILOSOPHY_LABELS, type Club } from '@cf/engine';
 import { ClubBadge, GlassButton, HeroReveal, useDesignMotion } from '@/design';
 import { useUiStore } from '@/state/uiStore';
 import { KitPreview } from './KitPreview';
+import { ArtImage } from '@/design/premium/components';
 
 /**
  * The club reveal — one of the nine hero moments this product licenses itself
@@ -38,7 +39,7 @@ export function ClubReveal({
   }, [open, setCinematic]);
 
   const visual = (
-    <div className="relative flex flex-col items-center">
+    <div className="cf-club-reveal-identity relative flex items-center gap-7">
       <span
         aria-hidden="true"
         className="pointer-events-none absolute -inset-16 rounded-pill"
@@ -47,25 +48,15 @@ export function ClubReveal({
           opacity: 0.55,
         }}
       />
-      <ClubBadge visual={club.visual} size={172} label={`${club.name} badge`} />
+      <ClubBadge visual={club.visual} size={128} className="cf-reveal-crest" label={`${club.name} badge`} />
       <motion.div
         initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...m.transition.medium, delay: m.reduced ? 0 : 0.55 }}
-        className="relative mt-5 flex items-center gap-3"
+        className="relative flex flex-col items-center gap-2"
       >
-        <KitPreview visual={club.visual} size={52} label={`${club.name} home kit`} />
-        <span className="flex flex-col items-start">
-          <span
-            className="font-display text-[26px] font-bold leading-none tracking-[0.06em]"
-            style={{ color: club.visual.secondary }}
-          >
-            {club.abbreviation}
-          </span>
-          <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-dim">
-            {club.city}
-          </span>
-        </span>
+        <KitPreview visual={club.visual} size={76} label={`${club.name} home kit`} />
+        <span className="text-caption text-ink-muted">Home kit</span>
       </motion.div>
     </div>
   );
@@ -86,13 +77,16 @@ export function ClubReveal({
       <HeroReveal
         open={open}
         onDismiss={onContinue}
-        eyebrow="Your club"
+        dismissOnBackdrop={false}
+        calm
+        backdrop={<div aria-hidden="true" className="cf-club-reveal-world"><ArtImage asset="environment.stadium-night" crop="hero" eager/><span/></div>}
+        eyebrow="Your story starts here"
         title={club.name}
         subtitle={
           <>
             <span className="block text-[16px] font-semibold italic text-ink">“{club.motto}”</span>
             <span className="mt-2 block">
-              {PHILOSOPHY_LABELS[club.philosophy]} · {club.stadium.name} · founded {club.founded}
+              {club.city} · {PHILOSOPHY_LABELS[club.philosophy]}<br/>{club.stadium.name} · Founded {club.founded}
             </span>
           </>
         }
