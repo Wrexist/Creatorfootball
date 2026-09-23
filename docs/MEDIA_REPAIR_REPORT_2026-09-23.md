@@ -24,6 +24,7 @@ This implements the 31 items in [the supplied-media audit](USER_MEDIA_AUDIT_2026
 | F05–F06 | Weekly income/cost pair plus full-width available transfer budget. Table movement shows previous/current rank when a pre-round snapshot exists; reload shows current position honestly. | Stable finance geometry, unchanged ledger arithmetic and save/reload tests. |
 | Earlier tablet defects | Matchday lineup/bench columns respond to actual content width; predicted lineup uses safe readable rows. Stadium reputation is rounded for display. | 768×1024 and 1024×1366 Matchday captures; fractional-reputation fixture. |
 | Native follow-up | Reduced-effects Home previously made the manager translucent. It now uses an opaque portrait with a simple rounded surface. The injury fixture explicitly selects the pitch token even when that player is also captain. | Reduced-effects opacity assertion, Android emulator inspection and release-workflow regression. |
+| Release follow-up | Content-pack toggles show a saving state until the local write completes. The enabled confirmation can no longer precede storage completion during a fast reload. | Browser expansion check inspects the saved pack list before reloading; existing storage-failure and ordered-write tests remain active. |
 
 ## Assets and ownership
 

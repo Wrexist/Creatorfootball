@@ -101,7 +101,7 @@ const Conversation = memo(function Conversation({
 }: FeedItemProps): ReactNode {
   const quoted = post.quoted;
   return (
-    <article className="glass-2 glass-sheen raised raised-edge relative overflow-hidden rounded-lg p-3.5">
+    <article data-testid="social-feed-post" className="glass-2 glass-sheen raised raised-edge relative overflow-hidden rounded-lg p-3.5">
       <Kicker post={post} timeLabel={timeLabel} />
 
       {quoted && (
@@ -145,7 +145,7 @@ const Chatter = memo(function Chatter({
   post, timeLabel,
 }: { post: PostData; timeLabel: string }): ReactNode {
   return (
-    <article className="flex items-start gap-2.5 border-b border-white/[0.06] px-1 py-2">
+    <article data-testid="social-feed-post" className="flex items-start gap-2.5 border-b border-white/[0.06] px-1 py-2">
       <CreatorAvatar seed={post.avatarSeed} size={24} verified={false} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-1.5">
@@ -166,7 +166,7 @@ const Lead = memo(function Lead({
   post, timeLabel, hasEvent, onOpenEvent,
 }: FeedItemProps): ReactNode {
   return (
-    <article className="glass-2 glass-sheen raised-strong raised-edge relative overflow-hidden rounded-lg p-4">
+    <article data-testid="social-feed-post" className="glass-2 glass-sheen raised-strong raised-edge relative overflow-hidden rounded-lg p-4">
       <div className="cf-feed-image"><ArtImage asset={storyArt(post.tags.join(' '))}/></div>
       <Kicker post={post} timeLabel={timeLabel} />
       {/* The lead is the one story of the matchweek, so it gets display type
@@ -193,7 +193,7 @@ const Standard = memo(function Standard({
   post, timeLabel, hasEvent, onOpenEvent,
 }: FeedItemProps): ReactNode {
   return (
-    <article className="glass-1 raised relative overflow-hidden rounded-lg p-3.5">
+    <article data-testid="social-feed-post" className="glass-1 raised relative overflow-hidden rounded-lg p-3.5">
       <div className="flex gap-3">
         <CreatorAvatar seed={post.avatarSeed} size={34} verified={post.verified} />
         <div className="min-w-0 flex-1">

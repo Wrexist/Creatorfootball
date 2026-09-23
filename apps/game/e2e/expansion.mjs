@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gunzipSync } from 'node:zlib';
 
 const base=process.argv[2]??'http://127.0.0.1:4173';
 const out=fileURLToPath(new URL('../../../artifacts/expansion/screenshots/',import.meta.url)); await mkdir(out,{recursive:true});
@@ -29,6 +30,9 @@ try {
   await page.goto(`${base}/settings/content`);
   await page.getByRole('button',{name:'Enable Touchline Voices',exact:true}).click();
   await page.getByRole('button',{name:'Disable Touchline Voices',exact:true}).waitFor();
+  const enabledSave=await page.evaluate(()=>localStorage.getItem('cf.save.v1'));
+  const enabledEnvelope=JSON.parse(enabledSave.startsWith('cf:gzip:1:')?gunzipSync(Buffer.from(enabledSave.slice(10),'base64')).toString():enabledSave);
+  assert.ok(enabledEnvelope.state.settings.enabledPackIds.includes('touchline-voices'),'Enabled confirmation means the choice is persisted before reload');
   await page.reload(); await page.getByRole('button',{name:'Disable Touchline Voices',exact:true}).waitFor(); await shot('content-packs');
   await page.goto(`${base}/settings/saves`);
   const downloadEvent=page.waitForEvent('download'); await page.getByRole('button',{name:'Export career file',exact:true}).click();

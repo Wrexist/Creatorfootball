@@ -104,7 +104,9 @@ try {
   assert.ok(await page.locator('.cf-screen .scroll-y').evaluate(el=>el.scrollTop)>scroll+10,'swiping a portrait scrolls the team sheet');
   state=await getState();assert.equal(JSON.stringify(state.clubs[state.playerClubId].tactics),unchanged,'scrolling cannot change the lineup');
   await go('/social');
-  const post=page.locator('article').filter({has:page.getByRole('button',{name:'See what actually happened',exact:true})}).first();
+  // A feed post can legitimately lack an event deep link. Test the author and
+  // geometry of the rendered post itself, without requiring that optional CTA.
+  const post=page.getByTestId('social-feed-post').first();
   await post.scrollIntoViewIfNeeded();
   await page.waitForTimeout(500); const authorText=await post.innerText(), box=await post.boundingBox();
   for(let i=0;i<40;i++) { await page.waitForTimeout(250); assert.equal(await post.innerText(),authorText,'idle author stability'); assert.ok(Math.abs((await post.boundingBox()).height-box.height)<1,'idle post geometry'); }
