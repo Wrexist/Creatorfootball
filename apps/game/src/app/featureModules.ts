@@ -107,3 +107,4 @@ export const ContentPacksScreen = screen(progression, 'ContentPacksScreen');
 /** Warms the chunk the player is most likely to need next. */
 export const preloadHome = (): void => { void home(); };
 export const preloadMatchday = (): void => { void matchday(); };
+export const preloadPrimary = (): void => { void squad(); void club(); void social(); };

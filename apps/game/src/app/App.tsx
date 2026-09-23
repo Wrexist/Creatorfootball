@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import { trackEvent } from '@cf/engine';
 import {
   ConfirmProvider, ReducedMotionOverrideContext, ToastProvider,
@@ -14,6 +14,8 @@ import { AppErrorBoundary } from './ErrorBoundary';
 import { Shell } from './Shell';
 import { installAnalytics } from './analytics';
 import { preloadHome } from './featureModules';
+import { ExpansionBridge } from '@/commerce/ExpansionBridge';
+import { ROUTES } from './routes';
 
 /**
  * The application root: providers, boot, and nothing else.
@@ -26,6 +28,7 @@ import { preloadHome } from './featureModules';
  */
 
 function BootGate({ children }: { children: ReactNode }): ReactNode {
+  const location = useLocation();
   const phase = useGameStore((s) => s.phase);
   const boot = useGameStore((s) => s.boot);
   const recovered = useGameStore((s) => s.recoveredFromBackup);
@@ -108,7 +111,7 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     clearPersistFailed();
   }, [persistFailed, clearPersistFailed, toast]);
 
-  if (phase === 'ERROR') return <SaveRecoveryScreen />;
+  if (phase === 'ERROR' && location.pathname !== ROUTES.localSaves) return <SaveRecoveryScreen />;
   if (phase === 'BOOTING' || splashHeld) return <SplashScreen />;
   return children;
 }
@@ -118,6 +121,15 @@ function Preferences({ children }: { children: ReactNode }): ReactNode {
   const reducedMotion = useGameStore((s) => s.state?.settings.reducedMotion ?? false);
   const hapticsEnabled = useGameStore((s) => s.state?.settings.haptics ?? true);
   const soundEnabled = useGameStore((s) => s.state?.settings.sound ?? true);
+  const reducedEffects = useGameStore((s) => s.state?.settings.reducedEffects);
+  const textSize = useGameStore((s) => s.state?.settings.textSize ?? 'STANDARD');
+  const highContrast = useGameStore((s) => s.state?.settings.highContrast ?? false);
+
+  useEffect(() => {
+    useUiStore.getState().setReducedEffects(reducedEffects ?? shouldReduceEffects(detectCapabilities()));
+    document.documentElement.dataset.textSize = textSize.toLowerCase();
+    document.documentElement.dataset.highContrast = String(highContrast);
+  }, [reducedEffects,textSize,highContrast]);
 
   useEffect(() => {
     setHapticsEnabled(hapticsEnabled);
@@ -139,6 +151,7 @@ function Preferences({ children }: { children: ReactNode }): ReactNode {
 export function App(): ReactNode {
   return (
     <AppErrorBoundary>
+      <ExpansionBridge />
       <Preferences>
         <ToastProvider>
           <ConfirmProvider>

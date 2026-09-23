@@ -2,7 +2,7 @@ import { ROLE_MINUTES_EXPECTATION } from '../contracts/contract';
 import type { ClubId, PlayerId } from '../core/brand';
 import { clamp, clamp01 } from '../core/math';
 import type { Rng } from '../core/rng';
-import { facilityEffect, type FacilityRegistry } from '../facilities/facilities';
+import { facilityEffect, injuryRecoveryPerCycle, type FacilityRegistry } from '../facilities/facilities';
 import type { GameState, TrainingResult, TrainingState } from '../game/state';
 import { ATTRIBUTE_LABELS, type AttributeKey } from '../players/attributes';
 import type { Player } from '../players/player';
@@ -38,6 +38,8 @@ export interface TrainingCycleContext {
   readonly minutesShare?: Readonly<Record<string, number>>;
   /** Include the youth squad in the session. Defaults to true for the YOUTH program. */
   readonly includeYouth?: boolean;
+  /** The weekly orchestrator already owns recovery; isolated training tests do not. */
+  readonly recoveryHandled?: boolean;
 }
 
 export interface TrainingInjury {
@@ -94,7 +96,7 @@ export function runTrainingCycle(
   const trainingGain = club ? facilityEffect(club, 'trainingGain', ctx.registry) : 0;
   const injuryResistance = club ? facilityEffect(club, 'injuryResistance', ctx.registry) : 0;
   const youthQuality = club ? facilityEffect(club, 'youthQuality', ctx.registry) : 0;
-  const injuryRecovery = club ? facilityEffect(club, 'injuryRecovery', ctx.registry) : 0;
+  const injuryRecovery = injuryRecoveryPerCycle(club, ctx.registry);
 
   const includeYouth = ctx.includeYouth ?? program.youthBias > 0;
   const roster: PlayerId[] = club
@@ -114,7 +116,8 @@ export function runTrainingCycle(
     // An injured player is not in the session; he is with the physio. Better
     // medical facilities are what turns four weeks out into three.
     if (player.injury) {
-      const healed = 1 + Math.max(0, injuryRecovery);
+      if (ctx.recoveryHandled) continue;
+      const healed = injuryRecovery;
       const weeksRemaining = Math.max(0, player.injury.weeksRemaining - healed);
       players[playerId] = {
         ...player,

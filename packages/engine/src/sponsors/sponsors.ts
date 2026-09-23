@@ -335,6 +335,7 @@ export function advanceSponsorDeals(
       );
       active.push({
         ...deal,
+        id: `${deal.id.replace(/:term:\d+$/, '')}:term:${ctx.cycle + 1}`,
         valuePerCycle: renewedValue,
         weeksRemaining: stream.pick(S.DEAL_LENGTHS),
         satisfaction,

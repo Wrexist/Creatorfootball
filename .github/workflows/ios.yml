@@ -1,0 +1,33 @@
+name: iOS source qualification
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['apps/game/**', 'packages/engine/**', 'pnpm-lock.yaml', '.github/workflows/ios.yml']
+permissions:
+  contents: read
+jobs:
+  simulator:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Verify native toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          test "$(xcodebuild -version | awk '/Xcode/ {split($2, v, "."); print v[1]}')" -ge 26
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter @cf/game cap:sync
+      - name: Build unsigned simulator app
+        run: xcodebuild -project apps/game/ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath artifacts/ios CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ios-simulator-app
+          path: artifacts/ios/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 7

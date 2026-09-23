@@ -155,7 +155,7 @@ export const SPEED_LABEL = {
   SLOW: 'Slow',
   NORMAL: 'Normal',
   FAST: 'Fast',
-  INSTANT: 'Skip',
+  INSTANT: 'Instant',
 } as const satisfies Record<string, string>;
 
 /**

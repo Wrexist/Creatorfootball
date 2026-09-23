@@ -1,0 +1,26 @@
+.cf-edge-blur {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+}
+.cf-edge-blur-top { top: 0; }
+.cf-edge-blur-bottom { bottom: 0; }
+.cf-edge-blur-layer { display: none; position: absolute; inset: 0; pointer-events: none; }
+.cf-edge-blur::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(var(--edge-direction), var(--edge-blur-tint, #0d1211cc), transparent);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and ((mask-image: linear-gradient(#000, transparent)) or (-webkit-mask-image: linear-gradient(#000, transparent))) {
+  .cf-edge-blur-layer { display: block; }
+}
+/* The inexpensive tint remains when transparency or effects are reduced. */
+@media (prefers-reduced-transparency: reduce) {
+  .cf-edge-blur-layer { display: none; }
+}
+[data-reduced-effects='true'] .cf-edge-blur-layer,
+[data-high-contrast='true'] .cf-edge-blur-layer { display: none; }
+.cf-edge-at-rest{opacity:0}

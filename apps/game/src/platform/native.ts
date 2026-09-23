@@ -23,6 +23,16 @@ export function isNativeShell(): boolean {
 export async function installNativeBridge(): Promise<void> {
   if (!isNativeShell()) return;
 
+  if (Capacitor.getPlatform() === 'android') {
+    const { App } = await import('@capacitor/app');
+    await App.addListener('backButton', ({ canGoBack }) => {
+      if (document.querySelector('[role="dialog"]')) {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      } else if (canGoBack) window.history.back();
+      else void App.minimizeApp();
+    });
+  }
+
   const [{ Haptics, ImpactStyle, NotificationType }, { StatusBar, Style }] = await Promise.all([
     import('@capacitor/haptics'),
     import('@capacitor/status-bar'),

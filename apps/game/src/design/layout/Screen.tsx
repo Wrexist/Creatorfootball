@@ -10,6 +10,9 @@ import { IconChevronLeft } from '../icons';
 import { FitText } from '../typography/FitText';
 import { TYPE_CLASS } from '../typography/type';
 import { useHeaderSlot } from './headerSlot';
+import { PageHero, useWorldScene } from '../premium/WorldScene';
+import { ArtImage } from '../premium/components';
+import { GradualBlur } from '../glass/GradualBlur';
 
 /**
  * The screen scaffold. Every route in the product is one of these.
@@ -51,6 +54,8 @@ export interface ScreenProps {
   /** Desktop/tablet second column. Ignored on mobile, so never put anything
    *  essential in it. */
   aside?: ReactNode;
+  /** Essential secondary controls can also appear below content on a phone. */
+  asideOnMobile?: boolean;
   /** Full-bleed content rendered above the large title (a hero, a pitch). */
   hero?: ReactNode;
   /** Adds bottom padding to clear the tab bar. Off inside a sheet or modal. */
@@ -73,6 +78,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
     headerAccessory,
     footer,
     aside,
+    asideOnMobile = false,
     hero,
     withTabBar = true,
     children,
@@ -82,6 +88,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
   forwardedRef,
 ) {
   const m = useDesignMotion();
+  const scene = useWorldScene();
   // Both are rendered, shared slot first.
   //
   // An earlier version let a screen's own accessory replace the shared one,
@@ -108,7 +115,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
   });
 
   return (
-    <div className={cn('relative flex h-full flex-col overflow-hidden bg-base', className)}>
+    <div className={cn('cf-screen relative flex h-full flex-col overflow-hidden bg-base', className)}>
       <header
         className={cn(
           'relative z-20 shrink-0 pt-[var(--safe-top)]',
@@ -132,8 +139,8 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
             className="flex min-w-0 flex-1 justify-center text-center"
             // On wide layouts there is no large title to hand off from, so the
             // compact title is simply always present.
-            style={wide ? undefined : { opacity: compactTitleOpacity }}
-            aria-hidden={wide ? undefined : true}
+            style={wide || scene ? undefined : { opacity: compactTitleOpacity }}
+            aria-hidden={wide || scene ? undefined : true}
           >
             {/* A screen title is a name. It shrinks to fit the gap between the
                 back button and the header actions; it does not get cut. */}
@@ -158,6 +165,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
             {headerAccessory}
           </div>
         )}
+        <GradualBlur side="top" height={36} className={cn('cf-screen-edge-top',!scrolled&&'cf-edge-at-rest')} />
       </header>
 
       <div
@@ -168,7 +176,8 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           withTabBar && wide && 'pb-8',
         )}
       >
-        {hero}
+        {scene && !hero && <PageHero scene={scene} title={title} {...(subtitle !== undefined ? {subtitle} : {})}/>}
+        {hero && <div className={scene ? 'cf-custom-hero' : undefined}>{scene && <ArtImage asset={scene.asset} crop="hero" className="cf-custom-hero-backdrop" eager/>}{hero}</div>}
 
         <div
           className={cn(
@@ -177,7 +186,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
           )}
         >
           <div className="min-w-0">
-            {!wide && (
+            {!wide && !scene && (
               <motion.div style={{ opacity: largeTitleOpacity }} className="pb-3 pt-2">
                 <h2 className={cn(TYPE_CLASS.hero, 'text-balance')}>{title}</h2>
                 {subtitle !== undefined && (
@@ -185,7 +194,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
                 )}
               </motion.div>
             )}
-            {wide && subtitle !== undefined && (
+            {wide && !scene && subtitle !== undefined && (
               <p className="pb-3 pt-4 text-body text-ink-muted text-pretty">{subtitle}</p>
             )}
             <motion.div
@@ -198,7 +207,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
             </motion.div>
           </div>
 
-          {wide && aside !== undefined && (
+          {(wide || asideOnMobile) && aside !== undefined && (
             <aside className="flex flex-col gap-4 pt-4">{aside}</aside>
           )}
         </div>
@@ -207,7 +216,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
       {footer !== undefined && (
         <div
           className={cn(
-            'relative z-20 shrink-0 border-t border-white/[0.07]',
+            'cf-screen-footer relative z-20 shrink-0',
             wide ? 'bg-base/95' : 'chrome-surface',
           )}
           style={{
@@ -221,6 +230,7 @@ export const Screen = forwardRef<HTMLDivElement, ScreenProps>(function Screen(
             paddingBottom: withTabBar || wide ? undefined : 'var(--safe-bottom)',
           }}
         >
+          <GradualBlur side="bottom" height={32} className="cf-footer-edge" />
           <div className="mx-auto w-full max-w-[1180px] px-4 py-3 sm:px-6">{footer}</div>
         </div>
       )}

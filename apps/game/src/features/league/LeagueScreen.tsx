@@ -18,6 +18,8 @@ import {
 } from './data';
 import { FixtureCard } from './components/FixtureCard';
 import { StandingsTable } from './components/StandingsTable';
+import { ArtImage } from '@/design/premium/components';
+import { storyArt } from '@/design/art/manifest';
 
 /**
  * The league hub.
@@ -37,6 +39,7 @@ import { StandingsTable } from './components/StandingsTable';
 function NewsRow({ story }: { story: NewsStory }): ReactNode {
   return (
     <article className="border-b border-white/[0.06] py-2.5 last:border-b-0">
+      <ArtImage asset={storyArt(story.tags.join(' '))} className="cf-news-thumbnail" />
       <Text role="micro" as="p">{story.outlet}</Text>
       <Text role="bodyStrong" as="p" className="mt-1 text-pretty">{story.headline}</Text>
       <Text role="caption" as="p" className="mt-0.5 text-pretty" clamp={3}>{story.body}</Text>

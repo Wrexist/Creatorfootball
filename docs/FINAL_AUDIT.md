@@ -1,5 +1,7 @@
 # Final Audit
 
+> Historical audit. For the 22 September completion status, see [the closure matrix](AUDIT_CLOSURE_2026-09-22.md) and [current implementation report](REDESIGN_REPORT.md). Findings below retain their original evidence; they are not the current open-work list.
+
 **Creator Football** — state of the product at the end of the build-and-audit
 cycle. This is the honest record: what was built, what the audits found, what
 was fixed, what remains, and what I would not ship without.

@@ -134,7 +134,7 @@ function SheetBody({ state, player }: { state: GameState; player: Player }): Rea
             <IconInjury size={18} className="shrink-0 text-danger" />
             <Text role="caption" as="p" className="text-ink text-pretty">
               <strong className="font-semibold">{sentenceCase(player.injury.description)}.</strong>{' '}
-              He is unavailable for about {player.injury.weeksRemaining} more weeks.
+              He is unavailable for about {Math.ceil(player.injury.weeksRemaining)} more weeks.
             </Text>
           </div>
         </GlassPanel>

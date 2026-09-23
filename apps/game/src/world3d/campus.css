@@ -1,0 +1,30 @@
+.cf-campus-stats{display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:14px 4px;border:1px solid var(--border-soft,rgba(232,244,232,.1));border-radius:20px;background:linear-gradient(120deg,#1b2725e8,#111b1bea)}
+.cf-campus-stats>div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cf-campus-stats>div+div{border-left:1px solid #d8e6dd16}
+.cf-campus-stats strong{font-family:var(--font-display);font-size:23px;line-height:1;font-variant-numeric:tabular-nums}
+.cf-campus-stats span{font-size:12px;color:#bdc5bc}
+.cf-campus-journey{display:grid;gap:8px}
+.cf-campus-journey-heading{display:flex;justify-content:space-between;align-items:center;padding:0 4px;color:#bdc5bc;font-size:12px}
+.cf-campus-journey-heading strong{color:#beff1f;font-weight:600}
+.cf-campus-journey [role=radiogroup]{border-radius:16px;background:#0e1717;border-color:#d8e6dd18}
+.cf-campus-journey [role=radio][aria-checked=true]{color:#beff1f;background:#beff1f12}
+.cf-model-stage{height:280px;isolation:isolate}
+.cf-model-stage canvas{display:block;width:100%;height:100%}
+.cf-model-viewer{box-shadow:0 16px 36px #0003;border-color:#ceded61a}
+.cf-model-toolbar{padding:8px 12px 12px;background:linear-gradient(#132021,#11191a);border-top:1px solid #ceded60b}
+.cf-model-toolbar p{text-align:center;color:#bdc5bc;font-size:12px;margin:0 0 8px}
+.cf-model-toolbar button{min-height:44px!important;border-radius:12px!important;background:#ffffff04!important;box-shadow:none!important}
+.cf-campus-caption{padding:0 4px}
+.cf-campus-caption h2,.cf-campus-upgrade h2{font-family:var(--font-display);font-size:23px;font-weight:700;line-height:1.1;color:#f6f7f2}
+.cf-campus-caption p,.cf-campus-upgrade p{margin:6px 0 0;color:#bdc5bc;font-size:13px;line-height:1.5}
+.cf-campus-caption small{display:block;color:#cbbb91;font-size:12px;line-height:1.4;margin-top:6px}
+.cf-campus-milestones{display:flex;align-items:center;justify-content:space-between;margin:14px 0;position:relative}
+.cf-campus-milestones::before{content:'';position:absolute;top:50%;left:12px;right:12px;height:1px;background:#cbd8ce2b;z-index:0}
+.cf-campus-milestones span{position:relative;display:grid;place-items:center;width:26px;height:26px;border:1px solid #cbd8ce36;border-radius:50%;background:#182320;color:#bdc5bc;font-size:12px;font-variant-numeric:tabular-nums}
+.cf-campus-milestones span[data-complete=true]{color:#beff1f;border-color:#beff1f78;background:#233026}
+.cf-campus-milestones span[data-current=true]{color:#10170e;background:#beff1f;border-color:#beff1f}
+.cf-campus-upgrade-facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:14px}
+.cf-campus-upgrade-facts span{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#bdc5bc}
+.cf-campus-upgrade-facts strong{font-size:20px;font-family:var(--font-display);color:#f6f7f2;font-variant-numeric:tabular-nums}
+@media(min-width:600px){.cf-model-stage{height:500px}}
+@media(max-width:374px){.cf-model-stage{height:270px}.cf-campus-stats strong{font-size:21px}}

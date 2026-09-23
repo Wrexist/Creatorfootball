@@ -170,20 +170,6 @@ export function applyMatchResult(
       },
     });
 
-    if (player.contractId) {
-      const contract = next.contracts[player.contractId];
-      // Minutes only. The weekly countdown happens once per cycle for every
-      // contract in the league, not here — otherwise a fringe player's deal
-      // would never run down because he never appears.
-      if (contract) {
-        next = setContract(next, {
-          ...contract,
-          minutesPlayed: contract.minutesPlayed + Math.max(0, stats.minutes),
-          minutesAvailable: contract.minutesAvailable + totalMinutes,
-        });
-      }
-    }
-
     if (injury) {
       emitted.push(events.make('PLAYER_INJURED', {
         playerId: playerId as PlayerId,
@@ -213,6 +199,16 @@ export function applyMatchResult(
     if (!club) continue;
     for (const playerId of club.squad) {
       const player = next.players[playerId];
+      const before = state.players[playerId];
+      const contract = player?.contractId ? next.contracts[player.contractId] : undefined;
+      // Bench players were available too. Injured/banned players were not
+      // selectable, so those minutes must not count as a broken role promise.
+      if (contract && before && !before.injury && before.suspensionMatches === 0) {
+        next = setContract(next, { ...contract,
+          minutesPlayed: contract.minutesPlayed + Math.max(0, result.playerStats[playerId]?.minutes ?? 0),
+          minutesAvailable: contract.minutesAvailable + totalMinutes,
+        });
+      }
       if (!player || player.suspensionMatches <= 0) continue;
       if (result.playerStats[playerId]) continue;
       next = patchPlayer(next, playerId, { suspensionMatches: player.suspensionMatches - 1 });
@@ -271,7 +267,8 @@ export function applyMatchResult(
   // The engine reports what was played; nothing consumed it, so a card could
   // be deployed every week forever. A card the player keeps is not a decision.
   const playerSide = result.homeClubId === next.playerClubId ? 'home' : 'away';
-  const spent = result.ruleCardsPlayed.filter((c) => c.side === playerSide);
+  const involvesPlayer = result.homeClubId === next.playerClubId || result.awayClubId === next.playerClubId;
+  const spent = involvesPlayer ? result.ruleCardsPlayed.filter((c) => c.side === playerSide) : [];
 
   if (spent.length > 0) {
     const remaining = next.inventory.ruleCards
@@ -299,6 +296,15 @@ export function applyMatchResult(
     attendance: result.attendance,
     capacity: next.clubs[homeId]?.stadium.capacity ?? 0,
   }, { importance: 1, entities: [events.clubRef(homeId)] }));
+
+  const usage = next.aiCardUsage?.season === next.clock.season ? next.aiCardUsage.byClub : {};
+  const byClub = { ...usage };
+  for (const card of result.ruleCardsPlayed) {
+    const clubId = card.side === 'home' ? homeId : awayId;
+    if (clubId === next.playerClubId) continue;
+    byClub[clubId] = [...new Set([...(byClub[clubId] ?? []), card.ruleId])];
+  }
+  next = { ...next, aiCardUsage: { season: next.clock.season, byClub } };
 
   return { state: next, events: emitted };
 }

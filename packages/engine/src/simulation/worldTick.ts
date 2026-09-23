@@ -67,6 +67,8 @@ export interface WorldTickContext {
   readonly nextEventId?: () => EventId;
   /** Skip media/social generation, for fast-forward tooling. */
   readonly skipContent?: boolean;
+  /** Full careers recover injuries and serve bans at their authoritative boundaries. */
+  readonly availabilityHandled?: boolean;
 }
 
 export interface WorldTickSummary {
@@ -338,7 +340,7 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
     const local = root.fork(`player:${playerId}`);
     let next: Player = player;
 
-    if (next.injury) {
+    if (next.injury && !ctx.availabilityHandled) {
       const weeksRemaining = next.injury.weeksRemaining - 1;
       if (weeksRemaining <= 0) {
         next = { ...next, injury: null, fitness: Math.min(next.fitness, 72) };
@@ -348,7 +350,7 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
       } else {
         next = { ...next, injury: { ...next.injury, weeksRemaining } };
       }
-    } else {
+    } else if (!next.injury && (!ctx.availabilityHandled || next.clubId !== state.playerClubId)) {
       const fatigueRisk = 1 + (1 - next.fitness / 100) * (W.injuries.fatigueMultiplier - 1);
       const ageRisk = next.age >= 31 ? W.injuries.veteranMultiplier : next.age <= 19 ? W.injuries.youthMultiplier : 1;
       if (local.chance(W.injuries.basePerCycle * fatigueRisk * ageRisk)) {
@@ -368,7 +370,7 @@ export function tickWorld(state: GameState, rng: Rng, ctx: WorldTickContext): Wo
       }
     }
 
-    if (next.suspensionMatches > 0 && next.clubId && playedThisCycle.has(next.clubId)) {
+    if (!ctx.availabilityHandled && next.suspensionMatches > 0 && next.clubId && playedThisCycle.has(next.clubId)) {
       next = { ...next, suspensionMatches: next.suspensionMatches - 1 };
     }
 

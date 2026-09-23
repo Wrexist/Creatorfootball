@@ -416,7 +416,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
   const unavailable = injured.length + suspended.length;
 
   if (injured.length >= 3) {
-    const weeks = Math.max(...injured.map((p) => p.injury?.weeksRemaining ?? 0));
+    const weeks = Math.ceil(Math.max(...injured.map((p) => p.injury?.weeksRemaining ?? 0)));
     out.push({
       id: 'crisis:injuries',
       family: 'SQUAD',
@@ -432,7 +432,7 @@ function candidates(state: GameState, club: Club): PriorityCard[] {
   } else {
     const key = injured[0];
     if (key) {
-      const weeks = key.injury?.weeksRemaining ?? 0;
+      const weeks = Math.ceil(key.injury?.weeksRemaining ?? 0);
       out.push({
         id: `injury:${key.id}`,
         family: 'SQUAD',

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Original Creator Football ball, adapted from website/favicon.svg.
+     The 64 dp ball stays inside Android's 66 dp adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="1.48837" android:scaleY="1.48837" android:translateX="6.3721" android:translateY="6.3721">
+        <path android:pathData="M32,10.5 A21.5,21.5 0,1 1,32,53.5 A21.5,21.5 0,1 1,32,10.5">
+            <aapt:attr name="android:fillColor">
+                <gradient android:startX="16" android:startY="11" android:endX="49" android:endY="53" android:type="linear">
+                    <item android:offset="0" android:color="#E6FF9B" />
+                    <item android:offset="0.38" android:color="#C8FF2E" />
+                    <item android:offset="1" android:color="#9ECC12" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:fillColor="#0D1400" android:strokeColor="#0D1400" android:strokeWidth="1.2" android:strokeLineJoin="round"
+            android:pathData="M32,24.6 L39.04,29.71 L36.35,37.99 L27.65,37.99 L24.96,29.71 Z" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#0D1400" android:strokeWidth="2.9" android:strokeLineCap="round"
+            android:pathData="M39.42,29.59 L49.16,26.42 M36.58,38.31 L42.6,46.6 M27.42,38.31 L21.4,46.6 M24.58,29.59 L14.84,26.42" />
+    </group>
+</vector>

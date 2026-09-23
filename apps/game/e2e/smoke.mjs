@@ -57,37 +57,22 @@ if (/could not finish loading|something went wrong/i.test(bodyText)) {
 }
 
 // --- 2. walk into a real game ------------------------------------------
-const footerState = () => page.evaluate(() => {
-  const b = [...document.querySelectorAll('button')].pop();
-  return { txt: b?.innerText.trim().replace(/\n/g, ' ') ?? '', disabled: Boolean(b?.disabled) };
+await page.getByRole('button', { name: 'Start your career', exact: true }).click();
+await page.getByRole('button', { name: /Vera Lindqvist/ }).click();
+await page.getByRole('button', { name: 'Next: your club', exact: true }).click();
+await page.getByRole('button', { name: /Larkspur Wolves of/ }).click();
+await page.getByRole('button', { name: 'Take over Larkspur', exact: true }).click();
+await page.getByRole('button', { name: 'Meet your squad', exact: true }).click();
+await page.goto(`${BASE}/home`);
+await page.getByTestId('premium-home').waitFor();
+const ready = await page.evaluate(() => {
+  const raw = localStorage.getItem('cf.save.v1');
+  if (!raw) return false;
+  const state = JSON.parse(raw).state;
+  return Boolean(state?.clubs?.[state.playerClubId]?.squad?.length && state?.managers?.[state.playerManagerId]);
 });
-
-const start = page.getByRole('button', { name: /start your career|continue/i }).first();
-if (await start.count()) { await start.click(); await page.waitForTimeout(1400); }
-
-for (let step = 0; step < 14; step++) {
-  const s = await footerState();
-  if (!s.disabled) {
-    await page.locator('button').last().click();
-    await page.waitForTimeout(1400);
-    if (page.url().includes('/home') || page.url().includes('/matchday')) break;
-    continue;
-  }
-  if (/name your club/i.test(s.txt)) {
-    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke United', { delay: 8 }); }
-  } else if (/city/i.test(s.txt)) {
-    const i = await page.$$('input'); const t = i[1] ?? i[0]; if (t) { await t.click(); await t.type('Smoketon', { delay: 8 }); }
-  } else if (/name/i.test(s.txt)) {
-    const i = await page.$$('input'); if (i[0]) { await i[0].click(); await i[0].type('Smoke Tester', { delay: 8 }); }
-  } else if (/archetype|manager/i.test(s.txt)) {
-    const c = page.getByRole('button', { name: /tactician|motivator|showman/i }).first();
-    if (await c.count()) await c.click();
-  } else if (/club|philosoph|culture/i.test(s.txt)) {
-    const c = page.locator('button').nth(4);
-    if (await c.count()) await c.click();
-  } else break;
-  await page.waitForTimeout(600);
-}
+if (!ready) throw new Error('Creation did not reach a persisted, playable career.');
+pass('fresh career reaches Home with a real persisted squad and manager');
 
 // --- 3. every primary action is actually clickable ---------------------
 // The tab bar is fixed above the page. A sticky footer left in normal flow

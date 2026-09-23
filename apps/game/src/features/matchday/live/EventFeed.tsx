@@ -2,6 +2,7 @@ import { memo, useMemo, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { MatchEventRow, cn, useDesignMotion } from '@/design';
 import { useMatchStore } from '@/state/matchStore';
+import { useGameStore } from '@/state/gameStore';
 import { isNoteworthy } from '../shared/format';
 
 /**
@@ -44,11 +45,12 @@ export const EventFeed = memo(function EventFeed({
   perspective, limit = 40, className,
 }: EventFeedProps): ReactNode {
   const feed = useMatchStore((s) => s.feed);
+  const commentary = useGameStore((s) => s.state?.settings.commentary ?? true);
   const m = useDesignMotion();
 
   const events = useMemo(
-    () => feed.filter(isNoteworthy).slice(0, limit),
-    [feed, limit],
+    () => feed.filter((event) => isNoteworthy(event) && (commentary || event.importance >= 4)).slice(0, limit),
+    [feed, limit, commentary],
   );
 
   return (

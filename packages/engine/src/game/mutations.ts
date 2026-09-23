@@ -142,6 +142,11 @@ export const appendEvents = (
   cap = 400,
 ): GameState => {
   if (!events.length) return s;
-  const combined = [...s.eventLog, ...events];
+  const seen = new Set<string>();
+  const combined = [...s.eventLog, ...events].filter(event => {
+    if (seen.has(event.id)) return false;
+    seen.add(event.id);
+    return true;
+  });
   return { ...s, eventLog: combined.slice(-cap) };
 };

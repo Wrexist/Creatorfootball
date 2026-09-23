@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, type ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn, haptics } from '@/design';
 import { SECTION_NAV, sectionFor } from './routes';
 
@@ -69,7 +69,7 @@ export const SectionNav = memo(function SectionNav(): ReactNode {
           const active = (exact || nested) && !deeper;
 
           return (
-            <NavLink
+            <Link
               key={item.path}
               to={item.path}
               ref={active ? activeRef : undefined}
@@ -91,7 +91,7 @@ export const SectionNav = memo(function SectionNav(): ReactNode {
                   className="absolute inset-x-2 bottom-0 h-0.5 rounded-pill bg-volt"
                 />
               )}
-            </NavLink>
+            </Link>
           );
         })}
       </div>

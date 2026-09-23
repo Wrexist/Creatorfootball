@@ -1,6 +1,7 @@
-import { memo, type ReactNode } from 'react';
+import { memo, useState, type ReactNode } from 'react';
 import { cn } from '../cn';
 import { useSvgId } from '../useSvgId';
+import { assetFor } from '../art/manifest';
 
 /**
  * Procedural silverware.
@@ -397,6 +398,8 @@ function SilverwareInner({
   };
   const showDetail = detail ?? size >= 34;
   const Piece = RENDERERS[variant] ?? LeagueCup;
+  const src = size >= 48 ? assetFor(`trophy.${RENDERERS[variant] ? variant : 'league'}`, size > 96 ? 'card' : 'thumb') : undefined;
+  const [loaded, setLoaded] = useState<string>();
 
   return (
     <svg
@@ -412,8 +415,11 @@ function SilverwareInner({
       {glow && (
         <ellipse cx="50" cy="66" rx="52" ry="58" fill="#ffd76a" opacity="0.12" />
       )}
-      <Piece ids={ids} detail={showDetail} />
-      <Plinth ids={ids} detail={showDetail} />
+      <g opacity={src && loaded === src ? 0 : 1}>
+        <Piece ids={ids} detail={showDetail} />
+        <Plinth ids={ids} detail={showDetail} />
+      </g>
+      {src && <image href={src} x="0" y="0" width="100" height="132" preserveAspectRatio="xMidYMid meet" className="cf-silverware-art" opacity={loaded === src ? 1 : 0} onLoad={() => setLoaded(src)} onError={() => setLoaded(undefined)} />}
     </svg>
   );
 }

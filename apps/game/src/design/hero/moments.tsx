@@ -234,6 +234,7 @@ export function HeroReveal({
 
 export interface GoalBurstProps extends Omit<HeroOverlayProps, 'children'> {
   scorer: string;
+  portrait?: ReactNode;
   assist?: string;
   minute: number;
   /** Score after the goal. */
@@ -251,7 +252,7 @@ export interface GoalBurstProps extends Omit<HeroOverlayProps, 'children'> {
  * thing standing between them and the next moment.
  */
 export function GoalBurst({
-  scorer, assist, minute, homeScore, awayScore, accent = '#c8ff2e', flavour, autoDismiss = 1900, ...overlay
+  scorer, portrait, assist, minute, homeScore, awayScore, accent = '#c8ff2e', flavour, autoDismiss = 1900, ...overlay
 }: GoalBurstProps): ReactNode {
   const m = useDesignMotion();
 
@@ -262,6 +263,7 @@ export function GoalBurst({
   return (
     <HeroOverlay {...overlay} autoDismiss={autoDismiss}>
       <Rays color={`${accent}66`} count={18} seed={`${scorer}${minute}`} />
+      {portrait && <div className="relative mb-3">{portrait}</div>}
 
       <motion.div
         initial={m.reduced ? { opacity: 0 } : { scale: 0.55, opacity: 0 }}

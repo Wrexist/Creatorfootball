@@ -20,6 +20,7 @@ import { GoalMoment } from './GoalMoment';
 import { useDrama } from './useDrama';
 import { RuleCardSheet, SpeedSheet, SubstitutionSheet, TacticsSheet } from './MatchSheets';
 import type { PitchCamera } from './pitchRenderer';
+import { ArtImage } from '@/design/premium/components';
 
 /**
  * The live match.
@@ -76,6 +77,8 @@ export function MatchLiveScreen(): ReactNode {
   const result = useMatchStore((s) => s.result);
   const highlight = useMatchStore((s) => s.highlight);
   const liveFeed = useMatchStore((s) => s.feed);
+  const presentation = useGameStore((s) => s.state?.settings.presentation ?? 'PITCH');
+  const unsaved = useGameStore(s => s.unsaved);
 
   // The most recently opened rule window that has not closed. The pitch takes
   // this as a trigger: a change of value replays the sweep, and null means no
@@ -96,7 +99,7 @@ export function MatchLiveScreen(): ReactNode {
 
   const [intro, setIntro] = useState(true);
   const [camera, setCamera] = useState<PitchCamera>('WIDE');
-  const [speed, setSpeedState] = useState<MatchSpeed>(() => useMatchStore.getState().speed);
+  const [speed, setSpeedState] = useState<MatchSpeed>(() => useGameStore.getState().state?.settings.matchSpeed ?? 'NORMAL');
   const [celebrating, setCelebrating] = useState<MatchEvent | null>(null);
   const [subsUsed, setSubsUsed] = useState(0);
   const [tactics, setTactics] = useState<TacticSetup | null>(null);
@@ -114,6 +117,12 @@ export function MatchLiveScreen(): ReactNode {
 
     simRef.current = sim;
     useMatchStore.getState().attach(sim);
+    const settings = useGameStore.getState().state?.settings;
+    if (settings) {
+      useMatchStore.getState().setSpeed(settings.matchSpeed);
+      useMatchStore.getState().setPresentation(settings.presentation);
+      useMatchStore.getState().setAutoDecisionTimeout(settings.autoDecisionTimeout);
+    }
     setReady(true);
     // Deliberately not `play()` here: the walk-out sequence starts the match
     // when it hands the screen over, and a match already running behind a
@@ -198,16 +207,21 @@ export function MatchLiveScreen(): ReactNode {
   useEffect(() => {
     if (playback !== 'COMPLETE') return;
     sfx.fullTime();
-  }, [playback]);
+  }, [playback, result]);
 
   useEffect(() => {
     // A last-minute winner must be allowed to finish celebrating before the
     // post-match sequence takes the screen, so the handoff waits for the burst.
     if (playback !== 'COMPLETE' || !result || celebrating) return;
     // A short beat on the final whistle: cutting instantly reads as a page load.
-    const timer = setTimeout(() => navigate(`/matchday/result/${result.matchId}`), 900);
-    return () => clearTimeout(timer);
-  }, [playback, result, navigate, celebrating]);
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void useGameStore.getState().recordMatch(result).then(saved => {
+        if (saved && !cancelled) navigate(`/matchday/result/${result.matchId}`);
+      });
+    }, 600);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [playback, result, navigate, celebrating, unsaved]);
 
   /* --- derived, stable ------------------------------------------------- */
 
@@ -341,7 +355,8 @@ export function MatchLiveScreen(): ReactNode {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-base">
+    <div className="cf-live-match relative flex h-full flex-col overflow-hidden bg-base">
+      <ArtImage asset="ambience.night-clear" crop="hero" className="cf-live-backdrop" eager />
       <MatchHeader
         home={context.home}
         away={context.away}
@@ -355,7 +370,7 @@ export function MatchLiveScreen(): ReactNode {
           wide && 'mx-auto w-full max-w-[1180px] grid grid-cols-[minmax(0,1fr)_360px] gap-4',
         )}
       >
-        <PitchStage
+        {presentation === 'PITCH' && <PitchStage
           names={surnames}
           ratings={liveRatings}
           homePalette={homePalette}
@@ -372,7 +387,7 @@ export function MatchLiveScreen(): ReactNode {
           impactStrength={celebrating && (celebrating.side ?? 'home') === playerSide ? 1 : 0.5}
           fill={wide}
           className={wide ? 'h-full min-h-0' : 'shrink-0'}
-        />
+        />}
 
         <StoryPanel
           home={context.home}
@@ -472,6 +487,7 @@ function useAnnouncements(
   celebrating: MatchEvent | null,
   names: ReadonlyMap<string, string>,
 ): { urgent: string | null; polite: string | null } {
+  const commentary = useGameStore((s) => s.state?.settings.commentary ?? true);
   const feed = useMatchStore((s) => s.feed);
   const decision = useMatchStore((s) => s.decision);
   const playback = useMatchStore((s) => s.playback);
@@ -507,6 +523,6 @@ function useAnnouncements(
         polite: null,
       };
     }
-    return { urgent: null, polite: `${minuteLabel(latest.minute)} ${latest.text}` };
-  }, [feed, decision, playback, homeScore, awayScore, playerIsHome, celebrating, names]);
+    return { urgent: null, polite: commentary ? `${minuteLabel(latest.minute)} ${latest.text}` : null };
+  }, [feed, decision, playback, homeScore, awayScore, playerIsHome, celebrating, names, commentary]);
 }

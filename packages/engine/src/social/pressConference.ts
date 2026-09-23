@@ -1854,6 +1854,7 @@ export function answerPressConference(state: GameState, input: PressAnswerInput)
       eventId: conference.anchorEventId,
       openedCycle: cycle,
       settleAfterCycle: cycle,
+      ...(nextFixture(state) ? { fixtureId: nextFixture(state)!.id } : {}),
       tone: entry.answer.warmth < 0 ? 'PROVOCATIVE' : 'DEFIANT',
       stake: entry.answer.stake.weight,
       claim: entry.answer.stake.claim,

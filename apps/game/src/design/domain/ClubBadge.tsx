@@ -1,7 +1,9 @@
-import { memo, useId, type ReactNode } from 'react';
+import { memo, useId, useState, type ReactNode } from 'react';
 import type { BadgeMotif, BadgeShape, ClubVisualIdentity } from '@cf/engine';
 import { cn } from '../cn';
 import { darken, lighten, pickReadable, rgba } from '../color';
+import { crestForVisual } from '../art/club-art';
+import { assetFor } from '../art/manifest';
 
 /**
  * Procedurally generated club badges.
@@ -367,4 +369,12 @@ function ClubBadgeInner({ visual, size = 40, label, flat = false, className }: C
 }
 
 /** Memoised — the league table draws 12 of these and the squad list draws one per row. */
-export const ClubBadge = memo(ClubBadgeInner);
+export const ClubBadge = memo(function TeamCrest(props:ClubBadgeProps): ReactNode {
+  const key = crestForVisual(props.visual);
+  const src = key ? assetFor(key,(props.size ?? 40)>96 ? 'card' : 'thumb') : undefined;
+  const [failed,setFailed] = useState<string>();
+  if (!src || failed === src) return <ClubBadgeInner {...props}/>;
+  return <img src={src} alt={props.label ?? ''} width={props.size ?? 40} height={props.size ?? 40}
+    style={{width:props.size ?? 40,height:props.size ?? 40}}
+    className={cn('cf-team-crest shrink-0 object-contain',props.className)} loading="lazy" decoding="async" onError={()=>setFailed(src)} />;
+});

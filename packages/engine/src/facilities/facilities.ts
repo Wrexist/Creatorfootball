@@ -55,6 +55,14 @@ export function facilityEffect(club: Club, key: string, registry: FacilityRegist
   return total;
 }
 
+/** Recovery effects are rate multipliers: two neutral facilities still heal one week. */
+export function injuryRecoveryPerCycle(club: Club | undefined, registry: FacilityRegistry): number {
+  if (!club) return 1;
+  return registry.facilities().reduce((rate, def) => def.effects.injuryRecovery
+    ? rate * Math.max(0.1, levelValue(def, 'injuryRecovery', facilityLevel(club, def.id)))
+    : rate, 1);
+}
+
 /** Same, but with a caller-supplied default when no facility declares the key at all. */
 export function facilityEffectOr(
   club: Club,
@@ -109,13 +117,15 @@ const failure = (facilityId: string, reason: string): UpgradeOutcome => ({
  * cycles later — that gap is the decision, and it is why a club in trouble
  * cannot simply build its way out.
  */
+export const FACILITY_CREDIT_VALUE = 100_000;
+
 export function upgradeFacility(
   club: Club,
   facilityId: string,
   registry: FacilityRegistry,
   ledger: Ledger,
   ctx: PostContext,
-  opts: { rush?: boolean } = {},
+  opts: { rush?: boolean; creditValue?: number } = {},
 ): UpgradeOutcome {
   const def = registry.facilities().find((d) => d.id === facilityId);
   if (!def) return failure(facilityId, 'No such facility.');
@@ -132,7 +142,7 @@ export function upgradeFacility(
   }
 
   const baseCost = def.upgradeCosts[level] ?? 0;
-  const cost = Math.round(baseCost * (opts.rush ? B.RUSH_COST_MULTIPLIER : 1));
+  const cost = Math.max(0, Math.round(baseCost * (opts.rush ? B.RUSH_COST_MULTIPLIER : 1)) - Math.min(FACILITY_CREDIT_VALUE, Math.max(0, opts.creditValue ?? 0)));
   if (!ledger.canAfford(club.id, cost)) {
     return failure(facilityId, `You cannot afford the ${cost.toLocaleString('en-GB')} this would cost.`);
   }
@@ -165,7 +175,7 @@ export function upgradeFacility(
     toLevel: level + 1,
     cost,
     cycles,
-    effectSummary: def.levelEffects[level] ?? def.description,
+    effectSummary: def.levelEffects[level + 1] ?? def.description,
   };
 }
 
@@ -271,7 +281,7 @@ export function nextUpgrade(
     level: level + 1,
     cost: def.upgradeCosts[level] ?? 0,
     cycles: Math.round((def.upgradeCycles[level] ?? B.DEFAULT_UPGRADE_CYCLES) * B.BUILD_SPEED),
-    effect: def.levelEffects[level] ?? def.description,
+    effect: def.levelEffects[level + 1] ?? def.description,
   };
 }
 

@@ -74,6 +74,9 @@ export interface Creator {
   readonly marketValue: number;
   /** Cycles remaining on their association with the club, if any. */
   readonly dealWeeksRemaining: number | null;
+  /** Agreed at signing; legacy associations have no retroactive charge. */
+  readonly retainerPerCycle?: number;
+  readonly dealSignedCycle?: number;
   /**
    * Season this creator entered the world, set only on life-cycle spawns.
    * Authored roster members carry no stamp and are never aged out.

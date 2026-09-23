@@ -102,6 +102,7 @@ export interface MatchTeam {
   readonly creatorPresence: number;
   readonly ruleCards: readonly SpecialRuleId[];
   readonly isPlayerControlled: boolean;
+  readonly autoPlayRuleCards?: boolean;
 }
 
 export interface MatchConfig {
@@ -699,6 +700,7 @@ export class MatchSimulator {
 
     this.accrueFatigue();
     this.handleRuleWindows();
+    if (this.tick % tpm === 0) this.maybePlayAiCard();
     this.maybeCreatorMoment();
 
     if (this.stoppage > 0) {
@@ -751,6 +753,24 @@ export class MatchSimulator {
         trigger: 'AI_TRAILING_RESPONSE',
         stance: pushUp ? 'PUSH_UP' : 'DROP_DEEPER',
       });
+    }
+  }
+
+  private maybePlayAiCard(): void {
+    for (const team of [this.home, this.away]) {
+      if (!team.team.autoPlayRuleCards || team.team.isPlayerControlled) continue;
+      for (const id of team.team.ruleCards) {
+        if (team.usedCards.has(id)) continue;
+        const def = specialRuleById(id);
+        if (!def) continue;
+        const phase = this.nominalMinute() / this.setup.config.minutes;
+        const own = team.side === 'home' ? this.homeScore : this.awayScore;
+        const against = team.side === 'home' ? this.awayScore : this.homeScore;
+        const defensive = id === 'LOCKDOWN' || id === 'LAST_STAND';
+        // Score-aware and deterministic: wait for a useful moment, never draw RNG each frame.
+        const ready = phase >= Math.max(def.earliestPhase, defensive && own >= against ? 0.55 : 0.35);
+        if (ready && phase <= def.latestPhase && this.playRuleCard(team.side, id)) break;
+      }
     }
   }
 

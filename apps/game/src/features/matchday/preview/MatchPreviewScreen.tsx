@@ -29,6 +29,7 @@ export function MatchPreviewScreen(): ReactNode {
   const fixtureId = params.fixtureId as FixtureId | undefined;
   const navigate = useNavigate();
   const context = useMatchdayContext(fixtureId);
+  const ready = useGameStore((s) => s.phase === 'READY');
   const [simulating, setSimulating] = useState(false);
   const toast = useToast();
 
@@ -69,7 +70,10 @@ export function MatchPreviewScreen(): ReactNode {
       store.attach(sim);
       store.skipToEnd();
       const result = useMatchStore.getState().result;
-      if (result) navigate(`/matchday/result/${result.matchId}`);
+      if (result) {
+        useGameStore.getState().recordMatch(result);
+        navigate(`/matchday/result/${result.matchId}`);
+      }
       else {
         setSimulating(false);
         toast.error(SIM_FAIL.title, SIM_FAIL.description);
@@ -80,7 +84,7 @@ export function MatchPreviewScreen(): ReactNode {
   if (!context || !ourKit) {
     return (
       <Screen title="Matchday" onBack={() => navigate('/matchday')}>
-        {fixtureId === undefined ? (
+        {fixtureId === undefined || ready ? (
           <ErrorState title="No fixture" description="This match could not be found." />
         ) : (
           <>
@@ -111,7 +115,7 @@ export function MatchPreviewScreen(): ReactNode {
             onClick={play}
             className="flex-[2]"
           >
-            Play
+            Play Match
           </GlassButton>
           <GlassButton
             variant="ghost"
@@ -557,7 +561,7 @@ function AvailabilityColumn({
             <span className="min-w-0 flex-1 leading-snug text-ink text-pretty">{player.displayName}</span>
             <PositionChip position={player.position} size="xs" />
             <span className="tnum shrink-0 text-[12px] text-ink-dim">
-              {player.injury?.weeksRemaining ?? 0}w
+              {Math.ceil(player.injury?.weeksRemaining ?? 0)}w
             </span>
           </li>
         ))}

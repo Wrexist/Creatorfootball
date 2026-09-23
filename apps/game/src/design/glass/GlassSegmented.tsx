@@ -56,7 +56,7 @@ export function GlassSegmented<T extends string = string>({
       role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex items-stretch gap-0.5 rounded-pill p-1',
+        'inline-flex items-stretch gap-0.5 overflow-x-auto rounded-pill p-1',
         controlSurface(level),
         block && 'flex w-full',
         className,
@@ -77,9 +77,9 @@ export function GlassSegmented<T extends string = string>({
               onChange(option.value);
             }}
             className={cn(
-              'relative inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill',
+              'relative inline-flex min-w-max flex-1 items-center justify-center gap-1.5 rounded-pill',
               'font-semibold transition-colors duration-[var(--duration-fast)] ease-out-quint',
-              size === 'sm' ? 'min-h-9 px-3 text-label' : 'min-h-11 px-4 text-body',
+              size === 'sm' ? 'min-h-11 px-2.5 text-label' : 'min-h-11 px-3 text-body',
               selected ? 'text-ink' : 'text-ink-dim hover:text-ink-muted',
               option.disabled && 'pointer-events-none opacity-40',
               FOCUS_RING,
@@ -98,7 +98,7 @@ export function GlassSegmented<T extends string = string>({
             {typeof option.label === 'string' ? (
               <FitText
                 role={size === 'sm' ? 'label' : 'body'}
-                lines={2}
+                lines={1}
                 lineHeight={1.1}
                 className="relative text-center"
               >

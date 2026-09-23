@@ -18,6 +18,7 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
+    SystemBars: { style: 'DARK' },
     SplashScreen: {
       backgroundColor: '#08090B',
       showSpinner: false,

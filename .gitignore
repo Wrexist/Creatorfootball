@@ -8,6 +8,8 @@ coverage/
 .env
 .env.*
 !.env.example
+*.keystore
+*.jks
 # Native shells are committed (they carry the Xcode project, plists and asset
 # catalogues); only their build products and synced copies are ignored.
 ios/App/output/

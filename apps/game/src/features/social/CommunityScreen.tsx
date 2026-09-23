@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   campaignOptions, closedPolls, declinePoll, liveCampaigns, milestones, nextMilestone,
   offeredPolls, openPolls, respondToCampaign, runPoll, settlePoll, socialWorld, trustSummary,
-  formatMoney,
+  formatMoney, pollIsBinding,
   type FanCampaign, type FanPoll, type GameState,
 } from '@cf/engine';
 import {
@@ -55,6 +55,7 @@ function PollCard({
         </Text>
       </div>
       <Text role="section" as="p" className="mt-2 text-pretty">{poll.question}</Text>
+      {!pollIsBinding(poll) && <Text role="caption" as="p">Advisory vote: accepting affects supporter trust and records your preference. It does not change club operations.</Text>}
 
       <ul className="mt-2.5 flex flex-col gap-2">
         {poll.options.map((option, index) => (
@@ -77,7 +78,7 @@ function PollCard({
               />
             )}
             <Text role="caption" as="p" className="mt-0.5 text-ink-dim text-pretty">
-              {option.commitment}
+              {pollIsBinding(poll) ? option.commitment : 'Supporter preference; advisory only.'}
             </Text>
           </li>
         ))}
@@ -104,7 +105,7 @@ function PollCard({
               Overrule them
             </GlassButton>
             <GlassButton variant="primary" size="sm" block onClick={() => onSettle(poll.id, true)}>
-              Do what they said
+              {pollIsBinding(poll) ? 'Apply their decision' : 'Accept their advice'}
             </GlassButton>
           </div>
         </>

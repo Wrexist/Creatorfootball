@@ -5,6 +5,8 @@ import {
   NameText, Numeric, Text, cn,
 } from '@/design';
 import { labelForPost, tierFor, toneForPost, type Tier } from '../data';
+import { ArtImage } from '@/design/premium/components';
+import { storyArt } from '@/design/art/manifest';
 
 /**
  * One item in the feed.
@@ -165,6 +167,7 @@ const Lead = memo(function Lead({
 }: FeedItemProps): ReactNode {
   return (
     <article className="glass-2 glass-sheen raised-strong raised-edge relative overflow-hidden rounded-lg p-4">
+      <div className="cf-feed-image"><ArtImage asset={storyArt(post.tags.join(' '))}/></div>
       <Kicker post={post} timeLabel={timeLabel} />
       {/* The lead is the one story of the matchweek, so it gets display type
           and the room to breathe that goes with being the only one. */}

@@ -333,26 +333,9 @@ function MarketView({ state }: { state: GameState }): ReactNode {
         </>
       }
     >
-      <HeroSurface
-        eyebrow={window.open ? 'Window open' : 'Window shut'}
-        title={window.open ? 'You can do business' : 'Nothing can be signed'}
-        subtitle={
-          window.open
-            ? window.closesWeek !== null
-              ? `You are in ${window.phaseLabel}, matchweek ${window.week} of ${window.totalWeeks}. Business closes when the calendar moves on after matchweek ${window.closesWeek}.`
-              : `You are in ${window.phaseLabel}. The window stays open for the rest of the calendar.`
-            : window.opensWeek !== null
-              ? `You are in ${window.phaseLabel}, matchweek ${window.week} of ${window.totalWeeks}. The next window opens at matchweek ${window.opensWeek} — because the calendar reaches it, not because a timer runs down.`
-              : `You are in ${window.phaseLabel}. No further window is scheduled this season.`
-        }
-        texture="stadium"
-        padding="md"
-        footer={
-          <GlassButton variant="primary" onClick={() => navigate(ROUTES.playerSearch)} block>
-            Browse, filter and sort every player
-          </GlassButton>
-        }
-      />
+      <HeroSurface eyebrow={window.open ? 'Window open' : 'Window closed'} texture="haze" padding="md" radius="lg"
+        subtitle={window.open ? (window.closesWeek === 0 ? 'Make your opening signings before the first match.' : window.closesWeek !== null ? `Business closes after week ${window.closesWeek}.` : 'The window stays open for the rest of this season.') : (window.opensWeek !== null ? `You can sign players again in week ${window.opensWeek}. Keep scouting until then.` : 'No further transfer window this season. Keep planning your next squad.')}
+        footer={<GlassButton variant="primary" block onClick={() => navigate(ROUTES.playerSearch)}>Find a player</GlassButton>}/>
 
       <div className="md:hidden">{budgets}</div>
 

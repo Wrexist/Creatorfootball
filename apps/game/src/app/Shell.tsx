@@ -9,7 +9,10 @@ import { PRIMARY_NAV, isImmersive, screenNameFor, sectionFor } from './routes';
 import { SectionNav } from './SectionNav';
 import { trackScreenView } from './analytics';
 import { AppRoutes, ScreenFallback } from './router';
-import { preloadMatchday } from './featureModules';
+import { preloadMatchday, preloadPrimary } from './featureModules';
+import { WorldSceneProvider, sceneForPath } from '@/design/premium/WorldScene';
+import { IdentityProvider } from '@/design/art/IdentityProvider';
+import { SaveStatus } from './SaveStatus';
 
 /**
  * The shell: navigation, screen transitions and screen tracking.
@@ -60,7 +63,7 @@ export function Shell(): ReactNode {
   /* The next thing a player on the home screen does is play a match, and the
      match chunk is the biggest one. Fetch it while they are reading. */
   useEffect(() => {
-    if (pathname === '/home') preloadMatchday();
+    if (pathname === '/home') { preloadMatchday(); preloadPrimary(); }
   }, [pathname]);
 
   const badges = useMemo(
@@ -77,7 +80,7 @@ export function Shell(): ReactNode {
   const variants = useMemo(
     () => ({
       hidden: { opacity: 0, y: m.reduced ? 0 : 10 },
-      visible: { opacity: 1, y: 0, transition: m.transition.medium },
+      visible: { opacity: 1, y: 0, transition: m.reduced ? { duration: 0 } : { duration: 0.26 } },
       exit: { opacity: 0, y: m.reduced ? 0 : -6, transition: m.transition.micro },
     }),
     [m],
@@ -94,8 +97,11 @@ export function Shell(): ReactNode {
       {...(badges ? { badges } : {})}
       navHeader={<NavHeader />}
     >
+      <IdentityProvider state={state}>
+      <SaveStatus />
+      <WorldSceneProvider value={sceneForPath(pathname)}>
       <HeaderSlotProvider accessory={immersive ? null : <SectionNav />}>
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false}>
         <motion.main
           key={screenNameFor(pathname)}
           variants={variants}
@@ -110,6 +116,8 @@ export function Shell(): ReactNode {
         </motion.main>
         </AnimatePresence>
       </HeaderSlotProvider>
+      </WorldSceneProvider>
+      </IdentityProvider>
     </AppShell>
   );
 }

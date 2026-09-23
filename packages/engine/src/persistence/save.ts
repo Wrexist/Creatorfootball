@@ -103,6 +103,7 @@ export function migrate(raw: Record<string, unknown>, from: number): Result<Game
 /** Structural checks that must hold for a save to be considered loadable. */
 export function validateState(state: GameState): string[] {
   const problems: string[] = [];
+  if (!state || typeof state !== 'object') return ['Invalid state'];
   const check = (condition: unknown, message: string) => { if (!condition) problems.push(message); };
 
   check(typeof state.saveId === 'string' && state.saveId.length > 0, 'Missing saveId');
@@ -118,6 +119,10 @@ export function validateState(state: GameState): string[] {
   // ship, because it silently duplicates value. Check it on every load.
   const owners = new Map<string, string>();
   for (const club of Object.values(state.clubs ?? {})) {
+    if (!club || !Array.isArray(club.squad) || !Array.isArray(club.youthSquad)) {
+      problems.push('Invalid club squad');
+      continue;
+    }
     for (const playerId of [...club.squad, ...club.youthSquad]) {
       const existing = owners.get(playerId);
       if (existing && existing !== club.id) {
@@ -157,10 +162,14 @@ export async function saveGame(
   };
 
   // Promote the current save to backup before writing the new one.
-  const previous = await storage.get(SAVE_KEY);
-  if (previous) await storage.set(BACKUP_KEY, previous);
-
-  await storage.set(SAVE_KEY, JSON.stringify(envelope));
+  try {
+    const previous = await storage.get(SAVE_KEY);
+    const validPrevious = previous ? await readEnvelope(storage, SAVE_KEY) : null;
+    if (previous && validPrevious?.ok) await storage.set(BACKUP_KEY, previous);
+    await storage.set(SAVE_KEY, JSON.stringify(envelope));
+  } catch (error) {
+    return err(`Save write failed: ${String(error)}`);
+  }
 
   const club = state.clubs[state.playerClubId];
   const manager = state.managers[state.playerManagerId];
@@ -174,7 +183,8 @@ export async function saveGame(
     savedAt: now,
     version: SAVE_VERSION,
   };
-  await storage.set(META_KEY, JSON.stringify(meta));
+  try { await storage.set(META_KEY, JSON.stringify(meta)); }
+  catch (error) { return err(`Save metadata write failed: ${String(error)}`); }
   return ok(meta);
 }
 
@@ -221,7 +231,8 @@ export async function loadGame(
 ): Promise<Result<{ state: GameState; recoveredFromBackup: boolean }, LoadError>> {
   const primary = await readEnvelope(storage, SAVE_KEY);
   if (primary.ok) return ok({ state: primary.value, recoveredFromBackup: false });
-  if (primary.error.code === 'NOT_FOUND') return err(primary.error);
+  // Do not overwrite a newer save by silently selecting an older backup.
+  if (primary.error.code === 'UNSUPPORTED_VERSION') return err(primary.error);
 
   const backup = await readEnvelope(storage, BACKUP_KEY);
   if (backup.ok) return ok({ state: backup.value, recoveredFromBackup: true });

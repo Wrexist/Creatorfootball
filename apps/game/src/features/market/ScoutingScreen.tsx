@@ -1,7 +1,7 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  knowledgeConfidence,
+  knowledgeConfidence, scoutReportCost, scoutReportQuote,
   type GameState,
   type Player,
   type PlayerId,
@@ -17,6 +17,7 @@ import { ROUTES } from '@/app/routes';
 import { GateScreen, useGameStatus } from './gate';
 import { useClubLookup } from './clubs';
 import { orderScoutReport, scoutingCapacity } from './engine';
+import { contentRegistry } from '@/state/content';
 import { PlayerRow } from './components/PlayerRow';
 import { AttributeDossier, ConfidenceMeter, PotentialPill, useKnowledge } from './components/scouting';
 
@@ -106,6 +107,8 @@ const ReportCard = memo(function ReportCard({ player }: { player: Player }): Rea
 /* --- depth picker ------------------------------------------------------- */
 
 interface DepthSheetProps {
+  state: GameState;
+  credits: number;
   open: boolean;
   player: Player | null;
   lastCosts: Partial<Record<ScoutDepth, number>>;
@@ -113,7 +116,7 @@ interface DepthSheetProps {
   onPick: (depth: ScoutDepth) => void;
 }
 
-function DepthSheet({ open, player, lastCosts, onClose, onPick }: DepthSheetProps): ReactNode {
+function DepthSheet({ open, player, lastCosts, credits, state, onClose, onPick }: DepthSheetProps): ReactNode {
   return (
     <GlassSheet
       open={open && player !== null}
@@ -123,7 +126,9 @@ function DepthSheet({ open, player, lastCosts, onClose, onPick }: DepthSheetProp
       size="auto"
     >
       <div className="flex flex-col gap-2">
-        {DEPTHS.map((depth) => (
+        {DEPTHS.map((depth) => {
+          const quote = scoutReportQuote(state, depth.id, contentRegistry());
+          return (
           <button
             key={depth.id}
             type="button"
@@ -144,11 +149,13 @@ function DepthSheet({ open, player, lastCosts, onClose, onPick }: DepthSheetProp
             <span className="text-[13px] leading-relaxed text-ink-muted text-pretty">
               {depth.blurb}
             </span>
+            <span className="text-[13px] text-ink">{credits > 0 ? 'Use 1 earned scout credit · no cash charge' : <>Pay <MoneyLabel amount={scoutReportCost(depth.id)} size="sm" /> now</>}</span>
+            <span className="text-[13px] text-ink-muted">{quote.cycles} week{quote.cycles === 1 ? '' : 's'} · up to {Math.round(quote.targetConfidence * 100)}% confidence</span>
           </button>
-        ))}
+          );
+        })}
         <p className="mt-1 text-[12px] leading-relaxed text-ink-dim text-pretty">
-          The exact fee is set by your scouting network and comes straight out of the club account —
-          you will see it posted in your finances the moment the scout goes out.
+          Choosing a report confirms the displayed cost. One earned scout credit covers any report and is used first.
         </p>
       </div>
     </GlassSheet>
@@ -355,6 +362,8 @@ function ScoutingView({ state }: { state: GameState }): ReactNode {
       </GlassPanel>
 
       <DepthSheet
+        state={state}
+        credits={state.inventory.scoutCredits}
         open={picking !== null}
         player={pickingPlayer}
         lastCosts={lastCosts}

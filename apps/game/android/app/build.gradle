@@ -1,0 +1,86 @@
+apply plugin: 'com.android.application'
+
+// CI supplies explicit store versions; disconnected qualification keeps its defaults.
+def releaseRequested = System.getenv('CF_ANDROID_STORE_RELEASE') == 'true'
+def releaseVersionCode = System.getenv('CF_ANDROID_VERSION_CODE') ?: '1'
+def releaseVersionName = System.getenv('CF_ANDROID_VERSION_NAME') ?: '1.0'
+if (!(releaseVersionCode ==~ /[1-9][0-9]*/) || releaseVersionCode.toBigInteger() > 2100000000) {
+    throw new GradleException('CF_ANDROID_VERSION_CODE must be between 1 and 2100000000.')
+}
+if (!(releaseVersionName ==~ /[0-9]+\.[0-9]+(\.[0-9]+)?/)) {
+    throw new GradleException('CF_ANDROID_VERSION_NAME must be a numeric release version.')
+}
+if (releaseRequested) {
+    ['CF_ANDROID_VERSION_CODE', 'CF_ANDROID_VERSION_NAME', 'CF_ANDROID_KEYSTORE',
+     'CF_ANDROID_STORE_PASSWORD', 'CF_ANDROID_KEY_ALIAS', 'CF_ANDROID_KEY_PASSWORD'].each { name ->
+        if (!System.getenv(name)) throw new GradleException("Missing required release setting: ${name}")
+    }
+    if (!file(System.getenv('CF_ANDROID_KEYSTORE')).isFile()) {
+        throw new GradleException('The Android upload keystore file does not exist.')
+    }
+}
+
+android {
+    namespace = "com.creatorfootball.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.creatorfootball.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode releaseVersionCode.toInteger()
+        versionName releaseVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            def path = System.getenv('CF_ANDROID_KEYSTORE')
+            if (path) {
+                storeFile file(path)
+                storePassword System.getenv('CF_ANDROID_STORE_PASSWORD')
+                keyAlias System.getenv('CF_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('CF_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (System.getenv('CF_ANDROID_KEYSTORE')) signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   facilityLevel, isProjectKey, nextUpgrade, pendingProjects, playerClub, setClub, totalUpkeep,
   upgradeFacility,
+  FACILITY_CREDIT_VALUE,
   type Club, type FacilityDef, type GameState, type UpgradeOutcome,
 } from '@cf/engine';
 import {
@@ -14,6 +15,8 @@ import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
 import { facilityDefs, ledgerOf, postContextOf } from './bridge';
+import { ArtImage } from '@/design/premium/components';
+import { facilityArt } from '@/design/art/manifest';
 
 /**
  * Facilities.
@@ -55,10 +58,9 @@ const EFFECT_LABELS: Record<string, string> = {
   atmosphere: 'Atmosphere',
 };
 
-const formatEffect = (key: string, value: number): string => {
-  if (key === 'stadiumCapacity') return `+${Math.round(value).toLocaleString('en-GB')} seats`;
-  if (Math.abs(value) < 3) return `${value >= 0 ? '+' : ''}${Math.round(value * 100)}%`;
-  return `${value >= 0 ? '+' : ''}${Math.round(value)}`;
+const formatEffect = (_key: string, value: number): string => {
+  // Content tables store multipliers (including capacity), not flat additions.
+  return `×${value.toFixed(2)}`;
 };
 
 function LevelPips({ level, max }: { level: number; max: number }): ReactNode {
@@ -97,7 +99,11 @@ const FacilityCard = memo(function FacilityCard({
   const effectKeys = Object.keys(def.effects);
 
   return (
-    <GlassPanel padding="md">
+    <GlassPanel padding="md" className="cf-facility-card">
+      <div className={`cf-facility-art ${level === 0 ? 'cf-unbuilt' : ''}`}>
+        <ArtImage asset={facilityArt(def.id,level)} />
+        <span>{building ? 'Under construction' : level === 0 ? 'A future investment' : `Your ${def.name.toLowerCase()}`}</span>
+      </div>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -118,7 +124,7 @@ const FacilityCard = memo(function FacilityCard({
       </div>
 
       <p className="mt-3 text-[13px] leading-relaxed text-ink text-pretty">
-        {level > 0 ? row.currentEffect : 'Not built. You get nothing from this yet.'}
+        {row.currentEffect}
       </p>
 
       {building ? (
@@ -186,10 +192,10 @@ const FacilityCard = memo(function FacilityCard({
                     key={index}
                     className={cn(
                       'flex gap-2 text-[12px] leading-relaxed text-pretty',
-                      index + 1 <= level ? 'text-ink' : 'text-ink-dim',
+                      index <= level ? 'text-ink' : 'text-ink-dim',
                     )}
                   >
-                    <span className="tnum shrink-0 font-semibold">{index + 1}</span>
+                    <span className="tnum shrink-0 font-semibold">{index}</span>
                     <span>{text}</span>
                   </li>
                 ))}
@@ -241,8 +247,8 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
         level,
         next,
         building: project ? { targetLevel: project.targetLevel, cyclesRemaining: project.cyclesRemaining } : null,
-        affordable: next ? balance >= next.cost : false,
-        currentEffect: def.levelEffects[level - 1] ?? def.description,
+        affordable: next ? balance >= Math.max(0, next.cost - (state.inventory.facilityCredits > 0 ? FACILITY_CREDIT_VALUE : 0)) : false,
+        currentEffect: def.levelEffects[level] ?? def.description,
       };
     });
 
@@ -276,10 +282,12 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
         { facilities: () => facilityDefs() },
         ledger,
         postContextOf(current),
-        { rush },
+        { rush, creditValue: current.inventory.facilityCredits > 0 ? FACILITY_CREDIT_VALUE : 0 },
       );
       if (!outcome.ok || !outcome.club) return current;
-      return { ...setClub(current, outcome.club), ledger: ledger.snapshot() };
+      return { ...setClub(current, outcome.club), ledger: ledger.snapshot(), inventory: { ...current.inventory,
+        facilityCredits: Math.max(0, current.inventory.facilityCredits - (current.inventory.facilityCredits > 0 ? 1 : 0)),
+      } };
     });
     const result = outcome as UpgradeOutcome | null;
     setFeedback(result ? { ok: result.ok, text: result.reason } : null);
@@ -287,6 +295,8 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
   };
 
   const pendingNext = pending ? nextUpgrade(data.club, pending.id, { facilities: () => facilityDefs() }) : null;
+  const creditDiscount = state.inventory.facilityCredits > 0 ? Math.min(FACILITY_CREDIT_VALUE, pendingNext?.cost ?? 0) : 0;
+  const dueNow = Math.max(0, (pendingNext?.cost ?? 0) - creditDiscount);
 
   return (
     <Screen
@@ -369,7 +379,7 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
         open={pending !== null}
         onClose={() => setPending(null)}
         title={pending ? `Upgrade ${pending.name}?` : ''}
-        subtitle={pendingNext ? `Level ${pendingNext.level} · ${formatMoney(pendingNext.cost)}` : undefined}
+        subtitle={pendingNext ? `Level ${pendingNext.level} · ${formatMoney(dueNow)}` : undefined}
         footer={
           pending && pendingNext ? (
             <div className="flex flex-col gap-2">
@@ -385,10 +395,11 @@ function FacilitiesBody({ state }: { state: GameState }): ReactNode {
           <div className="flex flex-col gap-3">
             <p className="text-[14px] leading-relaxed text-ink text-pretty">{pendingNext.effect}</p>
             <GlassPanel nested level={1} padding="sm">
-              <KeyValueRow label="Cost now" value={formatMoney(pendingNext.cost)} emphasis />
+              {creditDiscount > 0 && <KeyValueRow label="One earned credit" value={`−${formatMoney(creditDiscount)}`} hint="Unused credit value is not carried forward" />}
+              <KeyValueRow label="Cost now" value={formatMoney(dueNow)} emphasis />
               <KeyValueRow label="Ready in" value={pendingNext.cycles === 0 ? 'Immediately' : `${pendingNext.cycles} weeks`} />
               <KeyValueRow label="Upkeep after" value={`${formatMoney(pending.upkeepPerCycle[pendingNext.level] ?? 0)}/wk`} />
-              <KeyValueRow label="Cash left" value={formatMoney(data.balance - pendingNext.cost)} divided={false} />
+              <KeyValueRow label="Cash left" value={formatMoney(data.balance - dueNow)} divided={false} />
             </GlassPanel>
             <p className="text-[12px] leading-relaxed text-ink-muted text-pretty">
               The cost leaves your account immediately and the benefit only arrives when the build completes. Leave upkeep

@@ -18,6 +18,7 @@ import { CREATOR_BALANCE } from '../creators/balance';
 import { facilityEffect } from '../facilities/facilities';
 import type { ContentRegistry } from '../content';
 import type { GameEventFactory } from './eventFactory';
+import { ensureSeniorContracts } from './seniorContracts';
 
 /**
  * The end of a season, and the start of the next one.
@@ -405,5 +406,5 @@ export function rolloverSeason(
     season: nextNumber,
   }, { importance: 4 }));
 
-  return { state: next, events: emitted, summary, championClubId: champion, retired, promoted };
+  return { state: ensureSeniorContracts(next), events: emitted, summary, championClubId: champion, retired, promoted };
 }

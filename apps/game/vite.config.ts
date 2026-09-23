@@ -1,9 +1,14 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
+import { validatePurchaseBuild } from './src/commerce/config';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const envDir = fileURLToPath(new URL('.', import.meta.url));
+  validatePurchaseBuild({ ...loadEnv(mode, envDir, ''), ...process.env });
+  return {
+  envDir,
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -41,5 +46,12 @@ export default defineConfig({
       },
     },
   },
-  server: { host: true, port: 5173 },
+  // LAN testing is explicit: `pnpm dev --host 0.0.0.0` on a trusted network.
+  server: { host: '127.0.0.1', port: 5173,
+    // Native builds generate HTML reports and copied bundles. They must not
+    // trigger page reloads that discard an in-progress development session.
+    watch: { ignored: ['**/android/**', '**/ios/**', '**/dist/**'] },
+  },
+  preview: { host: '127.0.0.1' },
+  };
 });

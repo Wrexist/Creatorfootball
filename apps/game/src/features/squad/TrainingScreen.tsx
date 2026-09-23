@@ -14,6 +14,8 @@ import {
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
+import { ArtImage } from '@/design/premium/components';
+import { PROGRAMME_ART } from '@/design/art/manifest';
 import { facilityRegistry } from './bridge';
 
 /**
@@ -59,11 +61,12 @@ const ProgramCard = memo(function ProgramCard({
       onClick={() => onSelect(program.id)}
       aria-pressed={active}
       className={cn(
-        'w-full rounded-lg px-4 py-3.5 text-left',
+        'cf-program-card w-full rounded-lg px-4 py-3.5 text-left',
         'outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base',
         active ? 'bg-volt/12 ring-1 ring-volt/40' : 'bg-white/[0.03] hover:bg-white/[0.06]',
       )}
     >
+      <ArtImage asset={PROGRAMME_ART[program.id as keyof typeof PROGRAMME_ART] ?? 'object.training-cones'} className="cf-program-art"/>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold text-ink">{program.name}</h3>

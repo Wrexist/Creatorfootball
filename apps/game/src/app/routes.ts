@@ -53,6 +53,8 @@ export const ROUTES = {
   rewards: '/rewards',
   store: '/store',
   contentPacks: '/settings/content',
+  localSaves: '/settings/saves',
+  club3d: '/club/3d',
   settings: '/settings',
   gallery: '/dev/gallery',
 } as const;

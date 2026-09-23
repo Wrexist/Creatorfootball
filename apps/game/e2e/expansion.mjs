@@ -1,0 +1,81 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const base=process.argv[2]??'http://127.0.0.1:4173';
+const out=fileURLToPath(new URL('../../../artifacts/expansion/screenshots/',import.meta.url)); await mkdir(out,{recursive:true});
+const browser=await chromium.launch({args:['--enable-unsafe-swiftshader'],...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+try {
+  const context=await browser.newContext({viewport:{width:393,height:852},deviceScaleFactor:1});
+  const page=await context.newPage(); page.setDefaultTimeout(25000);
+  const errors=[], requests=[]; page.on('pageerror',e=>errors.push(String(e))); page.on('request',r=>requests.push(r.url()));
+  const shot=async name=>{await page.evaluate(()=>document.fonts.ready); await page.waitForTimeout(550); await page.screenshot({path:resolve(out,`${name}.png`)});};
+  await page.goto(base);
+  await page.getByRole('button',{name:'Start your career',exact:true}).click();
+  await page.getByRole('button',{name:/Vera Lindqvist/}).click();
+  await page.getByRole('button',{name:'Next: your club',exact:true}).click();
+  await page.getByRole('button',{name:/Larkspur Wolves of/}).click();
+  await page.getByRole('button',{name:'Take over Larkspur',exact:true}).click();
+  await page.getByRole('button',{name:'Meet your squad',exact:true}).click();
+  await page.goto(`${base}/home`); await page.getByText('Manager’s desk',{exact:false}).first().waitFor(); await shot('home');
+  assert.equal(requests.some(url=>/ModelViewer-|three\.module|\.glb$/.test(url)),false,'3D must not load on Home');
+  await page.goto(`${base}/store`); await page.getByText('Club collection',{exact:true}).first().waitFor(); await shot('store');
+  await page.getByRole('button',{name:'Explore pack',exact:true}).first().click();
+  await page.getByRole('button',{name:'Purchase unavailable',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Purchase unavailable',exact:true}).isDisabled(),true);
+  await shot('store-pack'); await page.keyboard.press('Escape');
+  await page.goto(`${base}/settings/content`);
+  await page.getByRole('button',{name:'Enable Touchline Voices',exact:true}).click();
+  await page.getByRole('button',{name:'Disable Touchline Voices',exact:true}).waitFor();
+  await page.reload(); await page.getByRole('button',{name:'Disable Touchline Voices',exact:true}).waitFor(); await shot('content-packs');
+  await page.goto(`${base}/settings/saves`);
+  const downloadEvent=page.waitForEvent('download'); await page.getByRole('button',{name:'Export career file',exact:true}).click();
+  const download=await downloadEvent; const raw=await readFile(await download.path(),'utf8');
+  assert.ok(JSON.parse(raw).state.settings.enabledPackIds.includes('touchline-voices'));
+  const before=await page.evaluate(()=>localStorage.getItem('cf.save.v1'));
+  await page.locator('input[type=file]').setInputFiles({name:'broken.json',mimeType:'application/json',buffer:Buffer.from('{}')});
+  await page.getByRole('alert').filter({hasText:'damaged'}).waitFor();
+  assert.equal(await page.evaluate(()=>localStorage.getItem('cf.save.v1')),before);
+  await page.reload(); await page.getByRole('button',{name:'Export career file',exact:true}).waitFor(); await shot('local-saves');
+  await page.locator('input[type=file]').setInputFiles({name:'career.json',mimeType:'application/json',buffer:Buffer.from(raw)});
+  await page.getByRole('button',{name:'Restore this career',exact:true}).waitFor(); await shot('save-inspection');
+  await page.getByRole('button',{name:'Restore this career',exact:true}).click();
+  await page.getByRole('button',{name:'Restore career',exact:true}).click();
+  await page.waitForURL('**/home');
+  await page.goto(`${base}/club/3d`); await page.getByRole('button',{name:'Open interactive 3D',exact:true}).click();
+  await page.getByRole('button',{name:'Rotate left',exact:true}).waitFor(); await shot('club-3d');
+  const metrics=[];
+  for(const scene of ['Campus','Kit','Trophy','Ball']) {
+    await page.getByRole('radio',{name:scene,exact:true}).click();
+    await page.getByRole('button',{name:'Rotate left',exact:true}).waitFor(); await page.waitForTimeout(350);
+    await page.getByRole('button',{name:'Rotate right',exact:true}).click();
+    await page.getByRole('button',{name:'Zoom in',exact:true}).click();
+    await page.getByRole('button',{name:'Reset view',exact:true}).click(); await page.waitForTimeout(150);
+    const data=await page.locator('[data-draw-calls]').evaluate(el=>({...el.dataset}));
+    assert.ok(Number(data.drawCalls)<=90); assert.ok(Number(data.triangles)<=50000);
+    await page.waitForTimeout(400);
+    assert.equal(await page.locator('[data-draw-calls]').getAttribute('data-frames'),data.frames,'Viewer must stop drawing while idle');
+    metrics.push({scene,...data}); await shot(`3d-${scene.toLowerCase()}`);
+  }
+  for(const size of [{width:360,height:800},{width:430,height:932}]) {
+    await page.setViewportSize(size); await page.goto(`${base}/settings/saves`);
+    await page.getByRole('button',{name:'Export career file',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await shot(`saves-${size.width}`);
+  }
+  assert.deepEqual(errors,[]);
+  assert.equal(requests.some(url=>/supabase|revenuecat\.com/.test(url)),false,'Web career must remain local');
+  const recoveryContext=await browser.newContext({viewport:{width:393,height:852}});
+  await recoveryContext.addInitScript(()=>{localStorage.setItem('cf.save.v1','broken');localStorage.setItem('cf.save.backup.v1','broken');});
+  const recovery=await recoveryContext.newPage();
+  await recovery.goto(base); await recovery.getByRole('button',{name:'Import a career backup',exact:true}).click();
+  await recovery.locator('input[type=file]').setInputFiles({name:'restored.json',mimeType:'application/json',buffer:Buffer.from(raw)});
+  await recovery.getByRole('button',{name:'Restore this career',exact:true}).click();
+  await recovery.getByRole('button',{name:'Restore career',exact:true}).click();
+  await recovery.waitForURL('**/home');
+  await recoveryContext.close();
+  await writeFile(resolve(out,'metrics.json'),JSON.stringify({renderer:'Chromium software WebGL, not physical-phone timing',metrics,errors},null,2));
+  console.log('PASS: local export/import/recovery, pack persistence, store unavailable state, 4 GLB runtime imports, controls, idle rendering and responsive screens.');
+} finally {await browser.close();}

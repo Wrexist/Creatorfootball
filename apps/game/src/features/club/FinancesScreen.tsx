@@ -139,6 +139,7 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
       balance: ledger.cashOf(club.id),
       transactions: ledger.ledgerFor(club.id, 40),
       wages: squadWageBill(state, club.id),
+      retainers: Object.values(state.creators).filter(c => c.clubId === club.id && (c.dealWeeksRemaining ?? 0) > 0).reduce((n,c) => n + (c.retainerPerCycle ?? 0), 0),
       usage: wageBudgetUsage(state, club.id),
       upkeep: totalUpkeep(club, { facilities: () => facilityDefs() }),
       balanceTrend: history.map((row) => row.closingBalance),
@@ -167,11 +168,13 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
           ]}
         />
       }
+      asideOnMobile
       aside={
         <>
           <GlassPanel title="Standing orders" padding="md">
             <KeyValueRow label="Wage bill" value={`${formatMoney(data.wages)}/wk`} hint={`Budget ${formatMoney(club.finance.wageBudgetPerCycle)}`} />
             <KeyValueRow label="Facility upkeep" value={`${formatMoney(data.upkeep)}/wk`} />
+            <KeyValueRow label="Creator retainers" value={`${formatMoney(data.retainers)}/wk`} hint="Agreed creator contracts, separate from the squad wage budget" />
             <KeyValueRow label="Transfer budget" value={formatMoney(club.finance.transferBudget)} />
             <KeyValueRow label="Debt" value={formatMoney(club.finance.debt)} divided={false} />
           </GlassPanel>
@@ -203,6 +206,15 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
           footnote={`${formatMoney(data.incomeTotal)} in · ${formatMoney(data.spendTotal)} out`}
         />
       </StatGrid>
+
+      <GlassPanel padding="md" className="cf-financial-outlook">
+        <p className="cf-eyebrow">The weeks ahead</p>
+        <div className="cf-squad-metrics">
+          <span><strong>{club.finance.lastCycleExpenditure > club.finance.lastCycleIncome ? `${Math.max(0,Math.floor(data.balance/(club.finance.lastCycleExpenditure-club.finance.lastCycleIncome)))}w` : state.clock.cycle > 0 ? 'Stable' : '—'}</strong><small>{state.clock.cycle > 0 ? 'Runway at last week’s net' : 'Play a week for a forecast'}</small></span>
+          <span><strong>{formatMoney(club.finance.lastCycleIncome-club.finance.lastCycleExpenditure)}</strong><small>Last week’s net</small></span>
+        </div>
+        <p className="text-caption text-ink-muted">Keep room for your next signing, facility upgrade, and the people who make this club.</p>
+      </GlassPanel>
 
       {/* --- wages against budget ------------------------------------- */}
       <GlassPanel padding="md" accent={data.usage > 1 ? 'danger' : 'none'}>

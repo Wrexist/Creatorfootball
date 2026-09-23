@@ -1,4 +1,6 @@
-import { memo, useMemo, type ReactNode } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
+import { usePortraitAsset } from '../art/IdentityProvider';
+import { assetFor } from '../art/manifest';
 import { cn } from '../cn';
 import { SeedStream } from '../seed';
 import { darken, lighten, rgba } from '../color';
@@ -292,7 +294,17 @@ function PortraitInner({
  * screens. Props are all primitives except `colors`, so callers should hoist
  * that object rather than building it inline in a map.
  */
-export const PlayerPortrait = memo(PortraitInner);
+export const PlayerPortrait = memo(function PlayerPortrait(props: PlayerPortraitProps): ReactNode {
+  const key = usePortraitAsset(props.seed);
+  const size = props.size ?? 48;
+  const src = key ? assetFor(key, size > 96 ? 'card' : 'thumb') : undefined;
+  const [failed, setFailed] = useState<string>();
+  if (!src || failed === src) return <PortraitInner {...props}/>;
+  return <span className={cn('cf-player-portrait relative inline-flex shrink-0 overflow-hidden',SHAPE_CLASS[props.shape ?? 'circle'],props.className)} style={{width:size,height:size,border:props.ring ? `2px solid ${props.ring}` : undefined,background:props.colors?.primary}}>
+    <img src={src} alt={props.label ?? ''} loading="lazy" decoding="async" onError={() => setFailed(src)} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+    {props.kit !== false && props.colors && <span aria-hidden="true" style={{position:'absolute',bottom:0,left:0,right:0,height:'9%',background:props.colors.primary,borderTop:`1px solid ${props.colors.secondary ?? props.colors.primary}`}}/>}
+  </span>;
+});
 
 export interface CreatorAvatarProps extends Omit<PlayerPortraitProps, 'kit'> {
   /** Draws the verified check overlay used across the social feed. */

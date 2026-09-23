@@ -8,6 +8,9 @@ import {
 } from '@cf/engine';
 import { storage } from '@/platform/storage';
 import { contentRegistry } from '@/state/content';
+import { withVisualIdentity } from '@/design/art/identity';
+import { useMatchStore } from './matchStore';
+import { SaveCoordinator, SaveConflict } from '@/platform/saveCoordinator';
 
 /**
  * The single bridge between the engine and the interface.
@@ -44,13 +47,18 @@ interface GameStoreState {
    * because the failure belongs to persistence, not to whatever button ran it.
    */
   persistFailed: boolean;
+  unsaved: boolean;
+  saveConflict: boolean;
+  saveError: string | null;
 
   boot: () => Promise<void>;
   startNewGame: (opts: { seed?: string; manager: ManagerChoice; club: ClubChoice }) => Promise<void>;
   advance: (playerResult?: MatchResult | null) => Promise<CycleSummary | null>;
   createSimulator: (fixtureId: FixtureId) => MatchSimulator | null;
   apply: (mutate: (state: GameState) => GameState) => void;
-  save: () => Promise<void>;
+  recordMatch: (result: MatchResult) => Promise<boolean>;
+  save: () => Promise<boolean>;
+  replaceCareer: (state: GameState) => Promise<boolean>;
   abandon: () => Promise<void>;
   clearCycleFeedback: () => void;
   clearPersistFailed: () => void;
@@ -67,15 +75,31 @@ async function persist(state: GameState): Promise<SaveMeta | null> {
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => {
+  let generation = 0;
+  let writes: Promise<unknown> = Promise.resolve();
+  const coordinator = new SaveCoordinator(storage);
   /**
    * Shared by every write path. `null` means storage rejected the write; the
    * caller has usually already shown the new state, so all that is left is to
    * make sure the player hears about it.
    */
   const notePersist = async (next: GameState): Promise<SaveMeta | null> => {
-    const meta = await persist(next);
-    if (meta === null) set({ persistFailed: true });
-    return meta;
+    const ownGeneration = generation;
+    const pending = writes.then(async () => {
+      if (ownGeneration !== generation) return null;
+      try {
+        const meta = await coordinator.write(() => persist(next));
+        if (ownGeneration === generation) set({ ...(meta ? { meta } : {}), persistFailed: meta === null, saveError: meta ? null : 'Storage rejected the write.', unsaved: meta === null || get().state !== next });
+        return meta;
+      } catch (error) {
+        if (ownGeneration === generation) set({ persistFailed: true, unsaved: true, saveError: String(error),
+          ...(error instanceof SaveConflict ? { saveConflict: true, error: error.message } : {}),
+        });
+        return null;
+      }
+    });
+    writes = pending;
+    return pending;
   };
 
   return {
@@ -87,16 +111,28 @@ export const useGameStore = create<GameStoreState>((set, get) => {
   busy: false,
   lastCycle: null,
   persistFailed: false,
+  unsaved: false,
+  saveConflict: false,
+  saveError: null,
 
   boot: async () => {
-    set({ phase: 'BOOTING', error: null });
+    const ownGeneration = ++generation;
+    set({ phase: 'BOOTING', error: null, busy: false });
     try {
+      await writes;
+      const revision = await coordinator.readRevision();
       const loaded = await loadGame(storage);
+      if (ownGeneration !== generation) return;
+      if (revision !== await coordinator.readRevision()) throw new SaveConflict();
+      coordinator.acceptRevision(revision);
+      set({ saveConflict: false, unsaved: false, persistFailed: false, saveError: null });
       if (loaded.ok) {
+        const meta = await loadMeta(storage);
+        if (ownGeneration !== generation) return;
         set({
           phase: 'READY',
-          state: loaded.value.state,
-          meta: await loadMeta(storage),
+          state: withVisualIdentity(loaded.value.state),
+          meta,
           recoveredFromBackup: loaded.value.recoveredFromBackup,
         });
         return;
@@ -115,21 +151,27 @@ export const useGameStore = create<GameStoreState>((set, get) => {
             : 'Your save could not be read and no usable backup was found.',
       });
     } catch (error) {
+      if (ownGeneration !== generation) return;
       set({ phase: 'ERROR', error: String(error) });
     }
   },
 
   startNewGame: async ({ seed, manager, club }) => {
+    if (get().saveConflict) return;
+    const ownGeneration = ++generation;
+    useMatchStore.getState().reset();
     set({ phase: 'CREATING', busy: true, error: null });
     try {
-      const state = createNewGame({
+      const state = withVisualIdentity(createNewGame({
         // A player-visible seed makes worlds shareable and bugs reproducible.
         seed: seed ?? Math.floor(Date.now() % 1e9).toString(36),
         now: Date.now(),
         manager,
         club,
-      });
+      }));
+      set({ state });
       const meta = await notePersist(state);
+      if (ownGeneration !== generation) return;
       set({ phase: 'READY', state, meta, busy: false, lastCycle: null });
     } catch (error) {
       set({ phase: 'ERROR', error: String(error), busy: false });
@@ -138,20 +180,25 @@ export const useGameStore = create<GameStoreState>((set, get) => {
 
   advance: async (playerResult) => {
     const current = get().state;
-    if (!current || get().busy) return null;
+    if (!current || get().busy || get().saveConflict) return null;
+    if (playerResult && Object.values(current.fixtures).some((f) =>
+      f.status === 'COMPLETED' && f.matchId === playerResult.matchId)) return null;
+    const ownGeneration = generation;
     set({ busy: true });
     try {
+      // Paint the busy state before the synchronous engine runs.
+      if (typeof requestAnimationFrame === 'function') await new Promise<void>(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+      if (ownGeneration !== generation) return null;
       const result = advanceCycle(current, {
         now: Date.now(),
         playerResult: playerResult ?? null,
         registry: contentRegistry(),
         ledger: Ledger.restore(current.ledger),
       });
-      const meta = await notePersist(result.state);
+      const illustrated = withVisualIdentity(playerResult
+        ? { ...result.state, latestMatchReport: playerResult } : result.state);
       set({
-        state: result.state,
-        meta,
-        busy: false,
+        state: illustrated,
         error: null,
         lastCycle: {
           summary: result.summary,
@@ -160,6 +207,9 @@ export const useGameStore = create<GameStoreState>((set, get) => {
           results: result.results,
         },
       });
+      await notePersist(illustrated);
+      if (ownGeneration !== generation) return null;
+      set({ busy: false });
       return result.summary;
     } catch (error) {
       set({ busy: false, error: String(error) });
@@ -171,7 +221,9 @@ export const useGameStore = create<GameStoreState>((set, get) => {
     const state = get().state;
     if (!state) return null;
     const fixture: Fixture | undefined = state.fixtures[fixtureId];
-    if (!fixture) return null;
+    if (!fixture || fixture.status !== 'SCHEDULED' || fixture.week !== state.clock.week + 1
+      || fixture.seasonId !== state.currentSeasonId
+      || (fixture.homeClubId !== state.playerClubId && fixture.awayClubId !== state.playerClubId)) return null;
     const config = contentRegistry().seasonConfig() as CreatorSeasonConfigDef;
     // The authored commentary bank reaches the player's own match too — the
     // cycle wires it for AI fixtures; without this the live game stayed on
@@ -189,22 +241,57 @@ export const useGameStore = create<GameStoreState>((set, get) => {
    */
   apply: (mutate) => {
     const current = get().state;
-    if (!current) return;
-    const next = mutate(current);
-    set({ state: next });
+    if (!current || get().busy || get().saveConflict) return;
+    const next = withVisualIdentity(mutate(current));
+    set({ state: next, unsaved: true });
     void notePersist(next);
+  },
+
+  recordMatch: async (result) => {
+    const current = get().state;
+    if (!current || get().saveConflict) return false;
+    if (current.latestMatchReport?.matchId === result.matchId) return get().save();
+    const fixture = Object.values(current.fixtures).find((f) => `match_${f.id}` === result.matchId);
+    if (!fixture || fixture.status !== 'SCHEDULED' || fixture.week !== current.clock.week + 1
+      || result.homeClubId !== fixture.homeClubId || result.awayClubId !== fixture.awayClubId
+      || result.seed !== `${current.seed}:match:${fixture.id}`
+      || (fixture.homeClubId !== current.playerClubId && fixture.awayClubId !== current.playerClubId)) return false;
+    const next = { ...current, latestMatchReport: result };
+    set({ state: next, unsaved: true });
+    return await notePersist(next) !== null;
   },
 
   save: async () => {
     const state = get().state;
-    if (!state) return;
+    if (!state || get().saveConflict) return false;
     const meta = await notePersist(state);
-    set({ meta });
+    return meta !== null;
+  },
+
+  replaceCareer: async (candidate) => {
+    if (get().busy || get().saveConflict) return false;
+    const ownGeneration = ++generation;
+    set({ busy: true });
+    await writes;
+    if (ownGeneration !== generation) return false;
+    const next = withVisualIdentity(candidate);
+    const meta = await notePersist(next);
+    if (ownGeneration !== generation) return false;
+    if (!meta) { set({ busy: false }); return false; }
+    useMatchStore.getState().reset();
+    set({ state: next, meta, phase: 'READY', busy: false, unsaved: false,
+      lastCycle: null, error: null, recoveredFromBackup: false });
+    return true;
   },
 
   abandon: async () => {
-    await deleteSave(storage);
-    set({ phase: 'NO_SAVE', state: null, meta: null, lastCycle: null, error: null });
+    if (get().saveConflict) throw new SaveConflict();
+    ++generation;
+    useMatchStore.getState().reset();
+    const deletion = writes.then(() => coordinator.write(() => deleteSave(storage)));
+    writes = deletion.catch(() => undefined);
+    await deletion;
+    set({ phase: 'NO_SAVE', state: null, meta: null, lastCycle: null, error: null, busy: false, unsaved: false, saveConflict: false });
   },
 
   clearCycleFeedback: () => set({ lastCycle: null }),

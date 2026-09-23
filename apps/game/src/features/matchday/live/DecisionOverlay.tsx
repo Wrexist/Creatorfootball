@@ -110,7 +110,7 @@ export function DecisionOverlay(): ReactNode {
       title={decision ? TRIGGER_LABEL[decision.trigger] : undefined}
     >
       {decision && (
-        <DecisionBody decision={decision} onPick={pick} ringRef={ringRef} secondsRef={secondsRef} />
+        <DecisionBody decision={decision} timed={deadline !== null} onPick={pick} ringRef={ringRef} secondsRef={secondsRef} />
       )}
     </GlassSheet>
   );
@@ -119,14 +119,14 @@ export function DecisionOverlay(): ReactNode {
 const noop = (): void => {};
 
 function DecisionBody({
-  decision, onPick, ringRef, secondsRef,
+  decision, timed, onPick, ringRef, secondsRef,
 }: {
   decision: DecisionPrompt;
+  timed: boolean;
   onPick: (optionId: string) => void;
   ringRef: RefObject<SVGCircleElement | null>;
   secondsRef: RefObject<HTMLSpanElement | null>;
 }): ReactNode {
-  const timed = decision.timeoutSeconds > 0;
 
   return (
     <div className="pb-1">

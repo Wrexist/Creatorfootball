@@ -1,0 +1,120 @@
+name: Android signed release bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version name (for example 1.0.15)'
+        type: string
+        required: true
+      version_code:
+        description: 'Unused Play version code, higher than every previous upload'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+env:
+  CF_PURCHASE_RELEASE_PLATFORM: android
+  VITE_REVENUECAT_ANDROID_KEY: ${{ vars.VITE_REVENUECAT_ANDROID_KEY }}
+  CF_ANDROID_VERSION_NAME: ${{ inputs.version }}
+  CF_ANDROID_VERSION_CODE: ${{ inputs.version_code }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Validate release inputs
+        run: |
+          node --input-type=module <<'JS'
+          const { CF_ANDROID_VERSION_NAME: version, CF_ANDROID_VERSION_CODE: code } = process.env;
+          if (!/^\d+\.\d+\.\d+$/.test(version ?? '') ||
+              !/^[1-9]\d*$/.test(code ?? '') || BigInt(code) > 2100000000n) {
+            throw new Error('Provide a numeric MAJOR.MINOR.PATCH version and a Play version code from 1 to 2100000000.');
+          }
+          JS
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:smoke
+
+  bundle:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter @cf/game exec cap sync android
+      - name: Sign and verify release bundle
+        working-directory: apps/game/android
+        env:
+          CF_ANDROID_STORE_RELEASE: 'true'
+          CF_ANDROID_KEYSTORE: ${{ runner.temp }}/creator-football-upload.jks
+          CF_ANDROID_KEYSTORE_BASE64: ${{ secrets.CF_ANDROID_KEYSTORE_BASE64 }}
+          CF_ANDROID_STORE_PASSWORD: ${{ secrets.CF_ANDROID_STORE_PASSWORD }}
+          CF_ANDROID_KEY_ALIAS: ${{ secrets.CF_ANDROID_KEY_ALIAS }}
+          CF_ANDROID_KEY_PASSWORD: ${{ secrets.CF_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in CF_ANDROID_KEYSTORE_BASE64 CF_ANDROID_STORE_PASSWORD CF_ANDROID_KEY_ALIAS CF_ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing Android upload-signing secret: $name"
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$CF_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$CF_ANDROID_KEYSTORE"
+          bash gradlew bundleRelease lintRelease --no-daemon
+          keytool -exportcert -keystore "$CF_ANDROID_KEYSTORE" -storepass:env CF_ANDROID_STORE_PASSWORD \
+            -alias "$CF_ANDROID_KEY_ALIAS" -file "$RUNNER_TEMP/creator-football-upload.der"
+          # Trust only this upload certificate while verifying. Android upload
+          # keys are normally self-signed, so the default Java truststore is unsuitable.
+          keytool -importcert -noprompt -keystore "$RUNNER_TEMP/creator-football-verify.jks" \
+            -storepass:env CF_ANDROID_STORE_PASSWORD -alias upload \
+            -file "$RUNNER_TEMP/creator-football-upload.der"
+          jarsigner -verify -strict -keystore "$RUNNER_TEMP/creator-football-verify.jks" \
+            -storepass:env CF_ANDROID_STORE_PASSWORD app/build/outputs/bundle/release/app-release.aab upload
+          sha256sum app/build/outputs/bundle/release/app-release.aab > app/build/outputs/bundle/release/SHA256SUMS.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: creator-football-android-signed-${{ inputs.version_code }}
+          path: |
+            apps/game/android/app/build/outputs/bundle/release/app-release.aab
+            apps/game/android/app/build/outputs/bundle/release/SHA256SUMS.txt
+            apps/game/android/app/build/reports/lint-results-release.html
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove temporary signing files
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/creator-football-upload.jks" "$RUNNER_TEMP/creator-football-upload.der" "$RUNNER_TEMP/creator-football-verify.jks"

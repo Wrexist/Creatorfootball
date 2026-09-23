@@ -133,7 +133,7 @@ export function formatDelta(value: number, decimals?: number): string {
  * here, so the three cannot drift apart again.
  */
 export function formatWeeks(weeks: number, style: 'short' | 'long' = 'short'): string {
-  const n = Math.max(0, Math.round(weeks));
+  const n = Math.max(0, Math.ceil(weeks));
   if (style === 'short') return `${n}w`;
   return n === 1 ? '1 week' : `${n} weeks`;
 }

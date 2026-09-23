@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { MatchEvent, Side } from '@cf/engine';
-import { GoalBurst, cn, haptics, sfx, useDesignMotion } from '@/design';
+import { GoalBurst, PlayerPortrait, cn, haptics, sfx, useDesignMotion } from '@/design';
+import { useGameStore } from '@/state/gameStore';
 import type { KitPalette } from '../shared/kit';
 
 /**
@@ -96,6 +97,7 @@ export function GoalMoment({
 }: GoalMomentProps): ReactNode {
   const m = useDesignMotion();
   const [phase, setPhase] = useState<GoalPhase>('IDLE');
+  const scorerPlayer = useGameStore(s => goal?.playerId ? s.state?.players[goal.playerId] : undefined);
 
   const ours = goal ? (goal.side ?? 'home') === playerSide : false;
 
@@ -175,6 +177,7 @@ export function GoalMoment({
         open={phase === 'BURST'}
         onDismiss={dismissBurst}
         scorer={scorer}
+        portrait={scorerPlayer ? <PlayerPortrait seed={scorerPlayer.portraitSeed} size={88} colors={palette} /> : undefined}
         assist={assist}
         minute={goal.minute}
         homeScore={goal.homeScore}

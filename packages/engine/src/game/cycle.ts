@@ -10,12 +10,13 @@ import { phaseForWeek } from '../league/fixtures';
 import { computeStandings } from '../league/standings';
 import { simulateMatch } from '../matches/simulator';
 import { tickWorld } from '../simulation/worldTick';
+import { runTrainingCycle } from '../training/training';
 import { runFinancialCycle } from '../economy/cycle';
 import { refreshMarket } from '../transfers/market';
 import { tickSocialWorld, type SettledStake } from '../social/socialTick';
 import { generateSponsorOffers, signSponsorOffer } from '../sponsors/sponsors';
 import { advanceScouting } from '../transfers/scouting';
-import { facilityEffect } from '../facilities/facilities';
+import { facilityEffect, injuryRecoveryPerCycle } from '../facilities/facilities';
 import { renewContract } from '../contracts/wages';
 import { defaultValuationContext, wageDemand } from '../transfers/valuation';
 import { asId } from '../core/brand';
@@ -31,6 +32,10 @@ import { rolloverSeason } from './seasonRollover';
 import { GameEventFactory } from './eventFactory';
 import { appendEvents, patchClub, patchPlayer, setContract, transferPlayer } from './mutations';
 import { clubCreators, recentForm, squadWageBill } from './selectors';
+import { settleContractConsequences } from './contractConsequences';
+import { payCreatorRetainers } from '../creators/campaigns';
+import { advanceNegotiations } from '../transfers/advanceNegotiations';
+import { ensureSeniorContracts } from './seniorContracts';
 
 /**
  * The cycle.
@@ -94,12 +99,15 @@ const BASE_RECOVERY = 26;
 export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): AdvanceCycleResult {
   const registry = opts.registry ?? defaultRegistry();
   const config = registry.seasonConfig() as CreatorSeasonConfigDef;
-  const ledger = opts.ledger ?? Ledger.restore(state.ledger);
+  let ledger = opts.ledger ?? Ledger.restore(state.ledger);
+  const cashTotals = (): { income: number; expenditure: number } => ledger.seasonHistory(state.playerClubId)
+    .reduce((a, r) => ({ income: a.income + r.income, expenditure: a.expenditure + r.expenditure }), { income: 0, expenditure: 0 });
+  const openingTotals = cashTotals();
   const events = new GameEventFactory(state, opts.now);
   const rng = new Rng(`${state.seed}:cycle:${state.clock.cycle}`);
 
-  let next = state;
-  const allEvents: AnyDomainEvent[] = [];
+  let next = ensureSeniorContracts({ ...state, pendingActionEvents: [] });
+  const allEvents: AnyDomainEvent[] = [...(state.pendingActionEvents ?? [])];
   const results: MatchResult[] = [];
   const notes: string[] = [];
 
@@ -108,6 +116,16 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   const dueFixtures = Object.values(state.fixtures)
     .filter((f) => f.week === week && f.status === 'SCHEDULED')
     .sort((a, b) => (a.id < b.id ? -1 : 1));
+
+  if (opts.playerResult) {
+    const supplied = opts.playerResult;
+    const fixture = dueFixtures.find((f) =>
+      (f.homeClubId === state.playerClubId || f.awayClubId === state.playerClubId)
+      && supplied.matchId === `match_${f.id}`
+      && supplied.homeClubId === f.homeClubId && supplied.awayClubId === f.awayClubId
+      && supplied.seed === `${state.seed}:match:${f.id}`);
+    if (!fixture) throw new Error('This result does not belong to the next scheduled fixture.');
+  }
 
   // --- 1. matches -------------------------------------------------------
   for (const fixture of dueFixtures) {
@@ -157,7 +175,9 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   }
 
   // --- 3. recovery, suspensions and injuries tick down ------------------
-  next = recoverSquads(next);
+  next = settleContractConsequences(next, results, ledger, { cycle: state.clock.cycle, season: state.clock.season, at: opts.now });
+  payCreatorRetainers(next, ledger, opts.now);
+  next = recoverSquads(next, state, registry, events, allEvents);
 
   // --- 3b. clubs protect the players they want to keep -----------------
   next = renewKeyContracts(next, rng.fork('renewals'));
@@ -207,6 +227,12 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
       ? { homeFixtureImportance: playerFixture.importance }
       : {}),
     managerBrandBuilding: next.managers[next.playerManagerId]?.attributes.brandBuilding ?? 50,
+    sponsorProgress: {
+      wins: results.filter(r => r.winner !== 'draw' && (r.winner === 'home' ? r.homeClubId : r.awayClubId) === playerClubId).length,
+      goals: results.reduce((n,r) => n + (r.homeClubId === playerClubId ? r.homeScore : r.awayClubId === playerClubId ? r.awayScore : 0), 0),
+      cleanSheets: results.filter(r => r.homeClubId === playerClubId ? r.awayScore === 0 : r.awayClubId === playerClubId && r.homeScore === 0).length,
+      topHalfFinish: week >= (season?.totalWeeks ?? 22) && position > 0 && position <= Math.ceil(standings.length / 2),
+    },
   });
 
   next = {
@@ -290,9 +316,23 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
     ledger,
     transferWindowOpen: next.transfers.windowOpen,
     nextEventId: events.nextEventId,
+    availabilityHandled: true,
   });
   next = world.state;
   allEvents.push(...world.events);
+
+  // The stored programme must affect the real career, using the same model as
+  // Training's preview. Recovery has already run; do not heal injuries again.
+  const training = runTrainingCycle(next, rng.fork('player-training'), {
+    clubId: playerClubId,
+    cycle: next.clock.cycle,
+    season: next.clock.season,
+    registry,
+    managerDevelopment: next.managers[next.playerManagerId]?.attributes.playerDevelopment ?? 50,
+    recoveryHandled: true,
+  });
+  next = { ...next, players: { ...next.players, ...training.players }, training: training.training };
+  notes.push(training.summary);
 
   // --- 5b. scouts report back ------------------------------------------
   // Nothing called advanceScouting, so an assignment the player paid for never
@@ -324,15 +364,35 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
   // milestones pay out. It runs here rather than on a screen mount so its
   // consequences are part of the matchweek, and so a player who never opens
   // the feed is still held to what they posted.
-  const socialTick = tickSocialWorld(next, {
+  const socialTick = tickSocialWorld({ ...next, ledger: ledger.snapshot() }, {
     at: opts.now,
     ...(registry ? { registry } : {}),
   });
   next = socialTick.state;
+  ledger = Ledger.restore(next.ledger);
   allEvents.push(...socialTick.events);
   notes.push(...socialTick.notes);
 
+  // Audience bonuses use the whole week's actual growth, including campaigns.
+  // Settle the departing term too; renewal must not erase its final week's work.
+  const growth = Math.max(0, (next.clubs[playerClubId]?.fans.onlineFollowers ?? 0)
+    - (state.clubs[playerClubId]?.fans.onlineFollowers ?? 0));
+  for (const deal of state.sponsors.active) {
+    const bonus = deal.bonusCondition;
+    if (!bonus || bonus.kind !== 'FOLLOWER_GROWTH') continue;
+    const progress = bonus.progress + growth;
+    if (bonus.progress < bonus.target && progress >= bonus.target) {
+      const paid = ledger.credit(playerClubId, 'SPONSOR_REVENUE', bonus.reward, `${deal.name}: follower growth bonus`,
+        { cycle: state.clock.cycle, season: state.clock.season, at: opts.now },
+        { idempotencyKey: `sponsor-bonus:${deal.id}`, metadata: { sponsorId: deal.sponsorId } });
+      if (paid.ok) notes.push(`${deal.name} paid their follower growth bonus.`);
+    }
+    next = { ...next, sponsors: { ...next.sponsors, active: next.sponsors.active.map(d => d.id === deal.id
+      ? { ...d, bonusCondition: { ...bonus, progress } } : d) } };
+  }
+
   // --- 6. revalue the market ------------------------------------------
+  next = advanceNegotiations(next);
   // Without this, players develop but their price tags never move, and the
   // brake the design depends on — a growing club facing bigger fees and bigger
   // wages — never engages. The economy audit catches exactly this as a flat
@@ -421,6 +481,12 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
 
   next = appendEvents(next, allEvents);
   next = events.commit(next);
+  const closingTotals = cashTotals();
+  const actualIncome = closingTotals.income - openingTotals.income;
+  const actualExpenditure = closingTotals.expenditure - openingTotals.expenditure;
+  next = patchClub({ ...next, ledger: ledger.snapshot() }, playerClubId, club => ({
+    finance: { ...club.finance, lastCycleIncome: actualIncome, lastCycleExpenditure: actualExpenditure },
+  }));
 
   const playerMatchResult = playerFixture
     ? results.find((r) => r.matchId === `match_${playerFixture.id}`)
@@ -444,8 +510,8 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
       season: next.clock.season,
       matchesPlayed: results.length,
       playerResult: playerOutcome,
-      income: Object.values(finance.income).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0),
-      expenditure: Object.values(finance.expenditure).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0),
+      income: actualIncome,
+      expenditure: actualExpenditure,
       storiesPublished: world.stories.length,
       postsPublished: world.posts.length,
       objectivesCompleted: objectiveUpdates.filter((u) => u.justCompleted).length,
@@ -459,24 +525,31 @@ export function advanceCycle(state: GameState, opts: AdvanceCycleOptions): Advan
 }
 
 /**
- * Between-match recovery. Fitness returns, injuries heal, bans expire.
+ * Between-match recovery. Only injuries present before this week's match heal.
+ * Match application owns suspensions; new match injuries retain their full term.
  *
  * This runs for every club in the league, not just the player's: an AI squad
  * that never recovered would decay across a season and the table would stop
  * meaning anything by March.
  */
-function recoverSquads(state: GameState): GameState {
+function recoverSquads(state: GameState, before: GameState, registry: ContentRegistry,
+  events: GameEventFactory, emitted: AnyDomainEvent[]): GameState {
   let next = state;
   for (const player of Object.values(state.players)) {
-    const recovering = player.injury
-      ? { ...player.injury, weeksRemaining: player.injury.weeksRemaining - 1 }
-      : null;
+    const club = player.clubId ? state.clubs[player.clubId] : undefined;
+    const recovery = injuryRecoveryPerCycle(club, registry);
+    const recovering = player.injury && player.injury === before.players[player.id]?.injury
+      ? { ...player.injury, weeksRemaining: player.injury.weeksRemaining - recovery }
+      : player.injury;
     const healed = recovering && recovering.weeksRemaining <= 0;
 
     next = patchPlayer(next, player.id, {
       fitness: clamp(player.fitness + BASE_RECOVERY, 0, 100),
       injury: healed ? null : recovering,
     });
+    if (healed && player.clubId) emitted.push(events.make('PLAYER_RECOVERED', {
+      playerId: player.id, clubId: player.clubId,
+    }, { importance: 2, entities: [events.playerRef(player.id)] }));
   }
   return next;
 }
@@ -499,6 +572,15 @@ function tickContracts(
   const EXPIRY_WARNING_CYCLES = 6;
 
   for (const contract of Object.values(state.contracts)) {
+    // Older saves may still contain a sold player's superseded contract.
+    // It is history, never an authority to release the current registration.
+    const registered = next.players[contract.playerId];
+    if (registered?.contractId !== contract.id) {
+      const contracts = { ...next.contracts };
+      delete contracts[contract.id];
+      next = { ...next, contracts };
+      continue;
+    }
     const weeksRemaining = Math.max(0, contract.weeksRemaining - 1);
     next = {
       ...next,

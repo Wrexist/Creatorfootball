@@ -1,4 +1,5 @@
 import type { StorageAdapter } from '@cf/engine';
+import { encodeStoredSave, decodeStoredSave } from './saveCodec';
 
 /**
  * Web/native storage adapter.
@@ -21,9 +22,6 @@ export class WebStorage implements StorageAdapter {
   private get backing(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'> | null {
     if (this.usingFallback) return null;
     try {
-      const probe = '__cf_probe__';
-      window.localStorage.setItem(probe, '1');
-      window.localStorage.removeItem(probe);
       return window.localStorage;
     } catch {
       // Private browsing or a storage-disabled environment. Degrade to memory so
@@ -38,19 +36,24 @@ export class WebStorage implements StorageAdapter {
   async get(key: string): Promise<string | null> {
     const backing = this.backing;
     if (!backing) return this.memoryFallback.get(this.key(key)) ?? null;
-    return backing.getItem(this.key(key));
+    const raw = backing.getItem(this.key(key));
+    if (raw === null) return null;
+    try { return await decodeStoredSave(raw); }
+    catch { return raw; } // Let the engine identify corruption and recover its backup.
   }
 
   async set(key: string, value: string): Promise<void> {
     const backing = this.backing;
-    if (!backing) { this.memoryFallback.set(this.key(key), value); return; }
+    if (!backing) {
+      this.memoryFallback.set(this.key(key), value);
+      throw new Error('Persistent storage is unavailable. Progress is only in this session.');
+    }
     try {
-      backing.setItem(this.key(key), value);
+      backing.setItem(this.key(key), await encodeStoredSave(value));
     } catch (error) {
       // Quota exceeded. Fall back rather than losing the write entirely.
-      this.usingFallback = true;
-      this.memoryFallback.set(this.key(key), value);
-      throw new Error(`Storage write failed, session is now in-memory only: ${String(error)}`);
+      // A full quota must never hide the readable career or prevent a retry.
+      throw new Error(`Storage write failed: ${String(error)}`);
     }
   }
 

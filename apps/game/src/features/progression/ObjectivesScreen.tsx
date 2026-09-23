@@ -54,6 +54,7 @@ const ObjectiveCard = memo(function ObjectiveCard({
   return (
     <GlassPanel
       padding="md"
+      className={`cf-objective cf-objective-${objective.source.toLowerCase()}`}
       accent={claimable ? 'volt' : objective.status === 'FAILED' || shown.missingTarget ? 'danger' : 'none'}
     >
       <div className="flex items-start gap-2">
@@ -135,8 +136,7 @@ const ObjectiveCard = memo(function ObjectiveCard({
       )}
       {claimed && (
         <Text role="caption" as="p" className="mt-3 text-ink-dim text-pretty">
-          Paid out. Rewards are posted through the ledger with a one-time key, so this can never be
-          claimed again.
+          Reward received. This achievement is part of your club’s story.
         </Text>
       )}
     </GlassPanel>

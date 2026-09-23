@@ -214,9 +214,16 @@ function settleStakes(
   const remaining: SocialStake[] = [];
 
   for (const stake of world.stakes) {
-    if (cycle <= stake.settleAfterCycle) { remaining.push(stake); continue; }
+    if (cycle < stake.settleAfterCycle) { remaining.push(stake); continue; }
 
-    const result = resultAfter(state, stake.openedCycle);
+    const fixture = stake.fixtureId ? state.fixtures[stake.fixtureId] : undefined;
+    const result = stake.fixtureId
+      ? fixture?.status === 'COMPLETED' && fixture.homeScore !== null && fixture.awayScore !== null
+        && (fixture.homeClubId === state.playerClubId || fixture.awayClubId === state.playerClubId)
+        ? fixture.homeScore === fixture.awayScore ? 'D'
+          : (fixture.homeClubId === state.playerClubId) === (fixture.homeScore > fixture.awayScore) ? 'W' : 'L'
+        : null
+      : resultAfter(state, stake.openedCycle);
     if (!result && cycle - stake.openedCycle <= A.stake.expiryCycles) {
       remaining.push(stake);
       continue;

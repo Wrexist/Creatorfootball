@@ -34,6 +34,9 @@ export default tseslint.config(
       // Throwaway audit probes; see .gitignore.
       'tools/sim/src/zz*.ts', 'tools/sim/src/__*.ts', 'tools/sim/src/_audit/**',
       'tmp/**',
+      // Downloaded Gradle distribution/cache used for isolated Android qualification.
+      // This contains third-party documentation scripts, not application sources.
+      'artifacts/expansion/gradle-home/**',
     ],
   },
 

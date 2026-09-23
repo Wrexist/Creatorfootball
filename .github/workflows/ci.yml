@@ -4,19 +4,24 @@ on:
   push:
     branches: ['**']
   pull_request:
+  schedule:
+    - cron: '31 6 * * 1'
+
+permissions:
+  contents: read
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       # No `version:` here on purpose: pnpm/action-setup reads the single
       # source of truth from package.json's "packageManager" field. Specifying
       # both makes the action fail with "Multiple versions of pnpm specified".
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
           cache: pnpm
@@ -25,6 +30,9 @@ jobs:
 
       # The engine purity boundary is enforced here. If this step fails, a
       # domain module has reached for React, the DOM, a clock or Math.random.
+      - name: Dependency advisories
+        run: pnpm audit --audit-level=moderate
+
       - name: Lint
         run: pnpm lint
 
@@ -45,13 +53,15 @@ jobs:
 
       - name: Browser smoke test
         run: pnpm test:smoke
+      - name: Optional content presentation qualification
+        run: node apps/game/e2e/paid-packs.mjs
 
   audits:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
           cache: pnpm

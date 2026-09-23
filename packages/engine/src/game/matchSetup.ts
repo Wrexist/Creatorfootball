@@ -65,7 +65,8 @@ export function aiRuleCards(state: GameState, clubId: ClubId): SpecialRuleId[] {
   // A better-run club has more to deploy: one card as standard, two for the
   // upper half of the league by reputation.
   const count = club.reputation >= 55 ? 2 : 1;
-  return rng.sample(pool, Math.min(count, pool.length));
+  const spent = state.aiCardUsage?.season === state.clock.season ? state.aiCardUsage.byClub[clubId] ?? [] : [];
+  return rng.sample(pool, Math.min(count, pool.length)).filter(id => !spent.includes(id));
 }
 
 const teamFor = (
@@ -98,10 +99,11 @@ const teamFor = (
     // advantage the player did not earn. AI holdings are derived from the club
     // and the season rather than stored, so they cost no save state and a
     // stronger club reliably brings more to the table.
-    ruleCards: isPlayerControlled
+    ruleCards: clubId === state.playerClubId
       ? state.inventory.ruleCards.filter((c) => c.quantity > 0).map((c) => c.ruleId)
       : aiRuleCards(state, clubId),
     isPlayerControlled,
+    autoPlayRuleCards: clubId !== state.playerClubId,
   };
 };
 

@@ -1,13 +1,14 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GradualBlur } from '@/design/glass/GradualBlur';
 import {
   clubCreators, expiringContracts, injuredPlayers, playerById, recentForm, squadOf, squadStrength,
   wageBudgetUsage, PHASE_LABELS,
   type Club, type GameState, type Player,
 } from '@cf/engine';
 import {
-  ClubBadge, CardRail, Divider, FormGuide, GlassButton, GlassCard, GlassPanel, GlassPill,
-  HeroSurface, ListRow, NameText, PlayerPortrait, ProgressBar, RatingBadge, ScorePanel, Screen,
+  ClubBadge, CardRail, FormGuide, GlassButton, GlassCard, GlassPanel,
+  ListRow, NameText, PlayerPortrait, ProgressBar, RatingBadge, Screen,
   StatBlock, Text, cn, formatCount, formatMoney,
   IconBall, IconCalendar, IconChevronRight, IconClock, IconFans, IconFlame, IconInjury, IconLeague, IconMarket,
   IconMoney, IconScout, IconSocial, IconStar, IconTraining, IconTrophy, IconWarning,
@@ -15,6 +16,8 @@ import {
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
+import { ArtImage, TopClubBar, CharacterHero, ObjectAssetCard, ProgressRing, StoryCard } from '@/design/premium/components';
+import { art, storyArt } from '@/design/art/manifest';
 import { homeFeed, type Glyph, type PriorityCard, type Tone } from './priority';
 
 /**
@@ -243,382 +246,79 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const busy = useGameStore((s) => s.busy);
   const [expanded, setExpanded] = useState(false);
-
   const feed = useMemo(() => homeFeed(state), [state]);
   const club = feed.club;
-
-  const week = useMemo(() => {
-    const squad = squadOf(state, club.id);
-    const injured = injuredPlayers(state, club.id);
-    return {
-      squad: squad.length,
-      injured: injured.length,
-      strength: squadStrength(state, club.id),
-      expiring: expiringContracts(state, club.id, 6).length,
-      wageUsage: wageBudgetUsage(state, club.id),
-      creators: clubCreators(state, club.id),
-      form: recentForm(state, club.id, 5),
-      claimable: state.objectives.active.filter((o) => o.status === 'COMPLETED').length,
-      active: state.objectives.active.filter((o) => o.status === 'ACTIVE').length,
-    };
-  }, [state, club.id]);
-
-  const go = useMemo(() => (route: string) => navigate(route), [navigate]);
+  const squad = squadOf(state, club.id);
+  const average = (read: (player: Player) => number) => squad.length ? squad.reduce((sum, player) => sum + read(player), 0) / squad.length : 0;
   const [lead, ...rest] = feed.cards;
   const leadPlayer = lead?.playerId ? playerById(state, lead.playerId as Player['id']) : undefined;
-  const shown = expanded ? rest : rest.slice(0, 3);
+  const upcoming = feed.upcoming;
+  const competition = upcoming ? state.competitions[upcoming.fixture.competitionId]?.shortName ?? 'League' : 'Season journey';
+  const news = state.media.stories[0];
+  const go = (route: string) => navigate(route === ROUTES.rewards && state.objectives.active.some(o => o.status === 'COMPLETED') ? ROUTES.objectives : route);
 
-  const sides = useMemo(() => {
-    if (!feed.upcoming) return null;
-    const { fixture, opponent, home } = feed.upcoming;
-    const us = {
-      name: club.name,
-      shortName: club.shortName,
-      abbreviation: club.abbreviation,
-      color: club.visual.primary,
-      emblem: <ClubBadge visual={club.visual} size={26} flat />,
-    };
-    const them = {
-      name: opponent.name,
-      shortName: opponent.shortName,
-      abbreviation: opponent.abbreviation,
-      color: opponent.visual.primary,
-      emblem: <ClubBadge visual={opponent.visual} size={26} flat />,
-    };
-    return { home: home ? us : them, away: home ? them : us, fixture };
-  }, [feed.upcoming, club]);
-
-  const competition = feed.upcoming
-    ? state.competitions[feed.upcoming.fixture.competitionId]?.shortName ?? 'League'
-    : 'League';
-
-  return (
-    <Screen
-      title={club.shortName}
-      subtitle={`Season ${state.clock.season} · Week ${Math.max(1, state.clock.week)} · ${PHASE_LABELS[state.clock.phase]}`}
-      leading={<ClubBadge visual={club.visual} size={30} label={club.name} />}
-      aside={
-        <>
-          <GlassPanel title="This week" padding="md">
-            <ListRow
-              title="Squad"
-              subtitle={week.injured > 0 ? `${week.injured} unavailable` : 'Everyone is fit'}
-              trailing={<Text role="stat">{week.squad}</Text>}
-              onPress={() => navigate(ROUTES.squad)}
-              chevron
-            />
-            <ListRow
-              title="Transfer budget"
-              subtitle="What you can spend on fees"
-              trailing={<Text role="stat">{formatMoney(club.finance.transferBudget)}</Text>}
-              onPress={() => navigate(ROUTES.finances)}
-              chevron
-            />
-            <ListRow
-              divided={false}
-              title="Objectives"
-              subtitle={week.claimable > 0 ? `${week.claimable} ready to claim` : `${week.active} in progress`}
-              trailing={<Text role="stat">{week.claimable + week.active}</Text>}
-              onPress={() => navigate(week.claimable > 0 ? ROUTES.rewards : ROUTES.objectives)}
-              chevron
-            />
-          </GlassPanel>
-        </>
-      }
-    >
-      {/* --- the hero ------------------------------------------------- */}
-      {feed.lead.kind === 'RESULT' ? (
-        <HeroSurface
-          eyebrow={<span className="text-volt">Last result</span>}
-          texture="stadium"
-          bleed={feed.lead.outcome === 'W' ? club.visual.primary : undefined}
-          padding="md"
-        >
-          <Text role="title" as="h2" className="text-pretty">{feed.lead.headline}</Text>
-          <Text role="caption" className="mt-1.5 text-pretty">{feed.lead.meaning}</Text>
-          <div className="mt-4">
-            <ScorePanel
-              size="lg"
-              context={`${competition} · ${feed.lead.fixture.stageLabel ?? `Week ${feed.lead.fixture.week}`}`}
-              status="Full time"
-              home={{
-                name: club.name,
-                shortName: club.shortName,
-                abbreviation: club.abbreviation,
-                color: club.visual.primary,
-                score: feed.lead.us,
-                emblem: <ClubBadge visual={club.visual} size={26} flat />,
-              }}
-              away={{
-                name: feed.lead.opponent.name,
-                shortName: feed.lead.opponent.shortName,
-                abbreviation: feed.lead.opponent.abbreviation,
-                color: feed.lead.opponent.visual.primary,
-                score: feed.lead.them,
-                emblem: <ClubBadge visual={feed.lead.opponent.visual} size={26} flat />,
-              }}
-            />
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {feed.lead.matchId && (
-              <GlassButton
-                variant="primary"
-                onClick={() => navigate(buildPath(ROUTES.matchResult, { matchId: feed.lead.kind === 'RESULT' ? feed.lead.matchId ?? '' : '' }))}
-              >
-                See the report
-              </GlassButton>
-            )}
-            <GlassButton variant="secondary" onClick={() => navigate(ROUTES.standings)}>The table</GlassButton>
-          </div>
-        </HeroSurface>
-      ) : feed.lead.kind === 'MATCH' ? (
-        <HeroSurface
-          eyebrow={<span className="text-volt">Next match</span>}
-          texture="stadium"
-          bleed={feed.lead.opponent.visual.primary}
-          padding="md"
-        >
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <Text role="micro" as="p">
-                {feed.lead.home ? 'At home to' : 'Away to'}
-              </Text>
-              {/* The opponent's name gets the full width of the hero. It is the
-                  one thing the player has to read, so it is never abbreviated
-                  here — the fixture bug below can wear the three letters. */}
-              <NameText
-                name={feed.lead.opponent.name}
-                short={feed.lead.opponent.shortName}
-                abbr={feed.lead.opponent.abbreviation}
-                role="hero"
-                lines={2}
-                as="h2"
-                className="mt-1"
-              />
-              <Text role="caption" className="mt-1.5">
-                {competition} · {feed.lead.fixture.stageLabel ?? `Week ${feed.lead.fixture.week}`}
-                {feed.lead.fixture.isDerby ? ' · Derby' : ''}
-              </Text>
-            </div>
-            <ClubBadge visual={feed.lead.opponent.visual} size={56} label={feed.lead.opponent.name} />
-          </div>
-          <Text role="bodyStrong" as="p" className="mt-4 text-pretty">{feed.lead.stake}</Text>
-          <div className="mt-4">
-            <GlassButton
-              variant="primary"
-              size="lg"
-              block
-              loading={busy}
-              icon={<IconBall size={20} />}
-              onClick={() => navigate(buildPath(ROUTES.matchPreview, { fixtureId: feed.lead.kind === 'MATCH' ? feed.lead.fixture.id : '' }))}
-            >
-              Take charge
-            </GlassButton>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <GlassButton size="sm" variant="secondary" block onClick={() => navigate(ROUTES.tactics)}>
-              Set the team up
-            </GlassButton>
-            <GlassButton size="sm" variant="secondary" block onClick={() => navigate(ROUTES.squad)}>
-              Check the squad
-            </GlassButton>
-          </div>
-        </HeroSurface>
-      ) : feed.lead.kind === 'IDLE' ? (
-        <HeroSurface eyebrow="Where you are" texture="haze" padding="md">
-          <Text role="title" as="h2">{feed.lead.headline}</Text>
-          <Text role="caption" className="mt-1.5 text-pretty">{feed.lead.meaning}</Text>
-          <div className="mt-4">
-            <GlassButton variant="primary" onClick={() => navigate(feed.lead.kind === 'IDLE' ? feed.lead.route : ROUTES.squad)}>
-              {feed.lead.actionLabel}
-            </GlassButton>
-          </div>
-        </HeroSurface>
-      ) : null}
-
-      {/* --- the opponent, in three lines ----------------------------- */}
-      {feed.lead.kind === 'MATCH' && feed.lead.beats.length > 0 && (
-        <GlassPanel padding="md">
-          <Text role="label" className="text-ink-dim">
-            What you need to know about {feed.lead.opponent.shortName}
-          </Text>
-          <ul className="mt-2.5 flex flex-col gap-2.5">
-            {feed.lead.beats.map((beat) => (
-              <li key={beat.id} className="flex items-start gap-2.5">
-                <span className="mt-0.5 shrink-0"><Glyphs glyph={beat.glyph} tone={beat.tone} size={15} /></span>
-                <Text role="caption" as="span" className="text-pretty">{beat.text}</Text>
-              </li>
-            ))}
-          </ul>
-        </GlassPanel>
-      )}
-
-      {/* --- the next match, when a result took the hero -------------- */}
-      {feed.lead.kind === 'RESULT' && sides && feed.upcoming && (
-        <GlassCard padding="md" onPress={() => navigate(buildPath(ROUTES.matchPreview, { fixtureId: feed.upcoming?.fixture.id ?? '' }))}>
-          <Text role="label" className="text-volt">Next match</Text>
-          <div className="mt-2">
-            <ScorePanel home={sides.home} away={sides.away} status="Kick off" context={`${competition} · ${feed.upcoming.home ? 'At home' : 'Away'}`} />
-          </div>
-          <div className="mt-3">
-            <GlassButton
-              variant="primary"
-              size="lg"
-              block
-              loading={busy}
-              icon={<IconBall size={20} />}
-              onClick={() => navigate(buildPath(ROUTES.matchPreview, { fixtureId: feed.upcoming?.fixture.id ?? '' }))}
-            >
-              Take charge
-            </GlassButton>
-          </div>
-        </GlassCard>
-      )}
-
-      {/* --- what matters now ----------------------------------------- */}
-      {lead && (
-        <>
-          <div className="flex items-end justify-between gap-3 pt-1">
-            <div className="min-w-0">
-              <Text role="section" as="h2">What matters now</Text>
-              <Text role="caption" className="mt-0.5 text-ink-dim">
-                Ranked by how urgent it is and how much it changes your season
-              </Text>
-            </div>
-          </div>
-          <LeadCard card={lead} player={leadPlayer} club={club} onGo={go} />
-        </>
-      )}
-
-      {shown.length > 0 && (
-        <GlassPanel padding="sm">
-          <div className="flex flex-col">
-            {shown.map((card, index) => (
-              <FeedRow
-                key={card.id}
-                card={card}
-                divided={index !== shown.length - 1}
-                onGo={go}
-              />
-            ))}
-          </div>
-        </GlassPanel>
-      )}
-
-      {rest.length > 3 && (
-        <GlassButton variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? 'Show less' : `Show ${rest.length - 3} more`}
-        </GlassButton>
-      )}
-
-      {/* --- the week in numbers -------------------------------------- */}
-      <div className="pt-1">
-        <Text role="section" as="h2">Your club right now</Text>
-        <Text role="caption" className="mt-0.5 text-ink-dim">
-          The four numbers the rest of the game runs on
-        </Text>
+  return <div className="cf-home-frame">
+    <GradualBlur side="top" height="calc(var(--safe-top) + 28px)" className="cf-home-edge" />
+    <div className="cf-home" data-testid="premium-home">
+    <div className="cf-home-world">
+      <ArtImage asset={art.office} crop="hero" eager className="cf-home-backdrop" />
+      <TopClubBar state={state} club={club} onNavigate={go}/>
+      <div className="cf-home-welcome">
+        <div><h1>YOUR CLUB.<em>YOUR STORY.</em></h1><p>CREATORS BUILD LEGACIES</p></div>
+        <CharacterHero manager={state.managers[state.playerManagerId]} className="cf-home-manager"/>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <StatBlock
-          tone="volt"
-          label="Squad rating"
-          value={week.strength}
-          caption={`${week.squad} players, ${week.injured} unavailable`}
-        />
-        <StatBlock
-          tone={club.fans.sentiment >= 55 ? 'positive' : club.fans.sentiment >= 40 ? 'warning' : 'danger'}
-          label="Fan mood"
-          value={Math.round(club.fans.sentiment)}
-          unit="/ 100"
-          caption={club.fans.sentiment >= club.fans.expectation ? 'Ahead of what they expected' : 'Below what they expected'}
-        />
-        <StatBlock
-          tone={week.wageUsage > 1 ? 'danger' : week.wageUsage > 0.9 ? 'warning' : 'neutral'}
-          label="Wages used"
-          value={Math.round(week.wageUsage * 100)}
-          unit="%"
-          caption="Of what the board allows"
-        />
-        <StatBlock
-          tone="neutral"
-          label="To spend"
-          value={formatMoney(club.finance.transferBudget)}
-          caption="Available for transfer fees"
-        />
-      </div>
-
+      <section className="cf-match-card" aria-label="Next match">
+        <span className="cf-eyebrow">{upcoming ? 'Next match' : 'Your next chapter'}</span>
+        <p className="cf-match-context">{competition} · {upcoming ? `Week ${upcoming.fixture.week}` : PHASE_LABELS[state.clock.phase]}</p>
+        {upcoming ? <>
+          <div className="cf-match-sides">
+            <div className="cf-match-team"><ClubBadge visual={club.visual} size={60}/><strong>{club.shortName}</strong><FormGuide results={recentForm(state, club.id, 5)} slots={5}/></div>
+            <div className="cf-match-center"><strong>{upcoming.fixture.week > state.clock.week ? `${upcoming.fixture.week - state.clock.week} WK` : 'NEXT UP'}</strong><span>VS</span></div>
+            <div className="cf-match-team"><ClubBadge visual={upcoming.opponent.visual} size={60}/><strong>{upcoming.opponent.shortName}</strong><FormGuide results={recentForm(state, upcoming.opponent.id, 5)} slots={5}/></div>
+          </div>
+          <p className="cf-match-stake">{upcoming.home ? 'Home ground' : 'Away day'} · {feed.lead.kind === 'MATCH' ? feed.lead.stake : 'Write the next chapter of your season.'}</p>
+          <GlassButton variant="primary" block loading={busy} icon={<IconBall size={21}/>} iconRight={<IconChevronRight size={20}/>} onClick={() => navigate(buildPath(ROUTES.matchPreview, {fixtureId:upcoming.fixture.id}))}>Prepare Match</GlassButton>
+        </> : feed.lead.kind === 'IDLE' ? <>
+          <Text as="h2" role="title" className="my-3">{feed.lead.headline}</Text><p className="cf-match-stake">{feed.lead.meaning}</p>
+          <GlassButton variant="primary" block onClick={() => feed.lead.kind === 'IDLE' && go(feed.lead.route)}>{feed.lead.actionLabel}</GlassButton>
+        </> : <GlassButton variant="primary" block onClick={() => navigate(ROUTES.matchday)}>Continue season</GlassButton>}
+      </section>
+    </div>
+    <div className="cf-home-body">
+      {feed.lead.kind === 'RESULT' && <GlassCard onPress={() => feed.lead.kind === 'RESULT' && feed.lead.matchId && navigate(buildPath(ROUTES.matchResult,{matchId:feed.lead.matchId}))} padding="md">
+        <Text role="label" className="text-volt">Last result · {feed.lead.us} – {feed.lead.them}</Text><Text role="section" as="h2" className="mt-1">{feed.lead.headline}</Text><Text role="caption" className="mt-1">{feed.lead.meaning}</Text>
+      </GlassCard>}
+      <section>
+        <div className="cf-section-title"><div><h2>Manager’s desk</h2><p>Small decisions. A bigger tomorrow.</p></div></div>
+        <div className="cf-desk">
+          <ObjectAssetCard asset={art.tactics} title="Set the Team" description="Your starting XI" onClick={() => go(ROUTES.tactics)}/>
+          <ObjectAssetCard asset={art.training} title="Training Plan" description="Build better players" onClick={() => go(ROUTES.training)}/>
+          <ObjectAssetCard asset={art.scouting} title="Scout Report" description="Find your next star" onClick={() => go(ROUTES.scouting)}/>
+        </div>
+      </section>
+      {lead && (lead.tone === 'danger' || lead.tone === 'warning') && <LeadCard card={lead} player={leadPlayer} club={club} onGo={go}/>}
+      <section>
+        <div className="cf-section-title"><div><h2>Club pulse</h2><p>A stronger club, together.</p></div><button onClick={() => go(ROUTES.club)}>View club →</button></div>
+        <div className="cf-pulse"><ProgressRing value={average(p => p.mental.morale)} label="Morale"/><ProgressRing value={average(p => p.fitness)} label="Fitness"/><ProgressRing value={club.fans.sentiment} label="Supporters" tone="gold"/></div>
+      </section>
+      <section>
+        <div className="cf-section-title"><div><h2>World moves</h2><p>News. Rivalries. Opportunities.</p></div><button onClick={() => go(ROUTES.media)}>View all →</button></div>
+        <StoryCard asset={storyArt(news?.tags.join(' ') ?? 'matchday')} title={news?.headline ?? 'The season begins here.'} description={news?.body ?? `${club.name}. Your club, a bigger stage. Every decision shapes what happens next.`} eyebrow={`Season ${state.clock.season}`} onClick={() => go(ROUTES.media)}/>
+      </section>
+      <section className="cf-home-urgent">
+        <div className="cf-section-title"><h2>What matters now</h2></div>
+        {lead && lead.tone !== 'danger' && lead.tone !== 'warning' && <LeadCard card={lead} player={leadPlayer} club={club} onGo={go}/>}
+        {rest.length > 0 && <GlassPanel padding="sm" className="mt-3">{(expanded ? rest : rest.slice(0,3)).map((card,index)=><FeedRow key={card.id} card={card} divided={index !== rest.length-1} onGo={go}/>)}</GlassPanel>}
+        {rest.length > 3 && <GlassButton variant="ghost" block onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : `Show ${rest.length-3} more`}</GlassButton>}
+      </section>
       <GlassPanel padding="sm">
-        <ListRow
-          leading={<IconLeague size={18} className="text-ink-dim" />}
-          title="Recent form"
-          subtitle={week.form.length ? 'Your last five league results, oldest first' : 'No games played yet this season'}
-          trailing={<FormGuide results={week.form} slots={5} />}
-          onPress={() => navigate(ROUTES.fixtures)}
-        />
-        <ListRow
-          leading={<IconClock size={18} className="text-ink-dim" />}
-          title="Contracts running down"
-          subtitle={week.expiring > 0 ? 'Renew them or they leave for nothing' : 'Nothing expiring in the next six weeks'}
-          trailing={<Text role="stat" className={week.expiring > 0 ? 'text-warning' : undefined}>{week.expiring}</Text>}
-          onPress={() => navigate(ROUTES.squad)}
-          chevron
-        />
-        <ListRow
-          divided={false}
-          leading={<IconFans size={18} className="text-ink-dim" />}
-          title="People following you"
-          subtitle="Supporters plus everyone your creators reach"
-          trailing={<Text role="stat">{formatCount(club.fans.onlineFollowers + club.fans.base)}</Text>}
-          onPress={() => navigate(ROUTES.fans)}
-          chevron
-        />
+        <ListRow title="Transfer budget" subtitle="Available for player fees" trailing={<Text role="stat">{formatMoney(club.finance.transferBudget)}</Text>} onPress={() => go(ROUTES.finances)} chevron/>
+        <ListRow title="Squad rating" subtitle={`${squad.length} players · ${injuredPlayers(state,club.id).length} injured`} trailing={<Text role="stat">{squadStrength(state,club.id)}</Text>} onPress={() => go(ROUTES.squad)} chevron/>
+        <ListRow title="Wages used" subtitle={`${expiringContracts(state,club.id,6).length} contracts expiring within six weeks`} trailing={<Text role="stat">{Math.round(wageBudgetUsage(state,club.id)*100)}%</Text>} onPress={() => go(ROUTES.squad)} chevron/>
+        <ListRow title="Your audience" subtitle="Supporters and online followers" trailing={<Text role="stat">{formatCount(club.fans.base+club.fans.onlineFollowers)}</Text>} onPress={() => go(ROUTES.fans)} chevron divided={false}/>
       </GlassPanel>
-
-      {/* --- creators --------------------------------------------------- */}
-      {week.creators.length > 0 && (
-        <>
-          <div className="pt-1">
-            <Text role="section" as="h2">Creators at your club</Text>
-            <Text role="caption" className="mt-0.5 text-ink-dim">
-              Their audience is what sponsors are actually buying
-            </Text>
-          </div>
-          <CardRail itemWidth={190} ariaLabel="Creators attached to your club">
-            {week.creators.slice(0, 6).map((creator) => (
-              <GlassCard
-                key={creator.id}
-                padding="sm"
-                onPress={() => navigate(buildPath(ROUTES.creator, { creatorId: creator.id }))}
-              >
-                <NameText name={creator.displayName} role="bodyStrong" />
-                <Text role="caption" className="mt-0.5 text-ink-dim">@{creator.handle}</Text>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <GlassPill
-                    size="xs"
-                    tone={creator.clubSentiment >= 20 ? 'positive' : creator.clubSentiment <= -20 ? 'danger' : 'neutral'}
-                  >
-                    {creator.clubSentiment >= 20 ? 'On side' : creator.clubSentiment <= -20 ? 'Critical' : 'Neutral'}
-                  </GlassPill>
-                  <Text role="stat">{formatCount(creator.followers)}</Text>
-                </div>
-              </GlassCard>
-            ))}
-          </CardRail>
-        </>
-      )}
-
-      <Divider />
-      <div className="grid grid-cols-3 gap-2 pb-2">
-        <GlassButton variant="ghost" size="sm" block icon={<IconSocial size={16} />} onClick={() => navigate(ROUTES.social)}>
-          Feed
-        </GlassButton>
-        <GlassButton variant="ghost" size="sm" block icon={<IconLeague size={16} />} onClick={() => navigate(ROUTES.standings)}>
-          Table
-        </GlassButton>
-        <GlassButton variant="ghost" size="sm" block icon={<IconTrophy size={16} />} onClick={() => navigate(ROUTES.objectives)}>
-          Objectives
-        </GlassButton>
-      </div>
-    </Screen>
-  );
+      {clubCreators(state,club.id).length > 0 && <section><div className="cf-section-title"><h2>Your creators</h2></div><CardRail itemWidth={190} ariaLabel="Creators attached to your club">{clubCreators(state,club.id).map(creator=><GlassCard key={creator.id} padding="md" onPress={() => go(buildPath(ROUTES.creator,{creatorId:creator.id}))}><NameText name={creator.displayName} role="bodyStrong"/><Text role="caption">@{creator.handle}</Text><Text role="stat" className="mt-2">{formatCount(creator.followers)}</Text></GlassCard>)}</CardRail></section>}
+      <div className="grid grid-cols-3 gap-2"><GlassButton variant="ghost" onClick={() => go(ROUTES.social)}>Social</GlassButton><GlassButton variant="ghost" onClick={() => go(ROUTES.standings)}>League</GlassButton><GlassButton variant="ghost" onClick={() => go(ROUTES.objectives)}>Objectives</GlassButton></div>
+    </div>
+  </div></div>;
 }

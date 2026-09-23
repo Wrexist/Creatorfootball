@@ -20,6 +20,7 @@ import { minuteLabel, one, stateOfPlay } from '../shared/format';
 import { AnalyticsTab } from './AnalyticsTab';
 import { concernRoute } from './concernRoute';
 import { masteryLines } from './mastery';
+import { ArtImage, CharacterHero } from '@/design/premium/components';
 
 /**
  * The post-match sequence.
@@ -41,7 +42,6 @@ const STAGES = [
 type Stage = (typeof STAGES)[number];
 
 /** Matches already handed to `advance()`. Survives a remount of this screen. */
-const committed = new Set<string>();
 
 interface Snapshot {
   readonly sentiment: number;
@@ -54,8 +54,10 @@ export function MatchResultScreen(): ReactNode {
   const navigate = useNavigate();
   const m = useDesignMotion();
 
-  const result = useMatchStore((s) => s.result);
+  const liveResult = useMatchStore((s) => s.result);
   const state = useGameStore((s) => s.state);
+  const result = liveResult?.matchId === params.matchId ? liveResult
+    : state && state.latestMatchReport?.matchId === params.matchId ? state.latestMatchReport : null;
   const lastCycle = useGameStore((s) => s.lastCycle);
   const busy = useGameStore((s) => s.busy);
   const storeError = useGameStore((s) => s.error);
@@ -67,8 +69,10 @@ export function MatchResultScreen(): ReactNode {
   /* --- commit the result to the world, once ---------------------------- */
 
   useEffect(() => {
-    if (!result || committed.has(result.matchId)) return;
+    if (!result) return;
     const current = useGameStore.getState().state;
+    if (!current || Object.values(current.fixtures).some((f) =>
+      f.status === 'COMPLETED' && f.matchId === result.matchId)) return;
     if (current) {
       const club = current.clubs[current.playerClubId];
       before.current = {
@@ -77,7 +81,7 @@ export function MatchResultScreen(): ReactNode {
         position: standings(current).find((row) => row.clubId === current.playerClubId)?.position ?? null,
       };
     }
-    committed.add(result.matchId);
+    useGameStore.getState().recordMatch(result);
     void useGameStore.getState().advance(result);
   }, [result]);
 
@@ -121,8 +125,8 @@ export function MatchResultScreen(): ReactNode {
    * of a "quiet week" fiction rendered on top of a broken save.
    */
   const retryAdvance = useCallback(() => {
-    void useGameStore.getState().advance(useMatchStore.getState().result);
-  }, []);
+    if (result) void useGameStore.getState().advance(result);
+  }, [result]);
 
   /* --- guards ---------------------------------------------------------- */
 
@@ -137,7 +141,7 @@ export function MatchResultScreen(): ReactNode {
         ) : (
           <ErrorState
             title="This match report has expired"
-            description={`Result ${params.matchId ?? ''} is no longer in memory. Its consequences have already been applied to your world.`}
+            description="This full report is not in the current save. Check fixtures and history for recorded scores."
             onRetry={() => navigate('/home')}
             retryLabel="Back to the club"
           />
@@ -166,7 +170,7 @@ export function MatchResultScreen(): ReactNode {
   };
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-base">
+    <div className="cf-result-screen relative flex h-full flex-col overflow-hidden bg-base">
       {/*
         The room the result was got in. A win warms the ground and lifts light
         off it; a defeat cools it and puts rain through it; a draw gets the
@@ -182,6 +186,7 @@ export function MatchResultScreen(): ReactNode {
         variant={outcome === 'W' ? 'triumph' : outcome === 'L' ? 'consolation' : 'title'}
         seed={result.matchId}
       />
+      <ArtImage asset={outcome === 'W' ? 'story.victory' : outcome === 'L' ? 'story.defeat' : 'environment.tunnel'} crop="hero" className="cf-result-backdrop" eager />
 
       <header className="glass-3 relative z-20 shrink-0 pt-[var(--safe-top)]">
         <div className="mx-auto w-full max-w-[1180px] px-4 pb-2.5 pt-2 sm:px-6">
@@ -316,7 +321,11 @@ function ResultStage({ result, home, away, playerIsHome, state }: StageProps): R
   const headline = outcome === 'W' ? 'Won it' : outcome === 'D' ? 'Shared it' : 'Lost it';
 
   return (
-    <GlassPanel nested level={2} padding="lg" accent={tone === 'positive' ? 'positive' : tone === 'danger' ? 'danger' : 'none'}>
+    <GlassPanel nested level={2} padding="lg" className="cf-result-hero" accent={tone === 'positive' ? 'positive' : tone === 'danger' ? 'danger' : 'none'}>
+      <div className="cf-result-character">
+        <CharacterHero manager={state.managers[state.playerManagerId]} expression={outcome === 'W' ? 'celebrating' : outcome === 'L' ? 'disappointed' : 'focused'} />
+        <span className="cf-eyebrow">{outcome === 'W' ? 'A moment to remember' : outcome === 'L' ? 'The work continues' : 'Every point matters'}</span>
+      </div>
       <div className="flex items-center justify-center gap-5">
         <ClubBadge visual={home.visual} size={52} flat label={home.name} />
         <ScoreDisplay

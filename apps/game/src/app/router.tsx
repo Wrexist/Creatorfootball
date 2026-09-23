@@ -46,6 +46,8 @@ const SquadIntroScreen = lazy(async () => ({
    "import only from @/design": it is not part of the kit's public barrel, and
    it must never be pulled into a player-facing chunk. */
 const Gallery = lazy(async () => ({ default: (await import('@/design/Gallery')).Gallery }));
+const LocalSavesScreen = lazy(async () => ({ default: (await import('@/features/progression/LocalSavesScreen')).LocalSavesScreen }));
+const Club3DScreen = lazy(async () => ({ default: (await import('@/world3d/Club3DScreen')).Club3DScreen }));
 
 /**
  * Shown while a route's chunk is in flight. It mirrors the shape of a `Screen`
@@ -216,6 +218,7 @@ export function AppRoutes({ location }: { location: Location }): ReactNode {
 
       {/* Onboarding and creation: reachable with or without a save. */}
       <Route path={ROUTES.onboarding} element={<TitleScreen />} />
+      <Route path={ROUTES.localSaves} element={<LocalSavesScreen />} />
       <Route path={ROUTES.managerCreation} element={<ManagerCreationScreen />} />
       <Route path={ROUTES.clubCreation} element={<ClubCreationScreen />} />
 
@@ -226,6 +229,7 @@ export function AppRoutes({ location }: { location: Location }): ReactNode {
         <Route path={ROUTES.home} element={<HomeScreen />} />
 
         <Route path={ROUTES.club} element={<ClubScreen />} />
+        <Route path={ROUTES.club3d} element={<Club3DScreen />} />
         <Route path={ROUTES.facilities} element={<FacilitiesScreen />} />
         <Route path={ROUTES.sponsors} element={<SponsorsScreen />} />
         <Route path={ROUTES.fans} element={<FansScreen />} />

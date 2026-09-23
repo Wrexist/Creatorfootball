@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+
 /**
  * Platform capability detection.
  *
@@ -26,7 +28,7 @@ const query = (q: string): boolean =>
 export function detectCapabilities(): PlatformCapabilities {
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
   const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & { deviceMemory?: number }) : undefined;
-  const isNative = typeof window !== 'undefined' && '__CAPACITOR__' in window;
+  const isNative = Capacitor.isNativePlatform();
 
   return {
     isNative,

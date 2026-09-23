@@ -233,50 +233,7 @@ export function CardFoil({ strength = 0.85, className }: CardFoilProps): ReactNo
 
 /* --- GradualBlur ------------------------------------------------------ */
 
-export interface GradualBlurProps {
-  /** Which edge fades. */
-  side?: 'top' | 'bottom';
-  height?: number;
-  strength?: number;
-  className?: string;
-}
-
-/**
- * A progressive blur along one edge, used to let content dissolve under a
- * header or a sticky footer instead of hitting a hard line.
- *
- * The usual implementation stacks six to eight `backdrop-filter` layers with
- * stepped masks. We use exactly **one** masked layer: stacked backdrop filters
- * are the single most expensive pattern available on a mobile GPU, and this kit
- * has a hard two-blur budget per screen that the header and the sheet already
- * spend. The one-layer version is slightly less smooth and enormously cheaper —
- * a trade-off made on purpose.
- */
-export function GradualBlur({
-  side = 'bottom',
-  height = 72,
-  strength = 10,
-  className,
-}: GradualBlurProps): ReactNode {
-  const mask =
-    side === 'bottom'
-      ? 'linear-gradient(to top, #000 0%, #000 32%, transparent 100%)'
-      : 'linear-gradient(to bottom, #000 0%, #000 32%, transparent 100%)';
-
-  return (
-    <span
-      aria-hidden="true"
-      className={cn('pointer-events-none absolute inset-x-0 z-10', side === 'bottom' ? 'bottom-0' : 'top-0', className)}
-      style={{
-        height,
-        backdropFilter: `blur(${strength}px)`,
-        WebkitBackdropFilter: `blur(${strength}px)`,
-        maskImage: mask,
-        WebkitMaskImage: mask,
-      }}
-    />
-  );
-}
+export { GradualBlur, type GradualBlurProps } from '../glass/GradualBlur';
 
 /* --- special-rule sweep ------------------------------------------------ */
 

@@ -92,12 +92,30 @@ export interface AssignScoutInput {
   readonly depth: ScoutDepth;
 }
 
+export function scoutReportCost(depth: ScoutDepth, credits = 0): number {
+  return credits > 0 ? 0 : Math.round(S.DEPTH_COST[depth] ?? 0);
+}
+
+export function scoutReportQuote(state: GameState, depth: ScoutDepth, registry: FacilityRegistry): {
+  cost: number; cycles: number; targetConfidence: number; usesCredit: boolean;
+} {
+  const club = state.clubs[state.playerClubId];
+  const speed = club ? facilityEffect(club, 'scoutSpeed', registry) : 0;
+  const accuracy = club ? facilityEffect(club, 'scoutAccuracy', registry) : 0;
+  const skill = state.managers[state.playerManagerId]?.attributes.scouting ?? 50;
+  return { cost: scoutReportCost(depth, state.inventory.scoutCredits), usesCredit: state.inventory.scoutCredits > 0,
+    cycles: Math.max(1, Math.round((S.DEPTH_CYCLES[depth] ?? 1) / (1 + Math.max(0, speed)))),
+    targetConfidence: clamp01((S.DEPTH_CONFIDENCE[depth] ?? 0.3) * (1 + ((skill - 50) / 50) * S.MANAGER_SCOUTING_SWING) * (1 + Math.max(0, accuracy))),
+  };
+}
+
 export interface AssignScoutResult {
   readonly ok: boolean;
   readonly reason: string;
   readonly scouting: ScoutingState | null;
   readonly cost: number;
   readonly cycles: number;
+  readonly creditsUsed?: number;
 }
 
 /**
@@ -130,7 +148,8 @@ export function assignScout(
     };
   }
 
-  const cost = Math.round(S.DEPTH_COST[input.depth] ?? 0);
+  const creditsUsed = input.clubId === state.playerClubId && state.inventory.scoutCredits > 0 ? 1 : 0;
+  const cost = scoutReportCost(input.depth, creditsUsed);
   if (!ledger.canAfford(input.clubId, cost)) {
     return { ok: false, reason: 'You cannot afford that report.', scouting: null, cost, cycles: 0 };
   }
@@ -155,6 +174,7 @@ export function assignScout(
     },
     cost,
     cycles,
+    creditsUsed,
   };
 }
 

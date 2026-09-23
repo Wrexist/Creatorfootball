@@ -194,7 +194,10 @@ describe('the negotiation flow', () => {
 
 describe('completeTransfer', () => {
   function agreedNegotiation(): { neg: Negotiation; ctx: NegotiationContext } | null {
-    const { ctx } = scenario();
+    const scenarioContext = scenario().ctx;
+    // Settlement fixtures explicitly authorize the same budget as their cash.
+    const ctx = { ...scenarioContext, buyingClub: { ...scenarioContext.buyingClub,
+      finance: { ...scenarioContext.buyingClub.finance, transferBudget: 80_000_000, wageBudgetPerCycle: 5_000_000 } } };
     for (let seed = 0; seed < 40; seed++) {
       const run = runToConclusion(ctx, `complete-${seed}`, meetDemand);
       if (run.negotiation.stage === 'AGREED') return { neg: run.negotiation, ctx };
@@ -238,11 +241,42 @@ describe('completeTransfer', () => {
     expect(ledger.cashOf(agreed.ctx.buyingClub.id)).toBe(1_000);
   });
 
+  it('removes a signed academy player from the seller youth registration', () => {
+    const agreed = agreedNegotiation();
+    expect(agreed).not.toBeNull();
+    if (!agreed || !agreed.ctx.sellingClub) throw new Error('Expected agreed fixture');
+    const seller = {...agreed.ctx.sellingClub,squad:[],youthSquad:[agreed.ctx.player.id]};
+    const ledger = new Ledger();
+    ledger.open(agreed.ctx.buyingClub.id,80_000_000,POST);
+    ledger.open(seller.id,1_000_000,POST);
+    const result = completeTransfer(agreed.neg,{...agreed.ctx,sellingClub:seller},ledger,POST,new IdFactory('academy'));
+    expect(result.ok).toBe(true);
+    expect(result.fromClub?.youthSquad).not.toContain(agreed.ctx.player.id);
+    expect(result.toClub?.squad).toContain(agreed.ctx.player.id);
+  });
+
   it('refuses to settle a negotiation that is not agreed', () => {
     const { ctx } = scenario();
     const neg = openNegotiation(ctx, new Rng('unagreed'));
     const outcome = completeTransfer(neg, ctx, new Ledger(), POST, new IdFactory('t'));
     expect(outcome.ok).toBe(false);
+  });
+
+  it.each(['transfer', 'wages', 'embargo', 'window', 'expiry'] as const)('rejects %s violations without moving money', violation => {
+    const agreed = agreedNegotiation()!;
+    const ledger = new Ledger();
+    ledger.open(agreed.ctx.buyingClub.id, 80_000_000, POST);
+    const ctx = { ...agreed.ctx, currentWageBill: 10_000, windowOpen: violation !== 'window',
+      cycle: violation === 'expiry' ? agreed.neg.deadlineCycle + 1 : agreed.ctx.cycle,
+      buyingClub: { ...agreed.ctx.buyingClub, finance: { ...agreed.ctx.buyingClub.finance,
+        ...(violation === 'transfer' ? { transferBudget: 0 } : {}),
+        ...(violation === 'wages' ? { wageBudgetPerCycle: 10_000 } : {}),
+        ...(violation === 'embargo' ? { debt: 1_000_000 } : {}),
+      } },
+    };
+    const before = ledger.snapshot();
+    expect(completeTransfer(agreed.neg, ctx, ledger, POST, new IdFactory('guard')).ok).toBe(false);
+    expect(ledger.snapshot()).toEqual(before);
   });
 });
 

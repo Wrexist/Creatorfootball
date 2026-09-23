@@ -97,6 +97,8 @@ interface MatchState {
   ratings: Readonly<Record<string, number>>;
   result: MatchResult | null;
   presentation: 'PITCH' | 'BROADCAST';
+  autoDecisionTimeout: boolean;
+  setAutoDecisionTimeout: (enabled: boolean) => void;
   /**
    * Which side the human manages. Substitutions and rule cards must be applied
    * to it, not to whichever team happens to be nominally at home — hardcoding
@@ -184,7 +186,9 @@ export const useMatchStore = create<MatchState>((set, get) => {
         // defaultOptionId, so the honest behaviour is to fall back to it after
         // a generous grace period rather than to stop the game.
         decisionDeadline:
-          Date.now() + (pending.timeoutSeconds > 0 ? pending.timeoutSeconds : INDEFINITE_PROMPT_GRACE_SECONDS) * 1000,
+          state.autoDecisionTimeout
+            ? Date.now() + (pending.timeoutSeconds > 0 ? pending.timeoutSeconds : INDEFINITE_PROMPT_GRACE_SECONDS) * 1000
+            : null,
       });
       return;
     }
@@ -219,6 +223,8 @@ export const useMatchStore = create<MatchState>((set, get) => {
     ratings: {},
     result: null,
     presentation: 'PITCH',
+    autoDecisionTimeout: true,
+    setAutoDecisionTimeout: (autoDecisionTimeout) => set({ autoDecisionTimeout }),
     playerSide: 'home',
 
     attach: (sim, playerSide) => {

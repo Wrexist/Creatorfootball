@@ -3,11 +3,12 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '@cf/engine';
 import {
-  GlassButton, GlassCard, GlassPill, HeroScene, IconChevronRight, useConfirm, useDesignMotion,
+  GlassButton, GlassCard, GlassPill, IconChevronRight, useConfirm, useDesignMotion,
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { BrandMark } from './BrandMark';
+import { ArtImage } from '@/design/premium/components';
 
 /**
  * The title screen.
@@ -63,7 +64,7 @@ export function TitleScreen(): ReactNode {
       {/* Beat 0:00-0:25. The hero is the screen, not a band across the top of
           it — the copy and the CTA sit *on* the ground rather than above and
           below a hole where a picture should be. */}
-      <HeroScene variant="title" seed="creator-football" />
+      <ArtImage asset="environment.office" crop="hero" eager className="cf-title-scene" />
 
       <div
         className="scroll-y relative flex flex-1 flex-col justify-between px-6 pb-[calc(var(--safe-bottom)+28px)] pt-[calc(var(--safe-top)+40px)]"
@@ -137,8 +138,9 @@ export function TitleScreen(): ReactNode {
           </motion.div>
 
           <motion.p variants={m.variants.rise} className="px-1 text-center text-[12px] text-ink-dim">
-            Creation takes about three minutes. Every step can be changed later.
+            Your club starts here. Progress is saved on this device.
           </motion.p>
+          <GlassButton variant="ghost" block onClick={() => navigate(ROUTES.localSaves)}>Local saves &amp; import</GlassButton>
 
           {import.meta.env.DEV && (
             <motion.div variants={m.variants.rise} className="flex justify-center pt-1">

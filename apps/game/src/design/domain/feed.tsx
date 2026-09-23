@@ -13,6 +13,8 @@ import { formatCount } from './numbers';
 import { IconHeart, IconReply, IconRepost, IconShare, IconVerified } from '../icons';
 import { NameText } from '../typography/Text';
 import { TYPE_CLASS } from '../typography/type';
+import { ArtImage } from '../premium/components';
+import { assetFor, storyArt } from '../art/manifest';
 
 /* --- generated story art ---------------------------------------------- */
 
@@ -305,7 +307,9 @@ export const NewsCard = memo(function NewsCard({
     >
       {lead && (
         <div className="relative h-28 w-full">
-          <StoryArt seed={story.imageSeed ?? story.id} motif={storyMotifFor(story.tags)} />
+          {assetFor(storyArt(story.tags.join(' ')))
+            ? <ArtImage asset={storyArt(story.tags.join(' '))} className="h-full w-full object-cover" />
+            : <StoryArt seed={story.imageSeed ?? story.id} motif={storyMotifFor(story.tags)} />}
           {story.tags[0] && (
             <div className="absolute left-3 top-3">
               <GlassPill tone={sentimentTone} size="xs" filled={sentimentTone !== 'neutral'}>

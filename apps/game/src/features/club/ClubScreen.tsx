@@ -7,14 +7,16 @@ import {
   type Club, type GameState, type Manager,
 } from '@cf/engine';
 import {
-  CardRail, ClubBadge, CreatorCard, Divider, FormGuide, GlassButton, GlassPanel, GlassPill,
-  HeroSurface, ListRow, NameText, ProgressBar, Screen, StatBlock, Text, formatCount, formatMoney,
+  CardRail, ClubBadge, CreatorCard, Divider, GlassButton, GlassPanel,
+  ListRow, NameText, ProgressBar, Screen, StatBlock, Text, formatCount, formatMoney,
   IconFans, IconMoney, IconSponsor, IconStadium, IconStar, IconTrophy,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
 import { ScreenStatus } from './status';
 import { facilityDefs, ledgerOf } from './bridge';
+import { ClubCampus } from '@/design/premium/ClubCampus';
+import { ManagerPortrait } from '@/features/creation/ManagerPortrait';
 
 /**
  * Club.
@@ -163,6 +165,7 @@ function ClubBody({ state }: { state: GameState }): ReactNode {
           </GlassPanel>
           {data.manager && (
             <GlassPanel title="Manager" padding="md">
+              <ManagerPortrait appearance={data.manager.appearance} size={72} label={data.manager.name} />
               <NameText name={data.manager.name} role="title" lines={2} />
               <Text role="caption" className="mt-1.5 text-pretty">{data.manager.bio}</Text>
               <Text role="caption" className="mt-3 text-ink-dim">
@@ -174,50 +177,7 @@ function ClubBody({ state }: { state: GameState }): ReactNode {
       }
     >
       {/* --- identity ------------------------------------------------- */}
-      <HeroSurface texture="stadium" bleed={club.visual.primary} bleedStrength={34} padding="md">
-        <div className="flex items-start gap-4">
-          <ClubBadge visual={club.visual} size={76} label={club.name} />
-          <div className="min-w-0 flex-1">
-            <NameText
-              name={club.name}
-              short={club.shortName}
-              abbr={club.abbreviation}
-              role="hero"
-              lines={2}
-              as="h2"
-            />
-            <Text role="caption" className="mt-1.5 italic text-pretty">“{club.motto}”</Text>
-            <div className="mt-2.5 flex items-center gap-1.5" aria-label="Club colours">
-              {[club.visual.primary, club.visual.secondary, club.visual.accent].map((colour, index) => (
-                <span
-                  key={`${colour}-${index}`}
-                  className="h-2 w-9 rounded-pill"
-                  style={{ background: colour }}
-                  aria-hidden="true"
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <GlassPill tone="volt" size="sm">{PHILOSOPHY_LABELS[club.philosophy]}</GlassPill>
-          <GlassPill size="sm">{FAN_CULTURE_LABELS[club.fanCulture]}</GlassPill>
-          <GlassPill size="sm">{club.city}</GlassPill>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/[0.08] pt-3">
-          <div className="min-w-0">
-            <Text role="label" className="text-ink-dim">Where you stand</Text>
-            <Text role="bodyStrong" as="p" className="mt-0.5">
-              {data.row && data.row.played > 0
-                ? `${data.row.position} of ${data.table.length} · ${data.row.points} points from ${data.row.played} games`
-                : 'The season has not started yet'}
-            </Text>
-          </div>
-          <FormGuide results={data.form} slots={5} size="md" />
-        </div>
-      </HeroSurface>
+      <ClubCampus club={club} onNavigate={navigate} />
 
       {/* --- what this club is --------------------------------------- */}
       <GlassPanel padding="md">

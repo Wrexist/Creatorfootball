@@ -12,6 +12,7 @@ import type { Contract } from '../contracts/contract';
 import type { Competition, Fixture, Season } from '../league/types';
 import type { RuleCard } from '../matches/specialRules';
 import type { DecisionTrigger } from '../matches/decisions';
+import type { MatchResult } from '../matches/result';
 
 /**
  * The complete serialisable game state.
@@ -61,8 +62,14 @@ export interface GameState {
 
   /** Bounded tail of the domain event journal, retained for the UI and history. */
   readonly eventLog: readonly AnyDomainEvent[];
+  /** UI actions awaiting the next world/objective tick; consumed exactly once. */
+  readonly pendingActionEvents?: readonly AnyDomainEvent[];
   readonly idCounters: Readonly<Record<string, number>>;
   readonly analytics: AnalyticsState;
+  /** Bounded, additive report storage; older saves have no archived report. */
+  readonly latestMatchReport?: MatchResult;
+  /** AI's finite, seeded season allocation; old saves start with no spent cards. */
+  readonly aiCardUsage?: { readonly season: number; readonly byClub: Readonly<Record<string, readonly string[]>> };
 }
 
 export interface TransferState {
@@ -357,6 +364,10 @@ export interface InventoryState {
 
 export interface GameSettings {
   readonly reducedMotion: boolean;
+  /** Optional presentation preferences preserve compatibility with older saves. */
+  readonly reducedEffects?: boolean;
+  readonly textSize?: 'STANDARD' | 'LARGE';
+  readonly highContrast?: boolean;
   readonly haptics: boolean;
   /** Synthesised sound effects. See `apps/game/src/design/audio.ts`. */
   readonly sound: boolean;

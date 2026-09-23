@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Only user-requested career exports can be shared by this provider. -->
+    <cache-path name="career_exports" path="career-exports/" />
+</paths>

@@ -15,7 +15,7 @@ export default defineConfig({
      * CPU-bound block can no longer starve the reporter.
      */
     pool: 'forks',
-    poolOptions: { forks: { isolate: true } },
+    isolate: true,
 
     /**
      * Run suites one at a time. The match simulator's aggregate-realism suite

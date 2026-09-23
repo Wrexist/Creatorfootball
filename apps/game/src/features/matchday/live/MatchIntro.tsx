@@ -4,6 +4,7 @@ import type { Club, Player } from '@cf/engine';
 import { ClubBadge, GlassButton, IconFans, PlayerPortrait, ShinyText, cn, haptics, sfx, useDesignMotion } from '@/design';
 import { arenaShareLine, type MatchdayContext } from '../shared/context';
 import { kitColors, type KitPalette } from '../shared/kit';
+import { ArtImage } from '@/design/premium/components';
 
 /**
  * The walk-out.
@@ -94,7 +95,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
 
   return (
     <div
-      className="fixed inset-0 z-[65] flex flex-col overflow-hidden bg-void"
+      className="cf-match-intro fixed inset-0 z-[65] flex flex-col overflow-hidden bg-void"
       style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}
       role="dialog"
       aria-modal="true"
@@ -130,6 +131,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
         }}
       />
 
+      <ArtImage asset="environment.tunnel" crop="hero" className="cf-intro-backdrop" eager />
       <div className="pointer-events-none relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center">
         {m.reduced ? (
           <StaticIntro

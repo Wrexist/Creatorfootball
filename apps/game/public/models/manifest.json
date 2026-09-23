@@ -1,0 +1,96 @@
+{
+  "version": 2,
+  "sources": [
+    {
+      "path": "apps/game/scripts/build-club-models.mjs",
+      "sha256": "3bbc95dbaa350d84cc1d6477a79a43b52fc36e0dd3ac745b18c2673b5a8d2701"
+    },
+    {
+      "path": "apps/game/scripts/campus-model.mjs",
+      "sha256": "4f1daaf3fac5bbd15583633b855e674128e96f7531bbcc484700a10d7bae2b75"
+    }
+  ],
+  "provenance": "Original source-authored procedural meshes. No external models, images or textures.",
+  "license": "Project-owned original assets; see repository licence. No third-party asset restrictions.",
+  "source": "apps/game/scripts/build-club-models.mjs",
+  "sourceSha256": "f7bb1cc96a5ef080a4b5edcab5273a0c84e516d75d6ea8fa26b9bd0368928a36",
+  "models": {
+    "campus": {
+      "src": "/models/campus.glb",
+      "bytes": 1263896,
+      "triangles": 28288,
+      "draws": 88,
+      "sha256": "036e248aaabca3f0d291adb08d11cf31f340774f54be0dd71826bfe26e986d1d",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "trophy": {
+      "src": "/models/trophy.glb",
+      "bytes": 42088,
+      "triangles": 2036,
+      "draws": 3,
+      "sha256": "c51c92830b730a2707c5da1acaeaea8d53b60d413a42d74bd91275a6918decd8",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "football": {
+      "src": "/models/football.glb",
+      "bytes": 43120,
+      "triangles": 2060,
+      "draws": 3,
+      "sha256": "029a9b182b4fe629c721fc0c39e51e06adbf219aa1f266343265aba0022e6a16",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "kit-classic": {
+      "src": "/models/kit-classic.glb",
+      "bytes": 15928,
+      "triangles": 205,
+      "draws": 5,
+      "sha256": "b4bffaaa2f7cbb8f2fbd70b9722c58bc55b1e5504dbdb01f7389c1771c7a2aa6",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "kit-sash": {
+      "src": "/models/kit-sash.glb",
+      "bytes": 16568,
+      "triangles": 217,
+      "draws": 5,
+      "sha256": "434ef9ef74a52fba4e411f291c1d2399391a373c4c24805fca1315b1dce08b36",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "kit-hoops": {
+      "src": "/models/kit-hoops.glb",
+      "bytes": 19168,
+      "triangles": 265,
+      "draws": 5,
+      "sha256": "e1ba1865d9ebacf30605c1db9fd042a1aa33fe6d5c06eb383a72d6f7d29116d2",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "kit-pinstripe": {
+      "src": "/models/kit-pinstripe.glb",
+      "bytes": 20464,
+      "triangles": 289,
+      "draws": 5,
+      "sha256": "c70b4922099f99a3f130f243725f8f60d6c867a6e34f02ec87a619c1a1b2d490",
+      "validation": {
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  }
+}

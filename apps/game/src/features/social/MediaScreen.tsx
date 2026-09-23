@@ -115,6 +115,7 @@ function MediaView({ state }: { state: GameState }): ReactNode {
           nested
         />
       }
+      asideOnMobile
       aside={
         <GlassPanel title="How the press works" padding="md">
           <p className="text-[13px] leading-relaxed text-ink-muted text-pretty">

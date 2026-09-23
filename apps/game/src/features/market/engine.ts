@@ -8,6 +8,7 @@ import {
   buildValuationContext,
   completeTransfer,
   currentCompetition,
+  computeStandings, squadWageBill, GameEventFactory, appendEvents,
   contractFor,
   openNegotiation,
   phaseForWeek,
@@ -164,7 +165,9 @@ export function orderScoutReport(playerId: PlayerId, depth: ScoutDepth): ScoutOr
   if (!result.ok || !result.scouting) return { ok: false, reason: result.reason };
 
   const scouting = result.scouting;
-  store.apply((current) => ({ ...current, scouting, ledger: ledger.snapshot() }));
+  store.apply((current) => ({ ...current, scouting, ledger: ledger.snapshot(),
+    inventory: { ...current.inventory, scoutCredits: Math.max(0, current.inventory.scoutCredits - (result.creditsUsed ?? 0)) },
+  }));
   return { ok: true, reason: result.reason };
 }
 
@@ -196,7 +199,7 @@ export function negotiationContext(s: GameState, negId: string, player: Player):
   const sellingClub: Club | null = player.clubId ? s.clubs[player.clubId] ?? null : null;
   const competition = currentCompetition(s);
   const position = competition
-    ? Math.max(1, competition.clubIds.indexOf(s.playerClubId) + 1)
+    ? Math.max(1, computeStandings(competition.clubIds, Object.values(s.fixtures), competition).findIndex(r => r.clubId === s.playerClubId) + 1)
     : 1;
 
   return {
@@ -214,6 +217,8 @@ export function negotiationContext(s: GameState, negId: string, player: Player):
     managerCharisma: manager?.attributes.mediaHandling ?? 50,
     managerNegotiation: manager?.attributes.negotiation ?? 50,
     rivals: rivalsFor(s, player),
+    currentWageBill: squadWageBill(s, s.playerClubId),
+    windowOpen: isWindowOpen(s),
   };
 }
 
@@ -325,21 +330,33 @@ export function finaliseTransfer(negId: string): TransferOutcome | null {
 
   store.apply((current) => {
     let next = setPlayer(current, signed);
+    // A sold player's former deal must not expire later and clear new ownership.
+    if (player.contractId && player.contractId !== contract.id) {
+      const contracts = { ...next.contracts };
+      delete contracts[player.contractId];
+      next = { ...next, contracts };
+    }
     next = setContract(next, contract);
     if (fromClub) next = setClub(next, fromClub);
     next = setClub(next, toClub);
     const negotiations = { ...next.transfers.negotiations };
     delete negotiations[negId];
-    return {
+    const factory = new GameEventFactory({ ...next, idCounters: counters }, postCtx.at);
+    const event = factory.make('PLAYER_SIGNED', { playerId: signed.id, clubId: toClub.id,
+      ...(fromClub ? { fromClubId: fromClub.id } : {}), fee: completed.fee, wage: contract.wage,
+      ...(outcome.transferId ? { transferId: outcome.transferId } : {}),
+    }, { importance: 3, entities: [factory.playerRef(signed.id), factory.clubRef(toClub.id)] });
+    return factory.commit(appendEvents({
       ...next,
       ledger: ledger.snapshot(),
       idCounters: counters,
+      pendingActionEvents: [...(next.pendingActionEvents ?? []), event],
       transfers: {
         ...next.transfers,
         negotiations,
         completed: [...next.transfers.completed, completed].slice(-60),
       },
-    };
+    }, [event]));
   });
   return outcome;
 }

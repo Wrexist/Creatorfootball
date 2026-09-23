@@ -1,0 +1,2348 @@
+[
+  {
+    "key": "manager.vera-focused",
+    "name": "manager-vera-focused",
+    "kind": "character",
+    "screens": [
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "prompt": "Edit the reference original fictional manager Vera into ONE expression variant. Preserve the exact same woman, age, facial identity, ash-grey pixie crop, skin, dark technical coat with cool-blue trim, blank notebook, plain dark forest background, portrait camera and warm-left/cool-right lighting. Waist-up 2:3 framing with entire head and arms comfortably visible. Change expression/pose ONLY: intent concentration, brows slightly knit, notebook in arm, eyes forward. Premium stylized semi-realistic 3D game character. No text, no brands, no UI, no crests, no watermarks. This is reusable character art, not an interface.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-9e8e5f05-330f-4466-acf2-bcf924b4cae9.png",
+    "cropRegions": {
+      "thumb": [
+        0.22,
+        0,
+        0.54,
+        0.38
+      ],
+      "card": [
+        0.12,
+        0,
+        0.76,
+        0.6
+      ]
+    }
+  },
+  {
+    "key": "manager.vera-happy",
+    "name": "manager-vera-happy",
+    "kind": "character",
+    "screens": [
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "prompt": "Edit the reference original fictional manager Vera into ONE expression variant. Preserve the exact same woman, age, facial identity, ash-grey pixie crop, skin, dark technical coat with cool-blue trim, blank notebook, plain dark forest background, portrait camera and warm-left/cool-right lighting. Waist-up 2:3 framing with entire head and arms comfortably visible. Change expression/pose ONLY: warm delighted smile, relaxed shoulders, notebook in arm. Premium stylized semi-realistic 3D game character. No text, no brands, no UI, no crests, no watermarks. This is reusable character art, not an interface.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4ce5b6ac-a4e6-4562-9d5c-a4631557b066.png",
+    "cropRegions": {
+      "thumb": [
+        0.22,
+        0,
+        0.54,
+        0.38
+      ],
+      "card": [
+        0.12,
+        0,
+        0.76,
+        0.6
+      ]
+    }
+  },
+  {
+    "key": "manager.vera-disappointed",
+    "name": "manager-vera-disappointed",
+    "kind": "character",
+    "screens": [
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "prompt": "Edit the reference original fictional manager Vera into ONE expression variant. Preserve the exact same woman, age, facial identity, ash-grey pixie crop, skin, dark technical coat with cool-blue trim, blank notebook, plain dark forest background, portrait camera and warm-left/cool-right lighting. Waist-up 2:3 framing with entire head and arms comfortably visible. Change expression/pose ONLY: quiet disappointment after defeat, gaze slightly lowered, lips pressed, notebook in arm, no tears. Premium stylized semi-realistic 3D game character. No text, no brands, no UI, no crests, no watermarks. This is reusable character art, not an interface.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-49328081-0a12-45c3-b08a-5443c39eff23.png",
+    "cropRegions": {
+      "thumb": [
+        0.22,
+        0,
+        0.54,
+        0.38
+      ],
+      "card": [
+        0.12,
+        0,
+        0.76,
+        0.6
+      ]
+    }
+  },
+  {
+    "key": "manager.vera-celebrating",
+    "name": "manager-vera-celebrating",
+    "kind": "character",
+    "screens": [
+      "Home",
+      "Club",
+      "Press",
+      "Result"
+    ],
+    "prompt": "Edit the reference original fictional manager Vera into ONE expression variant. Preserve the exact same woman, age, facial identity, ash-grey pixie crop, skin, dark technical coat with cool-blue trim, blank notebook, plain dark forest background, portrait camera and warm-left/cool-right lighting. Waist-up 2:3 framing with entire head and arms comfortably visible. Change expression/pose ONLY: joyful victory celebration, broad authentic smile, one fist lifted near shoulder, notebook held in other arm. Premium stylized semi-realistic 3D game character. No text, no brands, no UI, no crests, no watermarks. This is reusable character art, not an interface.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3d60b1d3-b7c2-4332-9825-89feb3e50784.png",
+    "cropRegions": {
+      "thumb": [
+        0.22,
+        0,
+        0.54,
+        0.38
+      ],
+      "card": [
+        0.12,
+        0,
+        0.76,
+        0.6
+      ]
+    }
+  },
+  {
+    "key": "manager.vera-neutral",
+    "name": "manager-vera-neutral",
+    "kind": "character",
+    "screens": [
+      "Home",
+      "Club",
+      "Press",
+      "Manager selection"
+    ],
+    "prompt": "Original fictional adult female football manager Vera, about 40, fair warm skin, short neat ash-grey pixie crop, no facial hair, thoughtful grey eyes, subtle asymmetrical smile, mature confident features, athletic average build. Waist-up hero looking toward viewer, holding an entirely blank closed notebook under one arm, other arm relaxed. Dark charcoal technical coaching coat, small cool-blue trim, absolutely unbranded. Neutral focused expression. Premium stylized semi-realistic 3D game character, same material quality as reference office, warm upper-left key light and cool right rim light. Portrait 2:3 canvas, entire head and elbows and waist framed with headroom. Plain deep forest charcoal background. No text, no letters, numbers, logos, crest, watermark, real-person likeness or interface. Art only.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-235e367d-82a9-49bd-b5ac-e2e072956270.png",
+    "cropRegions": {
+      "thumb": [
+        0.22,
+        0,
+        0.54,
+        0.38
+      ],
+      "card": [
+        0.12,
+        0,
+        0.76,
+        0.6
+      ]
+    }
+  },
+  {
+    "key": "environment.scouting-office",
+    "name": "scouting-office",
+    "kind": "environment",
+    "screens": [
+      "Market",
+      "Scouting",
+      "Finances",
+      "Sponsors",
+      "Negotiation"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. An original football scouting and analytics office, wide glass window onto a training pitch at blue hour, satin black binoculars and blank report folders on a wood desk, two powered-off dark monitors, board with blank card shapes, no readable data, no people.\n\nFinal cleanup: Edit this exact football scouting office artwork. Preserve camera, composition, lighting, materials and all objects. Remove every tiny logo, word or letter-like mark from both computer monitor bezels and any other object. Monitor lower bezels must be plain unbranded black plastic with no markings. No legible or pseudo writing anywhere. Make no other changes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-047c22be-a763-44ad-b30a-844e0b4c6cee.png",
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-54806ddf-0bd7-4835-b269-82ce2da03c16.png"
+  },
+  {
+    "key": "environment.boardroom",
+    "name": "boardroom",
+    "kind": "environment",
+    "screens": [
+      "Market",
+      "Scouting",
+      "Finances",
+      "Sponsors",
+      "Negotiation"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. A football club boardroom overlooking the stadium, dark oak conference table, forest green leather chairs, blank closed financial folders, unmarked brass pen, refined gold trophy in background, no people.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-9a5a4dd3-09a7-4175-8435-7cfa7cc04111.png"
+  },
+  {
+    "key": "environment.transfer-stage",
+    "name": "transfer-stage",
+    "kind": "environment",
+    "screens": [
+      "Market",
+      "Scouting",
+      "Finances",
+      "Sponsors",
+      "Negotiation"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. An original football transfer presentation stage, black blank sponsor backdrop with soft rectangular light panels but NO logos or text, a plain black and lime jersey displayed centrally on a stand, microphones on a press table, dramatic warm stage lighting, no people.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-144922e9-841d-44f6-9659-0573d78c01f1.png"
+  },
+  {
+    "key": "character.player-05",
+    "name": "player-05",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male defender, 27, East Asian appearance, straight black hair with side part, broad cheekbones, clean-shaven, muscular neck, composed expression",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-2f2e03a7-392c-4912-821b-474917bc06ac.png"
+  },
+  {
+    "key": "character.player-06",
+    "name": "player-06",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male defender, 30, deep brown skin, close fade and short boxed beard, stocky powerful build, serious eyes",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-5c5c8a90-bead-485a-93dc-bed8719f3fc4.png"
+  },
+  {
+    "key": "character.player-07",
+    "name": "player-07",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male fullback, 21, fair skin, shoulder-length sandy blond hair tied back, clean-shaven, lean runner build, confident",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b38d40b4-e205-474f-adb0-6cd16ef758b0.png"
+  },
+  {
+    "key": "character.player-08",
+    "name": "player-08",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male defender, 25, medium olive skin, tightly curled shoulder-length dark hair, trimmed moustache, distinctive long nose and calm gaze",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-0ec587a5-8308-4cdb-b9a2-d88c50074ef2.png"
+  },
+  {
+    "key": "character.player-01",
+    "name": "player-01",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male goalkeeper, 29, dark warm skin, shaved head, clean-shaven, broad shoulders and calm observant eyes",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-fbc1ec86-a1c9-4f49-a7f3-213ceda9e695.png"
+  },
+  {
+    "key": "character.player-02",
+    "name": "player-02",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male goalkeeper, 26, fair freckled skin, short auburn curls, clean-shaven, tall angular face, focused",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ad2e42e8-bd85-444b-9b18-fd80954cae8b.png"
+  },
+  {
+    "key": "character.player-03",
+    "name": "player-03",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male centre defender, 31, olive skin, short black hair, close beard, strong square jaw and sturdy build",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-37b9e960-e0f6-4855-a02b-75780be9116a.png"
+  },
+  {
+    "key": "character.player-04",
+    "name": "player-04",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Market",
+      "Tactics",
+      "Match"
+    ],
+    "prompt": "Create one ORIGINAL FICTIONAL ADULT football player portrait, no real-person likeness. Premium stylized semi-realistic 3D game character with coherent believable proportions, warm soft key light from upper left, fine cool rim light right, realistic fabric and subtle skin shader. Portrait 2:3 canvas. Chest-up, entire head and shoulders comfortably framed with 8% headroom, camera 85mm focal length, looking toward viewer in subtle three-quarter angle, deep forest charcoal studio background. Blank charcoal crew-neck training jersey with fine lime collar piping. No badge, logo, numbers, text, UI, watermark, jewellery, equipment or props. Identity: adult male fullback, 23, medium-brown skin, short tightly curled hair, slim athletic shoulders, clean-shaven, alert bright eyes",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c4f4be5d-719e-4767-af5f-cd927c6f0544.png"
+  },
+  {
+    "key": "environment.dressing-room",
+    "name": "dressing-room",
+    "kind": "environment",
+    "screens": [
+      "Squad",
+      "Tactics",
+      "Training"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cohesive with reference manager office. Main focal environment in upper centre, bottom suitable for UI overlay but DO NOT render any UI. No real clubs, logos, sponsors, letters, numbers, writing, text, watermark, panels, buttons. An intimate premium football dressing room, dark oak lockers, blank black jerseys with narrow lime trim hanging neatly, brass hooks, upholstered forest-green bench, no numbers on jerseys. View from doorway with depth and dramatic warm sidelighting.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8663790a-0dc3-440a-97a5-08c06e39ee40.png"
+  },
+  {
+    "key": "environment.training-ground",
+    "name": "training-ground",
+    "kind": "environment",
+    "screens": [
+      "Squad",
+      "Tactics",
+      "Training"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cohesive with reference manager office. Main focal environment in upper centre, bottom suitable for UI overlay but DO NOT render any UI. No real clubs, logos, sponsors, letters, numbers, writing, text, watermark, panels, buttons. A fictional professional football training ground at dawn, immaculately striped grass, small goal, lime training cones and mannequin wall, distant clubhouse, soft morning mist, inviting sunlight. No people.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-fc9e4b4a-b27f-447c-a539-33fd90e6ff1d.png"
+  },
+  {
+    "key": "environment.tactics-room",
+    "name": "tactics-room",
+    "kind": "environment",
+    "screens": [
+      "Squad",
+      "Tactics",
+      "Training"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cohesive with reference manager office. Main focal environment in upper centre, bottom suitable for UI overlay but DO NOT render any UI. No real clubs, logos, sponsors, letters, numbers, writing, text, watermark, panels, buttons. A beautifully lit football tactics room with a dark-green tactical board with only pitch lines, no writing or player markers, magnetic pieces on a side desk, charcoal walls, warm oak and satin metal, cool stadium window light. No people.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-ae426691-5c2d-46ed-90c8-ec655e5e12f5.png"
+  },
+  {
+    "key": "environment.office",
+    "name": "office",
+    "kind": "environment",
+    "screens": [
+      "Home"
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: pre-rendered 3D mobile football-management game environment background, landscape 3:2, high resolution. Reference image is ART DIRECTION ONLY, never reproduce its interface. Create an original premium manager office overlooking a fictional football stadium at blue-hour dusk, warm sunset beyond floor-to-ceiling windows, beautiful floodlights, dark forest-green upholstered furniture, satin charcoal desk in foreground, warm gold trophy on left shelving, small football, subtle wood/stone/fabric detail. NO PEOPLE. Main window/stadium opening occupies center and right so separate character and UI can overlay later. Cinematic depth, polished semi-realistic stylized 3D, consistent warm key light left and cool stadium rim light right. Color palette deep forest charcoal, muted warm gold, restrained lime accents. Absolutely NO text, NO letters, NO numbers, NO logos, NO crests, NO watermarks, NO panels, NO buttons, NO functional UI. Art only. Nothing written on objects, walls, flags, mugs or books. Crop safe with focal stadium centered.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-13a79d72-d453-4975-8f32-ec2e4efd5920.png"
+  },
+  {
+    "key": "manager.neutral",
+    "name": "manager-neutral",
+    "kind": "character",
+    "screens": [
+      "Home",
+      "Club",
+      "Press"
+    ],
+    "prompt": "Use case: stylized-concept. Production game art: one original fictional adult male football club manager, about 35, olive skin, wavy dark brown hair, short neatly trimmed beard, warm brown eyes, athletic average build, distinctive broad brows and subtle crooked smile. Waist-up hero facing camera in a slight three-quarter pose, arms crossed, neutral confident expression. Premium semi-realistic stylized 3D rendering, believable skin, satin black tracksuit with very fine acid-lime piping, blank unbranded chest. Consistent warm key light from upper left, cool stadium rim light from right. Isolate entire silhouette on a plain deep forest #0D1211 background, waist and elbows fully in frame, generous headroom. Portrait 2:3 composition. This is reusable character art only, absolutely NO text, letters, logos, crests, watermark, UI, panels, buttons, or real person likeness. Match the reference's lighting/material quality, but output only the character on plain background.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-793cdf65-adb3-4519-ad89-72d8ce89fd1b.png",
+    "cropRegions": {
+      "thumb": [
+        0.22,
+        0,
+        0.54,
+        0.38
+      ],
+      "card": [
+        0.12,
+        0,
+        0.76,
+        0.6
+      ]
+    }
+  },
+  {
+    "key": "object.tactics-tablet",
+    "name": "tactics-tablet",
+    "kind": "object",
+    "screens": [
+      "Home"
+    ],
+    "prompt": "Production isolated 3D object art for an original football-management game. Landscape 3:2 image, object fully visible centered, deep forest charcoal plain background, dramatic warm key light upper left and cool stadium rim right. Premium stylized semi-realistic 3D materials, tactile fabric and satin metal. No people. Absolutely no letters, numbers, text, logos, branding, watermark, functional interface or buttons. Subject: a premium dark tactical tablet lying on a charcoal desk, luminous green football pitch lines ONLY as blank pitch markings, a few plain unnumbered lime magnets beside it, no writing",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-870aaf57-bc20-49a8-9160-597611254218.png"
+  },
+  {
+    "key": "object.training-cones",
+    "name": "training-cones",
+    "kind": "object",
+    "screens": [
+      "Home"
+    ],
+    "prompt": "Production isolated 3D object art for an original football-management game. Landscape 3:2 image, object fully visible centered, deep forest charcoal plain background, dramatic warm key light upper left and cool stadium rim right. Premium stylized semi-realistic 3D materials, tactile fabric and satin metal. No people. Absolutely no letters, numbers, text, logos, branding, watermark, functional interface or buttons. Subject: three acid-lime training cones, folded black training bib and a blank black football with subtle gold seams on a wet dark training-ground bench",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-0a413f1c-492d-45aa-8ee4-4e401fc33330.png"
+  },
+  {
+    "key": "object.scout-binoculars",
+    "name": "scout-binoculars",
+    "kind": "object",
+    "screens": [
+      "Home"
+    ],
+    "prompt": "Production isolated 3D object art for an original football-management game. Landscape 3:2 image, object fully visible centered, deep forest charcoal plain background, dramatic warm key light upper left and cool stadium rim right. Premium stylized semi-realistic 3D materials, tactile fabric and satin metal. No people. Absolutely no letters, numbers, text, logos, branding, watermark, functional interface or buttons. Subject: beautiful satin-black scout binoculars with subtle green lens reflections, a blank closed report folder and unmarked pencil on a dark walnut desk",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c31353f5-2f00-4a64-b9ed-cb65cfa47c32.png"
+  },
+  {
+    "key": "environment.stadium-day",
+    "name": "environment-stadium-day",
+    "kind": "environment",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Matchday"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. Elevated three-quarter view of an original community football club campus. Small complete stadium with dark forest seats, training pitches, low academy building, trees and walkways. Warm late-afternoon sunshine, clean stylized miniature architectural depth, believable scale. No labels or text.\n\nFinal cleanup: Edit this exact stadium campus artwork. Preserve the complete camera, buildings, football pitches, daylight, materials, landscaping, composition and quality. Remove ALL letter-like, number-like or logo-like markings from every building, especially the small gold writing above the front stadium entrance and on the back academy facade. Replace those markings with plain continuous matching dark cladding. Every sign, wall and facade must be blank. No other changes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-011b7cff-a154-4036-b4ae-8601c6a34482.png",
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-60a63108-81e1-4882-b4aa-2c07d4a3dae6.png"
+  },
+  {
+    "key": "environment.stadium-night",
+    "name": "environment-stadium-night",
+    "kind": "environment",
+    "screens": [
+      "Matchday",
+      "Club"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. A fictional intimate football stadium exterior at blue hour before kickoff. Dark stone entrance, sculptural bronze wolf shape without a shield or logo, charcoal flags without writing, warm gates, floodlights and mist against indigo sky. Wide-angle arrival view, no people close to camera.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-487e906b-7856-494e-85b4-5e122d923586.png"
+  },
+  {
+    "key": "environment.tunnel",
+    "name": "environment-tunnel",
+    "kind": "environment",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Result"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. Inside an empty premium players' tunnel leading to a brilliantly floodlit football pitch at night. Charcoal padded walls, satin metal rails, thin acid lime floor edge and warm ceiling lights. Low central camera, dramatic open stadium beyond. No signage or writing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c432a57e-e15a-469e-a482-bcebd032b2ab.png"
+  },
+  {
+    "key": "environment.academy",
+    "name": "environment-academy",
+    "kind": "environment",
+    "screens": [
+      "Facilities",
+      "Training",
+      "Squad"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. Youth academy football development campus in morning sun. Small pristine pitch, cones, low timber-and-charcoal coaching pavilion, open equipment store and saplings. Welcoming aspirational miniature architecture; no people and absolutely no signage.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3f6bb8ba-322c-4b06-a546-ef27988a8287.png"
+  },
+  {
+    "key": "environment.fan-zone",
+    "name": "environment-fan-zone",
+    "kind": "environment",
+    "screens": [
+      "Fans",
+      "Community",
+      "Store"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. A lively fictional club fan plaza outside a small football ground at golden hour. Original adult supporters in plain charcoal and lime scarves, warm food stalls, club shop window with plain unbranded shirts and a ball sculpture. No faces close, no signage, no lettering on garments or buildings.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-479202f5-6fc9-46fd-9f15-7952f3d2a9fd.png"
+  },
+  {
+    "key": "environment.media-studio",
+    "name": "environment-media-studio",
+    "kind": "environment",
+    "screens": [
+      "Social",
+      "Press",
+      "Creators"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. Premium football creator media studio: dark acoustic walls, empty interviewer chairs, broadcast camera, microphone boom, practical lime rim lights, a desk and window looking toward stadium. All monitor screens powered off and plain black, no graphics.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f7047eb8-a125-4399-b78e-64d0aaa2d56d.png"
+  },
+  {
+    "key": "environment.medical",
+    "name": "environment-medical",
+    "kind": "environment",
+    "screens": [
+      "Facilities",
+      "Training"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. An immaculate recovery room at a fictional football club: padded treatment table, medical bag, foam rollers and recovery pool at rear, dark forest leather and warm wood, daylight through frosted glass. Peaceful and reassuring, no people, all surfaces blank.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-0c901a58-8ca7-45c6-9af5-353a6f18c69b.png"
+  },
+  {
+    "key": "environment.trophy-room",
+    "name": "environment-trophy-room",
+    "kind": "environment",
+    "screens": [
+      "Objectives",
+      "History",
+      "Trophies",
+      "Rewards"
+    ],
+    "prompt": "Original reusable landscape 3:2 environment art for Creator Football. Premium stylized semi-realistic 3D render, polished dark forest/charcoal materials, warm left key light and cool right rim, restrained acid lime and warm gold details. Cinematic depth, quiet composition with centre focal subject. Art only, absolutely no real clubs, brands, logos, letters, numbers, writing, text, watermark, user interface, panels containing data or buttons. An intimate club history gallery, empty bronze and dark-glass display cases, eight abstract golden trophies on satin pedestals, framed blank kit silhouettes, warm spotlights and deep green stone, cinema-level depth. Absolutely blank plinths, no plaques, all books blank spines.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-1d8f32dd-125b-4558-a0cf-0e116e08b85a.png"
+  },
+  {
+    "key": "character.player-09",
+    "name": "player-09",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 24-year-old lean midfield playmaker, warm brown skin, close dark curls, clean-shaven; 2) 30-year-old broad athletic holding midfielder, fair skin, receding brown hair, short beard; 3) 22-year-old agile midfielder, East Asian features, straight black swept fringe, clean-shaven; 4) 27-year-old athletic midfielder, olive skin, short black fade, close beard. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3ab1154f-1d16-471a-815d-8681410789fe.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "24-year-old lean midfield playmaker, warm brown skin, close dark curls, clean-shaven"
+  },
+  {
+    "key": "character.player-10",
+    "name": "player-10",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 24-year-old lean midfield playmaker, warm brown skin, close dark curls, clean-shaven; 2) 30-year-old broad athletic holding midfielder, fair skin, receding brown hair, short beard; 3) 22-year-old agile midfielder, East Asian features, straight black swept fringe, clean-shaven; 4) 27-year-old athletic midfielder, olive skin, short black fade, close beard. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3ab1154f-1d16-471a-815d-8681410789fe.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "30-year-old broad athletic holding midfielder, fair skin, receding brown hair, short beard"
+  },
+  {
+    "key": "character.player-11",
+    "name": "player-11",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 24-year-old lean midfield playmaker, warm brown skin, close dark curls, clean-shaven; 2) 30-year-old broad athletic holding midfielder, fair skin, receding brown hair, short beard; 3) 22-year-old agile midfielder, East Asian features, straight black swept fringe, clean-shaven; 4) 27-year-old athletic midfielder, olive skin, short black fade, close beard. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3ab1154f-1d16-471a-815d-8681410789fe.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "22-year-old agile midfielder, East Asian features, straight black swept fringe, clean-shaven"
+  },
+  {
+    "key": "character.player-12",
+    "name": "player-12",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 24-year-old lean midfield playmaker, warm brown skin, close dark curls, clean-shaven; 2) 30-year-old broad athletic holding midfielder, fair skin, receding brown hair, short beard; 3) 22-year-old agile midfielder, East Asian features, straight black swept fringe, clean-shaven; 4) 27-year-old athletic midfielder, olive skin, short black fade, close beard. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-3ab1154f-1d16-471a-815d-8681410789fe.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "27-year-old athletic midfielder, olive skin, short black fade, close beard"
+  },
+  {
+    "key": "character.player-13",
+    "name": "player-13",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 28-year-old Black midfielder, dark skin, short twisted locks, clean-shaven; 2) 25-year-old fair red-haired midfielder, neat red beard and freckles; 3) 31-year-old tan-skinned midfield captain, tied-back dark wavy hair, small moustache; 4) 21-year-old wiry midfielder, warm medium-brown skin, cropped dark hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-eb27a697-9862-4b8b-bcf1-3f8e093e38b6.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "28-year-old Black midfielder, dark skin, short twisted locks, clean-shaven"
+  },
+  {
+    "key": "character.player-14",
+    "name": "player-14",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 28-year-old Black midfielder, dark skin, short twisted locks, clean-shaven; 2) 25-year-old fair red-haired midfielder, neat red beard and freckles; 3) 31-year-old tan-skinned midfield captain, tied-back dark wavy hair, small moustache; 4) 21-year-old wiry midfielder, warm medium-brown skin, cropped dark hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-eb27a697-9862-4b8b-bcf1-3f8e093e38b6.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "25-year-old fair red-haired midfielder, neat red beard and freckles"
+  },
+  {
+    "key": "character.player-15",
+    "name": "player-15",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 28-year-old Black midfielder, dark skin, short twisted locks, clean-shaven; 2) 25-year-old fair red-haired midfielder, neat red beard and freckles; 3) 31-year-old tan-skinned midfield captain, tied-back dark wavy hair, small moustache; 4) 21-year-old wiry midfielder, warm medium-brown skin, cropped dark hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-eb27a697-9862-4b8b-bcf1-3f8e093e38b6.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "31-year-old tan-skinned midfield captain, tied-back dark wavy hair, small moustache"
+  },
+  {
+    "key": "character.player-16",
+    "name": "player-16",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 28-year-old Black midfielder, dark skin, short twisted locks, clean-shaven; 2) 25-year-old fair red-haired midfielder, neat red beard and freckles; 3) 31-year-old tan-skinned midfield captain, tied-back dark wavy hair, small moustache; 4) 21-year-old wiry midfielder, warm medium-brown skin, cropped dark hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-eb27a697-9862-4b8b-bcf1-3f8e093e38b6.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "21-year-old wiry midfielder, warm medium-brown skin, cropped dark hair, clean-shaven"
+  },
+  {
+    "key": "character.player-17",
+    "name": "player-17",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 26-year-old powerful striker, dark brown skin, shaved head, strong jaw, neat beard; 2) 23-year-old quick winger, East Asian features, side-swept black hair, clean-shaven; 3) 29-year-old tall centre-forward, fair skin, thick brown curls, short stubble; 4) 24-year-old athletic attacker, olive skin, long tied-back black hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6e11fa67-db32-459b-b837-94a24aa0de3a.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "26-year-old powerful striker, dark brown skin, shaved head, strong jaw, neat beard"
+  },
+  {
+    "key": "character.player-18",
+    "name": "player-18",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 26-year-old powerful striker, dark brown skin, shaved head, strong jaw, neat beard; 2) 23-year-old quick winger, East Asian features, side-swept black hair, clean-shaven; 3) 29-year-old tall centre-forward, fair skin, thick brown curls, short stubble; 4) 24-year-old athletic attacker, olive skin, long tied-back black hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6e11fa67-db32-459b-b837-94a24aa0de3a.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "23-year-old quick winger, East Asian features, side-swept black hair, clean-shaven"
+  },
+  {
+    "key": "character.player-19",
+    "name": "player-19",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 26-year-old powerful striker, dark brown skin, shaved head, strong jaw, neat beard; 2) 23-year-old quick winger, East Asian features, side-swept black hair, clean-shaven; 3) 29-year-old tall centre-forward, fair skin, thick brown curls, short stubble; 4) 24-year-old athletic attacker, olive skin, long tied-back black hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6e11fa67-db32-459b-b837-94a24aa0de3a.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "29-year-old tall centre-forward, fair skin, thick brown curls, short stubble"
+  },
+  {
+    "key": "character.player-20",
+    "name": "player-20",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 26-year-old powerful striker, dark brown skin, shaved head, strong jaw, neat beard; 2) 23-year-old quick winger, East Asian features, side-swept black hair, clean-shaven; 3) 29-year-old tall centre-forward, fair skin, thick brown curls, short stubble; 4) 24-year-old athletic attacker, olive skin, long tied-back black hair, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6e11fa67-db32-459b-b837-94a24aa0de3a.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "24-year-old athletic attacker, olive skin, long tied-back black hair, clean-shaven"
+  },
+  {
+    "key": "character.player-21",
+    "name": "player-21",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 30-year-old broad striker, warm brown skin, close cropped dark hair, strong beard; 2) 22-year-old slim winger, fair freckled skin, platinum cropped hair, clean-shaven; 3) 27-year-old forward, medium tan skin, thick black waves, narrow moustache; 4) 25-year-old Black winger, dark skin, short tapered curls, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7d80af02-916e-457c-85d7-a8acba238ebc.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "30-year-old broad striker, warm brown skin, close cropped dark hair, strong beard"
+  },
+  {
+    "key": "character.player-22",
+    "name": "player-22",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 30-year-old broad striker, warm brown skin, close cropped dark hair, strong beard; 2) 22-year-old slim winger, fair freckled skin, platinum cropped hair, clean-shaven; 3) 27-year-old forward, medium tan skin, thick black waves, narrow moustache; 4) 25-year-old Black winger, dark skin, short tapered curls, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7d80af02-916e-457c-85d7-a8acba238ebc.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ],
+    "identity": "22-year-old slim winger, fair freckled skin, platinum cropped hair, clean-shaven"
+  },
+  {
+    "key": "character.player-23",
+    "name": "player-23",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 30-year-old broad striker, warm brown skin, close cropped dark hair, strong beard; 2) 22-year-old slim winger, fair freckled skin, platinum cropped hair, clean-shaven; 3) 27-year-old forward, medium tan skin, thick black waves, narrow moustache; 4) 25-year-old Black winger, dark skin, short tapered curls, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7d80af02-916e-457c-85d7-a8acba238ebc.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "27-year-old forward, medium tan skin, thick black waves, narrow moustache"
+  },
+  {
+    "key": "character.player-24",
+    "name": "player-24",
+    "kind": "character",
+    "screens": [
+      "Squad",
+      "Player",
+      "Tactics",
+      "Market",
+      "Match"
+    ],
+    "prompt": "Create a production character sheet of EXACTLY FOUR original fictional ADULT male football players, arranged in an EXACT 2 columns x 2 rows grid, each cell the same size. Tall 2:3 canvas overall, making each cell a 2:3 chest-up portrait. Four completely separate backgrounds, hard clean central vertical and horizontal boundaries, no gutters and no borders. Each player's whole head and both shoulders centred safely within their OWN cell, 10% headroom. Consistent premium stylized semi-realistic 3D football-game art, believable facial anatomy, warm soft light upper-left, fine cool rim right, subtle skin shader. All wear the SAME blank charcoal crew-neck jersey with fine lime collar piping; deep forest charcoal plain background in each cell. No real people, celebrities, brands, badges, words, labels, numbers, watermarks, functional UI or props. The identities, in reading order top-left, top-right, bottom-left, bottom-right: 1) 30-year-old broad striker, warm brown skin, close cropped dark hair, strong beard; 2) 22-year-old slim winger, fair freckled skin, platinum cropped hair, clean-shaven; 3) 27-year-old forward, medium tan skin, thick black waves, narrow moustache; 4) 25-year-old Black winger, dark skin, short tapered curls, clean-shaven. Give every face a distinct believable identity.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-7d80af02-916e-457c-85d7-a8acba238ebc.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "identity": "25-year-old Black winger, dark skin, short tapered curls, clean-shaven"
+  },
+  {
+    "key": "character.staff-01",
+    "name": "character-staff-01",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Training"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) male head coach, 48, dark brown skin, greying cropped hair and neat beard, zip training jacket; 2) female chief scout, 39, olive skin, long dark hair tied low, thin round glasses, charcoal soft blazer; 3) female fitness coach, 32, fair freckled skin, copper pixie crop, athletic charcoal crew-neck; 4) male goalkeeper coach, 44, tan skin, shaved head and moustache, high-collar charcoal technical jacket.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f8d56b84-85b5-48bf-a203-e870fa55de10.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-02",
+    "name": "character-staff-02",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Training"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) male head coach, 48, dark brown skin, greying cropped hair and neat beard, zip training jacket; 2) female chief scout, 39, olive skin, long dark hair tied low, thin round glasses, charcoal soft blazer; 3) female fitness coach, 32, fair freckled skin, copper pixie crop, athletic charcoal crew-neck; 4) male goalkeeper coach, 44, tan skin, shaved head and moustache, high-collar charcoal technical jacket.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f8d56b84-85b5-48bf-a203-e870fa55de10.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-03",
+    "name": "character-staff-03",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Training"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) male head coach, 48, dark brown skin, greying cropped hair and neat beard, zip training jacket; 2) female chief scout, 39, olive skin, long dark hair tied low, thin round glasses, charcoal soft blazer; 3) female fitness coach, 32, fair freckled skin, copper pixie crop, athletic charcoal crew-neck; 4) male goalkeeper coach, 44, tan skin, shaved head and moustache, high-collar charcoal technical jacket.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f8d56b84-85b5-48bf-a203-e870fa55de10.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-04",
+    "name": "character-staff-04",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Training"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) male head coach, 48, dark brown skin, greying cropped hair and neat beard, zip training jacket; 2) female chief scout, 39, olive skin, long dark hair tied low, thin round glasses, charcoal soft blazer; 3) female fitness coach, 32, fair freckled skin, copper pixie crop, athletic charcoal crew-neck; 4) male goalkeeper coach, 44, tan skin, shaved head and moustache, high-collar charcoal technical jacket.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-f8d56b84-85b5-48bf-a203-e870fa55de10.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-05",
+    "name": "character-staff-05",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Facilities"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) female physio, 36, dark skin, short natural curls, deep green clinical polo; 2) male creator interviewer, 28, East Asian features, swept dark hair, charcoal casual overshirt, warm smile; 3) female creator analyst, 30, medium brown skin, wavy dark shoulder-length hair, dark forest blazer and plain cream tee, attentive expression; 4) male rival streamer, 26, light olive skin, loose brown curls, clean-shaven, black casual hoodie with restrained violet trim, playful confident expression.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-99027157-f0b9-4391-a0be-a968d8020ecf.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-06",
+    "name": "character-staff-06",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Facilities"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) female physio, 36, dark skin, short natural curls, deep green clinical polo; 2) male creator interviewer, 28, East Asian features, swept dark hair, charcoal casual overshirt, warm smile; 3) female creator analyst, 30, medium brown skin, wavy dark shoulder-length hair, dark forest blazer and plain cream tee, attentive expression; 4) male rival streamer, 26, light olive skin, loose brown curls, clean-shaven, black casual hoodie with restrained violet trim, playful confident expression.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-99027157-f0b9-4391-a0be-a968d8020ecf.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-07",
+    "name": "character-staff-07",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Facilities"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) female physio, 36, dark skin, short natural curls, deep green clinical polo; 2) male creator interviewer, 28, East Asian features, swept dark hair, charcoal casual overshirt, warm smile; 3) female creator analyst, 30, medium brown skin, wavy dark shoulder-length hair, dark forest blazer and plain cream tee, attentive expression; 4) male rival streamer, 26, light olive skin, loose brown curls, clean-shaven, black casual hoodie with restrained violet trim, playful confident expression.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-99027157-f0b9-4391-a0be-a968d8020ecf.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "character.staff-08",
+    "name": "character-staff-08",
+    "kind": "character",
+    "screens": [
+      "Creators",
+      "Social",
+      "Press",
+      "Facilities"
+    ],
+    "prompt": "Create EXACTLY FOUR original fictional ADULT football-club staff / creator people in a production sheet: exact 2 columns x 2 rows grid, tall 2:3 canvas overall, each cell an independent chest-up 2:3 portrait. Hard clean central boundaries, no gutters, no frames, 10% headroom within each cell. All faces consistent premium stylized semi-realistic 3D, warm soft key upper-left, cool rim right, dark forest plain background, believable skin and fabric. Original people only, no celebrities or real likenesses. Plain unbranded charcoal clothing, no writing, words, logos, badges, UI, watermarks. Reading-order identities: 1) female physio, 36, dark skin, short natural curls, deep green clinical polo; 2) male creator interviewer, 28, East Asian features, swept dark hair, charcoal casual overshirt, warm smile; 3) female creator analyst, 30, medium brown skin, wavy dark shoulder-length hair, dark forest blazer and plain cream tee, attentive expression; 4) male rival streamer, 26, light olive skin, loose brown curls, clean-shaven, black casual hoodie with restrained violet trim, playful confident expression.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-99027157-f0b9-4391-a0be-a968d8020ecf.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.aurelia",
+    "name": "crest-aurelia",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) white and cobalt blue diamond with an original geometric four-point star; 2) ivory and plum long tapered shield with an abstract three-prong gold crown made of folded ribbons; 3) graphite shield with bold burnt-orange crossed forging hammers and gold sparks; 4) burgundy shield with pale sky-blue stone watchtower motif and thin warm ivory rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e69f8cf0-ba04-43f5-a957-9170e1932c0e.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.cinderwick",
+    "name": "crest-cinderwick",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) round cobalt-blue and ivory emblem with a bold silver anchor and mint waves; 2) deep oxblood-red shield with original ivory coiled serpent and muted jade rim; 3) dark purple diamond with rising abstract phoenix of violet and amber wings; 4) round warm-ivory emblem with sculptural crimson flame, charcoal central field and red rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c7cde92e-b10f-4f02-afe7-ddd322d178de.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.coppervale",
+    "name": "crest-coppervale",
+    "kind": "crest",
+    "screens": [
+      "Asset library / future fictional clubs"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) copper and charcoal hexagon with an original stylized stag head; 2) navy and sea-green shield with two silver abstract cresting waves; 3) moss-green roundel with a warm-gold oak leaf; 4) icy blue diamond with original white angular mountain peak. These are four completely original fictional club identities, no real symbols.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-bebe19ec-bbe8-4f31-b660-84ff0ec555cc.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.duskford",
+    "name": "crest-duskford",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) white and cobalt blue diamond with an original geometric four-point star; 2) ivory and plum long tapered shield with an abstract three-prong gold crown made of folded ribbons; 3) graphite shield with bold burnt-orange crossed forging hammers and gold sparks; 4) burgundy shield with pale sky-blue stone watchtower motif and thin warm ivory rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e69f8cf0-ba04-43f5-a957-9170e1932c0e.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.ember",
+    "name": "crest-ember",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) round cobalt-blue and ivory emblem with a bold silver anchor and mint waves; 2) deep oxblood-red shield with original ivory coiled serpent and muted jade rim; 3) dark purple diamond with rising abstract phoenix of violet and amber wings; 4) round warm-ivory emblem with sculptural crimson flame, charcoal central field and red rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c7cde92e-b10f-4f02-afe7-ddd322d178de.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.ironhollow",
+    "name": "crest-ironhollow",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) white and cobalt blue diamond with an original geometric four-point star; 2) ivory and plum long tapered shield with an abstract three-prong gold crown made of folded ribbons; 3) graphite shield with bold burnt-orange crossed forging hammers and gold sparks; 4) burgundy shield with pale sky-blue stone watchtower motif and thin warm ivory rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e69f8cf0-ba04-43f5-a957-9170e1932c0e.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.larkspur",
+    "name": "crest-larkspur",
+    "kind": "crest",
+    "screens": [
+      "Home",
+      "League",
+      "Squad",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) amber gold and slate charcoal HEXAGON crest with a striking original silver wolf head, angular ears, graphite field; 2) deep navy tapered shield with silver four-point compass rose, periwinkle edge, navy vertical stripe; 3) dark forest green long tapered crest with original sculptural gold lion head, ivory outline; 4) black hexagonal crest with hot pink angular lightning bolt and restrained acid-lime border.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b4d396a0-21cd-4f45-8101-59febc6c4837.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.marrowgate",
+    "name": "crest-marrowgate",
+    "kind": "crest",
+    "screens": [
+      "Home",
+      "League",
+      "Squad",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) amber gold and slate charcoal HEXAGON crest with a striking original silver wolf head, angular ears, graphite field; 2) deep navy tapered shield with silver four-point compass rose, periwinkle edge, navy vertical stripe; 3) dark forest green long tapered crest with original sculptural gold lion head, ivory outline; 4) black hexagonal crest with hot pink angular lightning bolt and restrained acid-lime border.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b4d396a0-21cd-4f45-8101-59febc6c4837.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.mossbank",
+    "name": "crest-mossbank",
+    "kind": "crest",
+    "screens": [
+      "Asset library / future fictional clubs"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) copper and charcoal hexagon with an original stylized stag head; 2) navy and sea-green shield with two silver abstract cresting waves; 3) moss-green roundel with a warm-gold oak leaf; 4) icy blue diamond with original white angular mountain peak. These are four completely original fictional club identities, no real symbols.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-bebe19ec-bbe8-4f31-b660-84ff0ec555cc.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.neon-row",
+    "name": "crest-neon-row",
+    "kind": "crest",
+    "screens": [
+      "Home",
+      "League",
+      "Squad",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) amber gold and slate charcoal HEXAGON crest with a striking original silver wolf head, angular ears, graphite field; 2) deep navy tapered shield with silver four-point compass rose, periwinkle edge, navy vertical stripe; 3) dark forest green long tapered crest with original sculptural gold lion head, ivory outline; 4) black hexagonal crest with hot pink angular lightning bolt and restrained acid-lime border.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b4d396a0-21cd-4f45-8101-59febc6c4837.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.northglass",
+    "name": "crest-northglass",
+    "kind": "crest",
+    "screens": [
+      "Asset library / future fictional clubs"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) copper and charcoal hexagon with an original stylized stag head; 2) navy and sea-green shield with two silver abstract cresting waves; 3) moss-green roundel with a warm-gold oak leaf; 4) icy blue diamond with original white angular mountain peak. These are four completely original fictional club identities, no real symbols.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-bebe19ec-bbe8-4f31-b660-84ff0ec555cc.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.redmere",
+    "name": "crest-redmere",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) round cobalt-blue and ivory emblem with a bold silver anchor and mint waves; 2) deep oxblood-red shield with original ivory coiled serpent and muted jade rim; 3) dark purple diamond with rising abstract phoenix of violet and amber wings; 4) round warm-ivory emblem with sculptural crimson flame, charcoal central field and red rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c7cde92e-b10f-4f02-afe7-ddd322d178de.png",
+    "sourceRegion": [
+      0.52,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "crest.sable-coast",
+    "name": "crest-sable-coast",
+    "kind": "crest",
+    "screens": [
+      "Asset library / future fictional clubs"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) copper and charcoal hexagon with an original stylized stag head; 2) navy and sea-green shield with two silver abstract cresting waves; 3) moss-green roundel with a warm-gold oak leaf; 4) icy blue diamond with original white angular mountain peak. These are four completely original fictional club identities, no real symbols.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-bebe19ec-bbe8-4f31-b660-84ff0ec555cc.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.saltpine",
+    "name": "crest-saltpine",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) round cobalt-blue and ivory emblem with a bold silver anchor and mint waves; 2) deep oxblood-red shield with original ivory coiled serpent and muted jade rim; 3) dark purple diamond with rising abstract phoenix of violet and amber wings; 4) round warm-ivory emblem with sculptural crimson flame, charcoal central field and red rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-c7cde92e-b10f-4f02-afe7-ddd322d178de.png",
+    "sourceRegion": [
+      0.02,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "crest.vantage",
+    "name": "crest-vantage",
+    "kind": "crest",
+    "screens": [
+      "League",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) white and cobalt blue diamond with an original geometric four-point star; 2) ivory and plum long tapered shield with an abstract three-prong gold crown made of folded ribbons; 3) graphite shield with bold burnt-orange crossed forging hammers and gold sparks; 4) burgundy shield with pale sky-blue stone watchtower motif and thin warm ivory rim.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e69f8cf0-ba04-43f5-a957-9170e1932c0e.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "crest.verrow",
+    "name": "crest-verrow",
+    "kind": "crest",
+    "screens": [
+      "Home",
+      "League",
+      "Squad",
+      "Match",
+      "Club"
+    ],
+    "prompt": "Production art sheet of exactly FOUR original fictional football club emblems in a precise 2 by 2 grid on a square canvas. Each emblem centred inside its own equal square quadrant, generous 15% clear margin on ALL sides. Clean solid very dark charcoal background, no pedestals. Premium stylized semi-realistic 3D enamel and satin metal, warm key left and cool edge right, elegant bold readable silhouettes. Front-facing, consistent scale, restrained bevels. Original designs, absolutely no real club imitation, no letters, numbers, initials, text, crowns resembling real royal symbols, UI or watermarks. Reading order top-left, top-right, bottom-left, bottom-right: 1) amber gold and slate charcoal HEXAGON crest with a striking original silver wolf head, angular ears, graphite field; 2) deep navy tapered shield with silver four-point compass rose, periwinkle edge, navy vertical stripe; 3) dark forest green long tapered crest with original sculptural gold lion head, ivory outline; 4) black hexagonal crest with hot pink angular lightning bolt and restrained acid-lime border.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-b4d396a0-21cd-4f45-8101-59febc6c4837.png",
+    "sourceRegion": [
+      0.52,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "kit.away",
+    "name": "kit-away",
+    "kind": "kit",
+    "screens": [
+      "Club",
+      "Creation",
+      "Asset library"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) a blank charcoal short-sleeve football shirt on headless torso mannequin, acid-lime collar and subtle embossed fabric; 2) a blank ivory away shirt with dark forest collar and gold seam, headless torso mannequin; 3) a blank deep teal long-sleeve goalkeeper shirt with lime cuffs and padded elbows, headless torso mannequin; 4) a blank charcoal quarter-zip training top with a fine silver shoulder seam, headless torso mannequin. No shorts, no legs, all torsos consistently framed, no crest or sponsor anywhere.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-87c2d05d-857c-488a-b464-f5c9a9f467c5.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "kit.goalkeeper",
+    "name": "kit-goalkeeper",
+    "kind": "kit",
+    "screens": [
+      "Club",
+      "Creation",
+      "Asset library"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) a blank charcoal short-sleeve football shirt on headless torso mannequin, acid-lime collar and subtle embossed fabric; 2) a blank ivory away shirt with dark forest collar and gold seam, headless torso mannequin; 3) a blank deep teal long-sleeve goalkeeper shirt with lime cuffs and padded elbows, headless torso mannequin; 4) a blank charcoal quarter-zip training top with a fine silver shoulder seam, headless torso mannequin. No shorts, no legs, all torsos consistently framed, no crest or sponsor anywhere.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-87c2d05d-857c-488a-b464-f5c9a9f467c5.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "kit.home",
+    "name": "kit-home",
+    "kind": "kit",
+    "screens": [
+      "Club",
+      "Creation",
+      "Asset library"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) a blank charcoal short-sleeve football shirt on headless torso mannequin, acid-lime collar and subtle embossed fabric; 2) a blank ivory away shirt with dark forest collar and gold seam, headless torso mannequin; 3) a blank deep teal long-sleeve goalkeeper shirt with lime cuffs and padded elbows, headless torso mannequin; 4) a blank charcoal quarter-zip training top with a fine silver shoulder seam, headless torso mannequin. No shorts, no legs, all torsos consistently framed, no crest or sponsor anywhere.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-87c2d05d-857c-488a-b464-f5c9a9f467c5.png",
+    "sourceRegion": [
+      0.02,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "kit.training",
+    "name": "kit-training",
+    "kind": "kit",
+    "screens": [
+      "Club",
+      "Creation",
+      "Asset library"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) a blank charcoal short-sleeve football shirt on headless torso mannequin, acid-lime collar and subtle embossed fabric; 2) a blank ivory away shirt with dark forest collar and gold seam, headless torso mannequin; 3) a blank deep teal long-sleeve goalkeeper shirt with lime cuffs and padded elbows, headless torso mannequin; 4) a blank charcoal quarter-zip training top with a fine silver shoulder seam, headless torso mannequin. No shorts, no legs, all torsos consistently framed, no crest or sponsor anywhere.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-87c2d05d-857c-488a-b464-f5c9a9f467c5.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.boot",
+    "name": "trophy-boot",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "History",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original tall warm-gold league trophy formed from three slender rising arches around a golden football, dark stone base; 2) original broad satin-silver cup with two angular gold handles and a short charcoal plinth; 3) original polished gold circular super cup with an off-centre suspended football, low dark green base; 4) original golden football boot on a slim black stone base, no brand marks. All bases completely blank, no plaques, no engraving, no lettering.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-801e02e9-bc5b-4a99-8678-c89c799541a2.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.cup",
+    "name": "trophy-cup",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "History",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original tall warm-gold league trophy formed from three slender rising arches around a golden football, dark stone base; 2) original broad satin-silver cup with two angular gold handles and a short charcoal plinth; 3) original polished gold circular super cup with an off-centre suspended football, low dark green base; 4) original golden football boot on a slim black stone base, no brand marks. All bases completely blank, no plaques, no engraving, no lettering.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-801e02e9-bc5b-4a99-8678-c89c799541a2.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.league",
+    "name": "trophy-league",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "History",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original tall warm-gold league trophy formed from three slender rising arches around a golden football, dark stone base; 2) original broad satin-silver cup with two angular gold handles and a short charcoal plinth; 3) original polished gold circular super cup with an off-centre suspended football, low dark green base; 4) original golden football boot on a slim black stone base, no brand marks. All bases completely blank, no plaques, no engraving, no lettering.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-801e02e9-bc5b-4a99-8678-c89c799541a2.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.superCup",
+    "name": "trophy-superCup",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "History",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original tall warm-gold league trophy formed from three slender rising arches around a golden football, dark stone base; 2) original broad satin-silver cup with two angular gold handles and a short charcoal plinth; 3) original polished gold circular super cup with an off-centre suspended football, low dark green base; 4) original golden football boot on a slim black stone base, no brand marks. All bases completely blank, no plaques, no engraving, no lettering.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-801e02e9-bc5b-4a99-8678-c89c799541a2.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.analytics-tablet",
+    "name": "object-analytics-tablet",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) leather scouting report folder opened to completely blank cream paper, plain mechanical pencil; 2) black analytics tablet on a small stand with abstract blue and lime geometric bars only, no UI controls, labels or numbers; 3) charcoal manager clipboard with blank cream sheet and simple black clip; 4) forest leather manager notebook open to completely blank cream paper, small satin metal pen.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-a038f546-4d92-4bfa-a0e3-c3c98f2302e2.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.boots-elite",
+    "name": "object-boots-elite",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original satin silver football coach whistle with a coiled dark green lanyard; 2) plain matte charcoal ceramic club mug with a slim lime inner rim, no emblem; 3) a pair of modest black leather football boots with plain rounded studs and charcoal laces, no logos or stripes; 4) a pair of elite pearlescent ivory football boots with subtle lime sole plates and gold stitching, no logos or stripes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-aa278421-57d4-43df-bd6e-1ba5306f5c66.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.boots-training",
+    "name": "object-boots-training",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original satin silver football coach whistle with a coiled dark green lanyard; 2) plain matte charcoal ceramic club mug with a slim lime inner rim, no emblem; 3) a pair of modest black leather football boots with plain rounded studs and charcoal laces, no logos or stripes; 4) a pair of elite pearlescent ivory football boots with subtle lime sole plates and gold stitching, no logos or stripes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-aa278421-57d4-43df-bd6e-1ba5306f5c66.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.club-bus",
+    "name": "object-club-bus",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) single satin metal stadium turnstile with a completely blank cream paper ticket beside it; 2) miniature premium dark forest football team coach bus with lime accent line, no writing or insignia; 3) charcoal press podium with two small microphones before a completely blank deep forest sponsor wall, no writing; 4) three headless torso mannequins together wearing original plain charcoal-lime home, ivory-forest away and teal-lime goalkeeper football kits, no logos or printing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d2d534fa-7202-49cf-a194-df7991479847.png",
+    "sourceRegion": [
+      0.52,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "object.club-mug",
+    "name": "object-club-mug",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original satin silver football coach whistle with a coiled dark green lanyard; 2) plain matte charcoal ceramic club mug with a slim lime inner rim, no emblem; 3) a pair of modest black leather football boots with plain rounded studs and charcoal laces, no logos or stripes; 4) a pair of elite pearlescent ivory football boots with subtle lime sole plates and gold stitching, no logos or stripes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-aa278421-57d4-43df-bd6e-1ba5306f5c66.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.creator-camera",
+    "name": "object-creator-camera",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original charcoal broadcast camera with small shotgun microphone and plain dark foam cover on a compact tripod, no markings; 2) compact dark timber streaming desk with two softbox lights and blank unlit monitor, empty chair; 3) dark forest padded medical treatment table with a foam recovery roller and neatly folded towel, isolated studio; 4) plain charcoal medical bag opened to clean tape rolls, ice pack and bandage supplies, simple lime handle, no emblems.\n\nFinal cleanup: Edit this exact four-quadrant object production sheet. Preserve all four objects and their positions, camera and lighting. In the TOP LEFT camera object ONLY remove every letter, numeral, logo, label, glyph and pseudo-writing from the camera body, lens, controls and tripod. Leave blank smooth dark materials in place of tiny inscriptions. Simplify any illegible labeled control plate to plain unmarked black. Other quadrants unchanged. No text anywhere.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-843bae09-45c4-491a-92f3-a4c0ba0ef077.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ],
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-cf3862aa-eefe-4282-9825-9d5be70d8b6d.png"
+  },
+  {
+    "key": "object.floodlight",
+    "name": "object-floodlight",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original stitched charcoal and ivory training football with irregular lime geometric panels; 2) original satin gold and forest elite football with small triangular panels; 3) one forest green folding stadium seat on a small dark steel support, no numbers; 4) one compact stadium floodlight mast with a rectangular grid of glowing warm white lamps on a grey metal pole.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8d330f15-4b72-4f6b-8c97-8ff86a11c332.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.football-elite",
+    "name": "object-football-elite",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original stitched charcoal and ivory training football with irregular lime geometric panels; 2) original satin gold and forest elite football with small triangular panels; 3) one forest green folding stadium seat on a small dark steel support, no numbers; 4) one compact stadium floodlight mast with a rectangular grid of glowing warm white lamps on a grey metal pole.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8d330f15-4b72-4f6b-8c97-8ff86a11c332.png",
+    "sourceRegion": [
+      0.52,
+      0.02,
+      0.46,
+      0.437
+    ],
+    "isolationCropReviewed": true,
+    "lowerEdgeReviewed": true
+  },
+  {
+    "key": "object.football-training",
+    "name": "object-football-training",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original stitched charcoal and ivory training football with irregular lime geometric panels; 2) original satin gold and forest elite football with small triangular panels; 3) one forest green folding stadium seat on a small dark steel support, no numbers; 4) one compact stadium floodlight mast with a rectangular grid of glowing warm white lamps on a grey metal pole.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8d330f15-4b72-4f6b-8c97-8ff86a11c332.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.hurdles",
+    "name": "object-hurdles",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) dark green magnetic football tactics board on an angled stand, ONLY clean pitch lines and blank red and blue magnetic dots, no numbers; 2) neatly folded lime and forest training bibs with a small pile of blank black flat discs; 3) three dark forest freestanding football free-kick training mannequins, no printing; 4) a neat set of four lime agility hurdles and a black rope ladder.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-75d4ec71-2f97-475e-b569-231563272aa6.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.kit-mannequins",
+    "name": "object-kit-mannequins",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) single satin metal stadium turnstile with a completely blank cream paper ticket beside it; 2) miniature premium dark forest football team coach bus with lime accent line, no writing or insignia; 3) charcoal press podium with two small microphones before a completely blank deep forest sponsor wall, no writing; 4) three headless torso mannequins together wearing original plain charcoal-lime home, ivory-forest away and teal-lime goalkeeper football kits, no logos or printing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d2d534fa-7202-49cf-a194-df7991479847.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.magnetic-board",
+    "name": "object-magnetic-board",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) dark green magnetic football tactics board on an angled stand, ONLY clean pitch lines and blank red and blue magnetic dots, no numbers; 2) neatly folded lime and forest training bibs with a small pile of blank black flat discs; 3) three dark forest freestanding football free-kick training mannequins, no printing; 4) a neat set of four lime agility hurdles and a black rope ladder.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-75d4ec71-2f97-475e-b569-231563272aa6.png",
+    "sourceRegion": [
+      0.02,
+      0.02,
+      0.46,
+      0.437
+    ],
+    "isolationCropReviewed": true,
+    "lowerEdgeReviewed": true
+  },
+  {
+    "key": "object.manager-clipboard",
+    "name": "object-manager-clipboard",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) leather scouting report folder opened to completely blank cream paper, plain mechanical pencil; 2) black analytics tablet on a small stand with abstract blue and lime geometric bars only, no UI controls, labels or numbers; 3) charcoal manager clipboard with blank cream sheet and simple black clip; 4) forest leather manager notebook open to completely blank cream paper, small satin metal pen.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-a038f546-4d92-4bfa-a0e3-c3c98f2302e2.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.manager-notebook",
+    "name": "object-manager-notebook",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) leather scouting report folder opened to completely blank cream paper, plain mechanical pencil; 2) black analytics tablet on a small stand with abstract blue and lime geometric bars only, no UI controls, labels or numbers; 3) charcoal manager clipboard with blank cream sheet and simple black clip; 4) forest leather manager notebook open to completely blank cream paper, small satin metal pen.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-a038f546-4d92-4bfa-a0e3-c3c98f2302e2.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.mannequin-wall",
+    "name": "object-mannequin-wall",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) dark green magnetic football tactics board on an angled stand, ONLY clean pitch lines and blank red and blue magnetic dots, no numbers; 2) neatly folded lime and forest training bibs with a small pile of blank black flat discs; 3) three dark forest freestanding football free-kick training mannequins, no printing; 4) a neat set of four lime agility hurdles and a black rope ladder.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-75d4ec71-2f97-475e-b569-231563272aa6.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.medical-bag",
+    "name": "object-medical-bag",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original charcoal broadcast camera with small shotgun microphone and plain dark foam cover on a compact tripod, no markings; 2) compact dark timber streaming desk with two softbox lights and blank unlit monitor, empty chair; 3) dark forest padded medical treatment table with a foam recovery roller and neatly folded towel, isolated studio; 4) plain charcoal medical bag opened to clean tape rolls, ice pack and bandage supplies, simple lime handle, no emblems.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-cf3862aa-eefe-4282-9825-9d5be70d8b6d.png",
+    "sourceRegion": [
+      0.52,
+      0.52,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "object.press-podium",
+    "name": "object-press-podium",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) single satin metal stadium turnstile with a completely blank cream paper ticket beside it; 2) miniature premium dark forest football team coach bus with lime accent line, no writing or insignia; 3) charcoal press podium with two small microphones before a completely blank deep forest sponsor wall, no writing; 4) three headless torso mannequins together wearing original plain charcoal-lime home, ivory-forest away and teal-lime goalkeeper football kits, no logos or printing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d2d534fa-7202-49cf-a194-df7991479847.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.report-folder",
+    "name": "object-report-folder",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) leather scouting report folder opened to completely blank cream paper, plain mechanical pencil; 2) black analytics tablet on a small stand with abstract blue and lime geometric bars only, no UI controls, labels or numbers; 3) charcoal manager clipboard with blank cream sheet and simple black clip; 4) forest leather manager notebook open to completely blank cream paper, small satin metal pen.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-a038f546-4d92-4bfa-a0e3-c3c98f2302e2.png",
+    "sourceRegion": [
+      0.02,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "object.stadium-seat",
+    "name": "object-stadium-seat",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original stitched charcoal and ivory training football with irregular lime geometric panels; 2) original satin gold and forest elite football with small triangular panels; 3) one forest green folding stadium seat on a small dark steel support, no numbers; 4) one compact stadium floodlight mast with a rectangular grid of glowing warm white lamps on a grey metal pole.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-8d330f15-4b72-4f6b-8c97-8ff86a11c332.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.streaming-desk",
+    "name": "object-streaming-desk",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original charcoal broadcast camera with small shotgun microphone and plain dark foam cover on a compact tripod, no markings; 2) compact dark timber streaming desk with two softbox lights and blank unlit monitor, empty chair; 3) dark forest padded medical treatment table with a foam recovery roller and neatly folded towel, isolated studio; 4) plain charcoal medical bag opened to clean tape rolls, ice pack and bandage supplies, simple lime handle, no emblems.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-cf3862aa-eefe-4282-9825-9d5be70d8b6d.png",
+    "sourceRegion": [
+      0.52,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "object.training-bibs",
+    "name": "object-training-bibs",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) dark green magnetic football tactics board on an angled stand, ONLY clean pitch lines and blank red and blue magnetic dots, no numbers; 2) neatly folded lime and forest training bibs with a small pile of blank black flat discs; 3) three dark forest freestanding football free-kick training mannequins, no printing; 4) a neat set of four lime agility hurdles and a black rope ladder.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-75d4ec71-2f97-475e-b569-231563272aa6.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.treatment-table",
+    "name": "object-treatment-table",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original charcoal broadcast camera with small shotgun microphone and plain dark foam cover on a compact tripod, no markings; 2) compact dark timber streaming desk with two softbox lights and blank unlit monitor, empty chair; 3) dark forest padded medical treatment table with a foam recovery roller and neatly folded towel, isolated studio; 4) plain charcoal medical bag opened to clean tape rolls, ice pack and bandage supplies, simple lime handle, no emblems.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-cf3862aa-eefe-4282-9825-9d5be70d8b6d.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "object.turnstile-ticket",
+    "name": "object-turnstile-ticket",
+    "kind": "object",
+    "screens": [
+      "Club",
+      "Facilities",
+      "Social"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) single satin metal stadium turnstile with a completely blank cream paper ticket beside it; 2) miniature premium dark forest football team coach bus with lime accent line, no writing or insignia; 3) charcoal press podium with two small microphones before a completely blank deep forest sponsor wall, no writing; 4) three headless torso mannequins together wearing original plain charcoal-lime home, ivory-forest away and teal-lime goalkeeper football kits, no logos or printing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d2d534fa-7202-49cf-a194-df7991479847.png",
+    "sourceRegion": [
+      0.02,
+      0.02,
+      0.46,
+      0.46
+    ],
+    "isolationCropReviewed": true
+  },
+  {
+    "key": "object.whistle",
+    "name": "object-whistle",
+    "kind": "object",
+    "screens": [
+      "Training",
+      "Tactics",
+      "Club",
+      "Market",
+      "Facilities"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original satin silver football coach whistle with a coiled dark green lanyard; 2) plain matte charcoal ceramic club mug with a slim lime inner rim, no emblem; 3) a pair of modest black leather football boots with plain rounded studs and charcoal laces, no logos or stripes; 4) a pair of elite pearlescent ivory football boots with subtle lime sole plates and gold stitching, no logos or stripes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-aa278421-57d4-43df-bd6e-1ba5306f5c66.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.defeat",
+    "name": "story-defeat",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Result",
+      "World"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) close rear three-quarter view of an adult fictional footballer in plain charcoal and lime kit lifting both arms toward golden stadium lights as teammates celebrate, joyous victory, no jersey numbers; 2) adult fictional footballer sitting thoughtfully in a dark dressing room, looking down with a folded shirt in hands after defeat, empathetic warm light; 3) two adult fictional men shaking hands at a club transfer presentation stage, one player holding up a plain dark shirt while a manager smiles, backdrop completely blank; 4) adult fictional female physio calmly applying a recovery ice pack to an adult male player seated on a treatment bench, professional club recovery room, hopeful calm mood, no blood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-80157690-a917-4479-a984-5bef3f6fe668.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.injury",
+    "name": "story-injury",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Result",
+      "World"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) close rear three-quarter view of an adult fictional footballer in plain charcoal and lime kit lifting both arms toward golden stadium lights as teammates celebrate, joyous victory, no jersey numbers; 2) adult fictional footballer sitting thoughtfully in a dark dressing room, looking down with a folded shirt in hands after defeat, empathetic warm light; 3) two adult fictional men shaking hands at a club transfer presentation stage, one player holding up a plain dark shirt while a manager smiles, backdrop completely blank; 4) adult fictional female physio calmly applying a recovery ice pack to an adult male player seated on a treatment bench, professional club recovery room, hopeful calm mood, no blood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-80157690-a917-4479-a984-5bef3f6fe668.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.transfer",
+    "name": "story-transfer",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Result",
+      "World"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) close rear three-quarter view of an adult fictional footballer in plain charcoal and lime kit lifting both arms toward golden stadium lights as teammates celebrate, joyous victory, no jersey numbers; 2) adult fictional footballer sitting thoughtfully in a dark dressing room, looking down with a folded shirt in hands after defeat, empathetic warm light; 3) two adult fictional men shaking hands at a club transfer presentation stage, one player holding up a plain dark shirt while a manager smiles, backdrop completely blank; 4) adult fictional female physio calmly applying a recovery ice pack to an adult male player seated on a treatment bench, professional club recovery room, hopeful calm mood, no blood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-80157690-a917-4479-a984-5bef3f6fe668.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.victory",
+    "name": "story-victory",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Result",
+      "World"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) close rear three-quarter view of an adult fictional footballer in plain charcoal and lime kit lifting both arms toward golden stadium lights as teammates celebrate, joyous victory, no jersey numbers; 2) adult fictional footballer sitting thoughtfully in a dark dressing room, looking down with a folded shirt in hands after defeat, empathetic warm light; 3) two adult fictional men shaking hands at a club transfer presentation stage, one player holding up a plain dark shirt while a manager smiles, backdrop completely blank; 4) adult fictional female physio calmly applying a recovery ice pack to an adult male player seated on a treatment bench, professional club recovery room, hopeful calm mood, no blood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-80157690-a917-4479-a984-5bef3f6fe668.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.creator",
+    "name": "trophy-creator",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original dynasty trophy, a tall three-sided obsidian obelisk clasped by ascending gold laurel leaves, blank dark stone base; 2) a thick round gold football medal with an abstract laurel relief and folded forest ribbon, no lettering; 3) original academy achievement sculpture, a small silver football above a warm gold ascending leaf on a charcoal plinth, no writing; 4) original creator achievement trophy, an elegant golden abstract soundwave enclosing a small silver football on a black stone base, no writing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6fc30d55-d916-4571-aa53-aa16d700ef1e.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.legacy",
+    "name": "trophy-legacy",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original dynasty trophy, a tall three-sided obsidian obelisk clasped by ascending gold laurel leaves, blank dark stone base; 2) a thick round gold football medal with an abstract laurel relief and folded forest ribbon, no lettering; 3) original academy achievement sculpture, a small silver football above a warm gold ascending leaf on a charcoal plinth, no writing; 4) original creator achievement trophy, an elegant golden abstract soundwave enclosing a small silver football on a black stone base, no writing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6fc30d55-d916-4571-aa53-aa16d700ef1e.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.medal",
+    "name": "trophy-medal",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original dynasty trophy, a tall three-sided obsidian obelisk clasped by ascending gold laurel leaves, blank dark stone base; 2) a thick round gold football medal with an abstract laurel relief and folded forest ribbon, no lettering; 3) original academy achievement sculpture, a small silver football above a warm gold ascending leaf on a charcoal plinth, no writing; 4) original creator achievement trophy, an elegant golden abstract soundwave enclosing a small silver football on a black stone base, no writing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6fc30d55-d916-4571-aa53-aa16d700ef1e.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "trophy.youth",
+    "name": "trophy-youth",
+    "kind": "trophy",
+    "screens": [
+      "Trophies",
+      "Objectives",
+      "Rewards"
+    ],
+    "prompt": "Production sheet of exactly FOUR separate premium stylized semi-realistic 3D football objects in a precise 2 columns by 2 rows grid on a square canvas. One complete isolated subject per quadrant, 15% empty margin, clean flat dark charcoal background, no labels or frames. Warm soft upper-left light, cool right rim, satin metal and realistic woven fabric, coherent original game-art materials. No text, letters, numbers, logos, watermarks, real brands or functional UI. All subjects fully visible, front three-quarter view. Reading order: 1) original dynasty trophy, a tall three-sided obsidian obelisk clasped by ascending gold laurel leaves, blank dark stone base; 2) a thick round gold football medal with an abstract laurel relief and folded forest ribbon, no lettering; 3) original academy achievement sculpture, a small silver football above a warm gold ascending leaf on a charcoal plinth, no writing; 4) original creator achievement trophy, an elegant golden abstract soundwave enclosing a small silver football on a black stone base, no writing.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-6fc30d55-d916-4571-aa53-aa16d700ef1e.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.training",
+    "name": "story-training",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) three adult fictional footballers doing an agility drill with lime cones at a lush premium training ground, early morning light; 2) original adult fictional woman sports journalist asking a question with a plain microphone while seated at a charcoal football press desk with camera lights, no markings; 3) diverse adult fictional supporter group joyfully lifting plain forest-and-gold scarves outside an original stadium, no scarf writing; 4) close-up handshake between an adult fictional club representative in forest sports coat and an adult fictional woman sponsor representative in charcoal tailored jacket in a warm boardroom, blank folders and windows toward a stadium.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-871a0a8f-9c8b-40e1-a5da-3db6a5916358.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.press",
+    "name": "story-press",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) three adult fictional footballers doing an agility drill with lime cones at a lush premium training ground, early morning light; 2) original adult fictional woman sports journalist asking a question with a plain microphone while seated at a charcoal football press desk with camera lights, no markings; 3) diverse adult fictional supporter group joyfully lifting plain forest-and-gold scarves outside an original stadium, no scarf writing; 4) close-up handshake between an adult fictional club representative in forest sports coat and an adult fictional woman sponsor representative in charcoal tailored jacket in a warm boardroom, blank folders and windows toward a stadium.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-871a0a8f-9c8b-40e1-a5da-3db6a5916358.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.fans",
+    "name": "story-fans",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) three adult fictional footballers doing an agility drill with lime cones at a lush premium training ground, early morning light; 2) original adult fictional woman sports journalist asking a question with a plain microphone while seated at a charcoal football press desk with camera lights, no markings; 3) diverse adult fictional supporter group joyfully lifting plain forest-and-gold scarves outside an original stadium, no scarf writing; 4) close-up handshake between an adult fictional club representative in forest sports coat and an adult fictional woman sponsor representative in charcoal tailored jacket in a warm boardroom, blank folders and windows toward a stadium.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-871a0a8f-9c8b-40e1-a5da-3db6a5916358.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.sponsorship",
+    "name": "story-sponsorship",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) three adult fictional footballers doing an agility drill with lime cones at a lush premium training ground, early morning light; 2) original adult fictional woman sports journalist asking a question with a plain microphone while seated at a charcoal football press desk with camera lights, no markings; 3) diverse adult fictional supporter group joyfully lifting plain forest-and-gold scarves outside an original stadium, no scarf writing; 4) close-up handshake between an adult fictional club representative in forest sports coat and an adult fictional woman sponsor representative in charcoal tailored jacket in a warm boardroom, blank folders and windows toward a stadium.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-871a0a8f-9c8b-40e1-a5da-3db6a5916358.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.creator",
+    "name": "story-creator",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) original adult fictional creator woman wearing a headset, smiling toward an unbranded camera in a premium dark forest football streaming studio, only abstract non-text shapes on monitor; 2) two adult fictional rival football captains in charcoal-lime and deep navy-ivory kits facing one another before kick-off, serious respectful expressions, no words or logos; 3) view from behind a team of adult fictional football players entering a stadium tunnel toward a brilliant floodlit pitch, blank charcoal kits without names or numbers; 4) adult fictional eighteen-to-twenty-year-old academy footballers working with an adult coach on a sunlit training pitch, original plain forest kits and simple footballs, optimistic golden-hour mood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4c1e7c42-42ef-4644-967a-3ba36a1d8044.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.rivalry",
+    "name": "story-rivalry",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) original adult fictional creator woman wearing a headset, smiling toward an unbranded camera in a premium dark forest football streaming studio, only abstract non-text shapes on monitor; 2) two adult fictional rival football captains in charcoal-lime and deep navy-ivory kits facing one another before kick-off, serious respectful expressions, no words or logos; 3) view from behind a team of adult fictional football players entering a stadium tunnel toward a brilliant floodlit pitch, blank charcoal kits without names or numbers; 4) adult fictional eighteen-to-twenty-year-old academy footballers working with an adult coach on a sunlit training pitch, original plain forest kits and simple footballs, optimistic golden-hour mood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4c1e7c42-42ef-4644-967a-3ba36a1d8044.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.matchday",
+    "name": "story-matchday",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) original adult fictional creator woman wearing a headset, smiling toward an unbranded camera in a premium dark forest football streaming studio, only abstract non-text shapes on monitor; 2) two adult fictional rival football captains in charcoal-lime and deep navy-ivory kits facing one another before kick-off, serious respectful expressions, no words or logos; 3) view from behind a team of adult fictional football players entering a stadium tunnel toward a brilliant floodlit pitch, blank charcoal kits without names or numbers; 4) adult fictional eighteen-to-twenty-year-old academy footballers working with an adult coach on a sunlit training pitch, original plain forest kits and simple footballs, optimistic golden-hour mood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4c1e7c42-42ef-4644-967a-3ba36a1d8044.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "story.academy",
+    "name": "story-academy",
+    "kind": "story",
+    "screens": [
+      "Social",
+      "Home",
+      "World",
+      "Result"
+    ],
+    "prompt": "Production sheet of exactly FOUR distinct cinematic football story illustrations in a precise 2 columns by 2 rows grid, overall landscape 3:2 canvas, each quadrant an independent 3:2 picture with no borders, captions or gutters. Premium stylized semi-realistic 3D game world, dark charcoal and deep forest materials, restrained lime trim and warm gold light with cool blue stadium rim lighting. Original fictional adult people, no real-person likenesses, no text, letters, numbers, logos, brands, watermarks, interface elements or legible markings anywhere. Clothing plain original sports apparel. Composition clear at small mobile thumbnail size, one strong focal point each. Reading order: 1) original adult fictional creator woman wearing a headset, smiling toward an unbranded camera in a premium dark forest football streaming studio, only abstract non-text shapes on monitor; 2) two adult fictional rival football captains in charcoal-lime and deep navy-ivory kits facing one another before kick-off, serious respectful expressions, no words or logos; 3) view from behind a team of adult fictional football players entering a stadium tunnel toward a brilliant floodlit pitch, blank charcoal kits without names or numbers; 4) adult fictional eighteen-to-twenty-year-old academy footballers working with an adult coach on a sunlit training pitch, original plain forest kits and simple footballs, optimistic golden-hour mood.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-4c1e7c42-42ef-4644-967a-3ba36a1d8044.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "ambience.dusk-overcast",
+    "name": "ambience-dusk-overcast",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) dramatic overcast dusk with mauve clouds and warm stadium lamps; 2) atmospheric foggy night with soft volumetric stadium lights and a still clearly visible pitch; 3) cold pale daytime with light snow on distant roof edges, green football pitch cleared for play; 4) peaceful sunrise with warm amber light grazing the turf and pale blue sky.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-212901e2-f248-416a-8a5d-1c7f162c61bb.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "ambience.night-fog",
+    "name": "ambience-night-fog",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) dramatic overcast dusk with mauve clouds and warm stadium lamps; 2) atmospheric foggy night with soft volumetric stadium lights and a still clearly visible pitch; 3) cold pale daytime with light snow on distant roof edges, green football pitch cleared for play; 4) peaceful sunrise with warm amber light grazing the turf and pale blue sky.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-212901e2-f248-416a-8a5d-1c7f162c61bb.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "ambience.day-snow",
+    "name": "ambience-day-snow",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) dramatic overcast dusk with mauve clouds and warm stadium lamps; 2) atmospheric foggy night with soft volumetric stadium lights and a still clearly visible pitch; 3) cold pale daytime with light snow on distant roof edges, green football pitch cleared for play; 4) peaceful sunrise with warm amber light grazing the turf and pale blue sky.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-212901e2-f248-416a-8a5d-1c7f162c61bb.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "ambience.dawn-clear",
+    "name": "ambience-dawn-clear",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) dramatic overcast dusk with mauve clouds and warm stadium lamps; 2) atmospheric foggy night with soft volumetric stadium lights and a still clearly visible pitch; 3) cold pale daytime with light snow on distant roof edges, green football pitch cleared for play; 4) peaceful sunrise with warm amber light grazing the turf and pale blue sky.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-212901e2-f248-416a-8a5d-1c7f162c61bb.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "key": "ambience.day-clear",
+    "name": "ambience-day-clear",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) crisp clear bright summer daytime with soft white clouds; 2) clear cool evening with blue-black sky and bright stadium floodlights; 3) overcast daytime rain with wet reflective sidelines and gently falling rain; 4) rainy night under blazing floodlights with silver rain streaks and wet grass.\n\nFinal cleanup: Edit this exact 2 by 2 stadium-weather production sheet. Preserve the four scenes, grid alignment, all weather, lighting, stadium and pitch details. REMOVE all lettering, number-like marks and pseudo words from stadium roof fascia, balcony fronts, advertising hoardings and walls in ALL FOUR quadrants. Those bands should become uniformly plain ivory or dark metal matching the existing material, absolutely no letters, words, numbers, logos or marks. No other changes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d3276a38-99fd-45d4-9311-ca0521f8571f.png",
+    "sourceRegion": [
+      0,
+      0,
+      0.5,
+      0.5
+    ],
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e4e46e84-b23a-49f4-897b-64de0dcff4ec.png"
+  },
+  {
+    "key": "ambience.night-clear",
+    "name": "ambience-night-clear",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) crisp clear bright summer daytime with soft white clouds; 2) clear cool evening with blue-black sky and bright stadium floodlights; 3) overcast daytime rain with wet reflective sidelines and gently falling rain; 4) rainy night under blazing floodlights with silver rain streaks and wet grass.\n\nFinal cleanup: Edit this exact 2 by 2 stadium-weather production sheet. Preserve the four scenes, grid alignment, all weather, lighting, stadium and pitch details. REMOVE all lettering, number-like marks and pseudo words from stadium roof fascia, balcony fronts, advertising hoardings and walls in ALL FOUR quadrants. Those bands should become uniformly plain ivory or dark metal matching the existing material, absolutely no letters, words, numbers, logos or marks. No other changes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d3276a38-99fd-45d4-9311-ca0521f8571f.png",
+    "sourceRegion": [
+      0.5,
+      0,
+      0.5,
+      0.5
+    ],
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e4e46e84-b23a-49f4-897b-64de0dcff4ec.png"
+  },
+  {
+    "key": "ambience.day-rain",
+    "name": "ambience-day-rain",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) crisp clear bright summer daytime with soft white clouds; 2) clear cool evening with blue-black sky and bright stadium floodlights; 3) overcast daytime rain with wet reflective sidelines and gently falling rain; 4) rainy night under blazing floodlights with silver rain streaks and wet grass.\n\nFinal cleanup: Edit this exact 2 by 2 stadium-weather production sheet. Preserve the four scenes, grid alignment, all weather, lighting, stadium and pitch details. REMOVE all lettering, number-like marks and pseudo words from stadium roof fascia, balcony fronts, advertising hoardings and walls in ALL FOUR quadrants. Those bands should become uniformly plain ivory or dark metal matching the existing material, absolutely no letters, words, numbers, logos or marks. No other changes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d3276a38-99fd-45d4-9311-ca0521f8571f.png",
+    "sourceRegion": [
+      0,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e4e46e84-b23a-49f4-897b-64de0dcff4ec.png"
+  },
+  {
+    "key": "ambience.night-rain",
+    "name": "ambience-night-rain",
+    "kind": "ambience",
+    "screens": [
+      "Matchday",
+      "Live Match",
+      "Club"
+    ],
+    "prompt": "Production sheet of exactly FOUR variations of the SAME original compact football stadium from precisely the same low camera position looking from a corner toward the pitch and stands, in a strict 2 columns by 2 rows grid, landscape 3:2 overall canvas, each quadrant a complete 3:2 scene. Premium stylized semi-realistic 3D game art, dark forest stadium seats, satin steel roof, warm lamps, natural textured turf, coherent game-world materials. No players close to camera. No text, letters, logos, ads, brands, UI or watermarks anywhere; every advertising hoarding completely blank. Separate each variant exactly at centre, no borders. Reading order: 1) crisp clear bright summer daytime with soft white clouds; 2) clear cool evening with blue-black sky and bright stadium floodlights; 3) overcast daytime rain with wet reflective sidelines and gently falling rain; 4) rainy night under blazing floodlights with silver rain streaks and wet grass.\n\nFinal cleanup: Edit this exact 2 by 2 stadium-weather production sheet. Preserve the four scenes, grid alignment, all weather, lighting, stadium and pitch details. REMOVE all lettering, number-like marks and pseudo words from stadium roof fascia, balcony fronts, advertising hoardings and walls in ALL FOUR quadrants. Those bands should become uniformly plain ivory or dark metal matching the existing material, absolutely no letters, words, numbers, logos or marks. No other changes.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-d3276a38-99fd-45d4-9311-ca0521f8571f.png",
+    "sourceRegion": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-e4e46e84-b23a-49f4-897b-64de0dcff4ec.png"
+  },
+  {
+    "key": "environment.stadium-day-elite",
+    "name": "environment-stadium-day-elite",
+    "kind": "environment",
+    "screens": [
+      "Club",
+      "Facilities"
+    ],
+    "prompt": "Create the elite upgraded level-four version of this exact original fictional football club campus. Preserve the same elevated camera, forest lake setting, warm afternoon light, dark forest/gold/charcoal materials, original distinctive architecture, front courtyard and football sculpture. Show visible completed expansion: add a second tier of seating inside the main stadium, a larger clean satin-metal cantilever roof, upgraded glass hospitality facade, and a connected academy pavilion. Premium stylized semi-realistic 3D game environment, polished but believable club growth. Landscape 3:2. No labels, lettering, numbers, logos, ads, brands, signs or UI anywhere; all facades blank. This is environmental art, not a functional interface or runtime model.",
+    "source": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-1fdbc594-967d-4924-a1a7-98b49a4e49b2.png",
+    "revisionSource": "C:/Users/IsacC/.codex/generated_images/01a0c51b-0ef0-72f3-9499-e3360d1f9443/exec-011b7cff-a154-4036-b4ae-8601c6a34482.png"
+  }
+]

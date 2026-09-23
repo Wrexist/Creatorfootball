@@ -240,6 +240,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
           </div>
         </div>
       }
+      asideOnMobile
       aside={
         <>
           <GlassPanel title="At a glance" padding="md">
@@ -268,7 +269,7 @@ function ProfileBody({ state, player }: { state: GameState; player: Player }): R
             <IconInjury size={18} className="shrink-0 text-danger" />
             <Text role="caption" as="p" className="text-ink text-pretty">
               <strong className="font-semibold">{sentenceCase(player.injury.description)}.</strong>{' '}
-              He cannot play for about {player.injury.weeksRemaining} more weeks.
+              He cannot play for about {Math.ceil(player.injury.weeksRemaining)} more weeks.
             </Text>
           </div>
         </GlassPanel>

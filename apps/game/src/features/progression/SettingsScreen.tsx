@@ -7,9 +7,9 @@ import {
 } from '@/design';
 import { ROUTES } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
-import { useUiStore } from '@/state/uiStore';
 import { GateScreen, useGameStatus } from './gate';
 import { updateSettings } from './engine';
+import { exportCareer } from '@/platform/exportSave';
 
 /**
  * Settings.
@@ -39,9 +39,9 @@ const DIFFICULTIES = [
 ];
 
 const DIFFICULTY_BLURB: Record<GameSettings['difficulty'], string> = {
-  CASUAL: 'Boards are patient, budgets are kinder and rivals bid less aggressively.',
+  CASUAL: 'New objectives use gentler targets. Existing objectives and match rules stay the same.',
   STANDARD: 'The game as designed. Objectives are set against what your club can actually do.',
-  DEMANDING: 'Expectations rise faster, the market is sharper and mistakes stay expensive.',
+  DEMANDING: 'New objectives use tougher targets. Existing objectives and match rules stay the same.',
 };
 
 const PRESENTATION_BLURB: Record<GameSettings['presentation'], string> = {
@@ -63,8 +63,6 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
   const abandon = useGameStore((s) => s.abandon);
   const save = useGameStore((s) => s.save);
   const meta = useGameStore((s) => s.meta);
-  const reducedEffects = useUiStore((s) => s.reducedEffects);
-  const setReducedEffects = useUiStore((s) => s.setReducedEffects);
   const [busy, setBusy] = useState(false);
 
   const settings = state.settings;
@@ -90,15 +88,16 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
     });
     if (!ok) return;
     setBusy(true);
-    await abandon();
-    setBusy(false);
-    navigate(ROUTES.splash);
+    try { await abandon(); navigate(ROUTES.splash); }
+    catch (error) { toast.error('Career was not deleted', String(error)); }
+    finally { setBusy(false); }
   };
 
   return (
     <Screen
       title="Settings"
       subtitle="Presentation, accessibility and your save"
+      asideOnMobile
       aside={
         <GlassPanel title="Your save" padding="md">
           <KeyValueRow label="Club" value={state.clubs[state.playerClubId]?.shortName ?? '—'} />
@@ -116,9 +115,16 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
             size="sm"
             block
             loading={busy}
-            onClick={() => { void save(); toast.success('Saved'); }}
+            onClick={() => { void save().then((ok) => {
+              if (ok) toast.success('Saved');
+              else toast.error('Save failed', 'Progress is still in this session. Free some storage and try again.');
+            }); }}
           >
             Save now
+          </GlassButton>
+          <GlassButton className="mt-2" variant="ghost" size="sm" block
+            onClick={() => void exportCareer(state).catch(error => toast.error('Export failed', String(error)))}>
+            Export career backup
           </GlassButton>
         </GlassPanel>
       }
@@ -180,9 +186,13 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
           asRow
           label="Reduce effects"
           description="Turns off the glass blur. Use this if the interface feels heavy on your device."
-          checked={reducedEffects}
-          onChange={setReducedEffects}
+          checked={settings.reducedEffects ?? false}
+          onChange={(reducedEffects) => updateSettings({ reducedEffects })}
         />
+        <GlassToggle asRow label="Larger text" description="Increases reading text without shrinking touch targets."
+          checked={settings.textSize === 'LARGE'} onChange={(large) => updateSettings({textSize:large ? 'LARGE' : 'STANDARD'})} />
+        <GlassToggle asRow label="Stronger contrast" description="Brighter secondary text and stronger panel borders. Status labels remain visible alongside colours."
+          checked={settings.highContrast ?? false} onChange={(highContrast) => updateSettings({highContrast})} />
         <GlassToggle
           asRow
           label="Haptics"
@@ -240,7 +250,8 @@ function SettingsView({ state }: { state: GameState }): ReactNode {
         </GlassButton>
       </GlassPanel>
 
-      <SectionHeader title="Save management" subtitle="The irreversible corner" />
+      <SectionHeader title="Save management" subtitle="Stored on this device" />
+      <GlassButton block onClick={() => navigate(ROUTES.localSaves)}>Local backups &amp; import</GlassButton>
       <GlassPanel padding="md" accent="danger">
         <div className="flex items-start gap-3">
           <span

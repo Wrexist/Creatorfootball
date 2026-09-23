@@ -1,15 +1,29 @@
 import { BASE_PACK, ContentRegistry } from '@cf/engine';
+import { EXPANSION_PACKS, availablePackIds } from '@/commerce/packs';
+import type { ProductId } from '@/commerce/catalog';
 
 /**
- * The one loaded content pack, shared by every feature bridge.
+ * The active content registry, shared by every feature bridge.
  *
- * Loading a pack validates it end to end, so it happens exactly once, lazily,
- * on first read — never per render, never per screen. Every consumer gets the
+ * Loading validates packs end to end, on first read or a selection change,
+ * never per render or per screen. Every consumer gets the
  * same registry instance, which is what lets a screen agree with the
  * simulation about what an upgrade costs or what a facility does.
  */
 
 let registry: ContentRegistry | null = null;
+let selection = '';
+
+export function configureExpansionPacks(enabled: readonly string[], owned: readonly ProductId[]): void {
+  const ids = availablePackIds(enabled, owned);
+  const key = ids.slice().sort().join(',');
+  if (key === selection) return;
+  const next = new ContentRegistry();
+  next.load(BASE_PACK);
+  for (const pack of EXPANSION_PACKS) if (ids.includes(pack.manifest.id)) next.load(pack);
+  registry = next;
+  selection = key;
+}
 
 export function contentRegistry(): ContentRegistry {
   if (!registry) {

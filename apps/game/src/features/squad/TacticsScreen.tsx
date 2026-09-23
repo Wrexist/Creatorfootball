@@ -144,6 +144,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   const navigate = useNavigate();
   const apply = useGameStore((s) => s.apply);
   const [selection, setSelection] = useState<Selection>(null);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [shapeSize, setShapeSize] = useState<'7' | '11'>('7');
   const [duty, setDuty] = useState<null | 'captainId' | 'penaltyTakerId' | 'setPieceTakerId'>(null);
   const drag = useRef<DragState | null>(null);
@@ -378,6 +379,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
   return (
     <Screen
       title="Tactics"
+      asideOnMobile
       subtitle={`${formation.name} · ${formation.shape.toLowerCase()}`}
       onBack={() => navigate(ROUTES.squad)}
       footer={
@@ -433,9 +435,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
             Pick a side for {formation.name}
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-muted text-pretty">
-            Start from a sensible {sidesWord(formation.slots.length)} and adjust it, or drag players onto the pitch
-            yourself. Leave it empty and the simulator picks for you — it will not pick badly, but it will not pick your
-            way either.
+            Choose your starting {sidesWord(formation.slots.length)}. Tap or drag players to adjust the team.
           </p>
           <div className="mt-3">
             <GlassButton variant="primary" icon={<IconSwap size={18} />} onClick={autoPick}>
@@ -462,10 +462,11 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
         </GlassPanel>
       )}
 
+      <GlassButton variant="secondary" block icon={<IconTactics size={18}/>} onClick={() => setInstructionsOpen(true)}>Formation & instructions</GlassButton>
       {/* --- the pitch ------------------------------------------------ */}
       <div className="relative mx-auto w-full max-w-[420px]">
         <div
-          className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-white/[0.08]"
+          className="cf-tactic-pitch relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-white/[0.08]"
           style={{ background: 'linear-gradient(180deg, var(--color-pitch-mid) 0%, var(--color-pitch-deep) 100%)' }}
         >
           <svg viewBox="0 0 100 133" className="absolute inset-0 size-full" aria-hidden="true">
@@ -538,6 +539,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
         </GlassPanel>
       )}
 
+      <GlassSheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} title="Formation & instructions">
       {/* --- formation ------------------------------------------------ */}
       <SectionHeader
         title="Shape"
@@ -604,6 +606,7 @@ function TacticsBody({ state }: { state: GameState }): ReactNode {
       </p>
 
       {/* --- duty picker ---------------------------------------------- */}
+      </GlassSheet>
       <GlassSheet
         open={duty !== null}
         onClose={() => setDuty(null)}

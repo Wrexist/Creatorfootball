@@ -1,11 +1,15 @@
-import { memo, type ReactNode } from 'react';
+import { memo, useState, type ReactNode } from 'react';
+import { assetFor, managerAssetFor } from '@/design/art/manifest';
 import type { ManagerAppearance } from '@cf/engine';
 import {
-  Accessory as FaceAccessoryLayer, Brows, cn, darken, Ears, EYE_Y, Eyes, FACE_CHIN, FACE_CX,
+  Accessory as FaceAccessoryLayer, Brows, Ears, EYE_Y, Eyes, FACE_CHIN, FACE_CX,
   FaceGradients, FaceShading, FacialHairLayer, featureInk, Hair, HAIR_BACK_STYLES, headHalfWidth,
-  headPath, lighten, Mouth, Neck, Nose, rgba, useSvgId,
+  headPath, Mouth, Neck, Nose,
   type HeadGeometry,
-} from '@/design';
+} from '@/design/domain/face';
+import { cn } from '@/design/cn';
+import { darken, lighten, rgba } from '@/design/color';
+import { useSvgId } from '@/design/useSvgId';
 import { SKIN_TONES } from './appearance';
 
 /**
@@ -227,4 +231,11 @@ function ManagerPortraitInner({
   );
 }
 
-export const ManagerPortrait = memo(ManagerPortraitInner);
+export const ManagerPortrait = memo(function ManagerPortrait(props: ManagerPortraitProps): ReactNode {
+  const asset = managerAssetFor(props.appearance);
+  const size = props.size ?? 96;
+  const src = asset ? assetFor(asset,size > 96 ? 'card' : 'thumb') : undefined;
+  const [failed,setFailed] = useState<string>();
+  if (!src || failed === src) return <ManagerPortraitInner {...props}/>;
+  return <img src={src} width={size} height={size} style={{width:size,height:size}} alt={props.label ?? ''} loading="lazy" decoding="async" onError={() => setFailed(src)} className={cn('block shrink-0 object-cover',SHAPE_CLASS[props.shape ?? 'squircle'],props.className)}/>;
+});

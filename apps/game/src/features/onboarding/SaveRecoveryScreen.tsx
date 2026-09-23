@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { GlassButton, GlassPanel, IconWarning, KeyValueRow, useConfirm } from '@/design';
 import { useGameStore } from '@/state/gameStore';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/app/routes';
 
 /**
  * The save could not be read.
@@ -15,6 +17,7 @@ import { useGameStore } from '@/state/gameStore';
  * them.
  */
 export function SaveRecoveryScreen(): ReactNode {
+  const navigate = useNavigate();
   const error = useGameStore((s) => s.error);
   const boot = useGameStore((s) => s.boot);
   const abandon = useGameStore((s) => s.abandon);
@@ -73,6 +76,7 @@ export function SaveRecoveryScreen(): ReactNode {
           <GlassButton variant="ghost" size="md" block onClick={() => void startOver()}>
             Start a new career instead
           </GlassButton>
+          <GlassButton block onClick={() => navigate(ROUTES.localSaves)}>Import a career backup</GlassButton>
         </div>
       </div>
     </div>

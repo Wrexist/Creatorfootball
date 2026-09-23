@@ -1,11 +1,11 @@
 # App Store Submission Package
 
-Everything needed to create the App Store Connect record and ship v1.0 of
+Draft metadata and release checklist for the App Store Connect record for v1.0 of
 **Creator Football** (`com.creatorfootball.app`). Machine-readable copies of
 every text field live in `apps/game/fastlane/metadata/en-US/` — this document
 is the source of truth for *why*, plus everything fastlane files can't carry.
 
-All character counts were measured, not estimated.
+Description and promotional copy were refreshed September 22, 2026. This is not evidence of a signed or approved release. See [current console status and open release gates](STORE_SETUP_STATUS.md).
 
 ---
 
@@ -16,8 +16,8 @@ All character counts were measured, not estimated.
 | **Name** | 30 | `Creator Football: Club Manager` | 30/30 |
 | **Subtitle** | 30 | `Build a Club. Rule the League.` | 30/30 |
 | **Keywords** | 100 | see below | 97/100 |
-| **Promotional Text** | 170 | see `promotional_text.txt` | 137/170 |
-| **Description** | 4,000 | see `description.txt` | 2,796/4,000 |
+| **Promotional Text** | 170 | see `promotional_text.txt` | 154/170 |
+| **Description** | 4,000 | see `description.txt` | 2,177/4,000 |
 | **What's New (1.0)** | 4,000 | see `release_notes.txt` | 316/4,000 |
 
 ### Keywords field
@@ -49,7 +49,7 @@ fantasy rather than the category. Both read as one sentence in search results:
 | Field | Value |
 |---|---|
 | Bundle ID | `com.creatorfootball.app` |
-| Primary language | en-US |
+| Primary language | English (U.K.), as verified in App Store Connect; en-US copy is also prepared |
 | Category (primary) | Games → Sports |
 | Category (secondary) | Games → Simulation |
 | Copyright | `© 2026 Wrexist` |
@@ -58,9 +58,10 @@ fantasy rather than the category. Both read as one sentence in search results:
 | Privacy Policy URL | https://wrexist.github.io/Creatorfootball/privacy.html |
 | SKU | `creator-football-1` |
 
-The three URLs are served by GitHub Pages from `website/` in this repo,
-deployed by `.github/workflows/pages.yml`. First deploy requires a one-time
-repo setting: **Settings → Pages → Source: GitHub Actions**.
+GitHub's Pages API currently reports legacy deployment from `Main:/docs`.
+Keep the public HTML copies in `docs/` and `website/` consistent. The Pages
+workflow also exists; do not assume a local edit to `website/` is live without
+checking deployment status and the actual public URLs.
 
 ---
 
@@ -85,22 +86,18 @@ Answers that produce a rating of **4+** on the updated (2026) questionnaire:
 | Chat (filtered/unfiltered) | None |
 | Contests/ads for other products | No |
 
-The game contains no user-generated content sharing, no chat and no external
-links from inside gameplay, so no moderation obligations attach.
+The social feed is fictional game content, not public user-generated content or
+chat. The owner selected an all-ages Google Play audience, including children;
+that is separate from Apple's content rating. Review the actual SDKs, purchase
+flow and Families requirements before claiming the all-ages release is qualified.
 
 ---
 
 ## 4. App Privacy label
 
-Declare: **Data Not Collected.**
+The optional native purchase integration uses RevenueCat. Do not submit the old "Data Not Collected" label for a purchase-enabled build. The current console label declares purchase history and the anonymous app user identifier for app functionality and analytics, not linked to identity or used for advertising tracking. Careers remain local and no game account exists. Reconcile these answers with the archived binary's privacy report and the configured RevenueCat project before submission.
 
-The app has no accounts, no ads, no third-party analytics or crash SDKs, and
-saves never leave the device. The website sets no cookies and runs no scripts.
-`website/privacy.html` documents exactly this — Apple cross-checks the label
-against the policy, and a mismatch triggers a 5.1.1 rejection.
-
-> If telemetry is ever added, update: the engine's analytics sink config, the
-> privacy page, this label, and re-review — in that order, before shipping.
+Sources: [RevenueCat Apple privacy guidance](https://www.revenuecat.com/docs/platform-resources/apple-platform-resources/apple-app-privacy), [anonymous customer IDs](https://www.revenuecat.com/docs/customers/identifying-customers). The app privacy manifest includes Filesystem's timestamp access reason C617.1. Review the merged SDK manifests in Xcode as part of release qualification.
 
 ---
 
@@ -135,7 +132,7 @@ bleed captures are safe.
 
 ```
 Creator Football is a single-player football management game. Everything runs
-on-device; there is no server, account or online component.
+on-device. Optional one-time content purchases are verified through RevenueCat and the Apple store account. There is no game sign-in or cloud save.
 
 To review quickly:
 1. Launch and tap through club creation (any choices work).
@@ -174,11 +171,11 @@ Store side (App Store Connect):
 - [ ] App record created with bundle ID above; SKU set
 - [ ] All en-US fields pasted from `fastlane/metadata/en-US/`
 - [ ] Age rating questionnaire submitted (section 3 answers)
-- [ ] App Privacy: Data Not Collected
+- [ ] App Privacy: reconcile purchase history and anonymous user identifier declarations with the RevenueCat-enabled release; do not use Data Not Collected for that build.
 - [ ] URLs reachable (after first Pages deploy)
 - [ ] Screenshots uploaded per section 5
 - [ ] Review notes pasted; contact email confirmed monitored
-- [ ] Pricing: free, no IAP in v1.0; availability: all 175 regions default
+- [ ] Configure the three non-consumable products and their prices/regions, attach RevenueCat entitlements, and complete sandbox purchase/restore/refund tests before enabling IAP.
 
 Post-launch ASO cadence: refresh Promotional Text freely (no review); revisit
 Name/Subtitle/Keywords only with version updates; check App Store Connect's

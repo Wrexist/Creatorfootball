@@ -5,6 +5,7 @@ import { useDesignMotion } from '../motion';
 import { haptics } from '../haptics';
 import { sfx } from '../audio';
 import { FOCUS_RING } from '../glass/glassLevel';
+import { GradualBlur } from '../glass/GradualBlur';
 import {
   IconClub, IconHome, IconLeague, IconMatchday, IconSquad,
   type IconComponent,
@@ -55,7 +56,7 @@ export interface TabBarProps {
  * buttons, and the bar should read as chrome, not as seven controls.
  */
 export function TabBar({
-  value, onChange, badges, hidden = false, appearance = 'floating', className,
+  value, onChange, badges, hidden = false, appearance = 'anchored', className,
 }: TabBarProps): ReactNode {
   const m = useDesignMotion();
   const layoutId = useId();
@@ -73,10 +74,11 @@ export function TabBar({
         'pointer-events-none',
         'transition-transform duration-[var(--duration-fast)] ease-out-quint',
         hidden && 'translate-y-[calc(100%+var(--safe-bottom))]',
-        className,
+        'cf-bottom-nav', className,
       )}
       style={{ paddingBottom: 'var(--safe-bottom)' }}
     >
+      <GradualBlur side="bottom" height="calc(var(--nav-height) + var(--safe-bottom) + 44px)" strength={16} className="cf-nav-edge" />
       <div
         className={cn(
           'pointer-events-auto mx-auto flex w-full max-w-lg items-stretch',
@@ -282,7 +284,7 @@ export function AppShell({
   value, onChange, badges, navHeader, navFooter, immersive = false, children,
 }: AppShellProps): ReactNode {
   return (
-    <div className="flex h-full w-full overflow-hidden bg-base">
+    <div className="cf-game-shell flex h-full w-full overflow-hidden bg-base">
       {!immersive && (
         <div className="hidden md:flex">
           <SideNav

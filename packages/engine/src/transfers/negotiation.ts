@@ -10,6 +10,7 @@ import type { CompletedTransfer, Negotiation, NegotiationStage, NegotiationTerms
 import type { Player } from '../players/player';
 import { NEGOTIATION_BALANCE as N } from './balance';
 import { askingPrice, type ValuationContext } from './valuation';
+import { ECONOMY_BALANCE } from '../economy/balance';
 
 /**
  * The transfer negotiation flow.
@@ -77,6 +78,8 @@ export interface NegotiationContext {
   readonly rivals: readonly RivalClub[];
   /** How the player's current club has used him, -1..+1. Drives push motivation. */
   readonly rolePromiseDelta?: number;
+  readonly currentWageBill?: number;
+  readonly windowOpen?: boolean;
 }
 
 const TERMINAL: readonly NegotiationStage[] = ['AGREED', 'FAILED', 'HIJACKED'];
@@ -590,6 +593,16 @@ export function completeTransfer(
   const agentFee = Math.max(0, Math.round(neg.agentFeeDemand));
   const signingBonus = Math.max(0, Math.round(terms.signingBonus));
   const totalCost = fee + agentFee + signingBonus;
+  if (player.clubId === buyer.id || neg.playerId !== player.id || neg.toClubId !== buyer.id
+    || (player.clubId ?? null) !== (seller?.id ?? null)) return failedOutcome('Player registration changed. Reopen talks.');
+  if (ctx.cycle > neg.deadlineCycle) return failedOutcome('The agreement has expired.');
+  if (ctx.windowOpen === false && seller) return failedOutcome('The transfer window is closed.');
+  if (totalCost > buyer.finance.transferBudget) return failedOutcome('The fee and signing costs exceed your transfer budget.');
+  const wages = ctx.currentWageBill ?? 0;
+  if (wages + terms.wage > buyer.finance.wageBudgetPerCycle) return failedOutcome('The wage budget has insufficient headroom.');
+  if (buyer.finance.debt > Math.max(1, wages) * ECONOMY_BALANCE.DEBT_CEILING_WAGE_MULTIPLE) {
+    return failedOutcome('The club is insolvent. Recruitment is embargoed until the debt is under control.');
+  }
 
   if (!ledger.canAfford(buyer.id, totalCost)) {
     return failedOutcome(
@@ -651,10 +664,11 @@ export function completeTransfer(
   };
 
   const nextFrom: Club | null = seller
-    ? { ...seller, squad: seller.squad.filter((id) => id !== player.id) }
+    ? { ...seller, squad: seller.squad.filter((id) => id !== player.id), youthSquad: seller.youthSquad.filter((id) => id !== player.id) }
     : null;
   const nextTo: Club = {
     ...buyer,
+    finance: { ...buyer.finance, transferBudget: Math.max(0, buyer.finance.transferBudget - totalCost) },
     squad: buyer.squad.includes(player.id) ? buyer.squad : [...buyer.squad, player.id],
   };
 

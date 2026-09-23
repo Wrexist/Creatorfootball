@@ -241,6 +241,7 @@ export function payBonuses(
   triggers: BonusTriggers,
   playerName: string,
   ctx: PostContext,
+  allowOverdraft = false,
 ): BonusSettlement {
   const payouts = bonusPayouts(contract, triggers, playerName);
   const paid: BonusPayout[] = [];
@@ -248,7 +249,8 @@ export function payBonuses(
   for (const payout of payouts) {
     const result = ledger.debit(clubId, 'PERFORMANCE_BONUS', payout.amount, payout.memo, ctx, {
       idempotencyKey: `bonus:${contract.id}:${payout.kind}:${ctx.cycle}`,
-      metadata: { playerId: contract.playerId, kind: payout.kind },
+        metadata: { playerId: contract.playerId, kind: payout.kind },
+        allowOverdraft,
     });
     if (result.ok) paid.push(payout);
     else unpaid.push(payout);

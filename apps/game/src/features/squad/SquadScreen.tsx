@@ -9,7 +9,7 @@ import {
 import {
   Divider, EmptyState, GlassButton, GlassIcon, GlassPanel, GlassPill, GlassSegmented, GlassSheet,
   GlassToggle, HeroSurface, ListRow, NameText, PlayerPortrait, PositionChip,
-  RatingBadge, Screen, StatBlock, Text, TraitChip, cn, formatMoney,
+  RatingBadge, Screen, Text, TraitChip, cn, formatMoney,
   IconArrowDown, IconArrowUp, IconCheck, IconFlame, IconInjury, IconCard, IconSort, IconSwap,
   IconWarning,
 } from '@/design';
@@ -107,7 +107,7 @@ const SquadRow = memo(function SquadRow({
   const cold = player.form.rating <= -0.45;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="cf-squad-row flex items-center gap-1">
       <ListRow
         className="min-w-0 flex-1"
         divided={divided}
@@ -119,7 +119,7 @@ const SquadRow = memo(function SquadRow({
           <span className="relative">
             <PlayerPortrait
               seed={player.portraitSeed}
-              size={46}
+              size={54}
               shape="squircle"
               colors={{ primary, secondary }}
             />
@@ -144,7 +144,7 @@ const SquadRow = memo(function SquadRow({
             {player.injury && (
               <span className="inline-flex shrink-0 items-center gap-0.5 rounded-pill bg-danger/85 px-1.5 py-0.5 text-micro font-bold text-ink">
                 <IconInjury size={11} />
-                {player.injury.weeksRemaining}w
+                {Math.ceil(player.injury.weeksRemaining)}w
               </span>
             )}
             {!player.injury && player.suspensionMatches > 0 && (
@@ -240,6 +240,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
   const apply = useGameStore((s) => s.apply);
 
   const [group, setGroup] = useState<GroupFilter>('ALL');
+  const [unit, setUnit] = useState<'ALL' | 'XI' | 'BENCH'>('ALL');
   const [sort, setSort] = useState<SortKey>('position');
   const [availableOnly, setAvailableOnly] = useState(false);
   const [expiringOnly, setExpiringOnly] = useState(false);
@@ -285,6 +286,9 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
 
   const visible = useMemo(() => {
     let rows = data.entries;
+    const starting = new Set(Object.values(data.club.tactics.lineup));
+    if (unit === 'XI') rows = rows.filter(e => starting.has(e.player.id));
+    if (unit === 'BENCH') rows = rows.filter(e => !starting.has(e.player.id));
     if (group !== 'ALL') rows = rows.filter((e) => e.group === group);
     if (availableOnly) rows = rows.filter((e) => !e.unavailable);
     if (expiringOnly) rows = rows.filter((e) => e.expiring);
@@ -306,7 +310,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
       }
     });
     return sorted;
-  }, [data.entries, group, sort, availableOnly, expiringOnly]);
+  }, [data.entries, data.club.tactics.lineup, unit, group, sort, availableOnly, expiringOnly]);
 
   /**
    * The list is grouped by department whenever the ordering is one the player
@@ -429,52 +433,17 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
         ) : undefined
       }
     >
-      {/* --- the state of the squad ----------------------------------- */}
-      <HeroSurface
-        eyebrow="Your squad"
-        texture="haze"
-        bleed={data.club.visual.primary}
-        padding="md"
-      >
-        <Text role="title" as="h2" className="text-pretty">{verdict}</Text>
-        <Text role="caption" className="mt-1.5 text-pretty">
-          Each row shows the job you have promised him, how fresh he is, and how long his deal has left.
-        </Text>
-
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <StatBlock
-            tone="volt"
-            label="Average rating"
-            value={Math.round(data.averageRating)}
-            caption="Across the whole squad"
-          />
-          <StatBlock
-            label="Average age"
-            value={data.averageAge.toFixed(1)}
-            caption={data.averageAge >= 29 ? 'An old squad — plan the rebuild' : data.averageAge <= 24 ? 'A young squad with room to grow' : 'A balanced age profile'}
-          />
+      <HeroSurface texture="haze" padding="md" className="cf-squad-summary">
+        <Text role="bodyStrong">{verdict}</Text>
+        <div className="cf-squad-metrics">
+          <span><strong>{Math.round(data.averageRating)}</strong><small>Rating</small></span>
+          <span><strong>{Math.round(data.entries.reduce((n,e) => n+e.player.mental.morale,0)/Math.max(1,data.entries.length))}%</strong><small>Morale</small></span>
+          <span><strong>{Math.round(data.entries.reduce((n,e) => n+e.player.fitness,0)/Math.max(1,data.entries.length))}%</strong><small>Fitness</small></span>
+          <span><strong>{Math.round(data.usage*100)}%</strong><small>Wages used</small></span>
         </div>
-
-        {data.best && (
-          <button
-            type="button"
-            onClick={() => setOpened(data.best?.id ?? null)}
-            className="mt-3 flex w-full items-center gap-3 rounded-md bg-white/[0.05] p-2 text-left outline-none hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-base"
-          >
-            <PlayerPortrait
-              seed={data.best.portraitSeed}
-              size={40}
-              shape="squircle"
-              colors={{ primary: data.club.visual.primary, secondary: data.club.visual.secondary }}
-            />
-            <span className="min-w-0 flex-1">
-              <Text role="micro" as="span" className="block">Your best player</Text>
-              <NameText name={data.best.displayName} role="bodyStrong" className="mt-0.5" />
-            </span>
-            <RatingBadge value={data.best.overall} size="sm" />
-          </button>
-        )}
+        <GlassButton variant="secondary" block onClick={() => navigate(ROUTES.tactics)}>Select starting XI</GlassButton>
       </HeroSurface>
+      <GlassSegmented value={unit} onChange={setUnit} aria-label="Squad unit" options={[{value:'ALL',label:'Full squad'},{value:'XI',label:'Starting XI'},{value:'BENCH',label:'Bench & reserves'}]}/>
 
       {/* --- what needs doing ----------------------------------------- */}
       {data.expiringCount > 0 && (
@@ -519,7 +488,7 @@ function SquadBody({ state }: { state: GameState }): ReactNode {
           action={
             <GlassButton
               variant="secondary"
-              onClick={() => { setGroup('ALL'); setAvailableOnly(false); setExpiringOnly(false); }}
+              onClick={() => { setGroup('ALL'); setUnit('ALL'); setAvailableOnly(false); setExpiringOnly(false); }}
             >
               Clear the filters
             </GlassButton>

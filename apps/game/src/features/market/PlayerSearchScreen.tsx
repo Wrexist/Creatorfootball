@@ -5,6 +5,7 @@ import {
   POSITION_LABELS,
   contractFor,
   searchPlayers,
+  scoutReportCost,
   type GameState,
   type Player,
   type PlayerFilters,
@@ -381,7 +382,7 @@ function DetailSheetBody({
                   else toastError('Could not assign a scout', result.reason);
                 }}
               >
-                Scout
+                {state.inventory.scoutCredits > 0 ? 'Scout · 1 credit' : `Scout · ${plainMoney(scoutReportCost('DETAILED'))}`}
               </GlassButton>
             )}
           </div>

@@ -177,4 +177,16 @@ describe('active deals', () => {
     expect(signSponsorOffer(bigClub, offer, ledger, POST).ok).toBe(false);
     expect(sponsorIncomePerCycle({ available: [], active: [first.deal!] })).toBe(offer.valuePerCycle);
   });
+
+  it('gives a renewed term a fresh bonus identity', () => {
+    const ledger = new Ledger(); ledger.open(bigClub.id, 0, POST);
+    const first = advanceSponsorDeals(bigClub, state([deal({ weeksRemaining: 1, satisfaction: 100 })]),
+      { wins: 3 }, new Rng('renew-bonus'), ledger, ctx({ leaguePosition: 1 }), POST);
+    expect(first.bonusesPaid).toBe(400_000);
+    expect(first.expired[0]?.renewed).toBe(true);
+    expect(first.sponsors.active[0]?.id).not.toBe('deal_1');
+    const second = advanceSponsorDeals(bigClub, first.sponsors, { wins: 3 }, new Rng('renew-bonus'), ledger,
+      ctx({ cycle: 2, leaguePosition: 1 }), { ...POST, cycle: 2 });
+    expect(second.bonusesPaid).toBe(400_000);
+  });
 });

@@ -7,6 +7,7 @@ import { clamp } from '../core/math';
 import { clubToken, personToken, type ContentRegistryPort } from '../simulation/ports';
 import { seedFrom } from '../simulation/templating';
 import { injuredPlayers, recentForm, squadOf } from '../game/selectors';
+import { patchClub } from '../game/mutations';
 import { FAN_PERSONAS, SOCIAL_ACTION_BALANCE as A, SOCIAL_BALANCE as S, SUPPORTER_GROUPS } from './balance';
 import { applySocialEffect, describeEffect, type EffectLine, type SocialEffect } from './effects';
 import { socialMoments, type SocialMoment } from './moments';
@@ -75,11 +76,11 @@ const POLL_DEFS: readonly PollDef[] = [
     weight: 4,
     applies: (c) => c.sentiment < 55,
     build: () => ({
-      question: 'Should we freeze ticket prices for next season?',
+      question: 'What should a ticket cost from the next home match?',
       options: [
-        { id: 'opt_freeze', label: 'Freeze them', commitment: 'Matchday income stays flat while costs do not.' },
-        { id: 'opt_raise', label: 'Raise them, and say why', commitment: 'More income, and an argument on the concourse.' },
-        { id: 'opt_split', label: 'Freeze the away end only', commitment: 'A compromise nobody asked for and most people accept.' },
+        { id: 'opt_freeze', label: 'Keep the current price', commitment: 'The ticket price stays unchanged.' },
+        { id: 'opt_raise', label: 'Raise prices by 10%', commitment: 'Applies to every ticket from the next home match.' },
+        { id: 'opt_lower', label: 'Lower prices by 5%', commitment: 'Applies to every ticket from the next home match.' },
       ],
     }),
   },
@@ -311,9 +312,10 @@ export function generatePollOffer(state: GameState, rng: Rng, cycle: number): Fa
   return {
     id: `poll_${def.id}_${cycle}`,
     topic: def.topic,
-    question: built.question,
+    question: pollIsBinding({ topic: def.topic, options: built.options }) ? built.question : `Supporter advice: ${built.question}`,
     eventId: moment.eventId,
-    options: built.options,
+    options: pollIsBinding({ topic: def.topic, options: built.options }) ? built.options
+      : built.options.map(o => ({ ...o, commitment: 'Advisory preference. Accepting records your support and affects fan trust; it does not change kits, facilities, audio or spending.' })),
     offeredCycle: cycle,
     closesCycle: cycle + A.poll.offerWindow,
     status: 'OFFERED',
@@ -338,6 +340,11 @@ export interface CommunityResult {
   readonly effect?: SocialEffect;
   readonly posts: readonly SocialPost[];
   readonly events: readonly AnyDomainEvent[];
+}
+
+export function pollIsBinding(poll: Pick<FanPoll, 'topic' | 'options'>): boolean {
+  return poll.topic === 'The armband' || poll.topic === 'The number nine'
+    || (poll.topic === 'Ticket prices' && poll.options.every(o => ['opt_freeze', 'opt_raise', 'opt_lower'].includes(o.id)));
 }
 
 /** Put the question to the support. Asking is worth something on its own. */
@@ -407,11 +414,36 @@ export function settlePoll(
   if (!poll || poll.status !== 'CLOSED') {
     return { state, ok: false, reason: 'That vote is not waiting on you.', posts: [], events: [] };
   }
+  let committed = state;
+  if (input.honour && pollIsBinding(poll)) {
+    const winner = poll.options.find(o => o.id === poll.winnerId);
+    const club = state.clubs[state.playerClubId];
+    if (!winner || !club) return { state, ok: false, reason: 'The winning choice is unavailable.', posts: [], events: [] };
+    if (poll.topic === 'Ticket prices') {
+      const multiplier = winner.id === 'opt_raise' ? 1.1 : winner.id === 'opt_lower' ? 0.95 : 1;
+      committed = patchClub(state, club.id, c => ({ finance: { ...c.finance, ticketPrice: Math.max(1, Math.round(c.finance.ticketPrice * multiplier)) } }));
+    } else {
+      const id = winner.id.replace(/^opt_/, '') as PlayerId;
+      const player = state.players[id];
+      if (!player || player.clubId !== club.id || !club.squad.includes(id)) {
+        return { state, ok: false, reason: 'The selected player has left the squad. You can overrule the vote.', posts: [], events: [] };
+      }
+      if (poll.topic === 'The armband') {
+        committed = patchClub(state, club.id, c => ({ tactics: { ...c.tactics, captainId: id } }));
+      } else {
+        const players = { ...state.players, [id]: { ...player, shirtNumber: 9 } };
+        for (const other of club.squad) if (other !== id && players[other]?.shirtNumber === 9) {
+          players[other] = { ...players[other]!, shirtNumber: player.shirtNumber === 9 ? null : player.shirtNumber };
+        }
+        committed = { ...state, players };
+      }
+    }
+  }
   const effect: SocialEffect = input.honour
     ? { supportersTrust: A.poll.trustForHonouring, fanSentiment: 2.4, fanTrust: 3 }
     : { supportersTrust: A.poll.trustForOverruling, fanSentiment: -3.2, fanTrust: -4, mediaGoodwill: 1.2 };
 
-  const applied = applySocialEffect(state, effect, {
+  const applied = applySocialEffect(committed, effect, {
     anchorEventId: poll.eventId,
     suffix: `poll${input.honour ? 'honour' : 'overrule'}${poll.id}`,
     reason: input.honour ? 'Honoured the supporters’ vote' : 'Overruled the supporters’ vote',

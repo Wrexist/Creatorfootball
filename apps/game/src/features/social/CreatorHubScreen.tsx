@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CREATOR_BALANCE, campaignOffers, clubCreators, creatorInterest, creatorReach, declineCampaign,
-  deliveredCampaigns, formatMoney, greenlightCampaign, liveFeuds, releaseCreator, runningCampaigns,
+  deliveredCampaigns, formatMoney, greenlightCampaign, liveFeuds, releaseCreator, runningCampaigns, creatorRenewal,
   signCreator, socialWorld, unlockedCreatorTiers,
   type Creator, type CreatorCampaign, type CreatorInterest, type GameState,
 } from '@cf/engine';
@@ -302,7 +302,7 @@ function CreatorHubView({ state }: { state: GameState }): ReactNode {
                   divided={index < roster.length - 1}
                   leading={<CreatorAvatar seed={creator.avatarSeed} size={38} verified={creator.tier === 'GLOBAL'} />}
                   title={<NameText name={creator.displayName} role="bodyStrong" lines={2} />}
-                  subtitle={`${formatCount(creator.followers)} followers · ${creator.tier.toLowerCase()}`}
+                  subtitle={`${formatCount(creator.followers)} followers · ${creator.dealWeeksRemaining ?? 'Open'} weeks · ${formatMoney(creator.retainerPerCycle ?? 0)}/week`}
                   trailing={
                     <div className="flex flex-col items-end gap-1">
                       <GlassPill
@@ -325,6 +325,11 @@ function CreatorHubView({ state }: { state: GameState }): ReactNode {
         )}
         {roster.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
+            {roster.map(creator => {
+              const renewal = creatorRenewal(state, creator.id);
+              return renewal?.available ? <GlassButton key={`renew-${creator.id}`} variant="secondary" size="sm"
+                onClick={() => setSigning(renewal)}>{`Renew ${creator.displayName}`}</GlassButton> : null;
+            })}
             {roster.map((creator) => (
               <GlassButton
                 key={creator.id}
@@ -401,7 +406,7 @@ function CreatorHubView({ state }: { state: GameState }): ReactNode {
       <GlassSheet
         open={signing !== null}
         onClose={() => setSigning(null)}
-        title={signing ? `Sign ${signing.creator.displayName}?` : 'Sign a creator'}
+        title={signing ? `${signing.creator.clubId === state.playerClubId ? 'Renew' : 'Sign'} ${signing.creator.displayName}?` : 'Sign a creator'}
         subtitle={signing?.creator.bio}
         size="auto"
         footer={

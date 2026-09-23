@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "pnpm --filter @cf/game dev",
@@ -20,13 +20,15 @@
     "audit:all": "pnpm --filter @cf/sim audit:all",
     "lint:fix": "eslint . --fix",
     "test:smoke": "pnpm --filter @cf/game test:smoke",
-    "assets:ingest": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs"
+    "assets:ingest": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs",
+    "assets:models": "node apps/game/scripts/build-club-models.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.15.0",
+    "gltf-validator": "2.0.0-dev.3.10",
     "playwright": "^1.62.1",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.67.0"

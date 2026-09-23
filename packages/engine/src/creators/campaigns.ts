@@ -697,12 +697,38 @@ export interface RosterResult {
   readonly events: readonly AnyDomainEvent[];
 }
 
+/** Renewal uses the same disclosed commercial terms, with one term at a time. */
+export function creatorRenewal(state: GameState, creatorId: CreatorId): CreatorInterest | null {
+  const creator = state.creators[creatorId];
+  if (!creator || creator.clubId !== state.playerClubId) return null;
+  const fee = Math.round(creator.marketValue * CB.roster.signingMultiple);
+  const available = creator.dealWeeksRemaining !== null && creator.dealWeeksRemaining <= 6
+    && creator.dealSignedCycle !== state.clock.cycle;
+  return { creator, available, signingFee: fee, retainerPerCycle: Math.round(fee * CB.roster.retainerShare),
+    requiredFollowers: 0, reason: available ? `Renew for ${CB.roster.dealCycles} weeks. The new term replaces the remaining term.`
+      : 'Renewal opens in the final six weeks of the agreement.' };
+}
+
+export function payCreatorRetainers(state: GameState, ledger: Ledger, at: number): void {
+  for (const creator of Object.values(state.creators)) {
+    if (creator.clubId !== state.playerClubId || (creator.dealWeeksRemaining ?? 0) <= 0) continue;
+    const amount = creator.retainerPerCycle ?? 0;
+    if (amount <= 0) continue;
+    ledger.debit(state.playerClubId, 'WAGES', amount, `Creator retainer: ${creator.displayName}`,
+      { cycle: state.clock.cycle, season: state.clock.season, at }, {
+        allowOverdraft: true, metadata: { creatorId: creator.id },
+        idempotencyKey: `creator-retainer:${creator.id}:${creator.dealSignedCycle ?? 0}:${state.clock.cycle}`,
+      });
+  }
+}
+
 /** Bring a creator onto the books. Fee and retainer both move through the ledger. */
 export function signCreator(
   state: GameState,
   input: { creatorId: CreatorId; at: number },
 ): RosterResult {
-  const interest = creatorInterest(state).find((i) => i.creator.id === input.creatorId);
+  const renewal = creatorRenewal(state, input.creatorId);
+  const interest = renewal ?? creatorInterest(state).find((i) => i.creator.id === input.creatorId);
   if (!interest) return { state, ok: false, reason: 'Not available.', events: [] };
   if (!interest.available) return { state, ok: false, reason: interest.reason, events: [] };
 
@@ -733,14 +759,19 @@ export function signCreator(
     clubId: state.playerClubId,
     clubSentiment: Math.max(interest.creator.clubSentiment, CB.roster.joiningSentiment),
     dealWeeksRemaining: CB.roster.dealCycles,
+    dealSignedCycle: state.clock.cycle,
+    retainerPerCycle: interest.retainerPerCycle,
   });
+  if (interest.creator.clubId && interest.creator.clubId !== state.playerClubId) {
+    next = patchClub(next, interest.creator.clubId, c => ({ creatorIds: c.creatorIds.filter(id => id !== interest.creator.id) }));
+  }
   if (club && !club.creatorIds.includes(interest.creator.id)) {
     next = patchClub(next, club.id, (c) => ({ creatorIds: [...c.creatorIds, interest.creator.id] }));
   }
 
   const anchor = latestClubEvent(state) ?? (`ev_creator_${interest.creator.id}` as EventId);
   const event = {
-    id: `${anchor}~creatorjoin${interest.creator.id}` as EventId,
+    id: `${anchor}~creatorjoin${interest.creator.id}:${state.clock.cycle}` as EventId,
     type: 'CREATOR_JOINED',
     payload: { creatorId: interest.creator.id, clubId: state.playerClubId, role: 'CLUB_PERSONALITY' },
     cycle: state.clock.cycle,
@@ -896,6 +927,17 @@ export function advanceCreatorRelations(
         : {}),
     });
     next = retier(next, creator.id);
+
+    if (ours && creator.dealWeeksRemaining !== null && creator.dealWeeksRemaining <= 1) {
+      next = patchCreator(next, creator.id, { clubId: null, dealWeeksRemaining: null, retainerPerCycle: 0 });
+      next = patchClub(next, club.id, c => ({ creatorIds: c.creatorIds.filter(id => id !== creator.id) }));
+      notes.push(`${creator.displayName}'s agreement ended. They are available to approach again.`);
+      next = withSocialWorld(next, w => ({ departures: [...w.departures, {
+        creatorId: creator.id, cycle, reason: 'Agreement completed.',
+        eventId: latestClubEvent(state) ?? (`ev_creator_${creator.id}` as EventId),
+      }].slice(-S.historyCap.departures) }));
+      continue;
+    }
 
     // A creator who has been unhappy for long enough actually leaves.
     if (ours && sentiment <= CB.roster.unhappyAt) {

@@ -1,6 +1,6 @@
 # Creator Football
 
-A premium, iPhone-first (Android-compatible) football-management game built around a
+A premium football-management game for web, with an iOS shell, built around a
 compressed, high-energy short-format creator league.
 
 You take over a club in a twelve-team league. You recruit footballers **and** creators, pick
@@ -25,7 +25,7 @@ Requires **Node ≥ 20** and **pnpm 10**.
 ```bash
 pnpm install          # install the workspace
 pnpm dev              # Vite dev server for the game on :5173 (host: true — reachable from a phone on your LAN)
-pnpm test             # Vitest, engine package, node environment
+pnpm test             # Vitest engine and app suites
 pnpm typecheck        # tsc --noEmit across every package
 pnpm build            # type-check the engine, then build the app
 pnpm lint             # lint every package
@@ -44,28 +44,37 @@ Native shells:
 
 ```bash
 pnpm --filter @cf/game build
-pnpm --filter @cf/game cap:sync   # copy the web build into the iOS/Android shells
+pnpm --filter @cf/game cap:sync   # sync iOS and validate portable Swift package paths
 ```
 
-> **Current state.** The engine is complete: the match simulator, the fictional
-> base content pack and generators, transfers, scouting, training, facilities,
-> fans, sponsors, the economy cycle and audit, media, social, rivalries, AI
-> clubs, the world tick, objectives, legacy and analytics. `apps/game` has a
-> full design component library and a gallery. 50 test files, 653 tests.
->
-> CI gates every push on lint (including the engine-purity boundary),
-> typecheck, all tests, the production build, a real-browser smoke test of the
-> built artefact, and three headless balance audits.
->
-> iOS is wired for release: Capacitor 8 with haptics, status bar and splash
-> plugins, a committed `ios/` shell with brand icon and splash assets, and
-> App Store metadata in `docs/APP_STORE.md` +
-> `apps/game/fastlane/metadata/en-US/`. Building the archive itself requires
-> macOS/Xcode; everything up to that point is reproducible here.
->
-> Known remaining work before shipping (`docs/FINAL_AUDIT.md` §6): a real-
-> device pass, the save-size ceiling against localStorage quota, and an AI
-> that counters the player's tactics.
+**Current state ? 22 September 2026.** The premium redesign is implemented across the
+existing routes, with 129 original art assets and a typed, persistent identity manifest.
+The completion pass fixes the audit's gameplay, economy, recruitment and save integrations.
+**931 tests pass** (746 engine and 185 app), together with lint, typecheck, production
+build, browser career tests and simulation/economy/invariant audits. The dependency
+audit reports zero advisories. See [the current report](docs/REDESIGN_REPORT.md),
+[audit closure matrix](docs/AUDIT_CLOSURE_2026-09-22.md) and
+[screenshot gallery](artifacts/redesign/final/index.html).
+
+CI checks repository changes and scheduled dependency advisories. The browser runner owns
+its preview server and verifies real creation, team management, live substitution,
+result persistence, multi-tab conflicts, export, keyboard focus and responsive layouts.
+A separate macOS workflow prepares an unsigned iOS simulator build; it has not been run
+from this Windows environment. Capacitor sync and portable package paths were checked locally.
+
+**Release status:** web/browser qualification is complete for the documented flows.
+The iOS shell still needs its macOS CI run, signing, physical iPhone and VoiceOver testing.
+A 50-season save passed reload and corruption recovery with compressed primary/backup
+storage below 2 MB. Desktop timing is recorded; physical-phone performance is unverified.
+Android now has an emulator-tested debug APK, native backup sharing and CI. Careers remain
+local, with validated export/import and corruption recovery; there are no game accounts or
+cloud saves. RevenueCat integration and three content collections are implemented, but real
+checkout still needs public SDK keys, store products and sandbox qualification. An optional
+lazy-loaded 3D club/collection viewer ships with seven validated original GLB models.
+The campus has six stadium stages and read-only start/mid/end progression previews;
+see [the stadium redesign and verification](docs/STADIUM_REDESIGN.md).
+See [the expansion report](docs/EXPANSION_REPORT.md), [RevenueCat setup](docs/REVENUECAT_SETUP.md)
+and [Android build instructions](docs/ANDROID_BUILD.md). No build was published or purchase charged.
 
 ---
 
