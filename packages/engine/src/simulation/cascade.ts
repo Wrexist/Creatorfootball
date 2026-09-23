@@ -382,7 +382,8 @@ const matchLostRule: RuleFor<'MATCH_LOST'> = (e, ctx) => {
   const shock = p.margin >= C.shockDefeat.marginThreshold || repGap >= C.shockDefeat.reputationGap;
   const clubName = ctx.clubName(p.clubId);
   const oppName = ctx.clubName(p.opponentId);
-  const score = `${p.homeScore}-${p.awayScore}`;
+  // Result stories name the event's club first, which can be the away side.
+  const score = `${Math.min(p.homeScore, p.awayScore)}-${Math.max(p.homeScore, p.awayScore)}`;
   const tokens: TokenMap = { club: clubName, opponent: oppName, rival: oppName, score, margin: p.margin };
   const facts: HookFacts = { margin: p.margin, derby: isDerbyMoment, shock, intensity: Math.round(heat), result: 'LOSS' };
   const entities = [...clubEntity(ctx, p.clubId), ...clubEntity(ctx, p.opponentId)];
@@ -437,7 +438,7 @@ const matchWonRule: RuleFor<'MATCH_WON'> = (e, ctx) => {
   const big = p.margin >= C.bigWin.marginThreshold;
   const clubName = ctx.clubName(p.clubId);
   const oppName = ctx.clubName(p.opponentId);
-  const score = `${p.homeScore}-${p.awayScore}`;
+  const score = `${Math.max(p.homeScore, p.awayScore)}-${Math.min(p.homeScore, p.awayScore)}`;
   const tokens: TokenMap = { club: clubName, opponent: oppName, rival: oppName, score, margin: p.margin };
   const facts: HookFacts = { margin: p.margin, derby: isDerbyMoment, big, intensity: Math.round(heat), result: 'WIN' };
   const entities = [...clubEntity(ctx, p.clubId), ...clubEntity(ctx, p.opponentId)];

@@ -88,6 +88,24 @@ describe('the red-card cascade', () => {
 describe('other cascades', () => {
   const { state } = buildTestWorld();
 
+  it.each([
+    ['MATCH_WON', 6, 3, '6-3'],
+    ['MATCH_WON', 3, 6, '6-3'],
+    ['MATCH_LOST', 6, 3, '3-6'],
+    ['MATCH_LOST', 3, 6, '3-6'],
+  ] as const)('reports %s at %i-%i from the named club’s perspective', (type, homeScore, awayScore, score) => {
+    const event = makeTestEvent(type, {
+      matchId: 'match_2' as MatchId, clubId: 'club_0' as ClubId, opponentId: 'club_4' as ClubId,
+      homeScore, awayScore, margin: 3,
+    }, { id: 'ev_result', importance: 4 });
+    const cascade = expandCascade([event], state);
+    for (const hooks of [cascade.mediaHooks, cascade.socialHooks]) {
+      const result = hooks.find((hook) => hook.clubId === 'club_0' && hook.tags.includes('result'));
+      expect(result?.tokens).toMatchObject({ club: state.clubs['club_0']?.name, score });
+    }
+    expect(event.payload).toMatchObject({ homeScore, awayScore });
+  });
+
   it('cascades a marquee signing into hype, expectation and a debut follow-up', () => {
     const event = makeTestEvent('PLAYER_SIGNED', {
       playerId: 'p_1_3' as PlayerId, clubId: 'club_0' as ClubId, fee: 24_000_000, wage: 90_000,
