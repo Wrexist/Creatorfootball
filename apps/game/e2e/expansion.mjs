@@ -23,6 +23,17 @@ try {
   await page.goto(`${base}/home`); await page.getByText('Manager’s desk',{exact:false}).first().waitFor(); await shot('home');
   assert.equal(requests.some(url=>/ModelViewer-|three\.module|\.glb$/.test(url)),false,'3D must not load on Home');
   await page.goto(`${base}/store`); await page.getByText('Club collection',{exact:true}).first().waitFor(); await shot('store');
+  await page.getByRole('button',{name:'Explore membership',exact:true}).click();
+  await page.getByText('Your membership includes',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Membership unavailable',exact:true}).isDisabled(),true,'Web must not fake a native subscription checkout');
+  await shot('creator-club');
+  await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.getByText('More plans · Weekly',{exact:true}).click();
+  await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.getByRole('button',{name:'Continue free',exact:true}).click();
+  await page.getByText('Your membership includes',{exact:true}).waitFor({state:'hidden'});
   await page.getByRole('button',{name:'Explore pack',exact:true}).first().click();
   await page.getByRole('button',{name:'Purchase unavailable',exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Purchase unavailable',exact:true}).isDisabled(),true);

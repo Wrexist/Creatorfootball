@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GlassButton, GlassPanel, GlassSegmented, Screen, formatMoney } from '@/design';
 import { nextUpgrade, pendingProjects } from '@cf/engine';
 import { facilityDefs } from '@/features/club/bridge';
@@ -8,6 +8,9 @@ import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 import { useCommerceStore } from '@/commerce/store';
 import { availablePackIds } from '@/commerce/packs';
+import { membershipActive } from '@/commerce/membership';
+import { useMembershipStore } from '@/commerce/membershipStore';
+import { collectionLink } from '@/commerce/presentation';
 import { ROUTES } from '@/app/routes';
 import { CAMPUS_PREVIEWS, LIGHTING, type CampusPreviewId, type LightingId, type ModelId } from './manifest';
 import './campus.css';
@@ -15,11 +18,14 @@ import './campus.css';
 const ModelViewer=lazy(()=>import('./ModelViewer'));
 export function Club3DScreen(): ReactNode {
   const navigate=useNavigate();
+  const [params]=useSearchParams();
   const state=useGameStore(s=>s.state);
   const owned=useCommerceStore(s=>s.owned);
+  const membership=useMembershipStore();
+  const member=membershipActive(membership.member);
   const reduced=useUiStore(s=>s.reducedEffects);
-  const [started,setStarted]=useState(false);
-  const [scene,setScene]=useState<'campus'|'kit'|'trophy'|'football'>('campus');
+  const [started,setStarted]=useState(params.get('open')==='1');
+  const [scene,setScene]=useState<'campus'|'kit'|'trophy'|'football'>(params.get('scene')==='kit'?'kit':'campus');
   const [lighting,setLighting]=useState<LightingId>('daylight');
   const [pattern,setPattern]=useState<'classic'|'sash'|'hoops'|'pinstripe'>('classic');
   const [silver,setSilver]=useState(false);
@@ -46,7 +52,7 @@ export function Club3DScreen(): ReactNode {
       <div className="cf-campus-journey-heading"><span>{example?'Progression preview':'Your club today'}</span><strong>{example?`Level ${example.level}`:`Level ${level}`}</strong></div>
       <GlassSegmented size="sm" aria-label="Campus progression" value={preview} onChange={setPreview} options={[{value:'your',label:'Your club'},...Object.entries(CAMPUS_PREVIEWS).map(([value,item])=>({value:value as CampusPreviewId,label:item.name}))]} />
     </section>}
-    {started ? <Suspense fallback={<GlassPanel padding="md">Loading 3D renderer…</GlassPanel>}><ModelViewer model={model} lighting={nights?lighting:'daylight'} club={club} levels={scene==='campus'&&example?example.levels:club.facilityLevels} finish={heritage?(silver?'silver':'gold'):'bronze'} /></Suspense> :
+    {started ? <Suspense fallback={<GlassPanel padding="md">Loading 3D renderer…</GlassPanel>}><ModelViewer model={model} lighting={(member&&(lighting==='aurora'||lighting==='copper'))||(nights&&lighting!=='aurora'&&lighting!=='copper')?lighting:'daylight'} club={club} levels={scene==='campus'&&example?example.levels:club.facilityLevels} finish={heritage?(silver?'silver':'gold'):'bronze'} /></Suspense> :
       <GlassPanel padding="none" className="overflow-hidden"><ArtImage asset="environment.stadium-day" className="h-56 w-full object-cover"/><div className="space-y-3 p-4"><h2 className="font-display text-2xl font-bold">Walk around your ambition</h2><p className="text-sm text-ink-muted">Explore a 3D scale model in your club colours. Stands and buildings follow your real facility levels. Rotate and zoom at your own pace.</p>{reduced&&<p className="text-sm text-ink-muted">Reduced effects is on. 3D is optional and starts only when you choose.</p>}<GlassButton block variant="primary" onClick={()=>setStarted(true)}>Open interactive 3D</GlassButton></div></GlassPanel>}
     {started&&scene==='campus'&&<div className="cf-campus-caption" aria-live="polite">
       <h2>{example?.title??club.stadium.name}</h2>
@@ -64,8 +70,8 @@ export function Club3DScreen(): ReactNode {
     {started&&<GlassButton block variant="ghost" onClick={()=>setStarted(false)}>Return to illustration</GlassButton>}
     {scene==='trophy'&&<p className="text-sm text-ink-muted">Collection design preview. Your earned honours are recorded in the Trophy room.</p>}
     <GlassPanel padding="md"><h2 className="mb-3 font-display text-lg font-bold">Club atmosphere</h2>
-      {nights?<GlassSegmented aria-label="Lighting" options={Object.entries(LIGHTING).map(([value,look])=>({value:value as LightingId,label:look.name}))} value={lighting} onChange={setLighting}/>:<><p className="text-sm text-ink-muted">Daylight is included. Club Nights adds floodlit, sunset and creator-night lighting.</p><GlassButton className="mt-2" block onClick={()=>navigate(owned.includes('cf_club_nights')?ROUTES.contentPacks:ROUTES.store)}>{owned.includes('cf_club_nights')?'Enable Club Nights':'Explore Club Nights'}</GlassButton></>}
+      {(nights||member)?<GlassSegmented aria-label="Lighting" options={Object.entries(LIGHTING).filter(([id])=>id==='daylight'||((id==='aurora'||id==='copper')?member:nights)).map(([value,look])=>({value:value as LightingId,label:look.name}))} value={lighting} onChange={setLighting}/>:<><p className="text-sm text-ink-muted">Daylight is included. Club Nights adds floodlit, sunset and creator-night lighting.</p><GlassButton className="mt-2" block onClick={()=>navigate(owned.includes('cf_club_nights')?ROUTES.contentPacks:collectionLink('cf_club_nights','campus'))}>{owned.includes('cf_club_nights')?'Enable Club Nights':'Explore Club Nights'}</GlassButton></>}
     </GlassPanel>
-    {(scene==='kit'||scene==='trophy')&&<GlassPanel padding="md"><h2 className="mb-3 font-display text-lg font-bold">Heritage finishes</h2>{heritage ? scene==='kit'?<GlassSegmented aria-label="Shirt pattern" options={(['classic','sash','hoops','pinstripe'] as const).map(value=>({value,label:value}))} value={pattern} onChange={setPattern}/>:<GlassButton block aria-pressed={silver} onClick={()=>setSilver(!silver)}>{silver?'Use antique gold':'Use silver finish'}</GlassButton>:<><p className="text-sm text-ink-muted">Heritage Collection adds three shirt patterns and a silver trophy finish alongside antique gold.</p><GlassButton className="mt-2" block onClick={()=>navigate(owned.includes('cf_heritage_collection')?ROUTES.contentPacks:ROUTES.store)}>Explore Heritage Collection</GlassButton></>}</GlassPanel>}
+    {(scene==='kit'||scene==='trophy')&&<GlassPanel padding="md"><h2 className="mb-3 font-display text-lg font-bold">Heritage finishes</h2>{heritage ? scene==='kit'?<GlassSegmented aria-label="Shirt pattern" options={(['classic','sash','hoops','pinstripe'] as const).map(value=>({value,label:value}))} value={pattern} onChange={setPattern}/>:<GlassButton block aria-pressed={silver} onClick={()=>setSilver(!silver)}>{silver?'Use antique gold':'Use silver finish'}</GlassButton>:<><p className="text-sm text-ink-muted">Heritage Collection adds three shirt patterns and antique-gold and silver trophy finishes. Bronze is included.</p><GlassButton className="mt-2" block onClick={()=>navigate(owned.includes('cf_heritage_collection')?ROUTES.contentPacks:collectionLink('cf_heritage_collection','campus'))}>Explore Heritage Collection</GlassButton></>}</GlassPanel>}
   </Screen>;
 }

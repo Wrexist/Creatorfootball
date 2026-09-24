@@ -102,3 +102,5 @@ export * from './game/matchSetup';
 export * from './game/selectors';
 export * from './game/mutations';
 export * from './game/eventFactory';
+
+export * from './progression/membership';

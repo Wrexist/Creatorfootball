@@ -9,6 +9,8 @@ export const MODEL_ASSETS = {
 } as const;
 export type ModelId = keyof typeof MODEL_ASSETS;
 export const LIGHTING = {
+  aurora: { name: 'Aurora', background: '#112c2c', key: '#b5ffee', fill: '#83a2d2', intensity: 3.3 },
+  copper: { name: 'Copper dusk', background: '#302122', key: '#ffd0a4', fill: '#b290af', intensity: 3.2 },
   daylight: { name: 'Daylight', background: '#182829', key: '#fff1d9', fill: '#a8c6c9', intensity: 3.1 },
   floodlit: { name: 'Floodlit', background: '#111c2b', key: '#d0e4ff', fill: '#7c95b5', intensity: 3.6 },
   sunset: { name: 'Sunset', background: '#2d272b', key: '#ffc990', fill: '#9b9abd', intensity: 3.3 },

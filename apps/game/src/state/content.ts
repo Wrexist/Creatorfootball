@@ -1,6 +1,7 @@
 import { BASE_PACK, ContentRegistry } from '@cf/engine';
 import { EXPANSION_PACKS, availablePackIds } from '@/commerce/packs';
 import type { ProductId } from '@/commerce/catalog';
+import { MEMBER_LIBRARY, MEMBER_LIBRARY_ID } from '@/commerce/memberLibrary';
 
 /**
  * The active content registry, shared by every feature bridge.
@@ -14,13 +15,15 @@ import type { ProductId } from '@/commerce/catalog';
 let registry: ContentRegistry | null = null;
 let selection = '';
 
-export function configureExpansionPacks(enabled: readonly string[], owned: readonly ProductId[]): void {
-  const ids = availablePackIds(enabled, owned);
+export function configureExpansionPacks(enabled: readonly string[], owned: readonly ProductId[], member = false): void {
+  const ids = [...availablePackIds(enabled, owned)];
+  if (member && enabled.includes(MEMBER_LIBRARY_ID)) ids.push(MEMBER_LIBRARY_ID);
   const key = ids.slice().sort().join(',');
   if (key === selection) return;
   const next = new ContentRegistry();
   next.load(BASE_PACK);
   for (const pack of EXPANSION_PACKS) if (ids.includes(pack.manifest.id)) next.load(pack);
+  if (ids.includes(MEMBER_LIBRARY_ID)) next.load(MEMBER_LIBRARY);
   registry = next;
   selection = key;
 }
