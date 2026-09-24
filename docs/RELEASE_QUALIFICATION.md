@@ -4,9 +4,9 @@ Continuation of the expansion work, 22 September 2026. Careers remain local; Rev
 
 ## Current distribution checkpoint - September 23, 2026
 
-The qualification record below describes the earlier local pass. Since then, signed iOS `1.0.15 (8)` is on TestFlight and signed Android `1.0.15 (2)` is active on the internal track. RevenueCat store credentials and both-platform product/entitlement/offering wiring are complete. The latest iOS workflow passed lint, typecheck, 974 tests, production build and browser smoke before archive/upload. See [STORE_SETUP_STATUS.md](STORE_SETUP_STATUS.md) for artifact hashes, current listing evidence and unresolved gates.
+The qualification record below describes the earlier local pass. On September 24, signed iOS `1.0.16 (9)` was uploaded successfully (Apple processing/tester availability still to verify), and signed Android `1.0.16 (3)` became active on the internal track. RevenueCat store credentials and both-platform product/entitlement/offering wiring were rechecked. The latest iOS workflow passed lint, typecheck, 998 tests, production build and browser flows before archive/upload. See [STORE_SETUP_STATUS.md](STORE_SETUP_STATUS.md) for artifact hashes, current listing evidence and unresolved gates, and [NATIVE_TEST_HANDOFF.md](NATIVE_TEST_HANDOFF.md) for remaining device/commerce checks.
 
-**Public release remains blocked.** The owner explicitly held Google's children's compliance certification for review. Native purchase/restore/refund verification, Apple IAP review assets, tablet layout corrections and Google's required closed testing remain outstanding. Earlier missing-key/unsigned-only statements below are historical; real transactions remain unqualified.
+**Public release remains blocked.** The owner explicitly held Google's children's compliance certification for review. Native purchase/restore/refund verification, Apple IAP review assets, replacement listing galleries and Google's required closed testing remain outstanding. Tablet layout corrections have passed browser qualification. Earlier missing-key/unsigned-only statements below are historical; real transactions remain unqualified.
 
 ## Audit and scope
 

@@ -1,5 +1,18 @@
 # Store launch setup status
 
+## Test-release continuation — September 24, 2026
+
+This section supersedes the September 23 test-build versions below. **Public release and the owner's children's-compliance hold are unchanged.**
+
+- Android **1.0.16 (3)** is active on the existing internal test track. Google Play visibly reports it available to internal testers, released September 24 at 17:34 local time. Only the previously approved tester email list remains selected; no additional tester groups were enabled.
+- The bundle was built from `85c72e1` (the same implementation as qualified source `2a926c3`) with the Android production purchase-key gate, the retained upload key, release lint and strict signature verification. Five existing lint warnings and zero errors. The merged release manifest confirms version 3, Billing permission, no advertising-ID permission, and automatic backup disabled. Play's only rollout warning is the absent deobfuscation file; native code minification is disabled in this build.
+- Android artifact: `artifacts/store-launch/android-1.0.16-3/creator-football-1.0.16-3.aab`; SHA-256 `66CB42D96A7FA67F4BE4E553E9DD7C500E07F841DF8F940C8843B7EF1A5170E2`. Build/signature evidence is alongside it. A first local build hit the previously documented Windows Gradle transform-cache rename issue; the build using the regular cache passed without changing source or disabling checks.
+- iOS **1.0.16 (9)** uploaded successfully through [workflow 36020470132](https://github.com/Wrexist/Creatorfootball/actions/runs/36020470132), explicitly with `submit=true`. Both jobs passed, including lint, typecheck, 998 tests, production build, browser flows, archive/signing and upload. Xcode reported `Upload succeeded` at 15:44:57 UTC. Apple's processing and tester availability have not yet been verified because the browser requires sign-in.
+- iOS artifact: `artifacts/store-launch/ios-1.0.16-9/creator-football.ipa`; SHA-256 `2C242F3ED718ECAB385FDDA0060064FDA251B6992A546E7FA56FF26759FA13E4`. The downloaded IPA's Info.plist confirms bundle `com.creatorfootball.app`, version `1.0.16`, build `9`, and its packaged assets contain the repaired engine. The workflow log and result are retained beside the IPA.
+- App Store Connect's Chrome login expired. The owner has been asked to sign in again. This blocks browser-only listing, first-IAP review-image and build-selection work, but not the existing authenticated signing/upload workflow.
+- RevenueCat was rechecked: Apple purchase/API credentials and Google credentials are valid; Apple server notification configuration is correct; Google remains connected with its September 23 test notification received. The default offering still maps all three packs to both store products. No sandbox transaction has been recorded; real purchase/restore/refund qualification is not claimed.
+- Use [the native test handoff](NATIVE_TEST_HANDOFF.md) for the remaining device and commerce checks. Store listing images, Apple first-IAP review assets, operational purchase-data deletion, the compliance review and required Google closed testing remain open. No public release or legal certification was submitted.
+
 ## Current launch checkpoint - September 23, 2026
 
 This checkpoint supersedes all historical pending notes below. **The game is not publicly launched. The owner has explicitly held the children's compliance certification for review.**
