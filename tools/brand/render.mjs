@@ -3,8 +3,8 @@
  *
  * The masters in this folder are HTML/SVG compositions, not binaries: `og.html`
  * draws the share card (a stadium at dusk with the wordmark on glass, the same
- * construction as the in-app `HeroScene`) and `icon.html` draws the volt-ball
- * mark that `website/favicon.svg` carries as vector. Both are deterministic —
+ * construction as the in-app `HeroScene`) and `icon.html` loads the restored CF
+ * artwork from the committed master. Both are deterministic —
  * the crowd scatter runs off a fixed seed — so re-running this produces the same
  * pixels rather than a slightly different card every time.
  *

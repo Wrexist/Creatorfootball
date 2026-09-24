@@ -1,9 +1,13 @@
 # `tools/brand/` — brand masters and the art ingest pipeline
 
-Two things live here.
+The app identity is the original metallic **CF crest**, restored on September 24, 2026 from commit `0bcf661` after the legacy yellow/volt-ball artwork returned in the release branch. Do not replace it with the ball icon. `masters/app-icon.png` is the exact opaque 1024px RGB iOS asset from that commit; `mark.path.txt` preserves the matching flat geometry from the original brand pass. These are existing project artwork, not newly generated images.
+
+Run `python tools/brand/package-app-icon.py` (Pillow required) to package iOS, Android adaptive/legacy/themed resources and the 512px Play listing image. Android uses a safe inset for launcher masks and the CF silhouette for themed icons. The web/PWA icons and favicons were restored from the same original commit; `icon.html` now references the preserved CF artwork, so the legacy rasterizer cannot reintroduce the ball.
+
+Two other tools live here.
 
 **1. The vector masters and their rasteriser.** `og.html` draws the share card and `icon.html`
-draws the volt-ball mark; both are deterministic HTML/SVG compositions, not binaries.
+loads the preserved CF icon. The share-card composition is separate from the app icon.
 `render.mjs` screenshots them into the few slots that cannot take an SVG:
 
 ```sh
