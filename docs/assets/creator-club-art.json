@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-09-24",
+  "generator": "OpenAI image generation",
+  "kind": "Pre-rendered 2D art, not runtime 3D",
+  "assets": [
+    {
+      "key": "membership.tunnel",
+      "prompt": "Use case: stylized-concept. Production art backdrop for a premium portrait football management game paywall, NOT a UI mockup. Vertical 2:3 cinematic high-budget semi-realistic 3D render: viewed from behind three adult fictional football team staff in plain black satin training jackets walk through a beautiful dark charcoal stadium tunnel into a packed floodlit stadium at blue-hour. Central adult athlete stands at x=62%, back toward camera, plain unmarked broad jacket back available for a small code-rendered crest. Two supporting adult team figures left and right, faces not visible. Warm gold strip lights, rich deep forest shadows, atmospheric cool stadium beams. Upper left quarter remains dark calm negative space for separately rendered headline. Foreground lower left has polished dark tactical desk and gold coins, a blank club scarf and trophy silhouette. Luxurious composition, smooth clean rendering, strong depth, tasteful light. NO words, NO letters, NO numbers, NO logos, NO crests, NO emblems, NO brand names, NO UI, NO buttons, NO watermarks. Blank signage and apparel throughout. This image is one reusable club-neutral environment; live team names and crests will be added in code. Deliver single portrait image.",
+      "src": "/art/membership/tunnel.webp",
+      "crop": "cover, 50% 43%; live crest at 60.5% / 49%",
+      "screen": "Creator Club",
+      "fallback": "/art/premium/environment-tunnel-hero.webp"
+    },
+    {
+      "key": "membership.funds",
+      "prompt": "Use case: product-mockup. Production art for football game membership reward card, wide 3:2 image. A luxurious clean stack of gold in-game coins on black satin stone, two folded blank black football scarves, one large foreground upright gold coin with a perfectly plain dark circular center for a code-rendered fictional club badge. Gold stadium rim lights, forest green shadows, premium stylized semi-realistic 3D rendering, simple readable silhouette at thumbnail size. Main coin centered at x=50%, y=50%. No lettering, no numbers, no brand, no logos, no emblem, no watermark, no UI.",
+      "src": "/art/membership/funds.webp",
+      "crop": "center cover; live crest on central coin",
+      "screen": "Creator Club funds benefit",
+      "fallback": "Club-colour surface and code-rendered crest"
+    },
+    {
+      "key": "character.member-kai-arden",
+      "prompt": "Use case: stylized-concept. Original fictional football superstar character Kai Arden, age 22, for a premium mobile football management game. A single adult athletic male football forward with distinctive thick short dark wavy hair, warm medium olive skin, strong friendly face and confident focused expression, no likeness to any real player or celebrity. Waist-up hero portrait, shoulders squared, looking toward camera, arms relaxed, wearing a high-quality plain black football jersey with no logos, lettering, numbers, sponsors or crests. Dramatic warm gold rim light, tasteful forest-green stadium atmosphere and blurred floodlights behind, clean polished semi-realistic 3D game-character rendering, consistent realistic anatomy and fabric, premium cinematic sports campaign. Center face in upper third, ample torso visible for crop and a small code-rendered club badge. Square image. No functional UI, no rating, no text, no watermark. One character only.\n",
+      "src": "/art/membership/superstar-hero.webp",
+      "thumbnail": "/art/membership/superstar-thumb.webp",
+      "crop": "Square; center cover, face in upper third",
+      "screen": "Creator Club welcome signing and persistent player portraits",
+      "fallback": "Existing ArtImage character fallback",
+      "generator": "Built-in OpenAI image generation",
+      "source": "exec-7cdcbb15-9d17-47e3-967f-6bc49ec70c74.png"
+    }
+  ]
+}

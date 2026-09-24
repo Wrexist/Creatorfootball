@@ -23,17 +23,31 @@ try {
   await page.goto(`${base}/home`); await page.getByText('Manager’s desk',{exact:false}).first().waitFor(); await shot('home');
   assert.equal(requests.some(url=>/ModelViewer-|three\.module|\.glb$/.test(url)),false,'3D must not load on Home');
   await page.goto(`${base}/store`); await page.getByText('Club collection',{exact:true}).first().waitFor(); await shot('store');
-  await page.getByRole('button',{name:'Explore membership',exact:true}).click();
-  await page.getByText('Your membership includes',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Unlock your club advantage',exact:true}).click();
+  await page.getByRole('dialog').waitFor();
+  assert.equal(await page.getByText('Optional membership',{exact:true}).count(),0);
+  assert.equal(await page.getByRole('button',{name:'Continue free',exact:true}).count(),0);
+  const closeBox=await page.getByRole('button',{name:'Close membership',exact:true}).boundingBox();
+  assert.ok(closeBox && closeBox.width>=44 && closeBox.height>=44 && closeBox.x+closeBox.width<=393,'Visible touch-sized close button');
   assert.equal(await page.getByRole('button',{name:'Membership unavailable',exact:true}).isDisabled(),true,'Web must not fake a native subscription checkout');
   await shot('creator-club');
+  assert.equal(await page.locator('.cf-member-star-rating').innerText(),'90\nOVR · ST');
+  assert.ok(await page.locator('.cf-member-star-art img').first().evaluate(el=>el.complete && el.naturalWidth>0),'Superstar portrait loaded');
+  assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Close membership','Paywall focuses its immediate close control');
+  const clubCrest=await page.getByRole('img',{name:'Larkspur Wolves crest',exact:true}).getAttribute('src');
+  assert.ok(clubCrest,'Paywall renders the real career crest');
+  for(const width of [360,430,393]) {
+    await page.setViewportSize({width,height:852});
+    assert.equal(await page.getByRole('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,`Paywall fits ${width}px`);
+  }
   await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
+  await shot('creator-club-checkout');
   await page.getByText('More plans · Weekly',{exact:true}).click();
   await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
-  await page.getByRole('button',{name:'Continue free',exact:true}).click();
-  await page.getByText('Your membership includes',{exact:true}).waitFor({state:'hidden'});
+  await page.getByRole('button',{name:'Close membership',exact:true}).click();
+  await page.getByRole('dialog').waitFor({state:'hidden'});
   await page.getByRole('button',{name:'Explore pack',exact:true}).first().click();
   await page.getByRole('button',{name:'Purchase unavailable',exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Purchase unavailable',exact:true}).isDisabled(),true);

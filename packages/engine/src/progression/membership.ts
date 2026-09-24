@@ -2,18 +2,23 @@ import { Ledger } from '../economy/ledger';
 import type { CreatorId } from '../core/brand';
 import type { GameState } from '../game/state';
 import { emptyCreatorAttributes, type Creator } from '../creators/creator';
+import { claimMemberSuperstar, MEMBER_SUPERSTAR } from './memberSuperstar';
 
-export const MEMBER_MONTHLY_CASH = 25_000;
+export const MEMBER_MONTHLY_CASH = 250_000;
+export const MEMBER_CREATOR_WEEKS = 12;
+export const MEMBER_CREATOR_FOLLOWERS = 500_000;
 export const MEMBER_CREATORS = [
-  { id: 'creator_member_mika', name: 'Mika Sol', handle: 'mikasideline', tone: 'ANALYTICAL', bio: 'A fictional local analyst who turns training-ground details into matchday stories.' },
+  { id: 'creator_member_mika', name: 'Mika Sol', handle: 'mikasideline', tone: 'ANALYTICAL', bio: 'An established fictional analyst who turns training-ground details into matchday stories.' },
   { id: 'creator_member_remi', name: 'Remi Vale', handle: 'remiontheterrace', tone: 'WHOLESOME', bio: 'A fictional community filmmaker documenting the people behind the club.' },
 ] as const;
 export interface MemberBenefitProof { checkedAt: number; expiresAt: number; trial: boolean }
-export function memberRewardKey(kind: 'cash' | 'creator', proof: MemberBenefitProof): string {
+export function memberRewardKey(kind: 'cash' | 'creator' | 'superstar', proof: MemberBenefitProof): string {
+  if (kind === 'superstar') return MEMBER_SUPERSTAR.claimKey;
   return `creator-club:${kind}:${new Date(proof.checkedAt).toISOString().slice(0, 7)}`;
 }
 /** Commerce supplies verified store time; advancing game weeks never creates another claim. */
-export function claimMemberBenefit(state: GameState, proof: MemberBenefitProof, kind: 'cash' | 'creator', creatorId?: string): GameState {
+export function claimMemberBenefit(state: GameState, proof: MemberBenefitProof, kind: 'cash' | 'creator' | 'superstar', creatorId?: string): GameState {
+  if (kind === 'superstar') return claimMemberSuperstar(state, proof);
   if (!Number.isFinite(proof.checkedAt) || !Number.isFinite(proof.expiresAt) || proof.expiresAt <= proof.checkedAt || proof.trial) return state;
   const club = state.clubs[state.playerClubId];
   if (!club) return state;
@@ -29,13 +34,13 @@ export function claimMemberBenefit(state: GameState, proof: MemberBenefitProof, 
   if (kind === 'cash') return { ...state, ledger: ledger.snapshot() };
   const id = pick!.id as CreatorId;
   const existing = state.creators[id];
-  // Authored identities are stable. Collaboration lasts four in-game weeks; normal creator simulation applies.
+  // Authored identities are stable. Collaboration lasts twelve in-game weeks; normal creator simulation applies.
   const creator: Creator = { ...existing, id, identityKind: 'FICTIONAL', sourcePackId: 'creator-club', handle: pick!.handle,
-    displayName: pick!.name, roles: ['INFLUENCER', 'CLUB_PERSONALITY'], tier: existing?.tier ?? 'LOCAL',
-    followers: existing?.followers ?? 20_000, attributes: existing?.attributes ?? { ...emptyCreatorAttributes(55), controversy: 15, loyalty: 70 },
+    displayName: pick!.name, roles: ['INFLUENCER', 'CLUB_PERSONALITY'], tier: existing && !['LOCAL', 'RISING'].includes(existing.tier) ? existing.tier : 'ESTABLISHED',
+    followers: Math.max(existing?.followers ?? 0, MEMBER_CREATOR_FOLLOWERS), attributes: existing?.attributes ?? { ...emptyCreatorAttributes(78), controversy: 15, loyalty: 85 },
     style: { tone: pick!.tone, platforms: ['SHORTFORM', 'TEXT'], postingFrequency: 2 },
-    clubId: club.id, playerId: null, clubSentiment: Math.max(existing?.clubSentiment ?? 0, 30), marketValue: existing?.marketValue ?? 12000,
-    dealWeeksRemaining: Math.max(existing?.dealWeeksRemaining ?? 0, 4), retainerPerCycle: 0, dealSignedCycle: state.clock.cycle,
+    clubId: club.id, playerId: null, clubSentiment: Math.max(existing?.clubSentiment ?? 0, 30), marketValue: Math.max(existing?.marketValue ?? 0, 250000),
+    dealWeeksRemaining: Math.max(existing?.dealWeeksRemaining ?? 0, MEMBER_CREATOR_WEEKS), retainerPerCycle: 0, dealSignedCycle: state.clock.cycle,
     avatarSeed: pick!.id, bio: pick!.bio };
   const clubs = { ...state.clubs };
   if (existing?.clubId && existing.clubId !== club.id && clubs[existing.clubId]) {

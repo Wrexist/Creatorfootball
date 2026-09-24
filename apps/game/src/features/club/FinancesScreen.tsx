@@ -1,3 +1,4 @@
+import { MemberInvite } from '@/features/progression/MemberInvite';
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -191,6 +192,7 @@ function FinancesBody({ state }: { state: GameState }): ReactNode {
         </>
       }
     >
+      <MemberInvite />
       <StatGrid columns={2}>
         <StatCard
           label="Balance"

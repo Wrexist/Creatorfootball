@@ -1,31 +1,41 @@
-import { useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { useNavigate } from 'react-router-dom';
-import { claimMemberBenefit, Ledger, MEMBER_CREATORS, MEMBER_MONTHLY_CASH, memberRewardKey } from '@cf/engine';
-import { GlassButton, GlassPanel, GlassPill, GlassSheet } from '@/design';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { claimMemberBenefit, Ledger, MEMBER_CREATORS, MEMBER_MONTHLY_CASH, MEMBER_SUPERSTAR, memberRewardKey } from '@cf/engine';
+import { GlassButton, GlassPanel, ClubBadge } from '@/design';
 import { useMembershipStore } from '@/commerce/membershipStore';
 import { MEMBER_PLANS, membershipActive, yearlySaving, type MemberPlanId } from '@/commerce/membership';
 import { MEMBER_LIBRARY_ID, MEMBER_RELEASES } from '@/commerce/memberLibrary';
 import { purchaseAvailability } from '@/commerce/revenuecat';
 import { useGameStore } from '@/state/gameStore';
 import { ROUTES } from '@/app/routes';
+import { Portal } from '@/design/glass/Portal';
+import { useEscapeKey, useFocusTrap, useScrollLock } from '@/design/glass/useOverlay';
+import { MembershipHero } from './MembershipHero';
+import { MembershipBenefits } from './MembershipBenefits';
+import './membership.css';
 
 export function CreatorClub(): ReactNode {
   const store = useMembershipStore();
   const game = useGameStore();
   const navigate = useNavigate();
   const [planId, setPlan] = useState<MemberPlanId>('cf_creator_club_yearly');
-  const [open, setOpen] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const [open, setOpen] = useState(params.get('membership') === '1');
+  const panelRef = useRef<HTMLElement>(null);
   const [claiming, setClaiming] = useState(false);
   const [message, setMessage] = useState('');
+  const close = useCallback(() => { if (store.busy || claiming) return; setOpen(false); const next = new URLSearchParams(params); next.delete('membership'); setParams(next, { replace: true }); }, [store.busy, claiming, params, setParams]);
+  useScrollLock(open); useFocusTrap(open, panelRef); useEscapeKey(open && !store.busy && !claiming, close);
+  const club = game.state?.clubs[game.state.playerClubId];
   const active = membershipActive(store.member);
   const paid = active && !store.member?.trial;
   const quote = store.quotes.find(q => q.id === planId);
   const plan = MEMBER_PLANS.find(p => p.id === planId)!;
   const saving = yearlySaving(store.quotes);
   const disabled = claiming || store.busy || game.busy || game.unsaved || game.saveConflict || !!game.saveError;
-  const claimed = (kind: 'cash' | 'creator'): boolean => !!game.state && !!store.member && Ledger.restore(game.state.ledger).hasApplied(memberRewardKey(kind, store.member));
-  const claim = async (kind: 'cash' | 'creator', creator?: string): Promise<void> => {
+  const claimed = (kind: 'cash' | 'creator' | 'superstar'): boolean => !!game.state && !!store.member && Ledger.restore(game.state.ledger).hasApplied(memberRewardKey(kind, store.member));
+  const claim = async (kind: 'cash' | 'creator' | 'superstar', creator?: string): Promise<void> => {
     if (disabled || !game.state) return;
     const saveId = game.state.saveId;
     setClaiming(true); setMessage('');
@@ -40,7 +50,7 @@ export function CreatorClub(): ReactNode {
         setMessage('Finish saving this career, then try again.'); return;
       }
       const next = claimMemberBenefit(current.state, verified.member!, kind, creator);
-      if (next === current.state) { setMessage('Already claimed this month, or this creator is unavailable.'); return; }
+      if (next === current.state) { setMessage(kind === 'superstar' ? 'This welcome signing has already been claimed or is unavailable in this career.' : 'Already claimed this month, or this creator is unavailable.'); return; }
       current.apply(s => s === current.state ? next : s);
       setMessage(await useGameStore.getState().save() ? 'Benefit saved to this career.' : 'Benefit applied, but saving failed. Retry saving before leaving.');
     } finally { setClaiming(false); }
@@ -60,33 +70,29 @@ export function CreatorClub(): ReactNode {
         {option('cf_creator_club_yearly')}{option('cf_creator_club_monthly')}
         <details><summary>More plans · Weekly</summary>{option('cf_creator_club_weekly')}</details>
         {quote && <p>{quote.trialDays ? `7 days free, then ${quote.price} per ${plan.unit}.` : `${quote.price} per ${plan.unit}, charged now.`} Automatically renews until cancelled through your store account. All plans include the same benefits.</p>}
+        {quote?.trialDays === 7 && <p>Trial: library and lighting. Superstar signing, club funds and creator deals unlock during paid membership.</p>}
         <GlassButton block variant="primary" disabled={!quote || store.busy || !purchaseAvailability().enabled} loading={store.busy} onClick={() => void store.buy(planId)}>{quote ? quote.trialDays ? 'Start 7-day free trial' : `Subscribe · ${quote.price} / ${plan.unit}` : 'Membership unavailable'}</GlassButton>
         {!quote && <p className="text-sm">Membership purchases are not available in this build or store yet. Your complete free career is available.</p>}
-        <GlassButton variant="ghost" disabled={store.busy} onClick={() => setOpen(false)}>Continue free</GlassButton>
       </div>;
-  return <><GlassPanel padding="md" accent="volt"><GlassPill tone="positive">{active ? 'Your membership' : 'Optional membership'}</GlassPill><h2 className="font-display text-3xl font-bold mt-3">Creator Club</h2><p className="mt-2">Build with more stories, club funds and creator collaborations.</p><p className="my-3 text-sm text-ink-muted">Monthly library · £25,000 in-game funds · Choose a creator · Exclusive campus lighting</p><GlassButton block variant="primary" onClick={() => setOpen(true)}>{active ? 'Open your benefits' : 'Explore membership'}</GlassButton><p className="mt-2 text-xs text-ink-muted">Paid-period funds and creators. Full career stays free.</p></GlassPanel>
-    <GlassSheet open={open} onClose={() => { if (!store.busy && !claiming) setOpen(false); }} dismissible={!store.busy && !claiming} title="Creator Club" size="tall" footer={!active ? checkout : undefined}>
-    <section className="cf-membership" aria-labelledby="creator-club-title">
-    <div>
-      <GlassPill tone="positive">{active ? store.member?.trial ? 'Trial active' : 'Member' : 'Optional membership'}</GlassPill>
-      <h3 id="creator-club-title" className="font-display text-xl font-bold mt-3">Your membership includes</h3>
-      <ul className="cf-member-benefits">
-        <li><strong>£{MEMBER_MONTHLY_CASH.toLocaleString('en-GB')} in club funds</strong><span>In-game money, once per UTC calendar month per career during paid membership.</span></li>
-        <li><strong>Choose a creator collaboration</strong><span>Mika Sol or Remi Vale, once per UTC calendar month per career. Four in-game weeks, with no retainer fee.</span></li>
-        <li><strong>A growing monthly library</strong><span>First Lights is ready: 8 commentary variations and 6 story variations. New content every month.</span></li>
-        <li><strong>Aurora & Copper dusk</strong><span>Two exclusive lighting looks for your interactive 3D campus.</span></li>
-      </ul>
-      <p className="text-sm text-ink-muted">Money and creators affect your career. These are gameplay benefits. Trial access includes the library and lighting only.</p>
+  return <><GlassPanel padding="md" accent="volt" className="cf-member-store-banner"><div className="cf-member-banner-title">{club && <ClubBadge visual={club.visual} size={52} />}<h2 className="font-display text-3xl font-bold">Creator Club</h2></div><p className="mt-2">Sign Kai Arden. Your 90-rated superstar awaits.</p><p className="my-3 text-sm">{'\u00a3'}{MEMBER_MONTHLY_CASH.toLocaleString('en-GB')} monthly in-game funds, established creator deals and a growing member library.</p><GlassButton block variant="primary" onClick={() => setOpen(true)}>{active ? 'Open your benefits' : 'Unlock your club advantage'}</GlassButton></GlassPanel>
+    <Portal>{open && <div className="cf-paywall-backdrop"><section ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="creator-club-title" tabIndex={-1} className="cf-paywall">
+      <button type="button" className="cf-paywall-close" aria-label="Close membership" disabled={store.busy || claiming} onClick={close}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button>
+      <div className="cf-paywall-scroll"><MembershipHero /><div className="cf-paywall-body"><MembershipBenefits />
+      {!active && checkout}
       {active && <div className="cf-member-checkout">
         <p>{store.member!.willRenew ? 'Renews' : 'Access ends'} {new Date(store.member!.expiresAt).toLocaleDateString()}.{store.member!.billingIssue && ' Your store has reported a billing issue. Check your payment method.'}</p>
         <h3>Your library</h3>
         {MEMBER_RELEASES.map(issue => <p key={issue.id}><strong>{issue.title}</strong> · {issue.commentary} commentary and {issue.stories} story variations</p>)}
         <GlassButton disabled={disabled || !!game.state?.settings.enabledPackIds.includes(MEMBER_LIBRARY_ID)} onClick={enable}>{game.state?.settings.enabledPackIds.includes(MEMBER_LIBRARY_ID) ? 'First Lights enabled' : 'Enable First Lights'}</GlassButton>
         <GlassButton onClick={() => navigate(`${ROUTES.club3d}?open=1`)}>Explore member lighting</GlassButton>
+        <h3>Your superstar signing</h3>
+        <p>{MEMBER_SUPERSTAR.name} · {MEMBER_SUPERSTAR.overall} OVR · {MEMBER_SUPERSTAR.contractWeeks}-week contract. No transfer or signing fee. £{MEMBER_SUPERSTAR.wage.toLocaleString('en-GB')} in-game wages per week; regular football, injury and contract rules apply. Once per career, during paid membership.</p>
+        <GlassButton variant="primary" disabled={disabled || !paid || claimed('superstar')} onClick={() => void claim('superstar')}>{claimed('superstar') ? 'Welcome signing claimed' : `Sign ${MEMBER_SUPERSTAR.name} · £${MEMBER_SUPERSTAR.wage.toLocaleString('en-GB')}/week`}</GlassButton>
+        {claimed('superstar') && <GlassButton onClick={() => navigate(ROUTES.squad)}>Open your squad</GlassButton>}
         <h3>Monthly career benefits</h3>
         <GlassButton disabled={disabled || !paid || claimed('cash')} onClick={() => void claim('cash')}>{claimed('cash') ? 'Club funds claimed this month' : `Claim £${MEMBER_MONTHLY_CASH.toLocaleString('en-GB')} in-game funds`}</GlassButton>
         {MEMBER_CREATORS.map(creator => <div key={creator.id}><strong>{creator.name}</strong><p className="text-sm text-ink-muted">{creator.bio}</p><GlassButton disabled={disabled || !paid || claimed('creator')} onClick={() => void claim('creator', creator.id)}>{claimed('creator') ? 'Creator collaboration claimed' : `Choose ${creator.name}`}</GlassButton></div>)}
-        {!paid && <p>Club funds and creator collaborations unlock after the trial becomes a paid membership.</p>}
+        {!paid && <p>The superstar signing, club funds and creator collaborations unlock after the trial becomes a paid membership.</p>}
         <GlassButton variant="ghost" onClick={() => navigate(ROUTES.creators)}>Manage your creators</GlassButton>
       </div>}
       {(message || store.message) && <p role="status">{message || store.message}</p>}
@@ -96,7 +102,7 @@ export function CreatorClub(): ReactNode {
         <a href={Capacitor.getPlatform() === 'android' ? 'https://play.google.com/store/account/subscriptions' : 'https://apps.apple.com/account/subscriptions'} target="_blank" rel="noreferrer">Manage subscription</a>
         <a href="https://wrexist.github.io/Creatorfootball/terms.html" target="_blank" rel="noreferrer">Terms</a><a href="https://wrexist.github.io/Creatorfootball/privacy.html" target="_blank" rel="noreferrer">Privacy</a>
       </div>
-      <p className="text-sm text-ink-muted">Library and exclusive lighting require active membership. Claimed funds, signed collaborations and existing career history remain after expiry. Unclaimed monthly bonuses do not accumulate. In-game funds have no cash value. One-time collections below are sold separately and remain yours.</p>
-    </div>
-  </section></GlassSheet></>;
+      <p className="text-sm text-ink-muted">Library and exclusive lighting require active membership. Claimed funds, signed player contracts, creator collaborations and career history remain after expiry. Unclaimed monthly bonuses do not accumulate. In-game funds have no cash value. One-time collections are sold separately.</p>
+    </div></div>
+  </section></div>}</Portal></>;
 }

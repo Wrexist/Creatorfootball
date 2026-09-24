@@ -25,7 +25,7 @@ describe('Creator Club career benefits', () => {
     const { state } = buildTestWorld();
     const id = MEMBER_CREATORS[0].id;
     const signed = claimMemberBenefit(state, proof, 'creator', id);
-    expect(signed.creators[id]).toMatchObject({ clubId: state.playerClubId, dealWeeksRemaining: 4, retainerPerCycle: 0 });
+    expect(signed.creators[id]).toMatchObject({ clubId: state.playerClubId, dealWeeksRemaining: 12, retainerPerCycle: 0, followers: 500_000, tier: 'ESTABLISHED' });
     expect(signed.clubs[state.playerClubId]!.creatorIds).toContain(id);
     expect(claimMemberBenefit(signed, proof, 'creator', MEMBER_CREATORS[1].id)).toBe(signed);
     expect(claimMemberBenefit(signed, proof, 'cash')).not.toBe(signed);

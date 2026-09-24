@@ -1,0 +1,63 @@
+.cf-paywall-backdrop { position:fixed; inset:0; z-index:80; display:flex; justify-content:center; background:rgba(3,7,6,.86); }
+.cf-paywall { position:relative; width:min(100%,520px); height:100dvh; background:#080e0e; color:#f6f7f2; box-shadow:0 0 90px #000; }
+.cf-paywall-scroll { height:100%; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; padding-bottom:env(safe-area-inset-bottom,0px); }
+.cf-paywall-close { position:absolute; right:16px; top:max(14px,env(safe-area-inset-top,0px)); z-index:5; width:48px; height:48px; display:grid; place-items:center; border:1px solid #a7b2ac; border-radius:50%; color:white; background:rgba(13,20,20,.86); box-shadow:0 4px 18px #000c; }
+.cf-paywall-close:disabled { opacity:.6; }
+.cf-paywall button:focus-visible,.cf-paywall a:focus-visible,.cf-paywall summary:focus-visible,.cf-member-invite:focus-visible { outline:3px solid #beff1f; outline-offset:3px; }
+.cf-member-hero { height:340px; position:relative; isolation:isolate; overflow:hidden; }
+.cf-member-hero-scene { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 43%; z-index:-2; }
+.cf-member-hero::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,#0007,transparent 75%),linear-gradient(0deg,#080e0e,transparent 32%); z-index:-1; pointer-events:none; }
+.cf-member-hero-copy { position:absolute; top:max(30px,env(safe-area-inset-top,0px)); left:20px; }
+.cf-member-hero-copy h2 { font-family:var(--font-headline,Impact,sans-serif); font-size:clamp(62px,19vw,84px); line-height:.85; font-weight:700; letter-spacing:-1px; text-shadow:0 3px 16px #000a; }
+.cf-member-hero-copy h2 span { color:#beff1f; }
+.cf-member-hero-copy p { margin-top:14px; font-size:12px; line-height:1.5; letter-spacing:3px; font-weight:750; }
+.cf-member-shirt-crest { position:absolute; top:49%; left:60.5%; transform:translateX(-50%) rotate(-3deg); filter:drop-shadow(0 2px 2px #0008); }
+.cf-member-team { position:absolute; bottom:10px; left:16px; right:16px; display:flex; gap:8px; align-items:center; padding:10px; border:1px solid #ffffff20; border-radius:16px; background:#0b1416df; }
+.cf-member-team>div:nth-child(2) { flex:1; min-width:0; }
+.cf-member-team strong { display:block; font-size:14px; line-height:1.2; }
+.cf-member-team span { font-size:11px; color:#bdc5bc; }
+.cf-member-squad { display:flex; flex-shrink:0; padding-left:8px; }
+.cf-member-squad>* { margin-left:-12px; border:2px solid #25352f; }
+.cf-paywall-body { padding:0 16px 24px; }
+.cf-member-rewards { display:grid; gap:10px; }
+.cf-member-rewards details { border:1px solid #d3ead325; border-radius:16px; background:linear-gradient(120deg,#25322d99,#0b1212); overflow:hidden; }
+.cf-member-rewards summary { cursor:pointer; list-style:none; display:grid; grid-template-columns:104px 1fr 12px; align-items:center; gap:10px; padding-right:12px; min-height:94px; }
+.cf-member-rewards summary::-webkit-details-marker { display:none; }
+.cf-member-rewards summary strong { display:block; font-size:15px; line-height:1.25; }
+.cf-member-rewards summary small { display:block; font-size:12px; line-height:1.4; color:#bdc5bc; margin-top:5px; }
+.cf-member-rewards details>p { padding:12px 16px 16px; font-size:14px; line-height:1.55; color:#bdc5bc; border-top:1px solid #ffffff12; }
+.cf-member-reward-art { position:relative; height:96px; width:104px; display:block; overflow:hidden; background:#17261f; }
+.cf-member-reward-art>img { width:100%; height:100%; object-fit:cover; }
+.cf-member-creator-art { display:flex; }
+.cf-member-creator-art>img { width:50%; }
+.cf-member-coin-crest { position:absolute; top:31%; left:50%; transform:translateX(-50%); }
+.cf-member-library-crest { position:absolute; top:45%; left:50%; transform:translateX(-50%); }
+.cf-paywall .cf-member-footer { margin:20px 0; padding-top:16px; border-top:1px solid #ffffff30; }
+.cf-paywall .cf-member-plan { min-height:56px; background:linear-gradient(120deg,#23322b,#0b1515); }
+.cf-paywall .cf-member-plan[aria-pressed=true] { background:linear-gradient(100deg,#314326,#152318); }
+.cf-paywall .cf-store-links { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 20px; margin-top:16px; }
+.cf-paywall .cf-store-links a { display:inline-flex; align-items:center; min-height:44px; font-size:13px; text-decoration:underline; color:#c7cec8; }
+.cf-member-store-banner { background:linear-gradient(105deg,#0d1d18f5,#0d1d1880),url('/art/membership/tunnel.webp') center 35% / cover; }
+.cf-member-banner-title { display:flex; align-items:center; gap:14px; }
+.cf-member-invite { display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:16px; border:1px solid #baff1f66; border-radius:20px; background:linear-gradient(120deg,#273d27,#0d1917); color:#f6f7f2; }
+.cf-member-invite>span:first-of-type { flex:1; min-width:0; }
+.cf-member-invite strong { display:block; font-size:16px; }
+.cf-member-invite small { display:block; font-size:13px; line-height:1.45; color:#c0cbbd; margin-top:4px; }
+.cf-member-invite>span:last-child { font-size:28px; color:#beff1f; }
+.cf-member-rewards .cf-member-superstar { border-color:#f2bf4caa; background:radial-gradient(ellipse at 25% 10%,#76602a77,transparent 70%),linear-gradient(125deg,#272619,#0b1513); box-shadow:inset 0 0 22px #f2bf4c0a,0 4px 20px #0006; }
+.cf-member-superstar summary { grid-template-columns:46% 1fr 10px; min-height:210px; gap:12px; }
+.cf-member-star-art { position:relative; display:block; height:210px; overflow:hidden; }
+.cf-member-star-art>img { object-position:50% 30%; }
+.cf-member-star-rating { position:absolute; top:10px; left:10px; font-family:var(--font-headline); font-size:38px; font-weight:700; line-height:1; color:#ffdb7b; text-shadow:0 2px 7px #000; }
+.cf-member-star-rating small { font-family:var(--font-sans); font-size:10px!important; color:#ffdb7b!important; }
+.cf-member-star-crest { position:absolute; bottom:22px; right:18px; filter:drop-shadow(0 2px 4px #000); }
+.cf-member-star-copy>small { color:#f2bf4c!important; font-size:10px!important; letter-spacing:1px; }
+.cf-member-rewards .cf-member-star-copy>strong { font-family:var(--font-headline); font-size:40px; line-height:.92; margin:8px 0; }
+.cf-member-star-copy>span { font-size:12px; color:#d5ddd5; line-height:1.4; }
+.cf-member-star-stats { display:flex; gap:16px; margin-top:12px; }
+.cf-member-star-stats b { font-size:22px; color:#ffdb7b; }
+.cf-member-star-stats small { font-size:9px!important; margin-top:0!important; }
+.cf-member-library-note { font-size:13px; line-height:1.5; color:#bdc5bc; padding:4px 2px; }
+@media (max-width:370px) { .cf-member-hero { height:310px; } .cf-member-rewards summary { grid-template-columns:88px 1fr 10px; gap:8px; } .cf-member-reward-art { width:88px; } .cf-member-squad>* { width:34px!important; height:34px!important; } }
+
+@media (max-width:370px) { .cf-member-superstar summary { grid-template-columns:44% 1fr 10px; } }

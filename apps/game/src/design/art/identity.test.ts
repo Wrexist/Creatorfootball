@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BASE_PACK, PREMADE_MANAGERS, createNewGame } from '@cf/engine';
+import { BASE_PACK, PREMADE_MANAGERS, createNewGame, claimMemberBenefit, MEMBER_SUPERSTAR } from '@cf/engine';
 import { withVisualIdentity } from './identity';
 import { assetFor, managerAssetFor } from './manifest';
 import { crestForVisual } from './club-art';
@@ -10,6 +10,13 @@ const fresh = (managerId = BASE_PACK.data.managers![0]!.id) => createNewGame({se
 });
 
 describe('persistent illustrated identities', () => {
+  it('keeps the featured superstar face after signing and reload', () => {
+    const original = withVisualIdentity(fresh());
+    const signed = withVisualIdentity(claimMemberBenefit(original, { checkedAt: 1000, expiresAt: 2000, trial: false }, 'superstar'));
+    expect(signed.visualIdentity!.players[MEMBER_SUPERSTAR.id]).toBe('character.member-kai-arden');
+    expect(withVisualIdentity(JSON.parse(JSON.stringify(signed))).visualIdentity).toEqual(signed.visualIdentity);
+    expect(assetFor('character.member-kai-arden', 'thumb')).toBe('/art/membership/superstar-thumb.webp');
+  });
   it('provides every premade manager with all five expressions and three crops', () => {
     for (const manager of PREMADE_MANAGERS) {
       const state = fresh(manager.id);

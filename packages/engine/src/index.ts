@@ -104,3 +104,4 @@ export * from './game/mutations';
 export * from './game/eventFactory';
 
 export * from './progression/membership';
+export * from './progression/memberSuperstar';

@@ -1,12 +1,12 @@
-﻿# Creator Club membership — implementation and launch checklist
+# Creator Club membership — implementation and launch checklist
 
 Status: implemented locally; not a launched subscription. Public release remains held for the owner's children's-compliance review. Existing one-time purchases remain separate.
 
 ## Benefits delivered in code
 - First Lights library: eight alternate commentary lines and six story variants from real events. Original fictional copy; simulation metadata unchanged. Users can enable/disable the issue. Access stops when verified membership expires; saved history remains.
 - Aurora and Copper dusk: two member-only lighting configurations for the actual interactive campus renderer.
-- £25,000 in-game club funds per UTC calendar month per career, claimed manually during a verified paid period. No real cash value. Trial excluded.
-- Choose Mika Sol (analyst) or Remi Vale (community filmmaker), one collaboration per UTC calendar month per career. Four in-game weeks, zero retainer. These are real creator entities handled by existing creator gameplay, not guaranteed follower/revenue multipliers. Trial excluded.
+- £250,000 in-game club funds per UTC calendar month per career, claimed manually during a verified paid period. No real cash value. Trial excluded.
+- Choose Mika Sol (analyst) or Remi Vale (community filmmaker), one collaboration per UTC calendar month per career. Twelve in-game weeks, zero retainer. These are real creator entities handled by existing creator gameplay, not guaranteed follower/revenue multipliers. Trial excluded.
 - Claimed funds and signed collaboration state survive subscription expiry. Unclaimed benefits do not accumulate. Library access is rented; the three one-time collections remain permanently owned if separately purchased.
 
 The cash amount is an initial balancing value, not an evidence-based revenue optimum. Test its value against transfer/wage costs before live pricing. Local ledger permanent keys prevent ordinary reload/time-advance duplicate claims. Local saves are deliberately not an account-wide anti-tamper system: restoring an old backup or modifying device data can bypass a local claim history. No backend or Supabase was added.
@@ -40,3 +40,19 @@ First Lights (September 2026) is the only released issue in the local manifest. 
 - No formatter command is configured in the repository; the actual ESLint check is used without weakening rules.
 - Final `pnpm lint` and `pnpm build`: passed. Existing large-chunk warnings remain for the lazy 3D renderer and engine; no build limits were relaxed.
 - Browser regression: career flow, store-unavailable state, plan selection/close, pack persistence, local backup/restore, four GLB imports, 130 formation/viewport/text combinations and eight isolated edge-state fixtures passed. Real device purchase qualification remains a separate release gate.
+
+## Cinematic paywall revision � September 24
+- Replaced the membership sheet with a full-height cinematic paywall based on the supplied reference. Removed the membership badge and Continue free action. A visible 48px shadowed close button remains fixed at the top right, with Escape, focus trapping and scroll locking.
+- The current career's crest is rendered on the jacket, coin and trophy. The hero uses actual current squad portraits and the club name; no specific club branding is baked into the generated art.
+- Two new optimized WebP assets total 179,156 bytes. Built-in image generation produced the source art. Paths: `apps/game/public/art/membership/tunnel.webp` and `apps/game/public/art/membership/funds.webp`. Exact prompts, use and crop notes: `docs/assets/creator-club-art.json`. Art is 2D; no runtime 3D model is claimed.
+- Increased funds from 25,000 to 250,000 in-game GBP. Creators now start at ESTABLISHED tier, at least 500,000 followers, new-creator skills at 78 (low controversy, high loyalty), and a 12-game-week fee-free deal. Existing monthly claim keys remain unchanged: already claimed benefits cannot be duplicated by installing this revision.
+- Added club-branded invitations on Home, Finances and Creators. Entry points open the same paywall directly. Native price, trial, restore, expiry and verification behavior is preserved; no checkout price is invented for web previews.
+- Final paywall inspection uses 393x852, with automated overflow checks also at 360px and 430px. Updated browser tests verify the removed copy, real crest, initial close focus, touch target, plan selection and dismissal.
+- This revision: 255 app tests, the three member reward engine tests, typecheck, ESLint and production build passed. Store purchase qualification and public release remain on the existing gates above.
+
+## Superstar welcome signing
+Kai Arden replaces the generic third reward card with an original portrait and actual 90 OVR / 95 potential forward. Paid members can sign him once per local career, with no transfer fee and an explicitly disclosed 52-week STAR contract costing ?5,000 in-game per week. Trial access excludes the signing. The claim uses a permanent ledger key, real player/contract/squad registration, deterministic portrait mapping and the existing market valuation. He is not automatically selected in the lineup. Existing game contracts and progression apply after membership expires. Local-save rollback is not account-wide fraud protection.
+
+The portrait was generated using built-in OpenAI image generation, then resized/compressed to WebP. Exact prompt and intended use are recorded in `docs/assets/creator-club-art.json`. Store configuration and native purchase qualification remain outstanding; public launch remains held for children's compliance review.
+
+Verification after superstar integration (25 September): typecheck, lint and production build passed; 256 app tests and five targeted membership/reward engine tests passed. Browser expansion regression passed with the real portrait, visible close, unavailable web purchase, plan selection, local saves and responsive widths 360/393/430. Inspected actual 393?852 captures at `artifacts/expansion/screenshots/creator-club.png` and `creator-club-checkout.png`. Existing large engine/3D chunk warnings remain. No native purchase or public release was performed.

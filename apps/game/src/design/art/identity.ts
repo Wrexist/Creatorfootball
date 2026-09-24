@@ -1,4 +1,4 @@
-import { positionGroup, type GameState } from '@cf/engine';
+import { MEMBER_SUPERSTAR, positionGroup, type GameState } from '@cf/engine';
 import { managerAssetFor } from './manifest';
 import { clubArtIdentity, type ClubArtIdentity } from './club-art';
 
@@ -26,6 +26,7 @@ export function withVisualIdentity(state: GameState): IllustratedGameState {
   for (const [index,id] of ids.entries()) {
     const p = state.players[id];
     if (!p || players[id]) continue;
+    if (id === MEMBER_SUPERSTAR.id) { players[id] = 'character.member-kai-arden'; changed = true; continue; }
     // Junior faces retain their existing age-appropriate vector identity.
     const pool = roleSlots[positionGroup(p.position)];
     // Prefer the role's art, then any unused adult portrait. Exhausting a role

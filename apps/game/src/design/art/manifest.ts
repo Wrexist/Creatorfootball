@@ -6,6 +6,7 @@ export type AssetCrop = 'hero' | 'card' | 'thumb';
 
 /** All production art paths are owned here. Missing keys use code-native art. */
 export function assetFor(key: string, crop: AssetCrop = 'card'): string | undefined {
+  if (key === 'character.member-kai-arden') return `/art/membership/superstar-${crop === 'thumb' ? 'thumb' : 'hero'}.webp`;
   const asset = PREMIUM_ASSETS[key as AssetKey];
   return asset?.variants[crop].src;
 }

@@ -1,3 +1,4 @@
+import { MemberInvite } from '@/features/progression/MemberInvite';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -189,6 +190,7 @@ function CreatorHubView({ state }: { state: GameState }): ReactNode {
         </GlassPanel>
       }
     >
+      <MemberInvite />
       {offers.length > 0 ? (
         <section>
           <SectionHeader
