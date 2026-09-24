@@ -1,5 +1,15 @@
 # Store launch setup status
 
+## Original icon restoration - September 24, 2026
+
+This section supersedes the earlier build 3/9 checkpoint below. Source `4eeaa14` restores the owner's original metallic CF crest across native, web and onboarding icons. See [the restoration report](ICON_RESTORATION_2026-09-24.md) for provenance, file scope, artifact hashes and verification.
+
+- Android **1.0.16 (4)** is active on the existing internal track, available to internal testers September 24 at 18:16 local time. The signed bundle contains the restored icon. Tester access is unchanged.
+- iOS **1.0.16 (10)** uploaded successfully at 16:28:06 UTC through [workflow 36025668401](https://github.com/Wrexist/Creatorfootball/actions/runs/36025668401). All checks passed, including 998 tests and browser flows. The downloaded IPA's version, build, bundle and actual packaged icon were verified. Apple currently reports processing.
+- Google Play's CF listing icon and its original AI-artwork attribution were saved. The listing remains ready to send for review; no public submission was made.
+- App Store Connect login is restored. Version 1.0.16 is **Prepare for Submission**, with manual release selected. The old build was detached pending corrected build 10. Build 9 completed processing but contains the superseded icon.
+- The owner's children's-compliance hold, native commerce qualification, physical-device testing, first-IAP review assets, gallery refresh and required Google closed testing remain open. No public release or legal certification was submitted.
+
 ## Test-release continuation — September 24, 2026
 
 This section supersedes the September 23 test-build versions below. **Public release and the owner's children's-compliance hold are unchanged.**

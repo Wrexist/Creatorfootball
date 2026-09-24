@@ -4,8 +4,8 @@ Use the repaired 1.0.16 build. This checklist records work that automation has *
 
 ## Install and preserve the career
 
-- Android: use the previously approved Google account and [internal-test invitation](https://play.google.com/apps/internaltest/4701630808819754067). Check that the installed version is **1.0.16 (3)**. Play propagation may delay the update.
-- iOS: update Creator Football through TestFlight when **1.0.16 (9)** finishes processing. Do not assume the old 1.0.15 build contains the fixes.
+- Android: use the previously approved Google account and [internal-test invitation](https://play.google.com/apps/internaltest/4701630808819754067). Check that the installed version is **1.0.16 (4)**. Play propagation may delay the update.
+- iOS: update Creator Football through TestFlight when **1.0.16 (10)** finishes processing. Build 10 restores the original CF crest; build 9 has the gameplay repairs but the superseded icon. Do not assume the old 1.0.15 build contains the fixes.
 - Export a career using the existing local save controls before any destructive test. Updating should preserve the current career; do not uninstall or clear app data to test an ordinary update.
 - Record device model, OS, installed version/build, and the result of each check below. Do not place receipts, purchase tokens, account credentials or private customer IDs in public GitHub issues.
 
