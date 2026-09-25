@@ -34,7 +34,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.0",
+    "@capacitor/cli": "^8.5.2",
     "@capacitor/ios": "^8.5.0",
     "@tailwindcss/vite": "^4.1.13",
     "@types/node": "^22.20.1",
