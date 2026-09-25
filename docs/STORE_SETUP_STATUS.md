@@ -208,3 +208,14 @@ This section supersedes the earlier pending-build and pending-product notes.
 - RevenueCat imported these as **non-consumables**: Club Nights `prodaab0c3aa41`, Heritage `prod61a26cf2d2`, Creator Stories `prode02e0ee7e2`. Each product is attached to its matching entitlement. The default offering's three packages now each include both their Apple and Google products; saved console state verified.
 - Google catalog-read validation and notification transport pass. The last purchase-validation check still reported package-name propagation trouble; product import succeeding does not qualify transactions. Recheck after the Play testing release is available.
 - No public launch, native store purchase/restore/refund qualification, Families certification or required 12-testers/14-days closed-test completion is claimed.
+
+
+## 2026-09-25 follow-up: native prices and fixed checkout
+
+- Owner screenshots from TestFlight 1.0.16 (11) confirm real annual $29.99/year and monthly $4.99/month prices and eligible seven-day annual trial. This verifies product loading, not a purchase/restore/refund transaction.
+- Paywall now uses a separate bottom checkout panel: three billing periods, localized selected-plan terms, purchase action and paid-reward trial exclusion. Benefits scroll independently. The funds coin crest is centered using both axes.
+- Native Home launch offer waits for verified membership refresh and available products. Suppressed for members, store errors/unavailability and unsafe save states; once per runtime session, with a persisted 72-hour impression cooldown. No onboarding or match-route popup. Close remains immediately available.
+- Google Play annual, monthly and weekly `standard` base plans are active, with USD base prices 29.99 / 4.99 / 1.99. Annual `trial-7-days` offer active for new subscription customers; other periods have no trial. Availability excludes Vietnam and automatic future territories.
+- RevenueCat imports all three Android base plans, attaches them to `cf_creator_club` and maps them to the annual/monthly/weekly packages in `creator_club`. Apple mappings remain intact.
+- Apple draft 1.0.16 currently references build 11. The sticky checkout changes require a new native build; do not claim build 11 contains them.
+- Public release remains held for the owner's children's-compliance review. Apple review screenshots/metadata completion, latest native binary deployment and device transaction lifecycle verification remain release tasks.

@@ -30,6 +30,17 @@ try {
   const closeBox=await page.getByRole('button',{name:'Close membership',exact:true}).boundingBox();
   assert.ok(closeBox && closeBox.width>=44 && closeBox.height>=44 && closeBox.x+closeBox.width<=393,'Visible touch-sized close button');
   assert.equal(await page.getByRole('button',{name:'Membership unavailable',exact:true}).isDisabled(),true,'Web must not fake a native subscription checkout');
+  for (const width of [360,393,430]) {
+    await page.setViewportSize({width,height:852});
+    const cta = page.getByRole('button',{name:'Membership unavailable',exact:true});
+    const before = await cta.boundingBox();
+    assert.ok(before && before.y >= 0 && before.y + before.height <= 852, 'Checkout visible before scrolling');
+    await page.locator('.cf-paywall-scroll').evaluate(el => { el.scrollTop = el.scrollHeight; });
+    const after = await cta.boundingBox();
+    assert.ok(after && Math.abs(after.y - before.y) < 1, 'Checkout remains fixed while benefits scroll');
+    await page.locator('.cf-paywall-scroll').evaluate(el => { el.scrollTop = 0; });
+  }
+  await page.setViewportSize({width:393,height:852});
   await shot('creator-club');
   assert.equal(await page.locator('.cf-member-star-rating').innerText(),'90\nOVR · ST');
   assert.ok(await page.locator('.cf-member-star-art img').first().evaluate(el=>el.complete && el.naturalWidth>0),'Superstar portrait loaded');
@@ -44,7 +55,7 @@ try {
   assert.equal(await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
   await shot('creator-club-checkout');
   await page.getByText('More plans · Weekly',{exact:true}).click();
-  await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).click();
+  await page.locator('.cf-paywall-plans').getByRole('button',{name:'Weekly Unavailable',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
   await page.getByRole('button',{name:'Close membership',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});

@@ -1,3 +1,4 @@
+import { MembershipLaunchPrompt } from '@/features/progression/MembershipLaunchPrompt';
 import { MemberInvite } from '@/features/progression/MemberInvite';
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -286,7 +287,7 @@ function HomeBody({ state }: { state: GameState }): ReactNode {
       </section>
     </div>
     <div className="cf-home-body">
-      <MemberInvite />
+      <MembershipLaunchPrompt /><MemberInvite />
       {feed.lead.kind === 'RESULT' && <GlassCard onPress={() => feed.lead.kind === 'RESULT' && feed.lead.matchId && navigate(buildPath(ROUTES.matchResult,{matchId:feed.lead.matchId}))} padding="md">
         <Text role="label" className="text-volt">Last result · {feed.lead.us} – {feed.lead.them}</Text><Text role="section" as="h2" className="mt-1">{feed.lead.headline}</Text><Text role="caption" className="mt-1">{feed.lead.meaning}</Text>
       </GlassCard>}
