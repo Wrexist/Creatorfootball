@@ -261,12 +261,10 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
 
-      # Cloud signing: -allowProvisioningUpdates with the API key lets Xcode
-      # register the bundle ID, mint/refresh the App Store provisioning
-      # profile, and use a cloud-managed distribution certificate — no p12 in
-      # secrets, nothing to expire silently in a repo setting. First run may
-      # need the key to have the Admin role (certificate creation); see
-      # docs/RELEASE_IOS.md if this step fails on signing.
+      # Compile an unsigned intermediate archive. An ephemeral runner must not
+      # mint an Apple Development certificate on every release (account cap).
+      # Mandatory cloud distribution signing happens during export below; the
+      # exported IPA is verified before it can be retained or uploaded.
       #
       # MARKETING_VERSION / CURRENT_PROJECT_VERSION are overridden as build
       # settings — Info.plist reads both via $(…), so the working tree is
@@ -275,8 +273,6 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -285,10 +281,8 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/CreatorFootball.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" \
-            -authenticationKeyID "$KEY_ID" \
-            -authenticationKeyIssuerID "$ISSUER_ID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             MARKETING_VERSION="$VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
@@ -328,6 +322,33 @@ jobs:
             | tail -100
           mkdir -p "$GITHUB_WORKSPACE/build"
           cp "$RUNNER_TEMP"/export/*.ipa "$GITHUB_WORKSPACE/build/creator-football.ipa"
+
+      - name: Verify exported distribution signature
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          VERIFY_DIR="$RUNNER_TEMP/verify-ipa"
+          mkdir -p "$VERIFY_DIR"
+          ditto -x -k "$GITHUB_WORKSPACE/build/creator-football.ipa" "$VERIFY_DIR"
+          APP_PATH="$VERIFY_DIR/Payload/App.app"
+          codesign --verify --deep --strict "$APP_PATH"
+          codesign -d --entitlements :- "$APP_PATH" > "$RUNNER_TEMP/exported-entitlements.plist" 2>/dev/null
+          security cms -D -i "$APP_PATH/embedded.mobileprovision" > "$RUNNER_TEMP/exported-profile.plist"
+          python3 - <<'PY'
+          import os, plistlib
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])
+          ent = plistlib.loads((root / 'exported-entitlements.plist').read_bytes())
+          profile = plistlib.loads((root / 'exported-profile.plist').read_bytes())
+          team = os.environ['APPLE_TEAM_ID']
+          assert ent.get('com.apple.developer.team-identifier') == team, 'Wrong signing team'
+          assert ent.get('application-identifier') == team + '.com.creatorfootball.app', 'Wrong signed app'
+          assert ent.get('get-task-allow') is False, 'Development/debug signing is not allowed'
+          assert 'ProvisionedDevices' not in profile and not profile.get('ProvisionsAllDevices'), 'Not an App Store profile'
+          assert profile['Entitlements'].get('get-task-allow') is False, 'Development profile is not allowed'
+          print('Verified App Store signature, app identifier, team and distribution profile.')
+          PY
 
       # Always keep the .ipa, even if upload is skipped or later fails — lets
       # you upload it manually via the Transporter app as a fallback.

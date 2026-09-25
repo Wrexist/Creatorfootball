@@ -17,3 +17,9 @@ The restored workflow pins action revisions and sets `CF_PURCHASE_RELEASE_PLATFO
 Release runs use the build-number helper's `--require-asc` option. Failed or missing App Store Connect access stops the build instead of substituting a timestamp. The workflow captures that command separately so its error cannot be hidden by a successful `echo`. The script's older fallback remains available only for callers that do not request authoritative release numbering.
 
 See [store setup status](STORE_SETUP_STATUS.md) for console IDs and unfinished submission requirements, and [RevenueCat setup](REVENUECAT_SETUP.md) for product mappings and required transaction tests.
+
+## Certificate-cap repair (25 September 2026)
+
+The reward build failed during archive because automatic development signing on a fresh runner reached Apple's certificate cap. No certificates were revoked and no permissions changed. The archive now compiles without an intermediate development signature; the existing authenticated App Store export must apply distribution signing. A new mandatory gate verifies the exported app's deep/strict signature, team ID, exact app identifier, disabled debug entitlement and App Store provisioning profile before artifact retention or upload. This is not an unsigned release path.
+
+Cloud export reference: https://developer.apple.com/videos/play/wwdc2021/10204/. The revised archive/export path must succeed on the hosted macOS runner before being called validated. Creator Football currently has no custom entitlements or app extensions; future capabilities require explicit export-entitlement tests.
