@@ -20,3 +20,7 @@ Owner reported native sandbox purchase/restore/rewards tested before this change
 Full production browser regression passed: startup/routes, complete career and live substitution/result persistence, collection/store/local backup/3D controls, media stability, 130 formation/viewport/text combinations, and eight isolated edge-state fixtures. Source commit: a93da32. Replacement iOS TestFlight workflow: https://github.com/Wrexist/Creatorfootball/actions/runs/36125854210 (dispatched with upload enabled; do not call it uploaded until the archive/upload job succeeds).
 
 Initial upload run 36125854210 passed all verification but failed archive at the Apple Development certificate cap (build number 13 reserved by the helper, not uploaded). No certificates revoked. Workflow changed to unsigned intermediate archive plus mandatory cloud distribution export/signature verification; replacement run required.
+
+Replacement workflow: https://github.com/Wrexist/Creatorfootball/actions/runs/36127001078 at commit 7629279. Pending hosted validation of the certificate-cap repair.
+
+Apple Heritage screenshot preparation: artifacts/store-launch/review/heritage.png is a 1179x2556 RGB resize of the actual paid-pack QA sash-kit screenshot. Two UI upload attempts returned Apple's "There was an error uploading your screenshot. Try again later." No screenshot is confirmed attached, no product review submission added, and modified notes were not confirmed persisted. Do not claim Heritage complete.
