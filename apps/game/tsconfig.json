@@ -5,7 +5,6 @@
     "jsx": "react-jsx",
     "types": ["vite/client"],
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@cf/engine": ["../../packages/engine/src/index.ts"],
