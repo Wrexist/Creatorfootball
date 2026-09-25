@@ -13,6 +13,9 @@ import { Portal } from '@/design/glass/Portal';
 import { useEscapeKey, useFocusTrap, useScrollLock } from '@/design/glass/useOverlay';
 import { MembershipHero } from './MembershipHero';
 import { MembershipBenefits } from './MembershipBenefits';
+import { MemberCelebration, type MemberCelebrationEvent } from './MemberCelebration';
+import { sfx } from '@/design/audio';
+import { haptics } from '@/design/haptics';
 import './membership.css';
 
 export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { initiallyOpen?: boolean; hideBanner?: boolean } = {}): ReactNode {
@@ -25,8 +28,23 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
   const panelRef = useRef<HTMLElement>(null);
   const [claiming, setClaiming] = useState(false);
   const [message, setMessage] = useState('');
+  const [celebration, setCelebration] = useState<MemberCelebrationEvent | null>(null);
+  const benefitsRef = useRef<HTMLDivElement>(null);
+  const dismissCelebration = useCallback(() => {
+    setCelebration(null);
+    requestAnimationFrame(() => { benefitsRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' }); });
+  }, []);
+  const celebrate = (event: MemberCelebrationEvent): void => {
+    setCelebration(event);
+    if (event.kind === 'superstar') sfx.signing(); else sfx.reward();
+    haptics.success();
+  };
+  const buy = async (): Promise<void> => {
+    const purchased = await store.buy(planId);
+    if (purchased) celebrate({ kind: purchased.trial ? 'trial' : 'paid' });
+  };
   const close = useCallback(() => { if (store.busy || claiming) return; setOpen(false); const next = new URLSearchParams(params); next.delete('membership'); setParams(next, { replace: true }); }, [store.busy, claiming, params, setParams]);
-  useScrollLock(open); useFocusTrap(open, panelRef); useEscapeKey(open && !store.busy && !claiming, close);
+  useScrollLock(open); useFocusTrap(open && !celebration, panelRef); useEscapeKey(open && !store.busy && !claiming, celebration ? dismissCelebration : close);
   const club = game.state?.clubs[game.state.playerClubId];
   const active = membershipActive(store.member);
   const paid = active && !store.member?.trial;
@@ -52,7 +70,13 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
       const next = claimMemberBenefit(current.state, verified.member!, kind, creator);
       if (next === current.state) { setMessage(kind === 'superstar' ? 'This welcome signing has already been claimed or is unavailable in this career.' : 'Already claimed this month, or this creator is unavailable.'); return; }
       current.apply(s => s === current.state ? next : s);
-      setMessage(await useGameStore.getState().save() ? 'Benefit saved to this career.' : 'Benefit applied, but saving failed. Retry saving before leaving.');
+      if (useGameStore.getState().state?.ledger !== next.ledger) { setMessage('Your career changed. Check your benefits and try again.'); return; }
+      if (await useGameStore.getState().save()) {
+        setMessage('Benefit saved to this career.');
+        if (useGameStore.getState().state?.saveId === saveId) celebrate({ kind, creator });
+      } else setMessage('Benefit applied, but saving failed. Retry saving before leaving.');
+    } catch {
+      setMessage('The reward could not be confirmed as saved. Check your career and save status before trying again.');
     } finally { setClaiming(false); }
   };
   const enable = (): void => game.apply(s => ({ ...s, settings: { ...s.settings, enabledPackIds: [...new Set([...s.settings.enabledPackIds, MEMBER_LIBRARY_ID])] } }));
@@ -67,17 +91,18 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
   const checkout = <footer className="cf-paywall-purchase" aria-label="Membership checkout">
     <div className="cf-paywall-plans" aria-label="Choose billing period">{MEMBER_PLANS.map(p => <button type="button" key={p.id} aria-pressed={planId === p.id} disabled={store.busy} onClick={() => setPlan(p.id)}>{p.label}<strong>{store.quotes.find(q => q.id === p.id)?.price ?? 'Unavailable'}</strong></button>)}</div>
     {quote && <p className="cf-paywall-billing">{quote.trialDays ? `7 days free, then ${quote.price} per ${plan.unit}.` : `${quote.price} per ${plan.unit}, charged now.`} Auto-renews until cancelled.</p>}
-    <GlassButton block variant="primary" disabled={!quote || store.busy || !purchaseAvailability().enabled} loading={store.busy} onClick={() => void store.buy(planId)}>{quote ? quote.trialDays ? 'Start 7-day free trial' : `Subscribe ? ${quote.price} / ${plan.unit}` : 'Membership unavailable'}</GlassButton>
+    <GlassButton block variant="primary" disabled={!quote || store.busy || !purchaseAvailability().enabled} loading={store.busy} onClick={() => void buy()}>{quote ? quote.trialDays ? 'Start 7-day free trial' : `Subscribe · ${quote.price} / ${plan.unit}` : 'Membership unavailable'}</GlassButton>
     {quote?.trialDays === 7 && <p className="cf-paywall-trial">Trial: library + lighting. Player, funds and creator rewards unlock when paid.</p>}
     {store.error && <p role="alert">{store.error}</p>}
     {store.message && <p role="status">{store.message}</p>}
   </footer>;
   return <>{!hideBanner && <GlassPanel padding="md" accent="volt" className="cf-member-store-banner"><div className="cf-member-banner-title">{club && <ClubBadge visual={club.visual} size={52} />}<h2 className="font-display text-3xl font-bold">Creator Club</h2></div><p className="mt-2">Sign Kai Arden. Your 90-rated superstar awaits.</p><p className="my-3 text-sm">{'\u00a3'}{MEMBER_MONTHLY_CASH.toLocaleString('en-GB')} monthly in-game funds, established creator deals and a growing member library.</p><GlassButton block variant="primary" onClick={() => setOpen(true)}>{active ? 'Open your benefits' : 'Unlock your club advantage'}</GlassButton></GlassPanel>}
-    <Portal>{open && <div className="cf-paywall-backdrop"><section ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="creator-club-title" tabIndex={-1} className="cf-paywall">
+    <Portal>{open && <div className="cf-paywall-backdrop"><section ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={celebration ? 'member-reward-title' : 'creator-club-title'} tabIndex={-1} className="cf-paywall">
+      {celebration ? <MemberCelebration event={celebration} onDone={dismissCelebration} /> : <>
       <button type="button" className="cf-paywall-close" aria-label="Close membership" disabled={store.busy || claiming} onClick={close}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button>
       <div className="cf-paywall-scroll"><MembershipHero /><div className="cf-paywall-body"><MembershipBenefits />
       {!active && <div className="cf-member-checkout cf-member-footer">{option('cf_creator_club_yearly')}{option('cf_creator_club_monthly')}{option('cf_creator_club_weekly')}<p>All plans include the same benefits. Cancel through your store account.</p></div>}
-      {active && <div className="cf-member-checkout">
+      {active && <div ref={benefitsRef} className="cf-member-checkout">
         <p>{store.member!.willRenew ? 'Renews' : 'Access ends'} {new Date(store.member!.expiresAt).toLocaleDateString()}.{store.member!.billingIssue && ' Your store has reported a billing issue. Check your payment method.'}</p>
         <h3>Your library</h3>
         {MEMBER_RELEASES.map(issue => <p key={issue.id}><strong>{issue.title}</strong> · {issue.commentary} commentary and {issue.stories} story variations</p>)}
@@ -103,5 +128,6 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
       <p className="text-sm text-ink-muted">Library and exclusive lighting require active membership. Claimed funds, signed player contracts, creator collaborations and career history remain after expiry. Unclaimed monthly bonuses do not accumulate. In-game funds have no cash value. One-time collections are sold separately.</p>
     </div></div>
     {!active && checkout}
+    </>}
   </section></div>}</Portal></>;
 }

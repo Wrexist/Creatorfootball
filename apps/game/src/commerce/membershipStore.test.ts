@@ -18,11 +18,28 @@ beforeEach(() => {
   mocks.sdk.checkTrialOrIntroductoryPriceEligibility.mockResolvedValue({});
 });
 describe('membership native lifecycle', () => {
+  it.each(['NORMAL', 'TRIAL'])('returns a verified %s purchase for the correct welcome reveal', async periodType => {
+    const { useMembershipStore: store } = await import('./membershipStore');
+    await store.getState().refresh();
+    const customerInfo = info(true, now + 1);
+    customerInfo.entitlements.active.cf_creator_club!.periodType = periodType;
+    mocks.sdk.purchasePackage.mockResolvedValue({ customerInfo });
+    const result = await store.getState().buy('cf_creator_club_yearly');
+    expect(result?.trial).toBe(periodType === 'TRIAL');
+    expect(await store.getState().buy('cf_creator_club_yearly')).toBeUndefined();
+    expect(mocks.sdk.purchasePackage).toHaveBeenCalledTimes(1);
+  });
+  it('does not celebrate an approved transaction without an active entitlement', async () => {
+    const { useMembershipStore: store } = await import('./membershipStore');
+    await store.getState().refresh();
+    mocks.sdk.purchasePackage.mockResolvedValue({ customerInfo: info(false, now + 1) });
+    expect(await store.getState().buy('cf_creator_club_yearly')).toBeUndefined();
+  });
   it.each(['1', '20'])('does not grant benefits on cancelled/pending response %s', async code => {
     const { useMembershipStore: store } = await import('./membershipStore');
     await store.getState().refresh();
     mocks.sdk.purchasePackage.mockRejectedValue({ code });
-    await store.getState().buy('cf_creator_club_yearly');
+    expect(await store.getState().buy('cf_creator_club_yearly')).toBeUndefined();
     expect(store.getState().member).toBeNull();
     expect(store.getState().busy).toBe(false);
     expect(mocks.commerce.busy).toBe(false);
@@ -43,7 +60,7 @@ describe('membership native lifecycle', () => {
     const { useMembershipStore: store } = await import('./membershipStore');
     await store.getState().refresh();
     mocks.sdk.purchasePackage.mockResolvedValue({ customerInfo: { ...info(true), entitlements: { ...info(true).entitlements, verification: 'FAILED' } } });
-    await store.getState().buy('cf_creator_club_yearly');
+    expect(await store.getState().buy('cf_creator_club_yearly')).toBeUndefined();
     expect(store.getState().member).toBeNull();
     expect(store.getState().error).toContain('did not confirm');
   });

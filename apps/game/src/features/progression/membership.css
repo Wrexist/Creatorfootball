@@ -70,3 +70,31 @@
 .cf-paywall-billing,.cf-paywall-trial { font-size:12px; line-height:1.4; margin:7px 0; color:#d3dcd4; }
 .cf-paywall-trial { margin-bottom:0; }
 .cf-paywall-purchase [role=alert],.cf-paywall-purchase [role=status] { font-size:13px; margin-top:6px; }
+.cf-member-celebration { position:relative; display:flex; flex-direction:column; height:100%; overflow:hidden; background:radial-gradient(ellipse at 50% 25%,#49402170,transparent 65%),#0b1411; }
+.cf-member-celebration-content { position:relative; flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; padding:max(76px,calc(env(safe-area-inset-top,0px) + 64px)) 24px 24px; text-align:center; }
+.cf-reward-eyebrow { color:#f2bf4c; font-size:12px; font-weight:750; letter-spacing:2px; margin-bottom:16px; }
+.cf-reward-hero { position:relative; height:clamp(160px,29dvh,260px); max-width:340px; margin:0 auto 24px; border:1px solid #f2bf4c80; border-radius:24px; overflow:hidden; box-shadow:0 12px 32px #0008; animation:cf-reward-reveal .6s ease-out both; }
+.cf-reward-hero>img { width:100%; height:100%; object-fit:cover; }
+.cf-reward-hero>.cf-reward-player { object-position:50% 25%; }
+.cf-reward-club { position:absolute; bottom:12px; right:12px; padding:6px; border-radius:16px; background:#08110ddd; }
+.cf-reward-rating { position:absolute; top:16px; left:16px; color:#ffdb7b; font-size:54px; line-height:1; text-shadow:0 2px 8px #000; }
+.cf-reward-rating small { display:block; font-size:12px; margin-top:6px; }
+.cf-member-celebration h2 { font-family:var(--font-headline,Impact,sans-serif); font-size:clamp(30px,9vw,42px); line-height:1.05; margin-bottom:8px; }
+.cf-member-celebration p { line-height:1.5; }
+.cf-member-celebration .cf-reward-subtitle { color:#f2bf4c; margin-bottom:18px; }
+.cf-member-celebration .cf-reward-note { color:#bdc5bc; font-size:13px; margin-top:16px; }
+.cf-member-celebration ul { text-align:left; padding:16px 16px 16px 32px; margin-top:16px; border:1px solid #ffffff20; border-radius:16px; background:#1c2b24; list-style:disc; }
+.cf-member-celebration li+li { margin-top:8px; }
+.cf-member-celebration footer { flex-shrink:0; padding:16px 20px max(16px,env(safe-area-inset-bottom,0px)); background:#0d1714; border-top:1px solid #ffffff20; }
+.cf-reward-stats { display:flex; justify-content:center; gap:32px; margin-top:16px; }
+.cf-reward-stats span { color:#bdc5bc; font-size:13px; }
+.cf-reward-stats b { display:block; font-size:30px; color:#f2bf4c; }
+.cf-reward-sparks { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.cf-reward-sparks i { position:absolute; left:calc(6% + var(--i) * 6.5%); top:18%; width:4px; height:9px; background:#f2bf4c; border-radius:2px; opacity:0; animation:cf-reward-spark 1.4s ease-out calc(var(--i) * 35ms) both; }
+@keyframes cf-reward-reveal { from { opacity:0; transform:translateY(12px) scale(.97); } to { opacity:1; transform:none; } }
+@keyframes cf-reward-spark { 0% { opacity:0; transform:translateY(-12px) rotate(0); } 20% { opacity:.8; } 100% { opacity:0; transform:translateY(260px) rotate(150deg); } }
+.cf-member-celebration[data-simple=true] * { animation:none!important; }
+@media (prefers-reduced-motion:reduce) { .cf-member-celebration * { animation:none!important; } .cf-reward-sparks { display:none; } }
+.cf-reward-hero[data-kind=cash] .cf-reward-club { top:44%; left:50%; bottom:auto; right:auto; transform:translate(-50%,-50%); padding:0; background:none; }
+.cf-reward-hero[data-kind=creator]>img { object-position:50% 20%; }
+.cf-member-celebration .cf-paywall-close { font-size:28px; }

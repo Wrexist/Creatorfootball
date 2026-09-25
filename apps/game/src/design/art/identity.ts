@@ -11,6 +11,8 @@ export interface VisualIdentity {
 }
 export type IllustratedGameState = GameState & { readonly visualIdentity?: VisualIdentity };
 const hash = (id: string): number => [...id].reduce((n,c) => ((n*31+c.charCodeAt(0)) >>> 0), 0);
+export const creatorPortraitAsset = (state: IllustratedGameState | null, id: string): string =>
+  state?.visualIdentity?.creators[id] ?? `character.staff-${String(hash(id)%8+1).padStart(2,'0')}`;
 
 /** Additive save metadata, independent of engine rules and schema migrations. */
 export function withVisualIdentity(state: GameState): IllustratedGameState {

@@ -8,7 +8,7 @@ import type { CustomerInfo } from '@revenuecat/purchases-capacitor';
 interface MemberState {
   member: Membership | null; checkedAt: number; quotes: readonly MemberQuote[];
   ready: boolean; busy: boolean; error: string | null; message: string | null; revision: number;
-  refresh: () => Promise<void>; buy: (id: MemberPlanId) => Promise<void>; restore: () => Promise<void>; tick: () => void;
+  refresh: () => Promise<void>; buy: (id: MemberPlanId) => Promise<Membership | undefined>; restore: () => Promise<void>; tick: () => void;
 }
 let connection: Promise<void> | null = null;
 let refreshing: Promise<void> | null = null;
@@ -60,6 +60,10 @@ export const useMembershipStore = create<MemberState>((set, get) => {
         const result = quote.option ? await Purchases.purchaseSubscriptionOption({ subscriptionOption: quote.option }) : await Purchases.purchasePackage({ aPackage: quote.package });
         deliver(result.customerInfo);
         set({ message: membershipActive(get().member) ? 'Your membership is ready. Explore your benefits below.' : 'Waiting for store approval. Benefits unlock after verification.' });
+        // Only this completed checkout can trigger a welcome reveal. Refresh,
+        // restore, cancellations and pending transactions never emit one.
+        const purchased = membershipFromInfo(result.customerInfo);
+        if (membershipActive(purchased) && purchased?.checkedAt === get().member?.checkedAt) return purchased ?? undefined;
       } catch (error) {
         const e = error as { userCancelled?: boolean; code?: string | number };
         if (e.userCancelled || String(e.code) === '1') set({ message: 'Purchase cancelled. Your free career is unchanged.' });
