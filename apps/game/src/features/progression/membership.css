@@ -50,7 +50,7 @@
 .cf-member-star-art>img { object-position:50% 30%; }
 .cf-member-star-rating { position:absolute; top:10px; left:10px; font-family:var(--font-headline); font-size:38px; font-weight:700; line-height:1; color:#ffdb7b; text-shadow:0 2px 7px #000; }
 .cf-member-star-rating small { font-family:var(--font-sans); font-size:10px!important; color:#ffdb7b!important; }
-.cf-member-star-crest { position:absolute; bottom:22px; right:18px; filter:drop-shadow(0 2px 4px #000); }
+.cf-member-star-crest { position:absolute; top:56%; left:62%; transform:translate(-50%,-50%); filter:drop-shadow(0 2px 4px #000); }
 .cf-member-star-copy>small { color:#f2bf4c!important; font-size:10px!important; letter-spacing:1px; }
 .cf-member-rewards .cf-member-star-copy>strong { font-family:var(--font-headline); font-size:40px; line-height:.92; margin:8px 0; }
 .cf-member-star-copy>span { font-size:12px; color:#d5ddd5; line-height:1.4; }
