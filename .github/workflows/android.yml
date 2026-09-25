@@ -26,14 +26,14 @@ jobs:
       - name: Build APK, unsigned release bundle and run Android lint
         working-directory: apps/game/android
         run: bash gradlew assembleDebug bundleRelease lintDebug lintRelease --no-daemon
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: creator-football-android-debug
           path: |
             apps/game/android/app/build/outputs/apk/debug/app-debug.apk
             apps/game/android/app/build/reports/lint-results-debug.html
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: creator-football-android-unsigned-qualification
           path: |

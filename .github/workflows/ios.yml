@@ -26,7 +26,7 @@ jobs:
       - run: pnpm --filter @cf/game cap:sync
       - name: Build unsigned simulator app
         run: xcodebuild -project apps/game/ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath artifacts/ios CODE_SIGNING_ALLOWED=NO build
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ios-simulator-app
           path: artifacts/ios/Build/Products/Debug-iphonesimulator/App.app
