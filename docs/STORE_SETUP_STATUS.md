@@ -219,3 +219,10 @@ This section supersedes the earlier pending-build and pending-product notes.
 - RevenueCat imports all three Android base plans, attaches them to `cf_creator_club` and maps them to the annual/monthly/weekly packages in `creator_club`. Apple mappings remain intact.
 - Apple draft 1.0.16 currently references build 11. The sticky checkout changes require a new native build; do not claim build 11 contains them.
 - Public release remains held for the owner's children's-compliance review. Apple review screenshots/metadata completion, latest native binary deployment and device transaction lifecycle verification remain release tasks.
+
+
+### Follow-up verification and Android delivery
+
+- Lint, workspace typecheck, production build and all 259 app unit tests passed. Full local browser suite passed: career, expansion/paywall fixed-footer checks at 360/393/430px, media audit, 130 formation/viewport/text combinations and eight state fixtures. Updated screenshot: `artifacts/expansion/screenshots/creator-club.png` (web preview, native purchases intentionally unavailable).
+- Android 1.0.16 (5), source `51d201d`, signed bundle SHA-256 `3D2847EFF9DF1AFE86D2CC402F040A56DFFBB5C52492C0B0BC0EFCB5458FE6C2`, passed `lintRelease` and strict signature verification. Uploaded and published only to the existing internal test track; Play confirms available to internal testers on September 25. No supported-device losses reported. The sole Play warning is the absent deobfuscation file; this release does not enable R8 minification.
+- New iOS pipeline: https://github.com/Wrexist/Creatorfootball/actions/runs/36115658936. Source `51d201d`; native upload status must be checked before telling the owner to install the update.
