@@ -32,3 +32,5 @@ Primary references:
 - [Google testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465)
 
 Next release action: resolve the held compliance review and native billing evidence, finish console validation, then submit for store review. Store approval and public availability must be verified separately.
+
+Deployment verification: Pages run 36122345350 rejected the release branch under existing github-pages environment protection. Terms layout is committed, not deployed. Use the repository's approved main-branch review/merge path; do not weaken environment protection. Google Data safety preview explicitly disables submission until Target audience and content is completed.
