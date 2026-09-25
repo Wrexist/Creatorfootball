@@ -54,7 +54,6 @@ try {
   await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Monthly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
   await shot('creator-club-checkout');
-  await page.getByText('More plans · Weekly',{exact:true}).click();
   await page.locator('.cf-paywall-plans').getByRole('button',{name:'Weekly Unavailable',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Weekly Price unavailable',exact:true}).getAttribute('aria-pressed'),'true');
   await page.getByRole('button',{name:'Close membership',exact:true}).click();
