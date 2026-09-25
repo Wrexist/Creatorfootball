@@ -228,3 +228,7 @@ This section supersedes the earlier pending-build and pending-product notes.
 - New iOS pipeline: https://github.com/Wrexist/Creatorfootball/actions/runs/36115658936. Source `51d201d`; native upload status must be checked before telling the owner to install the update.
 
 - iOS run 36115658936 completed successfully (verification and native archive/upload). App Store Connect now lists 1.0.16 (12) as Processing. Build 12 includes the sticky checkout, startup cooldown and centered funds crest; processing/tester availability remains Apple's pending step. Public submission remains held.
+
+- Apple processing completed for 1.0.16 (12), build UUID `3370900d-0a1d-494a-9d92-e4d72dc8b0e8`. Existing Alpha testers and Tester internal groups are assigned (one tester each). What to Test notes saved. The update is available through the existing internal TestFlight groups; no public/external review submitted.
+
+- App Store version 1.0.16 draft now selects build 12. Updated reviewer instructions saved, including subscriptions, trial exclusions, claim rules and local backups. Manual release remains selected. No Add for Review/public submission performed.
