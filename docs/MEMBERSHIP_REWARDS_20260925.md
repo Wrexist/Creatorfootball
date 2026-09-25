@@ -24,3 +24,7 @@ Initial upload run 36125854210 passed all verification but failed archive at the
 Replacement workflow: https://github.com/Wrexist/Creatorfootball/actions/runs/36127001078 at commit 7629279. Pending hosted validation of the certificate-cap repair.
 
 Apple Heritage screenshot preparation: artifacts/store-launch/review/heritage.png is a 1179x2556 RGB resize of the actual paid-pack QA sash-kit screenshot. Two UI upload attempts returned Apple's "There was an error uploading your screenshot. Try again later." No screenshot is confirmed attached, no product review submission added, and modified notes were not confirmed persisted. Do not claim Heritage complete.
+
+## Final native upload evidence
+
+Run 36127001078 succeeded. Source 7629279 includes reward UI a93da32. Xcode archived 1.0.16 (13), exported via cloud signing, passed the new distribution signature/profile gate, and uploaded to Apple successfully at 11:16 UTC. App Store Connect's Build Uploads UI independently shows 1.0.16 (13), Processing, created 25 September 2026 13:15 CEST. Thus the certificate-cap repair is validated for this app; no certificates were revoked. Apple processing/tester assignment and selecting 13 in the review draft remain separate steps. Build 12 is still the staged review binary; public release has not occurred.

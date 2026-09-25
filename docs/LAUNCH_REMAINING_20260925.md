@@ -9,7 +9,7 @@ The owner approved the game/build and subsequently reported testing a TestFlight
 - RevenueCat annual/monthly/weekly offerings mapped on both stores. Native screenshots verify Apple price loading, not transactions.
 - Apple subscription review screenshots uploaded for all three periods, with notes identifying the owner's build-11 native capture and build-12 layout changes. App version, subscription group, all three plans and Club Nights are staged in a six-item review draft; final submission remains outstanding.
 - Featuring nomination submitted: `1df9e9d4-e227-4c86-b982-d09d7048621f`, earliest-approved-release intent, provisional 25 September–4 October window.
-- New reward celebrations passed local and hosted app checks. Replacement TestFlight upload is pending validation of a signing-workflow repair after the ephemeral runner hit Apple's development-certificate cap. No certificate revoked. See `MEMBERSHIP_REWARDS_20260925.md`.
+- New reward celebrations passed local and hosted app checks. iOS 1.0.16 (13) uploaded successfully in run 36127001078; Apple UI shows Processing at 13:15 CEST. The certificate-cap repair passed archive, cloud export, distribution signature/profile verification and upload. No certificate revoked. Build 12 remains in the review draft until 13 finishes processing and is selected. See `MEMBERSHIP_REWARDS_20260925.md`.
 - Existing superstar terms moved from below the page footer into the membership section in both terms pages; wording unchanged.
 
 ## Outstanding gates
