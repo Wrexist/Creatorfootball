@@ -102,8 +102,8 @@ importers:
         specifier: ^8.5.2
         version: 8.5.2
       '@capacitor/ios':
-        specifier: ^8.5.0
-        version: 8.5.0(@capacitor/core@8.5.0)
+        specifier: ^8.5.2
+        version: 8.5.2(@capacitor/core@8.5.0)
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.3.3(vite@7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
@@ -276,8 +276,8 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/ios@8.5.0':
-    resolution: {integrity: sha512-7k1TfohJu5BzRXc1F3g04Q8QQ0fyQgms6h1AvhnHb04VaNr9EdHOx03hL8O+OigEKMQnyJd1ZOjTPPNHCqL5Yw==}
+  '@capacitor/ios@8.5.2':
+    resolution: {integrity: sha512-eOT2S67AfTFG7KN0T3oxwAajrJz4rSye+ODfvChiwrk0F/+kWufFM1qU6cDjGJUOfwdAoeuEpZyWHSwZlu4GFg==}
     peerDependencies:
       '@capacitor/core': ^8.5.0
 
@@ -2180,7 +2180,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.5.0
 
-  '@capacitor/ios@8.5.0(@capacitor/core@8.5.0)':
+  '@capacitor/ios@8.5.2(@capacitor/core@8.5.0)':
     dependencies:
       '@capacitor/core': 8.5.0
 
