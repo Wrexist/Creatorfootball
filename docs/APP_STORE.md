@@ -126,6 +126,53 @@ Rules Apple enforces: screenshots must show the actual product (guideline
 be real. The smoke test already guarantees nothing overflows at 375px, so full-
 bleed captures are safe.
 
+### 5a. Creative assets: product page header and search results (iOS 27)
+
+App Store Connect → the version → **Header and Search Results**. Both files are
+in `apps/game/fastlane/creative_assets/en-US/`. They are opaque 8-bit RGB PNGs,
+because Apple rejects images with an alpha channel.
+
+| Placement | File | Size | What it shows |
+|---|---|---|---|
+| Header | `header.png` | 3840 × 1646 (21:9) | The home end at night under a ring of floodlights. Fans hold a *YOUR CLUB · YOUR STORY* tifo of the CF crest, the crest is projected into the centre circle, and both sides line up before kick-off. |
+| Search results | `search-results.png` | 3840 × 2560 (3:2) | *YOUR CLUB. YOUR CALL.* beside two real in-game screens: a live decision (*Under pressure*: Safe / Gamble / Calculated) and the live match view. |
+
+How they meet Apple's guidance:
+
+- **Safe areas.** The key art sits inside Apple's centred art-safe rectangles:
+  1646 × 661 on the header (the tifo and the crowd around it) and 2168 × 1030 on
+  search results (the headline, line and front decision card). Everything
+  outside those boxes is scene extension that devices may crop.
+- **Firsthand experience.** The search results phones show screenshots of the
+  shipping build, not mock-ups. Text is a short phrase, with no prices, awards,
+  URLs or other platforms. It is all 4+ content, and the crowd, kits and crest
+  are original fiction.
+- **Header text.** The header has no overlay text. The only words are on the
+  tifo, inside the scene.
+- **Localisation.** The text is English. For another locale, change the strings
+  in `tools/brand/appstore/search.html` and the tifo words in `stadium.js`,
+  then re-render.
+
+Regenerate:
+
+```sh
+pnpm assets:appstore                                  # both PNGs at upload size
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers \
+  node tools/brand/appstore/render.mjs /tmp/proof --scale 0.5   # quick half-size proof
+```
+
+The scene comes from `tools/brand/appstore/stadium.js`, a seeded perspective
+renderer. It draws a modelled bowl, tens of thousands of seat-by-seat crowd figures, the
+roof floodlight ring and bloom. The tifo and the pitch projection are mapped
+per pixel through a homography, so the crest stays sharp at 4K. The phone
+screens are in `tools/brand/appstore/screens/`, and
+`capture-screens.mjs` re-captures them from a `vite preview` build. Each career
+is seeded, so a new capture can land on a different decision. Check the
+frames before you re-render.
+
+Before submitting, check both assets in App Store Connect's **Preview** on
+iPhone and iPad, in both orientations and in Dark Mode.
+
 ---
 
 ## 6. Review notes (paste into App Review Information)

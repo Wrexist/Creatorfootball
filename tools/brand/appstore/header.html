@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Creator Football — App Store product page header</title>
+<style>
+  @font-face { font-family: Display; src: url(../../../apps/game/public/fonts/BarlowCondensed-Bold.ttf); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #050607; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script src="stadium.js"></script>
+<script>
+  // 3840 × 1646 (21:9). Apple's art-safe area is the centred 1646 × 661 box, so
+  // the tifo and the centre circle — the whole idea — sit inside it; the bowl,
+  // the roof ring and the crowd extend the scene out to the edges.
+  const k = Number(new URLSearchParams(location.search).get('scale') ?? 1);
+  const c = document.getElementById('c');
+  c.width = Math.round(3840 * k); c.height = Math.round(1646 * k);
+  document.fonts.load('700 168px Display').then(() => {
+    renderStadium(c, {
+      cam: [0, 14, -58], target: [0, 9, 40], hfov: 78,
+      tifo: { tier: 'lower', half: 36 },
+      projection: true,
+      lineup: { z: -11.5, gap: 0.95, order: ['ref', 'ref', 'keeperA', 'away', 'away', 'away', 'away', 'away', 'away', 'ref', 'home', 'home', 'home', 'home', 'home', 'home', 'keeperH'] },
+      shadeBottom: 0.3,
+    });
+    document.body.dataset.ready = '1';
+  });
+</script>
+</body>
+</html>
