@@ -26,8 +26,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(eslint@9.39.5(jiti@2.7.0))
       globals:
-        specifier: ^15.15.0
-        version: 15.15.0
+        specifier: ^17.13.0
+        version: 17.13.0
       gltf-validator:
         specifier: 2.0.0-dev.3.10
         version: 2.0.0-dev.3.10
@@ -106,7 +106,7 @@ importers:
         version: 8.5.2
       '@capacitor/ios':
         specifier: ^8.5.2
-        version: 8.5.3(@capacitor/core@8.5.0)
+        version: 8.5.2(@capacitor/core@8.5.0)
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.3.3(vite@7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
@@ -279,8 +279,8 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/ios@8.5.3':
-    resolution: {integrity: sha512-HnnV92Jl8+3x0JUloXUMjFcUsQI8wHFVsKwkLn72DfRZXYGZW11tQbmNOWOnRTljaU18FdI1b9ipT09SzzPDNw==}
+  '@capacitor/ios@8.5.2':
+    resolution: {integrity: sha512-eOT2S67AfTFG7KN0T3oxwAajrJz4rSye+ODfvChiwrk0F/+kWufFM1qU6cDjGJUOfwdAoeuEpZyWHSwZlu4GFg==}
     peerDependencies:
       '@capacitor/core': ^8.5.0
 
@@ -1308,8 +1308,8 @@ packages:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
     engines: {node: '>=18'}
 
-  globals@15.15.0:
-    resolution: {integrity: sha512-7ACyT3wmyp3I61S4fG682L0VA2RGD9otkqGJIwNUMF1SWUombIIk+af1unuDYgMm082aHYwD+mzJvv9Iu8dsgg==}
+  globals@17.13.0:
+    resolution: {integrity: sha512-RwMTC61u7hrG3ZJMkZQOK4JLJrKS8QtoTii63EmWvFXHqycY9FObBJQCbsLxSO8kjKhWE5kV1GC+Vb1g3RI0Zg==}
     engines: {node: '>=18'}
 
   gltf-validator@2.0.0-dev.3.10:
@@ -2183,7 +2183,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.5.0
 
-  '@capacitor/ios@8.5.3(@capacitor/core@8.5.0)':
+  '@capacitor/ios@8.5.2(@capacitor/core@8.5.0)':
     dependencies:
       '@capacitor/core': 8.5.0
 
@@ -3129,7 +3129,7 @@ snapshots:
 
   globals@14.0.0: {}
 
-  globals@15.15.0: {}
+  globals@17.13.0: {}
 
   gltf-validator@2.0.0-dev.3.10: {}
 
