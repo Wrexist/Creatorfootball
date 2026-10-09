@@ -71,8 +71,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/engine
       '@revenuecat/purchases-capacitor':
-        specifier: 13.6.0
-        version: 13.6.0(@capacitor/core@8.5.0)
+        specifier: 13.7.0
+        version: 13.7.0(@capacitor/core@8.5.0)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -106,7 +106,7 @@ importers:
         version: 8.5.2
       '@capacitor/ios':
         specifier: ^8.5.2
-        version: 8.5.3(@capacitor/core@8.5.0)
+        version: 8.5.2(@capacitor/core@8.5.0)
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.3.3(vite@7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
@@ -279,8 +279,8 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/ios@8.5.3':
-    resolution: {integrity: sha512-HnnV92Jl8+3x0JUloXUMjFcUsQI8wHFVsKwkLn72DfRZXYGZW11tQbmNOWOnRTljaU18FdI1b9ipT09SzzPDNw==}
+  '@capacitor/ios@8.5.2':
+    resolution: {integrity: sha512-eOT2S67AfTFG7KN0T3oxwAajrJz4rSye+ODfvChiwrk0F/+kWufFM1qU6cDjGJUOfwdAoeuEpZyWHSwZlu4GFg==}
     peerDependencies:
       '@capacitor/core': ^8.5.0
 
@@ -578,13 +578,13 @@ packages:
     os: [linux]
     libc: [glibc]
 
-  '@revenuecat/purchases-capacitor@13.6.0':
-    resolution: {integrity: sha512-qaihXzfwKjc6fFSDwyhSsznIobbnWCdUfZVv4N0gO1LN/gTSSOEy2eiA/Mur1Aows5ZR+2ZCEVuIjS1UmjNCfw==}
+  '@revenuecat/purchases-capacitor@13.7.0':
+    resolution: {integrity: sha512-GFBgeHuieJUBUgaoQaFKR9Rx1iF86WxLxiKSn0ybl11lDgIjZNcsGYJ2F+56cn9XRLw+TDh6+0PX3DSa8Aaikw==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@revenuecat/purchases-typescript-internal-esm@19.0.0':
-    resolution: {integrity: sha512-S/WAxkyiYMAAzNVFPHpD48rl967EJg+2pE9bse0phgX3UNs6200yhfrevqXFZ8edOBHSeZ7YdpXD0sWLh+bfWQ==}
+  '@revenuecat/purchases-typescript-internal-esm@19.5.0':
+    resolution: {integrity: sha512-25QmDlnwmOBHNFP3VgGLkuUA9CpMwHVfGv74CUj7TeeSbzARaGzwoqMET8MYC3YgixuutvPneUj2VN5GBHenIg==}
 
   '@rolldown/pluginutils@1.0.0-rc.3':
     resolution: {integrity: sha512-eybk3TjzzzV97Dlj5c+XrBFW57eTNhzod66y9HrBlzJ6NsCrWCp/2kaPS3K9wJmurBC0Tdw4yPjXKZqlznim3Q==}
@@ -2183,7 +2183,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.5.0
 
-  '@capacitor/ios@8.5.3(@capacitor/core@8.5.0)':
+  '@capacitor/ios@8.5.2(@capacitor/core@8.5.0)':
     dependencies:
       '@capacitor/core': 8.5.0
 
@@ -2445,12 +2445,12 @@ snapshots:
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true
 
-  '@revenuecat/purchases-capacitor@13.6.0(@capacitor/core@8.5.0)':
+  '@revenuecat/purchases-capacitor@13.7.0(@capacitor/core@8.5.0)':
     dependencies:
       '@capacitor/core': 8.5.0
-      '@revenuecat/purchases-typescript-internal-esm': 19.0.0
+      '@revenuecat/purchases-typescript-internal-esm': 19.5.0
 
-  '@revenuecat/purchases-typescript-internal-esm@19.0.0': {}
+  '@revenuecat/purchases-typescript-internal-esm@19.5.0': {}
 
   '@rolldown/pluginutils@1.0.0-rc.3': {}
 
