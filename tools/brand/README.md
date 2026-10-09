@@ -4,6 +4,8 @@ The app identity is the original metallic **CF crest**, restored on September 24
 
 Run `python tools/brand/package-app-icon.py` (Pillow required) to package iOS, Android adaptive/legacy/themed resources and the 512px Play listing image. Android uses a safe inset for launcher masks and the CF silhouette for themed icons. The web/PWA icons and favicons were restored from the same original commit; `icon.html` now references the preserved CF artwork, so the legacy rasterizer cannot reintroduce the ball.
 
+The App Store creative assets (the iOS 27 product page header and the search results image) are built in `appstore/`. Render them with `pnpm assets:appstore`; see `docs/APP_STORE.md` §5a.
+
 Two other tools live here.
 
 **1. The vector masters and their rasteriser.** `og.html` draws the share card and `icon.html`

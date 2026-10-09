@@ -21,6 +21,7 @@
     "lint:fix": "eslint . --fix",
     "test:smoke": "pnpm --filter @cf/game test:smoke",
     "assets:ingest": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/ingest.mjs",
+    "assets:appstore": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/brand/appstore/render.mjs apps/game/fastlane/creative_assets/en-US",
     "assets:models": "node apps/game/scripts/build-club-models.mjs"
   },
   "devDependencies": {

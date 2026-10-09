@@ -142,4 +142,14 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-restricted-syntax': 'off' },
   },
+
+  // --- App Store key art: a classic browser script, and its Playwright driver ---
+  {
+    files: ['tools/brand/appstore/*.js'],
+    languageOptions: { globals: { ...globals.browser }, sourceType: 'script' },
+  },
+  {
+    files: ['tools/brand/appstore/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
 );

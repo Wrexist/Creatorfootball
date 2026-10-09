@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Creator Football — App Store search results asset</title>
+<style>
+  @font-face { font-family: Display; src: url(../../../apps/game/public/fonts/BarlowCondensed-Bold.ttf); }
+  @font-face { font-family: Manrope; src: url(../../../apps/game/public/fonts/Manrope.ttf); font-weight: 200 800; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #050607; overflow: hidden; }
+  #bg { position: absolute; left: 0; top: 0; filter: blur(var(--blur)) brightness(0.95) saturate(1.05); transform: scale(1.01); }
+  /* Everything below is laid out on the 3840 × 2560 master grid and scaled. */
+  #stage { position: absolute; left: 0; top: 0; width: 3840px; height: 2560px; transform-origin: 0 0; }
+  .shade {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(90deg, rgba(5,6,7,0.92) 0%, rgba(5,6,7,0.78) 24%, rgba(5,6,7,0.3) 46%, rgba(5,6,7,0.04) 66%, rgba(5,6,7,0.2) 100%),
+      linear-gradient(0deg, rgba(5,6,7,0.7) 0%, rgba(5,6,7,0) 30%);
+  }
+  .copy { position: absolute; left: 900px; top: 760px; width: 1100px; color: #f4f6f8; }
+  .eyebrow {
+    font-family: Manrope, Arial, sans-serif; font-weight: 800; font-size: 44px; letter-spacing: 0.3em;
+    color: #c8ff2e; display: flex; align-items: center; gap: 26px;
+  }
+  .eyebrow svg { width: 74px; height: 74px; }
+  h1 {
+    margin-top: 44px;
+    font-family: Display, 'Arial Narrow', Arial, sans-serif; font-weight: 700;
+    font-size: 252px; line-height: 0.92; letter-spacing: 0; text-transform: uppercase; white-space: nowrap;
+  }
+  h1 span { color: #c8ff2e; text-shadow: 0 0 80px rgba(200,255,46,0.28); }
+  .rule { margin-top: 56px; width: 220px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #c8ff2e, rgba(200,255,46,0)); }
+  .lede { margin-top: 44px; font-family: Manrope, Arial, sans-serif; font-weight: 500; font-size: 64px; line-height: 1.32; color: #c3cad2; max-width: 20ch; }
+
+  .phone {
+    position: absolute; border-radius: 118px; padding: 22px;
+    background: linear-gradient(145deg, #3a4049 0%, #15181c 30%, #0b0d10 60%, #2a2f36 100%);
+    box-shadow:
+      0 0 0 3px rgba(255,255,255,0.06) inset,
+      0 90px 160px -40px rgba(0,0,0,0.85),
+      0 40px 80px -30px rgba(0,0,0,0.7);
+  }
+  .phone::before {
+    /* Inner bezel. */
+    content: ''; position: absolute; inset: 10px; border-radius: 108px; background: #020304;
+  }
+  .phone img { position: relative; display: block; width: 100%; border-radius: 96px; }
+  .phone::after {
+    /* A soft glass sheen across the screen. */
+    content: ''; position: absolute; inset: 22px; border-radius: 96px; pointer-events: none;
+    background: linear-gradient(115deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 26%, rgba(255,255,255,0) 40%);
+  }
+  .glow {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(200,255,46,0.26), rgba(200,255,46,0.07) 55%, rgba(200,255,46,0));
+    filter: blur(20px);
+  }
+  #back { left: 2690px; top: 470px; width: 690px; transform: perspective(5000px) rotateY(-14deg) rotateZ(1.5deg); opacity: 0.98; }
+  #front { left: 2020px; top: 560px; width: 760px; transform: perspective(5000px) rotateY(-9deg) rotateZ(-1.5deg); }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="stage">
+  <div class="shade"></div>
+  <div class="glow" style="left:1900px;top:600px;width:1700px;height:1500px"></div>
+  <div class="phone" id="back"><img src="screens/live-match.jpg" alt=""></div>
+  <div class="phone" id="front"><img src="screens/your-call.jpg" alt=""></div>
+  <div class="copy">
+    <div class="eyebrow">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path id="mark" fill="#c8ff2e"/></svg>
+      CLUB MANAGER
+    </div>
+    <h1>Your club.<br><span>Your call.</span></h1>
+    <div class="rule"></div>
+    <p class="lede">Build the squad. Make the decisions that win it, live.</p>
+  </div>
+</div>
+<script src="stadium.js"></script>
+<script>
+  // 3840 × 2560 (3:2). Apple's art-safe area is the centred 2168 × 1030 box
+  // (x 836–3004, y 765–1795): the headline and the front phone's decision
+  // card sit inside it; the second phone and the stadium run out past it.
+  const k = Number(new URLSearchParams(location.search).get('scale') ?? 1);
+  const c = document.getElementById('bg');
+  c.width = Math.round(3840 * k); c.height = Math.round(2560 * k);
+  document.documentElement.style.setProperty('--blur', `${5 * k}px`);
+  document.getElementById('stage').style.transform = `scale(${k})`;
+  document.getElementById('mark').setAttribute('d', window.CF_MARK);
+  Promise.all([
+    document.fonts.load('700 168px Display'),
+    document.fonts.load('500 64px Manrope'),
+    ...[...document.images].map((i) => i.decode()),
+  ]).then(() => {
+    renderStadium(c, {
+      cam: [8, 20, -60], target: [-6, 5, 26], hfov: 76, shiftY: -0.05,
+      tifo: { tier: 'lower', half: 36, words: false },
+    });
+    document.body.dataset.ready = '1';
+  });
+</script>
+</body>
+</html>
