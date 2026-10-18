@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import type { CustomerInfo, PurchasesPackage } from '@revenuecat/purchases-capacitor';
+import type { CustomerInfo, PurchasesOfferings, PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import { isProductId, type ProductId } from './catalog';
 import type { PurchaseAdapter, PurchaseSnapshot } from './controller';
 import { publicKeyKind } from './config';
@@ -26,6 +26,22 @@ export function verifiedSnapshot(info: CustomerInfo): PurchaseSnapshot {
   return { owned, checkedAt };
 }
 
+/**
+ * Find each one-time pack by product identifier, wherever the dashboard put it.
+ * The current offering is searched first, then every named offering, so making
+ * `creator_club` (or any other offering) current never hides the packs.
+ */
+export function packPackages(offerings: Pick<PurchasesOfferings, 'current' | 'all'>): Map<ProductId, PurchasesPackage> {
+  const found = new Map<ProductId, PurchasesPackage>();
+  for (const offering of [offerings.current, ...Object.values(offerings.all ?? {})]) {
+    for (const item of offering?.availablePackages ?? []) {
+      const id = item.product.identifier;
+      if (isProductId(id) && item.product.subscriptionPeriod === null && !found.has(id)) found.set(id, item);
+    }
+  }
+  return found;
+}
+
 export async function revenueCatAdapter(): Promise<PurchaseAdapter> {
   const availability = purchaseAvailability();
   if (!availability.enabled) throw new Error(availability.reason);
@@ -38,11 +54,7 @@ export async function revenueCatAdapter(): Promise<PurchaseAdapter> {
   return {
     snapshot: async () => verifiedSnapshot((await Purchases.getCustomerInfo()).customerInfo),
     products: async () => {
-      const offerings = await Purchases.getOfferings();
-      packages = new Map();
-      for (const item of offerings.current?.availablePackages ?? []) {
-        if (isProductId(item.product.identifier) && item.product.subscriptionPeriod === null) packages.set(item.product.identifier, item);
-      }
+      packages = packPackages(await Purchases.getOfferings());
       return [...packages].map(([id, item]) => ({ id, price: item.product.priceString, title: item.product.title }));
     },
     purchase: async id => {
