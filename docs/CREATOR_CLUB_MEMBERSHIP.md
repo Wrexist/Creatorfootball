@@ -21,7 +21,7 @@ RevenueCat entitlement: cf_creator_club; named offering: creator_club. Keep the 
 App reads store-localized prices and trial eligibility; no USD fallback can launch checkout. Unknown/unsupported prices or offer schedules disable checkout. Android purchases the exact displayed eligible option. Store verification is required for access; claims require a fresh server response, matching career, and writable local save. Expiry is checked on foreground and periodically. Restore/manage/terms/privacy links are present.
 
 ## Monthly publishing obligation
-First Lights (September 2026) is the only released issue in the local manifest. No October/future issue is claimed as delivered. Add and validate at least one real issue each calendar month before launch promises are fulfilled. Ship authored content via app update, append its manifest entry, validate story tokens and simulation invariants, test all packs together, inspect at phone sizes, and update release notes. Current library pipeline does not remotely download new issues.
+Released issues in the local manifest: First Lights (September 2026) and Autumn Pages (October 2026). No future issue is claimed as delivered. Add and validate at least one real issue each calendar month before launch promises are fulfilled. Ship authored content via app update, append its manifest entry, validate story tokens and simulation invariants, test all packs together, inspect at phone sizes, and update release notes. Current library pipeline does not remotely download new issues.
 
 ## Required release gates
 - Configure draft Apple/Google products, trial, subscription group/base plans, RevenueCat offering and entitlement; verify against this catalog.

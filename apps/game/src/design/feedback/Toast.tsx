@@ -120,6 +120,7 @@ function ToastViewport({
       */}
       <div
         className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 px-4 pt-[calc(var(--safe-top)+10px)]"
+        style={{ paddingLeft: 'calc(var(--safe-left) + 1rem)', paddingRight: 'calc(var(--safe-right) + 1rem)' }}
         role="region"
         aria-label="Notifications"
       >

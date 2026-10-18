@@ -5,7 +5,7 @@ const mocks=vi.hoisted(()=>({
 }));
 vi.mock('@capacitor/core',()=>({Capacitor:{isNativePlatform:()=>mocks.native,getPlatform:()=>mocks.platform}}));
 vi.mock('@revenuecat/purchases-capacitor',()=>({Purchases:mocks.sdk,ENTITLEMENT_VERIFICATION_MODE:{INFORMATIONAL:'INFORMATIONAL'}}));
-import { purchaseAvailability, revenueCatAdapter } from './revenuecat';
+import { packPackages, purchaseAvailability, revenueCatAdapter } from './revenuecat';
 const verified={requestDate:'2026-09-22T08:00:00Z',entitlements:{verification:'VERIFIED',active:{cf_club_nights:{isActive:true,verification:'VERIFIED',productIdentifier:'cf_club_nights'}}}};
 beforeEach(()=>{
   vi.clearAllMocks(); mocks.native=true; mocks.platform='android';
@@ -47,6 +47,25 @@ describe('native RevenueCat adapter contract',()=>{
     const adapter=await revenueCatAdapter(); expect(await adapter.products()).toEqual([]);
     await expect(adapter.purchase('cf_club_nights')).rejects.toThrow('not currently offered');
     expect(mocks.sdk.purchasePackage).not.toHaveBeenCalled();
+  });
+  it('finds packs in any offering when the membership offering is current',async()=>{
+    const member={identifier:'$rc_annual',product:{identifier:'cf_creator_club_yearly',subscriptionPeriod:'P1Y',priceString:'$29.99',title:'Creator Club'}};
+    const nights={identifier:'nights',product:{identifier:'cf_club_nights',subscriptionPeriod:null,priceString:'29,00 kr',title:'Club Nights'}};
+    const stories={identifier:'stories',product:{identifier:'cf_creator_stories',subscriptionPeriod:null,priceString:'19,00 kr',title:'Creator Stories'}};
+    const creatorClub={identifier:'creator_club',availablePackages:[member]};
+    mocks.sdk.getOfferings.mockResolvedValue({current:creatorClub,all:{creator_club:creatorClub,packs:{identifier:'packs',availablePackages:[nights,stories]}}});
+    const adapter=await revenueCatAdapter();
+    expect((await adapter.products()).map(p=>p.id)).toEqual(['cf_club_nights','cf_creator_stories']);
+    expect((await adapter.purchase('cf_club_nights')).outcome).toBe('PURCHASED');
+    expect(mocks.sdk.purchasePackage.mock.calls[0]![0].aPackage).toBe(nights);
+  });
+  it('prefers the current offering package and still works with no current offering',()=>{
+    const pkg=(identifier:string,price:string)=>({identifier,product:{identifier:'cf_club_nights',subscriptionPeriod:null,priceString:price,title:'Club Nights'}});
+    const current=pkg('current','29,00 kr'), other=pkg('other','35,00 kr');
+    const offerings=(c:unknown,all:Record<string,unknown>)=>({current:c,all} as unknown as Parameters<typeof packPackages>[0]);
+    expect(packPackages(offerings({availablePackages:[current]},{legacy:{availablePackages:[other]}})).get('cf_club_nights')).toBe(current);
+    expect(packPackages(offerings(null,{legacy:{availablePackages:[other]}})).get('cf_club_nights')).toBe(other);
+    expect(packPackages(offerings(null,{})).size).toBe(0);
   });
   it('does not report a successful store charge as cancelled if receipt verification fails',async()=>{
     const adapter=await revenueCatAdapter(); await adapter.products();

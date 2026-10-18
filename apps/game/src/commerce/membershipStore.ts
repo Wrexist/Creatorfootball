@@ -8,10 +8,14 @@ import type { CustomerInfo } from '@revenuecat/purchases-capacitor';
 interface MemberState {
   member: Membership | null; checkedAt: number; quotes: readonly MemberQuote[];
   ready: boolean; busy: boolean; error: string | null; message: string | null; revision: number;
-  refresh: () => Promise<void>; buy: (id: MemberPlanId) => Promise<Membership | undefined>; restore: () => Promise<void>; tick: () => void;
+  refresh: (options?: { force?: boolean }) => Promise<void>; buy: (id: MemberPlanId) => Promise<Membership | undefined>; restore: () => Promise<void>; tick: () => void;
 }
 let connection: Promise<void> | null = null;
 let refreshing: Promise<void> | null = null;
+/** Cache invalidation forces a network check, so foreground refreshes ration it. */
+export const MEMBER_INVALIDATE_INTERVAL = 300000;
+let invalidatedAt = Number.NEGATIVE_INFINITY;
+let storeChanged = false;
 export const useMembershipStore = create<MemberState>((set, get) => {
   const deliver = (info: CustomerInfo): void => {
     const member = membershipFromInfo(info), checkedAt = Date.parse(info.requestDate);
@@ -31,14 +35,23 @@ export const useMembershipStore = create<MemberState>((set, get) => {
   return {
     member: null, checkedAt: 0, quotes: [], ready: false, busy: false, error: null, message: null, revision: 0,
     tick: () => set({ revision: get().revision + 1 }),
-    refresh: async () => {
+    refresh: async ({ force = false } = {}) => {
       if (!purchaseAvailability().enabled) { set({ ready: true }); return; }
+      // A forced check must not settle for an in-flight cached refresh.
+      if (force && refreshing) await refreshing;
       refreshing ??= (async () => {
         set({ error: null });
         try {
           await connect();
           const { Purchases } = await import('@revenuecat/purchases-capacitor');
-          await Purchases.invalidateCustomerInfoCache();
+          const now = Date.now();
+          // Foregrounding used to discard the cache every time. Invalidate at
+          // most once per interval unless forced (claims, Refresh) or a
+          // purchase/restore has run since the last network check.
+          if (force || storeChanged || now - invalidatedAt >= MEMBER_INVALIDATE_INTERVAL) {
+            await Purchases.invalidateCustomerInfoCache();
+            invalidatedAt = now; storeChanged = false;
+          }
           deliver((await Purchases.getCustomerInfo()).customerInfo);
           const packages = (await Purchases.getOfferings()).all[MEMBER_OFFERING]?.availablePackages ?? [];
           const platform = Capacitor.getPlatform();
@@ -57,6 +70,7 @@ export const useMembershipStore = create<MemberState>((set, get) => {
       try {
         await connect();
         const { Purchases } = await import('@revenuecat/purchases-capacitor');
+        storeChanged = true;
         const result = quote.option ? await Purchases.purchaseSubscriptionOption({ subscriptionOption: quote.option }) : await Purchases.purchasePackage({ aPackage: quote.package });
         deliver(result.customerInfo);
         set({ message: membershipActive(get().member) ? 'Your membership is ready. Explore your benefits below.' : 'Waiting for store approval. Benefits unlock after verification.' });
@@ -76,6 +90,7 @@ export const useMembershipStore = create<MemberState>((set, get) => {
       set({ busy: true, error: null, message: null }); useCommerceStore.setState({ busy: true });
       try {
         await connect(); const { Purchases } = await import('@revenuecat/purchases-capacitor');
+        storeChanged = true;
         deliver((await Purchases.restorePurchases()).customerInfo);
         set({ message: membershipActive(get().member) ? 'Membership restored.' : 'No active membership was found for this store account.' });
       } catch { set({ error: 'Membership could not be restored. Please retry when connected.' }); }

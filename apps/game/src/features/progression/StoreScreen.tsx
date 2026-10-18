@@ -44,7 +44,7 @@ export function StoreScreen(): ReactNode {
     {game.saveError && activating && <p role="alert">Your choice could not be saved. Retry from Content packs.</p>}
     {store.owned.includes(product.id) ? <GlassButton variant="primary" block disabled={game.busy || game.saveConflict || activating} loading={activating && !game.saveError} onClick={activate}>Activate and explore</GlassButton> :
       <GlassButton variant="primary" block disabled={status !== 'available' || store.busy} loading={store.busy || status === 'loading'} onClick={() => void store.buy(product.id)}>{status === 'loading' ? 'Loading store price…' : quote && availability.enabled ? `Buy once · ${quote.price}` : 'Purchase unavailable'}</GlassButton>}
-    <p>One-time purchase · No subscription · Full career included</p>
+    <p>One-time purchase · Not a subscription · Full career included</p>
     {availability.enabled && status === 'unavailable' && <GlassButton disabled={store.busy} onClick={() => void store.refresh()}>Retry price</GlassButton>}
     <GlassButton variant="ghost" disabled={store.busy} onClick={close}>Not now</GlassButton>
   </div>;

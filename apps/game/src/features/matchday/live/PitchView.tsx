@@ -96,7 +96,17 @@ export const PitchView = memo(function PitchView({
     };
     applySize();
 
-    const observer = new ResizeObserver(applySize);
+    // A resize throws away the turf and sprite caches, and folding or rotating
+    // an iPhone Duo fires the observer on every frame of the animation. One
+    // resize per frame is all the canvas can show anyway.
+    let resizeRaf = 0;
+    const observer = new ResizeObserver(() => {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        applySize();
+      });
+    });
     observer.observe(host);
 
     let last = performance.now();
@@ -142,6 +152,7 @@ export const PitchView = memo(function PitchView({
       observer.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(resizeRaf);
       rendererRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -173,9 +184,13 @@ export const PitchView = memo(function PitchView({
         className,
       )}
     >
+      {/* Absolute, so the canvas never sizes its own host. In flow, the pixel
+          height the renderer wrote for the last layout propped the 3:2 box
+          open after a wide-to-narrow change (folding an iPhone Duo, leaving
+          iPad Split View), and the observer then kept that stale height. */}
       <canvas
         ref={canvasRef}
-        className="block h-full w-full"
+        className="absolute inset-0 block h-full w-full"
         role="img"
         aria-label="Animated pitch showing both teams' shape and the ball"
       />

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { GlassButton, GlassPanel, IconWarning, KeyValueRow, useConfirm } from '@/design';
+import { GlassButton, GlassPanel, IconWarning, KeyValueRow, useConfirm, useToast } from '@/design';
 import { useGameStore } from '@/state/gameStore';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/app/routes';
@@ -22,6 +22,7 @@ export function SaveRecoveryScreen(): ReactNode {
   const boot = useGameStore((s) => s.boot);
   const abandon = useGameStore((s) => s.abandon);
   const confirm = useConfirm();
+  const toast = useToast();
   const [retrying, setRetrying] = useState(false);
 
   const retry = async (): Promise<void> => {
@@ -39,7 +40,12 @@ export function SaveRecoveryScreen(): ReactNode {
       cancelLabel: 'Keep it',
       destructive: true,
     });
-    if (ok) await abandon();
+    if (!ok) return;
+    try {
+      await abandon();
+    } catch (error) {
+      toast.error('The damaged save was not deleted', String(error));
+    }
   };
 
   return (

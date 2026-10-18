@@ -72,48 +72,54 @@ export const PitchStage = memo(function PitchStage({
       )}
       aria-label="Live pitch"
     >
-      <div className={cn('relative w-full', fill ? 'min-h-0 flex-1' : 'aspect-[3/2]')}>
-        <PitchView
-          homePalette={homePalette}
-          awayPalette={awayPalette}
-          playerSide={playerSide}
-          numbers={numbers}
-          keepers={keepers}
-          roles={roles}
-          orientation="horizontal"
-          camera={camera}
-          names={names}
-          ratings={ratings}
-          labelMode={labelMode}
-          drama={drama !== null}
-          impactKey={impactKey}
-          impactStrength={impactStrength}
-          className="h-full w-full rounded-none"
-        />
+      {/* Filling a wide column must not stretch the grass: the renderer maps
+          pitch fractions straight onto the canvas, so anything but 3:2 squashes
+          the players. The fill area letterboxes a 3:2 box instead, which is
+          what keeps an unfolded iPhone Duo or an iPad landscape pitch true. */}
+      <div className={cn('relative w-full', fill ? 'cf-pitch-fill min-h-0 flex-1' : 'aspect-[3/2]')}>
+        <div className={cn('relative', fill ? 'cf-pitch-fit' : 'h-full w-full')}>
+          <PitchView
+            homePalette={homePalette}
+            awayPalette={awayPalette}
+            playerSide={playerSide}
+            numbers={numbers}
+            keepers={keepers}
+            roles={roles}
+            orientation="horizontal"
+            camera={camera}
+            names={names}
+            ratings={ratings}
+            labelMode={labelMode}
+            drama={drama !== null}
+            impactKey={impactKey}
+            impactStrength={impactStrength}
+            className="h-full w-full rounded-none"
+          />
 
-        {/* H6: the rule-window wash. Sits over the grass and under the
-            drama banner, so a rule opening never obscures the words that
-            say what happened. */}
-        <RuleSweep triggerKey={ruleKey} />
+          {/* H6: the rule-window wash. Sits over the grass and under the
+              drama banner, so a rule opening never obscures the words that
+              say what happened. */}
+          <RuleSweep triggerKey={ruleKey} />
 
-        {/* --- the drama banner ---------------------------------------- */}
-        <AnimatePresence>
-          {drama !== null && (
-            <motion.p
-              key={drama}
-              initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.94 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={m.reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
-              transition={m.transition.fast}
-              className={cn(
-                'pointer-events-none absolute left-1/2 top-2 -translate-x-1/2 rounded-pill',
-                'bg-volt px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-volt-ink',
-              )}
-            >
-              {drama}
-            </motion.p>
-          )}
-        </AnimatePresence>
+          {/* --- the drama banner ---------------------------------------- */}
+          <AnimatePresence>
+            {drama !== null && (
+              <motion.p
+                key={drama}
+                initial={m.reduced ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={m.reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                transition={m.transition.fast}
+                className={cn(
+                  'pointer-events-none absolute left-1/2 top-2 -translate-x-1/2 rounded-pill',
+                  'bg-volt px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-volt-ink',
+                )}
+              >
+                {drama}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/*

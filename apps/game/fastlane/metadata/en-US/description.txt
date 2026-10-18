@@ -17,9 +17,24 @@ Handle sponsors, fan expectations and press decisions. Follow fictional social p
 YOUR CAREER STAYS WITH YOU
 Play your career offline. No game account or cloud save is required. Export and import career backups through Local saves; keep an exported copy before reinstalling or changing devices.
 
-FREE GAME, OPTIONAL COLLECTIONS
-The complete career is free. Optional Club Nights, Heritage and Creator Stories packs add campus lighting, kit and trophy finishes, and extra storytelling. These are one-time purchases, with no subscriptions, random paid rewards or gameplay stat boosts. Prices appear in your store's local currency before checkout.
+FREE TO PLAY, OPTIONAL EXTRAS
+The complete career is free. Nothing is sold as a random paid reward or loot box, and prices appear in your store's local currency before you confirm.
 
-Purchasing and restoring packs requires an internet connection. Restore purchases using the same Apple store account; purchase restoration does not restore career progress or transfer purchases to another store platform.
+One-time packs: Club Nights, Heritage and Creator Stories add campus lighting, kit and trophy finishes, and extra storytelling. They are cosmetic and story content with no gameplay stat boosts, and they are yours to keep.
+
+Creator Club: an optional auto-renewing membership with weekly, monthly and yearly plans. Every plan includes the same benefits:
+• One welcome signing per career: Kai Arden, a 90-rated striker on a normal in-game contract
+• £250,000 in-game club funds to claim each calendar month
+• A monthly collaboration with an established fictional creator
+• The member library: new commentary and club-journal stories each month
+• Exclusive stadium lighting for your campus
+Any free trial includes the library and lighting; the signing, club funds and creator collaborations unlock during a paid period. Unclaimed monthly rewards do not carry over. Claimed rewards stay in your career after membership ends. In-game funds have no cash value.
+
+Payment is charged to your Apple Account when you confirm. Membership renews automatically unless cancelled at least 24 hours before the end of the current period, and your account is charged for renewal within 24 hours before the period ends. Manage or cancel in your Apple Account settings. Any free trial, and the price after it, is shown before you confirm.
+
+Purchasing and restoring requires an internet connection. Restore packs and membership with the same Apple Account; restoring purchases does not restore career progress.
+
+Terms of Use: https://wrexist.github.io/Creatorfootball/terms.html
+Privacy Policy: https://wrexist.github.io/Creatorfootball/privacy.html
 
 Make the calls. Grow your club. Give your supporters a story to remember.

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { setHapticDriver } from '@/design/haptics';
+import { claimedByScreen } from './nativeBack';
 
 /**
  * The native shell's only integration point.
@@ -12,7 +13,9 @@ import { setHapticDriver } from '@/design/haptics';
  * The splash screen is configured with `launchAutoHide: false`, which means
  * the *app* owns the handoff: the native splash stays up until React has
  * painted its own splash and booted, then `hideNativeSplash()` fades it. This
- * kills the white-flash gap between launch image and first frame.
+ * kills the white-flash gap between launch image and first frame. Both error
+ * boundaries and a startup failsafe call it too, so a crash can never leave the
+ * launch image up for good.
  */
 
 export function isNativeShell(): boolean {
@@ -28,7 +31,11 @@ export async function installNativeBridge(): Promise<void> {
     await App.addListener('backButton', ({ canGoBack }) => {
       if (document.querySelector('[role="dialog"]')) {
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      } else if (canGoBack) window.history.back();
+        return;
+      }
+      // A screen that runs its own confirmed exit (the live match) claims the press.
+      if (claimedByScreen()) return;
+      if (canGoBack) window.history.back();
       else void App.minimizeApp();
     });
   }
@@ -61,9 +68,8 @@ export async function installNativeBridge(): Promise<void> {
   }
 }
 
-/** Fade out the native launch image once React is painting its own splash. */
-export async function hideNativeSplash(): Promise<void> {
-  if (!isNativeShell()) return;
-  const { SplashScreen } = await import('@capacitor/splash-screen');
-  await SplashScreen.hide({ fadeOutDuration: 220 }).catch(() => undefined);
-}
+/**
+ * Fade out the native launch image once React is painting its own splash.
+ * Idempotent and never rejects; see `./splash` for why it lives on its own.
+ */
+export { hideNativeSplash } from './splash';

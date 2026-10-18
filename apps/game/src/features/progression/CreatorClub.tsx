@@ -4,8 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { claimMemberBenefit, Ledger, MEMBER_CREATORS, MEMBER_MONTHLY_CASH, MEMBER_SUPERSTAR, memberRewardKey } from '@cf/engine';
 import { GlassButton, GlassPanel, ClubBadge } from '@/design';
 import { useMembershipStore } from '@/commerce/membershipStore';
-import { MEMBER_PLANS, membershipActive, yearlySaving, type MemberPlanId } from '@/commerce/membership';
-import { MEMBER_LIBRARY_ID, MEMBER_RELEASES } from '@/commerce/memberLibrary';
+import { MEMBER_PLANS, manageSubscriptionsUrl, membershipActive, yearlySaving, type MemberPlanId } from '@/commerce/membership';
+import { MEMBER_LIBRARY_ID, MEMBER_RELEASES, issueMonthLabel } from '@/commerce/memberLibrary';
 import { purchaseAvailability } from '@/commerce/revenuecat';
 import { useGameStore } from '@/state/gameStore';
 import { ROUTES } from '@/app/routes';
@@ -58,7 +58,7 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
     const saveId = game.state.saveId;
     setClaiming(true); setMessage('');
     try {
-      await store.refresh();
+      await store.refresh({ force: true });
       const verified = useMembershipStore.getState();
       const current = useGameStore.getState();
       if (verified.error || !membershipActive(verified.member) || verified.member!.trial || Math.abs(Date.now() - verified.member!.checkedAt) > 300000) {
@@ -79,6 +79,8 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
       setMessage('The reward could not be confirmed as saved. Check your career and save status before trying again.');
     } finally { setClaiming(false); }
   };
+  const libraryEnabled = !!game.state?.settings.enabledPackIds.includes(MEMBER_LIBRARY_ID);
+  const manageUrl = manageSubscriptionsUrl(Capacitor.isNativePlatform(), Capacitor.getPlatform());
   const enable = (): void => game.apply(s => ({ ...s, settings: { ...s.settings, enabledPackIds: [...new Set([...s.settings.enabledPackIds, MEMBER_LIBRARY_ID])] } }));
   const option = (id: MemberPlanId): ReactNode => {
     const p = MEMBER_PLANS.find(x => x.id === id)!;
@@ -105,8 +107,8 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
       {active && <div ref={benefitsRef} className="cf-member-checkout">
         <p>{store.member!.willRenew ? 'Renews' : 'Access ends'} {new Date(store.member!.expiresAt).toLocaleDateString()}.{store.member!.billingIssue && ' Your store has reported a billing issue. Check your payment method.'}</p>
         <h3>Your library</h3>
-        {MEMBER_RELEASES.map(issue => <p key={issue.id}><strong>{issue.title}</strong> · {issue.commentary} commentary and {issue.stories} story variations</p>)}
-        <GlassButton disabled={disabled || !!game.state?.settings.enabledPackIds.includes(MEMBER_LIBRARY_ID)} onClick={enable}>{game.state?.settings.enabledPackIds.includes(MEMBER_LIBRARY_ID) ? 'First Lights enabled' : 'Enable First Lights'}</GlassButton>
+        {MEMBER_RELEASES.map(issue => <p key={issue.id}><strong>{issue.title}</strong> · {issueMonthLabel(issue.month)} · {issue.commentary} commentary and {issue.stories} story variations</p>)}
+        <GlassButton disabled={disabled || libraryEnabled} onClick={enable}>{libraryEnabled ? 'Member library enabled' : 'Enable member library'}</GlassButton>
         <GlassButton onClick={() => navigate(`${ROUTES.club3d}?open=1`)}>Explore member lighting</GlassButton>
         <h3>Your superstar signing</h3>
         <p>{MEMBER_SUPERSTAR.name} · {MEMBER_SUPERSTAR.overall} OVR · {MEMBER_SUPERSTAR.contractWeeks}-week contract. No transfer or signing fee. £{MEMBER_SUPERSTAR.wage.toLocaleString('en-GB')} in-game wages per week; regular football, injury and contract rules apply. Once per career, during paid membership.</p>
@@ -121,8 +123,8 @@ export function CreatorClub({ initiallyOpen = false, hideBanner = false }: { ini
       {(message || store.message) && <p role="status">{message || store.message}</p>}
       {store.error && <p role="alert">{store.error}</p>}
       <div className="cf-store-links">
-        {purchaseAvailability().enabled && <><GlassButton variant="ghost" disabled={store.busy} onClick={() => void store.restore()}>Restore membership</GlassButton><GlassButton variant="ghost" disabled={store.busy} onClick={() => void store.refresh()}>Refresh membership</GlassButton></>}
-        <a href={Capacitor.getPlatform() === 'android' ? 'https://play.google.com/store/account/subscriptions' : 'https://apps.apple.com/account/subscriptions'} target="_blank" rel="noreferrer">Manage subscription</a>
+        {purchaseAvailability().enabled && <><GlassButton variant="ghost" disabled={store.busy} onClick={() => void store.restore()}>Restore membership</GlassButton><GlassButton variant="ghost" disabled={store.busy} onClick={() => void store.refresh({ force: true })}>Refresh membership</GlassButton></>}
+        {manageUrl && <a href={manageUrl} target="_blank" rel="noreferrer">Manage subscription</a>}
         <a href="https://wrexist.github.io/Creatorfootball/terms.html" target="_blank" rel="noreferrer">Terms</a><a href="https://wrexist.github.io/Creatorfootball/privacy.html" target="_blank" rel="noreferrer">Privacy</a>
       </div>
       <p className="text-sm text-ink-muted">Library and exclusive lighting require active membership. Claimed funds, signed player contracts, creator collaborations and career history remain after expiry. Unclaimed monthly bonuses do not accumulate. In-game funds have no cash value. One-time collections are sold separately.</p>

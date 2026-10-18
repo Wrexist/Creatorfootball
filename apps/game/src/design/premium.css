@@ -156,6 +156,10 @@ button,a { touch-action: manipulation; }
 .cf-program-card { overflow:hidden; border:1px solid var(--border-soft); background:var(--surface-1); }
 .cf-program-card[aria-pressed='true'] { border-color:var(--border-focus); background:var(--surface-selected); }
 @media(min-width:768px) { .cf-page-hero { min-height:230px; padding-left:24px; padding-right:24px; } .cf-page-hero-compact { min-height:140px; } }
+/* Live pitch in a wide column: letterbox a true 3:2 box (see PitchStage). Without container units it falls back to filling. */
+.cf-pitch-fill{container-type:size;display:grid;place-items:center}
+.cf-pitch-fit{width:100%;height:100%}
+@supports (width:1cqw){.cf-pitch-fit{width:min(100cqw,150cqh);height:min(100cqh,calc(100cqw * 2 / 3))}}
 .cf-live-backdrop,.cf-result-backdrop,.cf-intro-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:.25;z-index:0}
 .cf-live-match>header,.cf-live-match>footer{position:relative;z-index:1}
 .cf-result-hero{overflow:hidden;background:linear-gradient(160deg,rgba(32,46,37,.94),rgba(10,17,14,.92))!important}
