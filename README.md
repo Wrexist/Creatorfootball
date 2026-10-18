@@ -20,7 +20,7 @@ footballers to be added later as an optional, separately gated pack — never as
 
 ## Quick start
 
-Requires **Node ≥ 20** and **pnpm 10**.
+Requires **Node ≥ 22** and **pnpm 10.33** (`corepack enable`, or `npx pnpm@10.33.0`). pnpm 9 cannot read the overrides in `pnpm-workspace.yaml`.
 
 ```bash
 pnpm install          # install the workspace
@@ -47,13 +47,13 @@ pnpm --filter @cf/game build
 pnpm --filter @cf/game cap:sync   # sync iOS and validate portable Swift package paths
 ```
 
-**Current state ? 22 September 2026.** The premium redesign is implemented across the
-existing routes, with 129 original art assets and a typed, persistent identity manifest.
-The completion pass fixes the audit's gameplay, economy, recruitment and save integrations.
-**931 tests pass** (746 engine and 185 app), together with lint, typecheck, production
-build, browser career tests and simulation/economy/invariant audits. The dependency
-audit reports zero advisories. See [the current report](docs/REDESIGN_REPORT.md),
-[audit closure matrix](docs/AUDIT_CLOSURE_2026-09-22.md) and
+**Current state — 18 October 2026.** iOS is the only release target for now. Main carries
+iPhone Duo support (both displays, fold transitions), durable native saves in
+`Library/cf-saves/`, and the 18 October launch-audit fixes.
+**1,060 tests pass** (762 engine and 298 app), together with lint, typecheck, production
+build, the full browser suite (including iPhone Duo sizes) and the iOS simulator CI build.
+See [the 18 October audit and remaining work](docs/REMAINING_WORK_2026-10-18.md),
+[the redesign report](docs/REDESIGN_REPORT.md) and
 [screenshot gallery](artifacts/redesign/final/index.html).
 
 CI checks repository changes and scheduled dependency advisories. The browser runner owns

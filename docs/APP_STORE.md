@@ -192,8 +192,9 @@ The full career is free. There are no loot boxes or random paid rewards.
 
 To review gameplay:
 1. Launch and tap through club creation (any choices work).
-2. From Home, tap PLAY to reach matchday. Decisions appear as timed prompts;
-   any choice progresses the match.
+2. From Home, tap Prepare Match, then Play Match. Decisions appear as timed
+   prompts; any choice progresses the match. Leaving a live match plays out
+   the remaining minutes automatically.
 3. Saves persist locally between launches; deleting the app deletes the save.
 
 To review Creator Club:

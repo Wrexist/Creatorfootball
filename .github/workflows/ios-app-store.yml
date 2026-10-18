@@ -1,0 +1,70 @@
+name: iOS App Store submission
+
+# Prepares an App Store version for review through the App Store Connect API,
+# with the same API key as ios-testflight.yml: waits for the build to finish
+# processing, attaches it, writes the English description/promotional text
+# (What's New on updates) from apps/game/fastlane/metadata/en-US and the review
+# notes from docs/APP_STORE.md §6, and — only when `submit` is ticked — submits
+# the open review draft. Logic: tools/release/asc-release.mjs.
+#
+# The public API has no endpoints for iPhone Duo screenshots or the iOS 27
+# header / search-results creative assets. Upload those in App Store Connect
+# first: metadata is locked while a version waits for review.
+#
+# Dry run is the default and changes nothing; it prints what would happen.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'App Store version (e.g. 1.0.16)'
+        type: string
+        required: true
+      build:
+        description: 'Build number (CFBundleVersion) uploaded for that version'
+        type: string
+        required: true
+      submit:
+        description: 'Submit for App Review after preparing (outward-facing)'
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Only print what would change'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ios-app-store
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+
+      - name: Prepare (and optionally submit) the App Store version
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+          SUBMIT: ${{ inputs.submit }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          args=(--version "$VERSION" --build "$BUILD")
+          [ "$SUBMIT" = "true" ] && args+=(--submit)
+          [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
+          node tools/release/asc-release.mjs "${args[@]}"
