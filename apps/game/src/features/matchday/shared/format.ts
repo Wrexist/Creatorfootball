@@ -125,12 +125,27 @@ export const one = (value: number): string => value.toFixed(1);
 export const two = (value: number): string => value.toFixed(2);
 
 /**
- * Whether leaving now would throw away a match in motion. Before kick-off or
- * after full time, walking out is free; between those, the header X must ask
- * first. Kept pure so the gate can be tested without a running simulator.
+ * What leaving the live match (the header X, or Android back) does right now.
+ *
+ * - `LEAVE` — before kick-off, while the walk-out is still on screen. Nothing
+ *   has happened yet, so walking out is free and the fixture is still to play.
+ * - `PLAY_OUT` — from the first tick to the final whistle. Leaving used to
+ *   stop the clock and keep the fixture replayable with the same seed, so a
+ *   match going badly could be quit and replayed until it went well. Once the
+ *   ball is rolling the match is played for good: leaving (after a confirm)
+ *   plays out the remaining minutes at once, exactly like "Jump to the final
+ *   whistle", and the result counts.
+ * - `SAVE_RESULT` — after full time. The result is decided and on its way to
+ *   the save and the report; leaving must never route around either.
+ *
+ * Kept pure so the rule can be tested without a running simulator.
  */
-export function shouldConfirmMatchExit(minute: number, playback: PlaybackState): boolean {
-  return minute > 0 && playback !== 'COMPLETE' && playback !== 'IDLE';
+export type MatchExitPlan = 'LEAVE' | 'PLAY_OUT' | 'SAVE_RESULT';
+
+export function matchExitPlan(playback: PlaybackState): MatchExitPlan {
+  if (playback === 'IDLE') return 'LEAVE';
+  if (playback === 'COMPLETE') return 'SAVE_RESULT';
+  return 'PLAY_OUT';
 }
 
 /* --- presentation vocabulary ------------------------------------------ */

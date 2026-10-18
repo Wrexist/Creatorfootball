@@ -70,6 +70,20 @@ describe('ordered career persistence', () => {
     expect(saved.state.latestMatchReport.matchId).toBe(result.matchId);
     expect(useGameStore.getState().createSimulator(fixture.id)).toBeNull();
   });
+  it('keeps a full-time result the device refused, and saves it on retry', async () => {
+    // The live match's "Retry save" calls recordMatch again with the same result.
+    const fixture = nextFixture(useGameStore.getState().state!)!;
+    const result = useGameStore.getState().createSimulator(fixture.id)!.finish();
+    vi.spyOn(storage,'set').mockRejectedValue(new Error('Quota exceeded'));
+    expect(await useGameStore.getState().recordMatch(result)).toBe(false);
+    expect(useGameStore.getState().state?.latestMatchReport).toBe(result);
+    expect(useGameStore.getState().unsaved).toBe(true);
+    vi.restoreAllMocks();
+    expect(await useGameStore.getState().recordMatch(result)).toBe(true);
+    const saved = JSON.parse((await storage.get(SAVE_KEY))!);
+    expect(saved.state.latestMatchReport.matchId).toBe(result.matchId);
+    expect(useGameStore.getState().unsaved).toBe(false);
+  });
   it('does not resurrect a career after deletion with a write already queued', async () => {
     useGameStore.getState().apply(s => ({...s,settings:{...s.settings,sound:false}}));
     await useGameStore.getState().abandon();

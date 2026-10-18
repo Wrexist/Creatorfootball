@@ -104,7 +104,17 @@ export const StoreScreen = screen(progression, 'StoreScreen');
 export const SettingsScreen = screen(progression, 'SettingsScreen');
 export const ContentPacksScreen = screen(progression, 'ContentPacksScreen');
 
+/**
+ * A warm-up is only an optimisation. One that fails (a dropped connection on
+ * the web build) is logged and otherwise ignored: the route's own loader asks
+ * again when the screen is actually opened, and that is where a real failure
+ * belongs on screen.
+ */
+function warm(load: () => Promise<unknown>, area: string): void {
+  load().catch((error: unknown) => console.warn(`[preload] the ${area} screens did not load`, error));
+}
+
 /** Warms the chunk the player is most likely to need next. */
-export const preloadHome = (): void => { void home(); };
-export const preloadMatchday = (): void => { void matchday(); };
-export const preloadPrimary = (): void => { void squad(); void club(); void social(); };
+export const preloadHome = (): void => { warm(home, 'home'); };
+export const preloadMatchday = (): void => { warm(matchday, 'matchday'); };
+export const preloadPrimary = (): void => { warm(squad, 'squad'); warm(club, 'club'); warm(social, 'social'); };

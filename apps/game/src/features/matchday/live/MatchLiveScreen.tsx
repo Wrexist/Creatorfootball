@@ -4,13 +4,14 @@ import type {
   FixtureId, MatchEvent, MatchSimulator, Player, PlayerId, SpecialRuleDefinition, SpecialRuleId,
   TacticSetup,
 } from '@cf/engine';
-import { ErrorState, Skeleton, cn, sfx, useConfirm, useIsWide } from '@/design';
+import { ErrorState, GlassButton, Skeleton, cn, sfx, useConfirm, useIsWide } from '@/design';
+import { onNativeBack } from '@/platform/nativeBack';
 import { useGameStore } from '@/state/gameStore';
 import { useMatchStore, type MatchSpeed } from '@/state/matchStore';
 import { useMatchdayContext } from '../shared/context';
 import { Announcer } from '../shared/Announcer';
 import { kitColors, paletteFor, roleOfPosition, type PitchRole } from '../shared/kit';
-import { isGoalEvent, minuteLabel, shouldConfirmMatchExit, stateOfPlay } from '../shared/format';
+import { isGoalEvent, matchExitPlan, minuteLabel, stateOfPlay } from '../shared/format';
 import { MatchControlRail, MatchHeader } from './MatchChrome';
 import { PitchStage } from './PitchStage';
 import { StoryPanel } from './StoryPanel';
@@ -78,7 +79,7 @@ export function MatchLiveScreen(): ReactNode {
   const highlight = useMatchStore((s) => s.highlight);
   const liveFeed = useMatchStore((s) => s.feed);
   const presentation = useGameStore((s) => s.state?.settings.presentation ?? 'PITCH');
-  const unsaved = useGameStore(s => s.unsaved);
+  const saveError = useGameStore((s) => s.saveError);
 
   // The most recently opened rule window that has not closed. The pitch takes
   // this as a trigger: a change of value replays the sweep, and null means no
@@ -209,19 +210,50 @@ export function MatchLiveScreen(): ReactNode {
     sfx.fullTime();
   }, [playback, result]);
 
+  /**
+   * The result is written to the save before the report opens, so a crash
+   * during the post-match sequence cannot cost the player the match. A write
+   * the device refuses used to leave the screen frozen on "Full time" with no
+   * way forward but the X — which dropped the result. Now the failure is shown
+   * with a retry, and the result stays in memory (this store, and the game
+   * store's `latestMatchReport`) until it is saved or the player chooses to
+   * carry on without it. `saveAttempt` is the retry: each bump runs the write
+   * again, at once.
+   */
+  const [saveStatus, setSaveStatus] = useState<'WAITING' | 'SAVING' | 'FAILED'>('WAITING');
+  const [saveAttempt, setSaveAttempt] = useState(0);
+
   useEffect(() => {
     // A last-minute winner must be allowed to finish celebrating before the
     // post-match sequence takes the screen, so the handoff waits for the burst.
-    if (playback !== 'COMPLETE' || !result || celebrating) return;
-    // A short beat on the final whistle: cutting instantly reads as a page load.
+    // `ready` too: until this screen has attached its own simulator, a
+    // COMPLETE in the store is the previous match's.
+    if (!ready || playback !== 'COMPLETE' || !result || celebrating) return;
     let cancelled = false;
+    // A short beat on the final whistle: cutting instantly reads as a page load.
+    // A retry the player asked for does not wait.
     const timer = setTimeout(() => {
-      void useGameStore.getState().recordMatch(result).then(saved => {
-        if (saved && !cancelled) navigate(`/matchday/result/${result.matchId}`);
-      });
-    }, 600);
+      setSaveStatus('SAVING');
+      useGameStore.getState().recordMatch(result)
+        .catch((error: unknown) => {
+          console.error('[match] the full-time result could not be saved', error);
+          return false;
+        })
+        .then((saved) => {
+          if (cancelled) return;
+          if (saved) navigate(`/matchday/result/${result.matchId}`);
+          else setSaveStatus('FAILED');
+        });
+    }, saveAttempt === 0 ? 600 : 0);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [playback, result, navigate, celebrating, unsaved]);
+  }, [ready, playback, result, navigate, celebrating, saveAttempt]);
+
+  const retrySave = useCallback(() => setSaveAttempt((n) => n + 1), []);
+
+  /** The player's informed choice: the report still commits the result to the world in memory. */
+  const continueUnsaved = useCallback(() => {
+    if (result) navigate(`/matchday/result/${result.matchId}`);
+  }, [navigate, result]);
 
   /* --- derived, stable ------------------------------------------------- */
 
@@ -303,27 +335,46 @@ export function MatchLiveScreen(): ReactNode {
     useMatchStore.getState().setSpeed(next);
   }, []);
 
+  /**
+   * The header X and Android back. See `matchExitPlan` for the rule: before
+   * kick-off it is a free exit; once the ball is rolling, leaving plays the
+   * match out — the same `skipToEnd` as "Jump to the final whistle", so the
+   * engine resolves every remaining minute and decision for the player's side
+   * — and the full-time handoff above saves it and opens the report. Walking
+   * out can therefore never leave a fixture replayable with a known seed.
+   */
   const exit = useCallback(() => {
     void (async () => {
-      // An accidental tap on the header X must not throw away a match in
-      // motion — the fixture stays replayable, but everything the player sat
-      // through is gone.
-      const { playback: current, minute } = useMatchStore.getState();
-      if (shouldConfirmMatchExit(minute, current)) {
-        const ok = await confirm({
-          title: 'Leave the match?',
-          description:
-            'The clock stops and this viewing ends. You can replay the fixture, but not this one live.',
-          confirmLabel: 'Leave',
-          cancelLabel: 'Keep watching',
-          destructive: true,
-        });
-        if (!ok) return;
+      // No simulator of this screen's own (the fixture failed to start): the
+      // store's playback, if any, belongs to some earlier match.
+      const plan = simRef.current ? matchExitPlan(useMatchStore.getState().playback) : 'LEAVE';
+      // Full time: the save-then-report handoff is already running (or
+      // showing its retry); leaving must not drop the result on the way out.
+      if (plan === 'SAVE_RESULT') return;
+      if (plan === 'LEAVE') {
+        useMatchStore.getState().reset();
+        navigate('/matchday');
+        return;
       }
-      useMatchStore.getState().reset();
-      navigate('/matchday');
+      const ok = await confirm({
+        title: 'Leave the match?',
+        description:
+          'Leaving plays out the rest of the match at once — the bench makes every call from here — and the result counts. This fixture cannot be replayed.',
+        confirmLabel: 'Leave and play it out',
+        cancelLabel: 'Keep watching',
+        destructive: true,
+      });
+      if (!ok) return;
+      // The final whistle may have gone while the dialog was open.
+      if (matchExitPlan(useMatchStore.getState().playback) !== 'PLAY_OUT') return;
+      setSheet(null);
+      useMatchStore.getState().skipToEnd();
     })();
   }, [navigate, confirm]);
+
+  // Android's back button must take the same confirmed path as the X, not
+  // navigate around it.
+  useEffect(() => onNativeBack(exit), [exit]);
 
   /* --- announcements ---------------------------------------------------- */
 
@@ -466,6 +517,28 @@ export function MatchLiveScreen(): ReactNode {
           awayPalette={awayPalette}
           onDone={startMatch}
         />
+      )}
+
+      {(saveStatus === 'FAILED' || (saveStatus === 'SAVING' && saveAttempt > 0)) && (
+        // Above the match chrome and its X, below toasts: the only ways on
+        // from here are the two buttons, and neither one drops the result.
+        <div className="absolute inset-0 z-[57] flex items-center justify-center bg-base/95 px-6 pt-[var(--safe-top)]">
+          <div className="w-full max-w-[440px]">
+            <ErrorState
+              title="This result is not saved yet"
+              description="Full time stands and the score is safe while the game stays open, but this device refused to save it. If the app closes before it is saved, this match will not count."
+              detail={saveError ?? undefined}
+            />
+            <div className="flex flex-col items-center gap-2">
+              <GlassButton variant="primary" size="lg" loading={saveStatus === 'SAVING'} onClick={retrySave}>
+                Retry save
+              </GlassButton>
+              <GlassButton variant="ghost" size="md" disabled={saveStatus === 'SAVING'} onClick={continueUnsaved}>
+                Continue without saving
+              </GlassButton>
+            </div>
+          </div>
+        </div>
       )}
 
       <Announcer urgent={urgent} polite={polite} />

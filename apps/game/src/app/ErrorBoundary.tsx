@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorState, GlassButton } from '@/design';
+import { hideNativeSplash } from '@/platform/splash';
 
 /**
  * The last line of defence.
@@ -24,6 +25,9 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, State> 
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[app] render failure', error, info.componentStack);
+    // A crash during boot happens under the native launch image, which only
+    // the boot handoff would otherwise remove: the player must see this screen.
+    void hideNativeSplash();
   }
 
   override render(): ReactNode {

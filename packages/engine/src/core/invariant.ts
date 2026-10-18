@@ -18,13 +18,22 @@ export class InvariantError extends Error {
 }
 
 export type InvariantMode = 'throw' | 'collect';
+export type InvariantReporter = (violation: InvariantViolation) => void;
 
 let mode: InvariantMode = 'throw';
+let reporter: InvariantReporter | null = null;
 const collected: InvariantViolation[] = [];
 
 export const setInvariantMode = (next: InvariantMode): void => { mode = next; };
 export const drainViolations = (): InvariantViolation[] => collected.splice(0, collected.length);
 export const peekViolations = (): readonly InvariantViolation[] => collected;
+
+/**
+ * Told about each violation collected in `'collect'` mode, as it happens. The
+ * host owns the transport (a log line, a crash reporter); the engine only hands
+ * over the record. `null` removes it.
+ */
+export const setInvariantReporter = (next: InvariantReporter | null): void => { reporter = next; };
 
 export function invariant(
   condition: unknown,
@@ -36,6 +45,11 @@ export function invariant(
   const violation: InvariantViolation = { code, message, context };
   if (mode === 'throw') throw new InvariantError(violation);
   collected.push(violation);
+  try {
+    reporter?.(violation);
+  } catch {
+    // A failing reporter must not turn a collected violation back into a crash.
+  }
 }
 
 export function assertNever(value: never, code = 'EXHAUSTIVE'): never {
