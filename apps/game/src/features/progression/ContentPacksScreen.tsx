@@ -10,7 +10,7 @@ import { useCommerceStore } from '@/commerce/store';
 import { useGameStore } from '@/state/gameStore';
 import { useMembershipStore } from '@/commerce/membershipStore';
 import { membershipActive } from '@/commerce/membership';
-import { MEMBER_LIBRARY_ID } from '@/commerce/memberLibrary';
+import { MEMBER_LIBRARY_ID, MEMBER_RELEASES, issueMonthLabel } from '@/commerce/memberLibrary';
 
 export function ContentPacksScreen(): ReactNode {
   const navigate = useNavigate();
@@ -30,8 +30,8 @@ export function ContentPacksScreen(): ReactNode {
   return <Screen title="Content packs" subtitle="Your club, your edition" onBack={() => navigate(ROUTES.settings)}>
     <GlassPanel padding="md" accent="volt"><h2 className="font-display text-xl font-bold">The whole game is yours</h2><p className="mt-2 text-sm text-ink-muted">The fictional base universe is always active. Optional collections change the presentation, never player ability or match results.</p><GlassPill className="mt-3" tone="positive">Base universe · Included</GlassPill></GlassPanel>
     <SectionHeader title="Choose your atmosphere" subtitle="Saved with this career" />
-    <GlassPanel padding="md"><h2 className="font-display text-xl font-bold">Creator Club library · First Lights</h2><p className="my-3 text-sm text-ink-muted">8 commentary and 6 story variations. Access requires an active membership. Membership also offers separate in-game funds and creator collaborations.</p>
-      {member ? <GlassButton block aria-pressed={enabled.includes(MEMBER_LIBRARY_ID)} disabled={busy} loading={saving} onClick={() => toggle(MEMBER_LIBRARY_ID)}>{enabled.includes(MEMBER_LIBRARY_ID) ? 'Disable First Lights' : 'Enable First Lights'}</GlassButton> : <GlassButton block onClick={() => navigate(ROUTES.store)}>Explore Creator Club</GlassButton>}
+    <GlassPanel padding="md"><h2 className="font-display text-xl font-bold">Creator Club library</h2><p className="my-3 text-sm text-ink-muted">Monthly issues of alternate commentary and club stories: {MEMBER_RELEASES.map(issue => `${issue.title} (${issueMonthLabel(issue.month)})`).join(', ')}. Access requires an active membership. Membership also offers separate in-game funds and creator collaborations.</p>
+      {member ? <GlassButton block aria-pressed={enabled.includes(MEMBER_LIBRARY_ID)} disabled={busy} loading={saving} onClick={() => toggle(MEMBER_LIBRARY_ID)}>{enabled.includes(MEMBER_LIBRARY_ID) ? 'Disable member library' : 'Enable member library'}</GlassButton> : <GlassButton block onClick={() => navigate(ROUTES.store)}>Explore Creator Club</GlassButton>}
     </GlassPanel>
     {packs.map(pack => <GlassPanel key={pack.id} padding="none" className="overflow-hidden">
       <ArtImage asset={pack.art} className="h-32 w-full object-cover" />
