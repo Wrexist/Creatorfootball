@@ -23,6 +23,7 @@ export default function ModelViewer({ model, lighting, club, finish, levels=club
     let renderer: T.WebGLRenderer;
     let controls: OrbitControls | null = null;
     let root: T.Group | null = null;
+    let refit: (() => void) | null = null;
     const scene = new T.Scene();
     const look = LIGHTING[lighting];
     element.style.background=`radial-gradient(ellipse at 50% 32%, ${look.background}, #0b1518 90%)`;
@@ -68,7 +69,7 @@ export default function ModelViewer({ model, lighting, club, finish, levels=club
     const fill=new T.DirectionalLight('#e0d9bd',.8); fill.position.set(10,5,15); scene.add(fill);
     const resize = (): void => {
       const width = Math.max(1,element.clientWidth), height = Math.max(1,element.clientHeight);
-      renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); render();
+      renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); refit?.(); render();
     };
     const observer = new ResizeObserver(resize); observer.observe(element);
     const intersection = new IntersectionObserver(entries => { visible=!!entries[0]?.isIntersecting; if(visible) render(); }); intersection.observe(element);
@@ -106,19 +107,35 @@ export default function ModelViewer({ model, lighting, club, finish, levels=club
       const right=new T.Vector3().crossVectors(camera.up,angle).normalize();
       const up=new T.Vector3().crossVectors(angle,right).normalize();
       const tangent=Math.tan(T.MathUtils.degToRad(camera.fov/2));
-      const aspect=Math.max(.5,element.clientWidth/Math.max(1,element.clientHeight));
-      let distance=0;
-      for(const x of [box.min.x,box.max.x]) for(const y of model==='campus'?[0]:[box.min.y,box.max.y]) for(const z of [box.min.z,box.max.z]) {
-        const point=new T.Vector3(x,y,z).sub(centre);
-        distance=Math.max(distance,Math.abs(point.dot(right))/(tangent*aspect)+point.dot(angle),Math.abs(point.dot(up))/tangent+point.dot(angle));
-      }
-      distance*=model==='campus'?1.02:1.18;
+      const fitDistance=(): number => {
+        const aspect=Math.max(.5,element.clientWidth/Math.max(1,element.clientHeight));
+        let fit=0;
+        for(const x of [box.min.x,box.max.x]) for(const y of model==='campus'?[0]:[box.min.y,box.max.y]) for(const z of [box.min.z,box.max.z]) {
+          const point=new T.Vector3(x,y,z).sub(centre);
+          fit=Math.max(fit,Math.abs(point.dot(right))/(tangent*aspect)+point.dot(angle),Math.abs(point.dot(up))/tangent+point.dot(angle));
+        }
+        return fit*(model==='campus'?1.02:1.18);
+      };
+      let distance=fitDistance();
       camera.position.copy(centre).add(angle.clone().multiplyScalar(distance));
       camera.near=Math.max(.01,size/200); camera.far=size*20; camera.updateProjectionMatrix();
       controls=new OrbitControls(camera,renderer.domElement);
       controls.target.copy(centre); controls.enableDamping=false; controls.enablePan=false;
       controls.minDistance=distance*.55; controls.maxDistance=distance*1.5; controls.minPolarAngle=.3; controls.maxPolarAngle=Math.PI*.46;
       controls.update(); controls.saveState(); controls.addEventListener('change',render);
+      // Folding an iPhone Duo or rotating a tablet changes the stage's shape
+      // under a fitted camera. Rescale the orbit, and the saved reset pose, so
+      // the site still fits without discarding the angle the player chose.
+      refit=()=>{
+        if(!controls) return;
+        const next=fitDistance(), ratio=next/distance;
+        if(Math.abs(ratio-1)<.01) return;
+        distance=next;
+        controls.minDistance=distance*.55; controls.maxDistance=distance*1.5;
+        camera.position.sub(controls.target).multiplyScalar(ratio).add(controls.target);
+        controls.position0.sub(controls.target0).multiplyScalar(ratio).add(controls.target0);
+        controls.update();
+      };
       command.current = value => {
         if(!controls) return;
         if(value==='reset') controls.reset();
@@ -143,7 +160,7 @@ export default function ModelViewer({ model, lighting, club, finish, levels=club
     },undefined,() => { if(!disposed) setStatus('error'); });
     resize();
     return () => {
-      disposed=true; cancelAnimationFrame(frame); command.current=()=>{}; updateFacilities.current=()=>{};
+      disposed=true; refit=null; cancelAnimationFrame(frame); command.current=()=>{}; updateFacilities.current=()=>{};
       observer.disconnect(); intersection.disconnect(); document.removeEventListener('visibilitychange',onVisibility);
       renderer.domElement.removeEventListener('webglcontextlost',onLost);
       controls?.dispose(); if(root) disposeObject(root); key.shadow.map?.dispose();

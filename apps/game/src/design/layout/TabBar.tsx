@@ -76,7 +76,7 @@ export function TabBar({
         hidden && 'translate-y-[calc(100%+var(--safe-bottom))]',
         'cf-bottom-nav', className,
       )}
-      style={{ paddingBottom: 'var(--safe-bottom)' }}
+      style={{ paddingBottom: 'var(--safe-bottom)', paddingLeft: 'var(--safe-left)', paddingRight: 'var(--safe-right)' }}
     >
       <GradualBlur side="bottom" height="calc(var(--nav-height) + var(--safe-bottom) + 12px)" strength={12} className="cf-nav-edge" />
       <div

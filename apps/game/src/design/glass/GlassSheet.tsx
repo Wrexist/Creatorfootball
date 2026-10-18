@@ -86,7 +86,10 @@ export function GlassSheet({
     <Portal>
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center"
+            style={{ paddingLeft: 'var(--safe-left)', paddingRight: 'var(--safe-right)' }}
+          >
             <motion.button
               type="button"
               aria-label="Close"

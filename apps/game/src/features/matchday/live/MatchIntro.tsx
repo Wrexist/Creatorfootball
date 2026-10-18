@@ -96,7 +96,7 @@ export function MatchIntro({ context, homePalette, awayPalette, onDone }: MatchI
   return (
     <div
       className="cf-match-intro fixed inset-0 z-[65] flex flex-col overflow-hidden bg-void"
-      style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}
+      style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)', paddingLeft: 'var(--safe-left)', paddingRight: 'var(--safe-right)' }}
       role="dialog"
       aria-modal="true"
       aria-label="Match introduction"

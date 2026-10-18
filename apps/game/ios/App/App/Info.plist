@@ -54,11 +54,17 @@
 		<string>arm64</string>
 	</array>
 	<!-- The game is designed portrait-first; every screen is measured at
-	     320-440px widths. Landscape on iPhone would letterbox every layout,
-	     so it is not offered. iPad keeps all four. -->
+	     320-440px widths. All four orientations are declared so the iPhone Duo
+	     inner display (regular width and height) can fill the screen instead of
+	     being scaled as a portrait-only app. GameBridgeViewController still
+	     locks every compact-size-class iPhone screen to portrait, so ordinary
+	     iPhones and the Duo outer display do not rotate. iPad keeps all four. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>

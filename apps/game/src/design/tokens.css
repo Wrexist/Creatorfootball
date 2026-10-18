@@ -130,6 +130,15 @@
     height: 100%;
   }
 
+  /* Side insets are zero on a portrait iPhone, but not on iPhone Duo (status
+     bar and camera sit beside the outer display) or any landscape screen.
+     They are often asymmetric, so each side is applied on its own. Fixed
+     surfaces outside #root apply the same pair themselves. */
+  #root {
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+
   body {
     background-color: var(--color-base);
     color: var(--color-ink);

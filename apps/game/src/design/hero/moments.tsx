@@ -72,7 +72,10 @@ function HeroOverlay({ open, onDismiss, autoDismiss = 0, children, className, di
               'fixed inset-0 z-[70] flex flex-col items-center overflow-x-hidden overflow-y-auto bg-void px-6 text-center outline-none',
               className,
             )}
-            style={{ paddingTop: 'max(24px, var(--safe-top))', paddingBottom: 'max(24px, var(--safe-bottom))' }}
+            style={{
+              paddingTop: 'max(24px, var(--safe-top))', paddingBottom: 'max(24px, var(--safe-bottom))',
+              paddingLeft: 'calc(var(--safe-left) + 1.5rem)', paddingRight: 'calc(var(--safe-right) + 1.5rem)',
+            }}
           >
             <div className="my-auto flex w-full shrink-0 flex-col items-center py-5">
             {children}

@@ -65,7 +65,10 @@ export function GlassModal({
     <Portal>
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-5">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-5"
+            style={{ paddingLeft: 'calc(var(--safe-left) + 1.25rem)', paddingRight: 'calc(var(--safe-right) + 1.25rem)' }}
+          >
             <motion.button
               type="button"
               aria-label="Close"
