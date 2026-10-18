@@ -108,7 +108,7 @@ const library = (await asc('GET', `/v1/apps/${appId}/assetLibrary`)).data ?? fai
 log(`app ${appId}, version ${VERSION} (${version.attributes.appStoreState}), asset library ${library.id}, locales ${locales.map((l) => l.attributes.locale).join(', ')}`);
 
 const TYPES = ['APP_SCREENSHOT', 'PRODUCT_PAGE_HEADER_ASSET', 'APP_STORE_SEARCH_RESULTS_ASSET'];
-const ref = (await asc('GET', `/v1/appAssetLibraryRefData?${q({ 'filter[placementTypes]': TYPES.join(','), 'filter[features]': 'APP_STORE_VERSIONS', limit: '200' })}`)).data;
+const ref = (await asc('GET', `/v1/appAssetLibraryRefData?${q({ 'filter[placementTypes]': TYPES.join(','), 'filter[features]': 'APP_STORE_VERSIONS' })}`)).data;
 const groups = ref.flatMap((r) => r.attributes.placementProfileGroups ?? []);
 const specs = ref.flatMap((r) => r.attributes.imageSpecs ?? []);
 const policies = ref.flatMap((r) => (r.attributes.features ?? []).flatMap((f) => (f.placementPolicies ?? []).map((p) => ({ feature: f.featureId, ...p }))));
