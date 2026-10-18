@@ -24,6 +24,10 @@ on:
         description: 'Build number (CFBundleVersion) uploaded for that version'
         type: string
         required: true
+      replace:
+        description: 'If this version is already waiting for review, pull it out (keeping its other items in a new draft) so the new build can be attached'
+        type: boolean
+        default: false
       submit:
         description: 'Submit for App Review after preparing (outward-facing)'
         type: boolean
@@ -60,11 +64,13 @@ jobs:
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
+          REPLACE: ${{ inputs.replace }}
           SUBMIT: ${{ inputs.submit }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
           args=(--version "$VERSION" --build "$BUILD")
+          [ "$REPLACE" = "true" ] && args+=(--replace)
           [ "$SUBMIT" = "true" ] && args+=(--submit)
           [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
           node tools/release/asc-release.mjs "${args[@]}"
