@@ -272,10 +272,15 @@ export function AppRoutes({ location }: { location: Location }): ReactNode {
         <Route path={ROUTES.settings} element={<SettingsScreen />} />
       </Route>
 
+      {/* Still served by production builds: `e2e/media-matrix.mjs` (part of
+          `test:smoke`, which drives the production bundle) and `e2e/insitu.mjs`
+          read gallery fixtures at this path. Gate it on `import.meta.env.DEV`
+          once those checks move off the shipping build. */}
       <Route path={ROUTES.gallery} element={<Gallery />} />
       {/* `/design` is the name people say out loud; the route table's canonical
-          path is `/dev/gallery`, so this is an alias rather than a second entry. */}
-      <Route path="/design" element={<Navigate to={ROUTES.gallery} replace />} />
+          path is `/dev/gallery`, so this is an alias rather than a second entry.
+          A development convenience only, so a shipping build does not answer to it. */}
+      {import.meta.env.DEV && <Route path="/design" element={<Navigate to={ROUTES.gallery} replace />} />}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

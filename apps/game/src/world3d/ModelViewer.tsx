@@ -7,6 +7,7 @@ import { GlassButton } from '@/design';
 import { ArtImage } from '@/design/premium/components';
 import { useUiStore } from '@/state/uiStore';
 import { facilityVisible, LIGHTING, MODEL_ASSETS, type LightingId, type ModelId } from './manifest';
+import { disposeObject } from './dispose';
 
 type Command = 'left' | 'right' | 'in' | 'out' | 'reset';
 export default function ModelViewer({ model, lighting, club, finish, levels=club.facilityLevels }: { model: ModelId; lighting: LightingId; club: Club; finish: 'bronze'|'gold'|'silver'; levels?: Readonly<Record<string,number>> }): ReactNode {
@@ -30,9 +31,6 @@ export default function ModelViewer({ model, lighting, club, finish, levels=club
     const camera = new T.PerspectiveCamera(36,1,.05,180);
     setStatus('loading');
     delete element.dataset.model;
-    const disposeObject = (object: T.Object3D): void => object.traverse(node => {
-      if (node instanceof T.Mesh) { node.geometry.dispose(); for (const mat of Array.isArray(node.material) ? node.material : [node.material]) mat.dispose(); }
-    });
     try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' }); }
     catch { setStatus('error'); return; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, reduced?1:1.5));

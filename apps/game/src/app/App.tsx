@@ -14,9 +14,14 @@ import { AppErrorBoundary } from './ErrorBoundary';
 import { Shell } from './Shell';
 import { installAnalytics } from './analytics';
 import { preloadHome } from './featureModules';
+import { installInvariantMode } from './invariants';
 import { ExpansionBridge } from '@/commerce/ExpansionBridge';
 import { ROUTES } from './routes';
 import { LargeTextContext } from '@/design/typography/FitText';
+
+// Before anything renders or reads a save: a shipping build reports a broken
+// engine invariant instead of crashing on it; development still throws.
+installInvariantMode();
 
 /**
  * The application root: providers, boot, and nothing else.
@@ -53,8 +58,11 @@ function BootGate({ children }: { children: ReactNode }): ReactNode {
     trackEvent('session_start', {});
 
     // Native drivers (haptics, status bar) exist only inside the Capacitor
-    // shell; in a browser this resolves immediately as a no-op.
-    void installNativeBridge();
+    // shell; in a browser this resolves immediately as a no-op. A plugin that
+    // fails to load costs a haptic or the status-bar tint, never the boot.
+    installNativeBridge().catch((error: unknown) => {
+      console.warn('[native] bridge install failed', error);
+    });
 
     // Decide the presentation tier once, here, rather than per frame: heavy
     // glass and the animated pitch are what drop frames on a low-end device.

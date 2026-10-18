@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, type ErrorInfo, type ReactNode } from 'react';
+import { Component, Suspense, lazy, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { SplashScreen } from '@/features/onboarding/SplashScreen';
 
 /**
@@ -19,11 +19,39 @@ import { SplashScreen } from '@/features/onboarding/SplashScreen';
 const App = lazy(async () => ({ default: (await import('./App')).App }));
 
 /**
+ * The native launch image is removed only by an explicit call
+ * (`launchAutoHide: false`), so every path out of startup must make it. Reached
+ * by dynamic import for the same reason as `App`: the splash module brings
+ * Capacitor's core, which has no place in this chunk. On a device the import
+ * is a local file, so it still arrives when the app chunk itself failed to run.
+ */
+function hideNativeSplash(): void {
+  import('@/platform/splash')
+    .then((splash) => splash.hideNativeSplash())
+    .catch((error: unknown) => console.warn('[startup] the launch splash could not be hidden', error));
+}
+
+/**
+ * Comfortably longer than a healthy cold start on the slowest supported device.
+ * Should boot stall without throwing — a hung promise, a chunk that never
+ * settles — the launch image still gives way to the React splash or error
+ * screen beneath it, instead of a frozen logo the player can only force-quit.
+ */
+const NATIVE_SPLASH_FAILSAFE_MS = 8000;
+let failsafeArmed = false;
+
+function armNativeSplashFailsafe(): void {
+  if (failsafeArmed) return;
+  failsafeArmed = true;
+  setTimeout(hideNativeSplash, NATIVE_SPLASH_FAILSAFE_MS);
+}
+
+/**
  * Catches the one failure the app-level boundary cannot: the core chunk never
  * arriving. Plain markup, because the design system lives in the chunk that
  * just failed to load.
  */
-class StartupBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+export class StartupBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   override state = { failed: false };
 
   static getDerivedStateFromError(): { failed: boolean } {
@@ -32,6 +60,7 @@ class StartupBoundary extends Component<{ children: ReactNode }, { failed: boole
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[startup] failed to load the app', error, info.componentStack);
+    hideNativeSplash();
   }
 
   override render(): ReactNode {
@@ -61,6 +90,7 @@ class StartupBoundary extends Component<{ children: ReactNode }, { failed: boole
 }
 
 export function Entry(): ReactNode {
+  useEffect(armNativeSplashFailsafe, []);
   return (
     <StartupBoundary>
       <Suspense fallback={<SplashScreen label="Starting Creator Football" />}>

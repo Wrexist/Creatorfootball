@@ -1,25 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { ordinal, sidesWord } from '../../../design/domain/numbers';
-import { shouldConfirmMatchExit } from './format';
+import { matchExitPlan } from './format';
 
 /**
- * The exit gate once lived inline in MatchLiveScreen; extracting it made the
- * one rule that protects a live match from a stray tap testable at all.
+ * The exit rule once lived inline in MatchLiveScreen; extracting it made the
+ * one rule that decides whether a live match can be walked away from testable.
  */
-describe('shouldConfirmMatchExit', () => {
-  it('asks nothing before kick-off', () => {
-    expect(shouldConfirmMatchExit(0, 'PLAYING')).toBe(false);
-    expect(shouldConfirmMatchExit(0, 'IDLE')).toBe(false);
+describe('matchExitPlan', () => {
+  it('lets the player walk out freely before kick-off', () => {
+    expect(matchExitPlan('IDLE')).toBe('LEAVE');
   });
 
-  it('asks nothing after full time', () => {
-    expect(shouldConfirmMatchExit(30, 'COMPLETE')).toBe(false);
+  it('plays the match out from the first tick, so a live match cannot be quit and replayed', () => {
+    expect(matchExitPlan('PLAYING')).toBe('PLAY_OUT');
+    expect(matchExitPlan('PAUSED')).toBe('PLAY_OUT');
+    expect(matchExitPlan('AWAITING_DECISION')).toBe('PLAY_OUT');
   });
 
-  it('guards every minute after the first, in any live state', () => {
-    expect(shouldConfirmMatchExit(1, 'PLAYING')).toBe(true);
-    expect(shouldConfirmMatchExit(14, 'PAUSED')).toBe(true);
-    expect(shouldConfirmMatchExit(22, 'AWAITING_DECISION')).toBe(true);
+  it('never routes around the save after full time', () => {
+    expect(matchExitPlan('COMPLETE')).toBe('SAVE_RESULT');
   });
 });
 

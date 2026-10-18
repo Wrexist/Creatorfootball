@@ -6,7 +6,7 @@ import {
 } from '@cf/engine';
 import {
   GlassButton, GlassPanel, GlassPill, IconCheck, NameText, PlayerCard,
-  SectionHeader, Text, useConfirm,
+  SectionHeader, Text, useConfirm, useToast,
 } from '@/design';
 import { ROUTES, buildPath } from '@/app/routes';
 import { useGameStore } from '@/state/gameStore';
@@ -50,6 +50,7 @@ const ROLE_TONE = {
 export function SquadIntroScreen(): ReactNode {
   const navigate = useNavigate();
   const confirm = useConfirm();
+  const toast = useToast();
   const gameState = useGameStore((s) => s.state);
   const apply = useGameStore((s) => s.apply);
   const abandon = useGameStore((s) => s.abandon);
@@ -139,8 +140,14 @@ export function SquadIntroScreen(): ReactNode {
       destructive: true,
     });
     if (!ok) return;
-    await abandon();
-    navigate(ROUTES.managerCreation, { replace: true });
+    // Same handling as Settings' delete: a refused delete leaves the club in
+    // place, so say so rather than navigate as if it had gone.
+    try {
+      await abandon();
+      navigate(ROUTES.managerCreation, { replace: true });
+    } catch (error) {
+      toast.error(`${club.name} was not deleted`, String(error));
+    }
   };
 
   return (
