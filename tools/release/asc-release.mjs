@@ -156,8 +156,19 @@ if (build.attributes.usesNonExemptEncryption === null || build.attributes.usesNo
 // submission never silently goes out without Creator Club.
 async function subscriptions() {
   const groups = await asc('GET', `/v1/apps/${appId}/subscriptionGroups?${q({ include: 'subscriptions', limit: '10' })}`);
+  const groupOf = new Map((groups.data ?? []).flatMap((g) => (g.relationships?.subscriptions?.data ?? []).map((s) => [s.id, g.id])));
   return (groups.included ?? []).filter((r) => r.type === 'subscriptions')
-    .map((s) => ({ id: s.id, productId: s.attributes.productId, state: s.attributes.state }));
+    .map((s) => ({ id: s.id, productId: s.attributes.productId, state: s.attributes.state, groupId: groupOf.get(s.id) }));
+}
+// Subscriptions and their group are reviewed as versions, added to the review
+// submission like any other item. Reuse a version that is still editable;
+// create one only when none exists yet.
+const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'DEVELOPER_REJECTED', 'REJECTED'];
+async function pendingVersion(listRoute, type, rel, relType, parentId) {
+  const versions = (await asc('GET', listRoute)).data ?? [];
+  const editable = versions.find((v) => EDITABLE.includes(v.attributes.state));
+  if (editable) return editable;
+  return (await asc('POST', `/v1/${type}`, { data: { type, relationships: { [rel]: { data: { type: relType, id: parentId } } } } }))?.data ?? null;
 }
 for (const s of await subscriptions()) log(`subscription ${s.productId}: ${s.state}`);
 
@@ -256,11 +267,20 @@ if (submission) {
     await asc('POST', '/v1/reviewSubmissionItems', { data: { type: 'reviewSubmissionItems', relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: submission.id } }, appStoreVersion: { data: { type: 'appStoreVersions', id: version.id } } } } });
     log(`added version ${VERSION} to submission`);
   }
-  for (const s of await subscriptions()) {
-    if (s.state !== 'READY_TO_SUBMIT') continue;
-    await asc('POST', '/v1/subscriptionSubmissions', { data: { type: 'subscriptionSubmissions', relationships: { subscription: { data: { type: 'subscriptions', id: s.id } } } } });
-    log(`submitted subscription ${s.productId} with this version`);
+  // First-time (READY_TO_SUBMIT) subscriptions go in with the version, with
+  // their group.
+  const present = await submissionItems(submission.id);
+  const inDraft = (rel, id) => present.some((i) => i.rel === rel && i.id === id);
+  const ready = (await subscriptions()).filter((sub) => sub.state === 'READY_TO_SUBMIT');
+  for (const groupId of [...new Set(ready.map((sub) => sub.groupId).filter(Boolean))]) {
+    const gv = await pendingVersion(`/v1/subscriptionGroups/${groupId}/versions`, 'subscriptionGroupVersions', 'subscriptionGroup', 'subscriptionGroups', groupId);
+    if (gv && !inDraft('subscriptionGroupVersion', gv.id)) { await addItem(submission.id, { rel: 'subscriptionGroupVersion', type: 'subscriptionGroupVersions', id: gv.id }); log(`added subscription group ${groupId} (version ${gv.id})`); }
   }
+  for (const sub of ready) {
+    const sv = await pendingVersion(`/v1/subscriptions/${sub.id}/versions`, 'subscriptionVersions', 'subscription', 'subscriptions', sub.id);
+    if (sv && !inDraft('subscriptionVersion', sv.id)) { await addItem(submission.id, { rel: 'subscriptionVersion', type: 'subscriptionVersions', id: sv.id }); log(`added subscription ${sub.productId} (version ${sv.id})`); }
+  }
+  log(`submission ${submission.id} now has ${(await submissionItems(submission.id)).length} item(s)`);
   await asc('PATCH', `/v1/reviewSubmissions/${submission.id}`, { data: { type: 'reviewSubmissions', id: submission.id, attributes: { submitted: true } } });
   log(DRY ? 'DRY RUN — would submit.' : `SUBMITTED for review: submission ${submission.id}`);
 }
