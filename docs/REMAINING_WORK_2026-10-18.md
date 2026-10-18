@@ -9,6 +9,30 @@ Full audit of `Main` at `6f51bb5` (latest on GitHub). Supersedes
 
 Legend: **[owner]** needs account access, a device, a Mac or money · **[code]** can be done in the repo.
 
+## Progress since the audit (PR #36, merged as `3244d9d`)
+
+Google Play is out of scope for now (owner decision, 18 Oct): **iOS only**.
+
+**Fixed in code:** A1 (iOS listing, review notes, privacy pages), B1–B6, the `/design` route,
+manage-subscription link, unhandled promises, invariant collect mode, membership refresh throttle,
+C5 (October "Autumn Pages" issue), Capacitor core aligned to 8.5.3 with `Package.swift` re-synced,
+RevenueCat 13.7.0, three 0.186.1, and the iPhone Duo items in section E marked done.
+Checks at merge: typecheck, lint, 762 engine + 298 app tests, full browser suite, iOS simulator CI.
+
+**Still open:**
+- `/dev/gallery` stays reachable in production because `e2e/media-matrix.mjs` and
+  `e2e/insitu.mjs` open it against the production build. Move those checks to a dev build to gate it.
+- Force-quitting the app mid-match (or browser back on web) still leaves the fixture replayable;
+  closing that needs the live match state persisted.
+- Leaving a match lets the engine AI make the remaining calls, which is not strictly the
+  "safe call" the decision sheet promises.
+- Native storage has not run on a device yet: confirm an existing TestFlight career loads after
+  migration and `Library/cf-saves/` appears.
+- iPhone Duo screenshots are captured locally in `artifacts/store-launch/duo/` (git-ignored, like
+  the other store captures) by `apps/game/scripts/duo-screenshots.mjs`.
+- Xcode 27.1 is not on GitHub-hosted runners (only the `xcode-27` preview image with 27.0 beta),
+  so release builds still use Xcode 26.6 (iOS 26 SDK).
+
 ---
 
 ## A. Blockers before submitting
