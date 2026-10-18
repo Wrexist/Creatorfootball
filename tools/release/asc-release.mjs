@@ -20,7 +20,10 @@
 // metadata is locked while a version waits for review.
 //
 // Usage (CI: .github/workflows/ios-app-store.yml):
-//   node tools/release/asc-release.mjs --version 1.0.16 --build 15 [--submit] [--dry-run]
+//   node tools/release/asc-release.mjs --version 1.0.16 --build 15 [--replace] [--submit] [--dry-run]
+//   --replace  if the version is already waiting for review, remove it from
+//              review and rebuild a draft with the same items, so a newer
+//              build can be attached. Costs the place in the review queue.
 // Env: APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID,
 //      APP_STORE_CONNECT_API_KEY_BASE64 (base64 or raw .p8). ASC_APP_ID optional.
 
@@ -148,6 +151,75 @@ if (build.attributes.usesNonExemptEncryption === null || build.attributes.usesNo
   await asc('PATCH', `/v1/builds/${build.id}`, { data: { type: 'builds', id: build.id, attributes: { usesNonExemptEncryption: false } } });
 }
 
+// Subscriptions are reviewed with the binary but are not review-submission
+// items: they are sent with POST /v1/subscriptionSubmissions. Report them so a
+// submission never silently goes out without Creator Club.
+async function subscriptions() {
+  const groups = await asc('GET', `/v1/apps/${appId}/subscriptionGroups?${q({ include: 'subscriptions', limit: '10' })}`);
+  const groupOf = new Map((groups.data ?? []).flatMap((g) => (g.relationships?.subscriptions?.data ?? []).map((s) => [s.id, g.id])));
+  return (groups.included ?? []).filter((r) => r.type === 'subscriptions')
+    .map((s) => ({ id: s.id, productId: s.attributes.productId, state: s.attributes.state, groupId: groupOf.get(s.id) }));
+}
+// Subscriptions and their group are reviewed as versions, added to the review
+// submission like any other item. Reuse a version that is still editable;
+// create one only when none exists yet.
+const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'DEVELOPER_REJECTED', 'REJECTED'];
+async function pendingVersion(listRoute, type, rel, relType, parentId) {
+  const versions = (await asc('GET', listRoute)).data ?? [];
+  const editable = versions.find((v) => EDITABLE.includes(v.attributes.state));
+  if (editable) return editable;
+  return (await asc('POST', `/v1/${type}`, { data: { type, relationships: { [rel]: { data: { type: relType, id: parentId } } } } }))?.data ?? null;
+}
+for (const s of await subscriptions()) log(`subscription ${s.productId}: ${s.state}`);
+
+// 1b. --replace: pull a version that is already waiting for review back out,
+// keeping every other item (subscription group, plans, one-time purchases)
+// in a fresh draft so nothing has to be re-added by hand.
+const OPEN_STATES = 'READY_FOR_REVIEW,WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES,CANCELING';
+const ITEM_RELATIONSHIPS = ['appStoreVersion', 'appCustomProductPageVersion', 'appStoreVersionExperimentV2', 'appEvent', 'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion', 'backgroundAssetVersion'];
+async function submissionItems(id) {
+  const items = (await asc('GET', `/v1/reviewSubmissions/${id}/items?${q({ include: ITEM_RELATIONSHIPS.join(','), limit: '50' })}`)).data;
+  return items.map((item) => {
+    const rel = ITEM_RELATIONSHIPS.find((name) => item.relationships?.[name]?.data?.id);
+    return rel ? { rel, type: item.relationships[rel].data.type, id: item.relationships[rel].data.id, state: item.attributes?.state } : null;
+  }).filter(Boolean);
+}
+async function addItem(submissionId, item) {
+  await asc('POST', '/v1/reviewSubmissionItems', { data: { type: 'reviewSubmissionItems', relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: submissionId } }, [item.rel]: { data: { type: item.type, id: item.id } } } } });
+}
+const REPLACE = argv.includes('--replace');
+const pending = (await asc('GET', `/v1/apps/${appId}/reviewSubmissions?${q({ 'filter[platform]': 'IOS', 'filter[state]': OPEN_STATES, limit: '10' })}`)).data
+  .filter((s) => s.attributes.state !== 'READY_FOR_REVIEW');
+for (const submission of pending) {
+  const items = await submissionItems(submission.id);
+  log(`submission ${submission.id} is ${submission.attributes.state} with ${items.length} item(s): ${items.map((i) => i.rel).join(', ')}`);
+  if (!items.some((i) => i.rel === 'appStoreVersion' && i.id === version.id)) continue;
+  if (!REPLACE) fail(`Version ${VERSION} is already ${submission.attributes.state} (${submission.id}). Run with --replace to pull it out of review and swap in build ${BUILD}.`);
+  if (submission.attributes.state !== 'CANCELING') {
+    await asc('PATCH', `/v1/reviewSubmissions/${submission.id}`, { data: { type: 'reviewSubmissions', id: submission.id, attributes: { canceled: true } } });
+    log(`requested removal from review for ${submission.id}`);
+  }
+  if (DRY) { log(`DRY RUN — would wait for cancellation, then re-create a draft with: ${items.map((i) => `${i.rel}:${i.id}`).join(', ')}`); continue; }
+  for (let tries = 0; ; tries += 1) {
+    const state = (await asc('GET', `/v1/reviewSubmissions/${submission.id}`)).data.attributes.state;
+    const versionState = (await asc('GET', `/v1/appStoreVersions/${version.id}`)).data.attributes.appStoreState;
+    log(`cancellation: submission ${state}, version ${versionState}`);
+    if (!['WAITING_FOR_REVIEW', 'IN_REVIEW', 'CANCELING'].includes(state) && !['WAITING_FOR_REVIEW', 'IN_REVIEW'].includes(versionState)) break;
+    if (tries > 30) fail('Apple did not finish removing the submission from review within 30 minutes.');
+    await sleep(60_000);
+  }
+  // A new draft holding exactly what was in review before.
+  let draft = (await asc('GET', `/v1/apps/${appId}/reviewSubmissions?${q({ 'filter[platform]': 'IOS', 'filter[state]': 'READY_FOR_REVIEW', limit: '1' })}`)).data[0];
+  if (!draft) draft = (await asc('POST', '/v1/reviewSubmissions', { data: { type: 'reviewSubmissions', attributes: { platform: 'IOS' }, relationships: { app: { data: { type: 'apps', id: appId } } } } })).data;
+  const already = await submissionItems(draft.id);
+  for (const item of items) {
+    if (already.some((a) => a.rel === item.rel && a.id === item.id)) continue;
+    try { await addItem(draft.id, item); log(`re-added ${item.rel} ${item.id} to draft ${draft.id}`); }
+    catch (error) { console.error(`::warning::Could not re-add ${item.rel} ${item.id}: ${error.message}`); }
+  }
+  log(`draft ${draft.id} ready with ${(await submissionItems(draft.id)).length} item(s)`);
+}
+
 // 2. attach it
 const current = await asc('GET', `/v1/appStoreVersions/${version.id}/relationships/build`);
 if (current?.data?.id === build.id) log('build already attached');
@@ -195,6 +267,20 @@ if (submission) {
     await asc('POST', '/v1/reviewSubmissionItems', { data: { type: 'reviewSubmissionItems', relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: submission.id } }, appStoreVersion: { data: { type: 'appStoreVersions', id: version.id } } } } });
     log(`added version ${VERSION} to submission`);
   }
+  // First-time (READY_TO_SUBMIT) subscriptions go in with the version, with
+  // their group.
+  const present = await submissionItems(submission.id);
+  const inDraft = (rel, id) => present.some((i) => i.rel === rel && i.id === id);
+  const ready = (await subscriptions()).filter((sub) => sub.state === 'READY_TO_SUBMIT');
+  for (const groupId of [...new Set(ready.map((sub) => sub.groupId).filter(Boolean))]) {
+    const gv = await pendingVersion(`/v1/subscriptionGroups/${groupId}/versions`, 'subscriptionGroupVersions', 'subscriptionGroup', 'subscriptionGroups', groupId);
+    if (gv && !inDraft('subscriptionGroupVersion', gv.id)) { await addItem(submission.id, { rel: 'subscriptionGroupVersion', type: 'subscriptionGroupVersions', id: gv.id }); log(`added subscription group ${groupId} (version ${gv.id})`); }
+  }
+  for (const sub of ready) {
+    const sv = await pendingVersion(`/v1/subscriptions/${sub.id}/versions`, 'subscriptionVersions', 'subscription', 'subscriptions', sub.id);
+    if (sv && !inDraft('subscriptionVersion', sv.id)) { await addItem(submission.id, { rel: 'subscriptionVersion', type: 'subscriptionVersions', id: sv.id }); log(`added subscription ${sub.productId} (version ${sv.id})`); }
+  }
+  log(`submission ${submission.id} now has ${(await submissionItems(submission.id)).length} item(s)`);
   await asc('PATCH', `/v1/reviewSubmissions/${submission.id}`, { data: { type: 'reviewSubmissions', id: submission.id, attributes: { submitted: true } } });
   log(DRY ? 'DRY RUN — would submit.' : `SUBMITTED for review: submission ${submission.id}`);
 }
