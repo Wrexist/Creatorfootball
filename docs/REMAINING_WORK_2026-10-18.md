@@ -9,6 +9,22 @@ Full audit of `Main` at `6f51bb5` (latest on GitHub). Supersedes
 
 Legend: **[owner]** needs account access, a device, a Mac or money · **[code]** can be done in the repo.
 
+## Release record — 18 October 2026
+
+- iOS **1.0.16 (15)** built from Main `3244d9d` (run 39140732610, Xcode 26.6) and uploaded.
+- The earlier 1.0.16 submission (older build, no subscriptions) was removed from review and
+  replaced. **Submitted for App Review** as submission `9baaeb36` with 8 items: app version,
+  Club Nights / Heritage / Creator Stories, the Creator Club group and its weekly, monthly and
+  yearly plans. State: Waiting for Review. Release type is manual: release after approval.
+- Listing (en-US and en-GB): new description, promotional text and review notes; 8 iPhone Duo
+  screenshots (inner display, `apps/game/fastlane/screenshots/en-US/iphone-duo-inner-2853x2007`);
+  header and search-results assets (en-GB already had them; en-US added).
+- Done through the App Store Connect API: `.github/workflows/ios-app-store.yml` with
+  `tools/release/asc-release.mjs` (build, text, replace, submit) and
+  `tools/release/asc-assets.mjs` (asset library: Duo screenshots, header, search results).
+  Apple's Duo screenshot group (`IPHONE_DUO_PROFILE`) holds at most 10 images across both
+  displays, so only the inner set is placed; the outer set is kept beside it.
+
 ## Progress since the audit (PR #36, merged as `3244d9d`)
 
 Google Play is out of scope for now (owner decision, 18 Oct): **iOS only**.
@@ -28,8 +44,8 @@ Checks at merge: typecheck, lint, 762 engine + 298 app tests, full browser suite
   "safe call" the decision sheet promises.
 - Native storage has not run on a device yet: confirm an existing TestFlight career loads after
   migration and `Library/cf-saves/` appears.
-- iPhone Duo screenshots are captured locally in `artifacts/store-launch/duo/` (git-ignored, like
-  the other store captures) by `apps/game/scripts/duo-screenshots.mjs`.
+- Re-capture Duo screenshots with `apps/game/scripts/duo-screenshots.mjs`, then copy them to
+  `apps/game/fastlane/screenshots/en-US/` before running the media upload.
 - Xcode 27.1 is not on GitHub-hosted runners (only the `xcode-27` preview image with 27.0 beta),
   so release builds still use Xcode 26.6 (iOS 26 SDK).
 
