@@ -151,6 +151,16 @@ if (build.attributes.usesNonExemptEncryption === null || build.attributes.usesNo
   await asc('PATCH', `/v1/builds/${build.id}`, { data: { type: 'builds', id: build.id, attributes: { usesNonExemptEncryption: false } } });
 }
 
+// Subscriptions are reviewed with the binary but are not review-submission
+// items: they are sent with POST /v1/subscriptionSubmissions. Report them so a
+// submission never silently goes out without Creator Club.
+async function subscriptions() {
+  const groups = await asc('GET', `/v1/apps/${appId}/subscriptionGroups?${q({ include: 'subscriptions', limit: '10' })}`);
+  return (groups.included ?? []).filter((r) => r.type === 'subscriptions')
+    .map((s) => ({ id: s.id, productId: s.attributes.productId, state: s.attributes.state }));
+}
+for (const s of await subscriptions()) log(`subscription ${s.productId}: ${s.state}`);
+
 // 1b. --replace: pull a version that is already waiting for review back out,
 // keeping every other item (subscription group, plans, one-time purchases)
 // in a fresh draft so nothing has to be re-added by hand.
@@ -245,6 +255,11 @@ if (submission) {
   if (!hasVersion) {
     await asc('POST', '/v1/reviewSubmissionItems', { data: { type: 'reviewSubmissionItems', relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: submission.id } }, appStoreVersion: { data: { type: 'appStoreVersions', id: version.id } } } } });
     log(`added version ${VERSION} to submission`);
+  }
+  for (const s of await subscriptions()) {
+    if (s.state !== 'READY_TO_SUBMIT') continue;
+    await asc('POST', '/v1/subscriptionSubmissions', { data: { type: 'subscriptionSubmissions', relationships: { subscription: { data: { type: 'subscriptions', id: s.id } } } } });
+    log(`submitted subscription ${s.productId} with this version`);
   }
   await asc('PATCH', `/v1/reviewSubmissions/${submission.id}`, { data: { type: 'reviewSubmissions', id: submission.id, attributes: { submitted: true } } });
   log(DRY ? 'DRY RUN — would submit.' : `SUBMITTED for review: submission ${submission.id}`);
