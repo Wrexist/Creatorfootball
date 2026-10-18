@@ -155,7 +155,7 @@ if (build.attributes.usesNonExemptEncryption === null || build.attributes.usesNo
 // keeping every other item (subscription group, plans, one-time purchases)
 // in a fresh draft so nothing has to be re-added by hand.
 const OPEN_STATES = 'READY_FOR_REVIEW,WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES,CANCELING';
-const ITEM_RELATIONSHIPS = ['appStoreVersion', 'appCustomProductPageVersion', 'appStoreVersionExperiment', 'appStoreVersionExperimentV2', 'appEvent', 'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion', 'backgroundAssetVersion'];
+const ITEM_RELATIONSHIPS = ['appStoreVersion', 'appCustomProductPageVersion', 'appStoreVersionExperimentV2', 'appEvent', 'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion', 'backgroundAssetVersion'];
 async function submissionItems(id) {
   const items = (await asc('GET', `/v1/reviewSubmissions/${id}/items?${q({ include: ITEM_RELATIONSHIPS.join(','), limit: '50' })}`)).data;
   return items.map((item) => {
