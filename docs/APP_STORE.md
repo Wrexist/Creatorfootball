@@ -5,7 +5,7 @@ Draft metadata and release checklist for the App Store Connect record for v1.0 o
 every text field live in `apps/game/fastlane/metadata/en-US/` — this document
 is the source of truth for *why*, plus everything fastlane files can't carry.
 
-Description and promotional copy were refreshed September 22, 2026. This is not evidence of a signed or approved release. See [current console status and open release gates](STORE_SETUP_STATUS.md).
+Description, promotional text and release notes were refreshed October 18, 2026 to disclose the Creator Club auto-renewing membership alongside the one-time packs, with Terms of Use and Privacy Policy links (guideline 3.1.2). This is not evidence of a signed or approved release. See [current console status and open release gates](STORE_SETUP_STATUS.md).
 
 ---
 
@@ -16,9 +16,9 @@ Description and promotional copy were refreshed September 22, 2026. This is not 
 | **Name** | 30 | `Creator Football: Club Manager` | 30/30 |
 | **Subtitle** | 30 | `Build a Club. Rule the League.` | 30/30 |
 | **Keywords** | 100 | see below | 97/100 |
-| **Promotional Text** | 170 | see `promotional_text.txt` | 154/170 |
-| **Description** | 4,000 | see `description.txt` | 2,177/4,000 |
-| **What's New (1.0)** | 4,000 | see `release_notes.txt` | 316/4,000 |
+| **Promotional Text** | 170 | see `promotional_text.txt` | 159/170 |
+| **Description** | 4,000 | see `description.txt` | 3,416/4,000 |
+| **What's New** | 4,000 | see `release_notes.txt` | 296/4,000 |
 
 ### Keywords field
 
@@ -178,17 +178,41 @@ iPhone and iPad, in both orientations and in Dark Mode.
 ## 6. Review notes (paste into App Review Information)
 
 ```
-Creator Football is a single-player football management game. Everything runs
-on-device. Optional one-time content purchases are verified through RevenueCat and the Apple store account. There is no game sign-in or cloud save.
+Creator Football is a single-player football management game. Careers run
+on-device. There is no game sign-in, account or cloud save, so no demo account
+is needed.
 
-To review quickly:
+In-app purchases, verified through RevenueCat and the Apple Account:
+- Three optional one-time packs: Club Nights, Heritage Collection and
+  Creator Stories (cosmetic and story content).
+- Creator Club, an optional auto-renewing subscription: one subscription
+  group with weekly, monthly and yearly plans that share the same benefits.
+  The yearly plan can show a 7-day free trial to eligible accounts.
+The full career is free. There are no loot boxes or random paid rewards.
+
+To review gameplay:
 1. Launch and tap through club creation (any choices work).
 2. From Home, tap PLAY to reach matchday. Decisions appear as timed prompts;
    any choice progresses the match.
 3. Saves persist locally between launches; deleting the app deletes the save.
 
+To review Creator Club:
+1. On Home, tap the Creator Club card ("A 90-rated superstar. Your club.").
+   It opens the membership sheet. Other routes: Club > Finances, the Club
+   collection screen, or Settings > Content packs > Explore Creator Club.
+   The membership sheet may also open by itself on Home (at most every 72h).
+2. Choose Weekly, Monthly or Yearly. The store price, billing period and
+   auto-renewal terms appear above the Subscribe button. Terms and Privacy
+   links are at the bottom of the sheet.
+3. Purchasing works with any sandbox Apple Account. No game login exists.
+4. After purchase the same sheet shows the member library, the Kai Arden
+   welcome signing, club funds and creator collaborations to claim. Trial
+   accounts get the library and stadium lighting only.
+5. Restore: "Restore membership" in the sheet, or "Restore purchases" on
+   the Club collection screen, using the same Apple Account. "Manage
+   subscription" opens the App Store subscriptions page.
+
 The app uses no tracking, shows no ads, and requires no special permissions.
-No demo account is needed because there are no accounts.
 ```
 
 Export compliance: the app uses only standard HTTPS (ATS enforced by
@@ -223,6 +247,8 @@ Store side (App Store Connect):
 - [ ] Screenshots uploaded per section 5
 - [ ] Review notes pasted; contact email confirmed monitored
 - [ ] Configure the three non-consumable products and their prices/regions, attach RevenueCat entitlements, and complete sandbox purchase/restore/refund tests before enabling IAP.
+- [ ] Configure the Creator Club subscription group (`cf_creator_club_weekly`, `cf_creator_club_monthly`, `cf_creator_club_yearly` with its 7-day introductory offer), the `cf_creator_club` entitlement and the `creator_club` offering; attach the subscriptions to the version for review; sandbox-test purchase, trial, restore, renewal and expiry.
+- [ ] Terms of Use: the description links `https://wrexist.github.io/Creatorfootball/terms.html`; optionally also set it as the custom EULA (App Information > License Agreement) so the 3.1.2 link appears in both places.
 
 Post-launch ASO cadence: refresh Promotional Text freely (no review); revisit
 Name/Subtitle/Keywords only with version updates; check App Store Connect's
