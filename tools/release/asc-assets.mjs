@@ -92,9 +92,13 @@ function imageSize(file) {
   }
   throw new Error(`Unreadable image ${file}`);
 }
+// Apple's IPHONE_DUO_PROFILE group takes both displays' sizes but at most 10
+// images in total, so one set is placed: the unfolded inner display by
+// default (DUO_SET=outer for the closed-phone set).
+const DUO_SET = process.env.DUO_SET ?? 'inner';
 function duoScreens() {
   if (!fs.existsSync(DUO_DIR)) return [];
-  return fs.readdirSync(DUO_DIR).filter((d) => fs.statSync(path.join(DUO_DIR, d)).isDirectory()).sort()
+  return fs.readdirSync(DUO_DIR).filter((d) => d.startsWith(`iphone-duo-${DUO_SET}`) && fs.statSync(path.join(DUO_DIR, d)).isDirectory()).sort()
     .flatMap((dir) => fs.readdirSync(path.join(DUO_DIR, dir)).filter((f) => /\.(jpe?g|png)$/i.test(f)).sort()
       .map((f) => ({ file: path.join(DUO_DIR, dir, f), set: dir })));
 }
