@@ -122,7 +122,11 @@ function loadFilesystem(): Promise<typeof FilesystemApi> {
 function isMissing(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const { code, message } = error as { code?: unknown; message?: unknown };
-  return code === 'OS-PLUG-FILE-0008' || (typeof message === 'string' && /does not exist/i.test(message));
+  // The plugin maps a missing file to OS-PLUG-FILE-0008, but a raw Foundation
+  // error ("no such file") can surface instead as a generic failure. Both mean
+  // "no save yet"; treating either as fatal would block every first launch.
+  return code === 'OS-PLUG-FILE-0008'
+    || (typeof message === 'string' && /does not exist|no such file|couldn.t be opened because there is no such|ENOENT/i.test(message));
 }
 
 function legacyStore(): Storage | null {
