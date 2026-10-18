@@ -36,6 +36,11 @@ on:
         description: 'Only print what would change'
         type: boolean
         default: true
+      media:
+        description: 'Product page media instead of the build/text/submit flow: explore (read-only) or upload Duo screenshots + header/search assets'
+        type: choice
+        options: [none, explore, upload]
+        default: none
 
 concurrency:
   group: ios-app-store
@@ -57,7 +62,23 @@ jobs:
         with:
           node-version: 22
 
+      - name: Product page media (asset library)
+        if: ${{ inputs.media != 'none' }}
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          VERSION: ${{ inputs.version }}
+          MEDIA: ${{ inputs.media }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          args=(--version "$VERSION" "--$MEDIA")
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          node tools/release/asc-assets.mjs "${args[@]}"
+
       - name: Prepare (and optionally submit) the App Store version
+        if: ${{ inputs.media == 'none' }}
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
