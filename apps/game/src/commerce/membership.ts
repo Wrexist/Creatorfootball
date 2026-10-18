@@ -56,3 +56,14 @@ export function yearlySaving(quotes: readonly MemberQuote[]): number | null {
   const percent = Math.floor((1 - annual.amount / (monthly.amount * 12)) * 100);
   return percent > 0 && percent < 100 ? percent : null;
 }
+/**
+ * purchases-capacitor 13.7 has no manage-subscriptions API, so native builds
+ * link to the store's own subscription page. The web build sells nothing and
+ * shows no control.
+ */
+export function manageSubscriptionsUrl(native: boolean, platform: string): string | null {
+  if (!native) return null;
+  if (platform === 'ios') return 'https://apps.apple.com/account/subscriptions';
+  if (platform === 'android') return 'https://play.google.com/store/account/subscriptions';
+  return null;
+}

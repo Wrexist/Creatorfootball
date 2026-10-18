@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   commerce: { busy: false, boot: vi.fn() },
   sdk: { isConfigured: vi.fn(), addCustomerInfoUpdateListener: vi.fn(), invalidateCustomerInfoCache: vi.fn(), getCustomerInfo: vi.fn(), getOfferings: vi.fn(), checkTrialOrIntroductoryPriceEligibility: vi.fn(), purchasePackage: vi.fn(), purchaseSubscriptionOption: vi.fn(), restorePurchases: vi.fn() },
@@ -70,5 +70,42 @@ describe('membership native lifecycle', () => {
     await store.getState().buy('cf_creator_club_yearly');
     expect(mocks.sdk.purchasePackage).not.toHaveBeenCalled();
     expect(mocks.commerce.busy).toBe(true);
+  });
+});
+describe('membership cache invalidation throttle', () => {
+  afterEach(() => { vi.useRealTimers(); });
+  it('invalidates at most once per five minutes across foreground refreshes', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(now);
+    const { useMembershipStore: store, MEMBER_INVALIDATE_INTERVAL } = await import('./membershipStore');
+    await store.getState().refresh(); await store.getState().refresh();
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(1);
+    expect(mocks.sdk.getCustomerInfo).toHaveBeenCalledTimes(2);
+    vi.setSystemTime(now + MEMBER_INVALIDATE_INTERVAL - 1); await store.getState().refresh();
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(1);
+    vi.setSystemTime(now + MEMBER_INVALIDATE_INTERVAL); await store.getState().refresh();
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(2);
+  });
+  it('re-checks straight after a restore or checkout, and whenever forced', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(now);
+    const { useMembershipStore: store } = await import('./membershipStore');
+    await store.getState().refresh();
+    mocks.sdk.restorePurchases.mockResolvedValue({ customerInfo: info(false, now + 1) });
+    await store.getState().restore();
+    await store.getState().refresh(); await store.getState().refresh();
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(2);
+    mocks.sdk.purchasePackage.mockRejectedValue({ code: '20' });
+    await store.getState().buy('cf_creator_club_yearly');
+    await store.getState().refresh();
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(3);
+    await store.getState().refresh({ force: true });
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(4);
+  });
+  it('does not let a forced check reuse an in-flight cached refresh', async () => {
+    const { useMembershipStore: store } = await import('./membershipStore');
+    await store.getState().refresh();
+    const background = store.getState().refresh();
+    await store.getState().refresh({ force: true }); await background;
+    expect(mocks.sdk.invalidateCustomerInfoCache).toHaveBeenCalledTimes(2);
+    expect(mocks.sdk.getCustomerInfo).toHaveBeenCalledTimes(3);
   });
 });

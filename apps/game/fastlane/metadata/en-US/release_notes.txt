@@ -1,5 +1,6 @@
-Welcome to Season One.
+What's new in this update:
 
-This is the first release of Creator Football: twelve clubs, twenty-two matches, live matchday decisions, transfers, training, facilities, sponsors, fans, media and a world that keeps living between seasons.
-
-Your save stays on your device. Play offline. Build something the world remembers.
+- iPhone Duo support: play on both the inner and outer displays.
+- General stability improvements.
+- More reliable local saves to help protect your career.
+- Creator Club members get Autumn Pages, the October library issue with new commentary and club-journal stories.
