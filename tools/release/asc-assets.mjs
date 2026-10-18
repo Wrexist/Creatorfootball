@@ -178,6 +178,27 @@ async function place(image, type, group, loc) {
 
 const screens = duoScreens();
 if (screens.length === 0) fail(`No Duo screenshots in ${DUO_DIR}.`);
+
+// Apple refuses new placements while the version sits in a review draft
+// (READY_FOR_REVIEW). Take only the version out of the draft; the other items
+// (one-time purchases) stay, and asc-release.mjs --submit adds it back.
+if (version.attributes.appStoreState === 'READY_FOR_REVIEW') {
+  const drafts = (await asc('GET', `/v1/apps/${appId}/reviewSubmissions?${q({ 'filter[platform]': 'IOS', 'filter[state]': 'READY_FOR_REVIEW', limit: '5' })}`)).data;
+  for (const draft of drafts) {
+    const items = (await asc('GET', `/v1/reviewSubmissions/${draft.id}/items?${q({ include: 'appStoreVersion', limit: '50' })}`)).data;
+    for (const item of items.filter((i) => i.relationships?.appStoreVersion?.data?.id === version.id)) {
+      await asc('DELETE', `/v1/reviewSubmissionItems/${item.id}`);
+      log(`took version ${VERSION} out of review draft ${draft.id} so media can be placed`);
+    }
+  }
+  if (!DRY) {
+    for (let tries = 0; tries < 20; tries += 1) {
+      const state = (await asc('GET', `/v1/appStoreVersions/${version.id}`)).data.attributes.appStoreState;
+      if (state !== 'READY_FOR_REVIEW') { log(`version state now ${state}`); break; }
+      await sleep(5000);
+    }
+  }
+}
 const creative = [
   { file: path.join(CREATIVE_DIR, 'header.png'), type: 'PRODUCT_PAGE_HEADER_ASSET' },
   { file: path.join(CREATIVE_DIR, 'search-results.png'), type: 'APP_STORE_SEARCH_RESULTS_ASSET' },
